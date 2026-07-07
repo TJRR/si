@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php echo htmlspecialchars($titulo !== null ? $titulo : 'Sistema Premio de Inovacao TJRR', ENT_QUOTES, 'UTF-8'); ?></title>
+    <title><?php echo htmlspecialchars($titulo !== null ? $titulo : 'Sistema de Gestão da Semana de Inovação e do Prêmio de Inovação do TJRR', ENT_QUOTES, 'UTF-8'); ?></title>
 </head>
 <body>
 <?php if (!empty($_SESSION['flash'])): ?>

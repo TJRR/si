@@ -14,8 +14,17 @@ class HomeController extends Controller
 {
     public function index()
     {
+        $this->renderizar(
+            'home/index',
+            [],
+            'Sistema de Gestão da Semana de Inovação e do Prêmio de Inovação do TJRR'
+        );
+    }
+
+    public function administrativo()
+    {
         RoleMiddleware::exigir(['administrador']);
-        $this->renderizar('home/index', [], 'Painel');
+        $this->renderizar('home/administrativo', [], 'Painel');
     }
 
     /**

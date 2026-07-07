@@ -4,7 +4,7 @@
 } ?>
 <h1>Formularios Dinamicos</h1>
 
-<p><a href="<?php echo url('home/index'); ?>">Voltar ao painel</a></p>
+<p><a href="<?php echo url('home/administrativo'); ?>">Voltar ao painel</a></p>
 <p><a href="<?php echo url('formularios/novo'); ?>">+ Novo formulario</a></p>
 
 <?php if (empty($formularios)): ?>

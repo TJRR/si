@@ -4,7 +4,7 @@
 } ?>
 <h1>Concursos</h1>
 
-<p><a href="<?php echo url('home/index'); ?>">Voltar ao painel</a></p>
+<p><a href="<?php echo url('home/administrativo'); ?>">Voltar ao painel</a></p>
 <p><a href="<?php echo url('concursos/novo'); ?>">+ Novo concurso</a></p>
 
 <?php if (empty($concursos)): ?>

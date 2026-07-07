@@ -4,7 +4,7 @@
 } ?>
 <h1>Cadastros pendentes</h1>
 
-<p><a href="<?php echo url('home/index'); ?>">Voltar ao painel</a></p>
+<p><a href="<?php echo url('home/administrativo'); ?>">Voltar ao painel</a></p>
 
 <?php if (empty($pendentes)): ?>
     <p>Nenhum cadastro pendente.</p>

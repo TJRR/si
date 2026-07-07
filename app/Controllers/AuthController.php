@@ -25,7 +25,7 @@ class AuthController extends Controller
 
             if ($resultado['sucesso']) {
                 Auth::login($resultado['usuario'], $resultado['perfis']);
-                $this->redirecionar('home/index');
+                $this->redirecionar('home/administrativo');
                 return;
             }
 

@@ -69,6 +69,6 @@ http_response_code(200);
     <a href="mailto:npi@tjrr.jus.br">npi@tjrr.jus.br</a>.
 </p>
 
-<p><a href="/si/">Voltar ao início</a></p>
+<p><a href="index.php">Voltar ao início</a></p>
 </body>
 </html>
