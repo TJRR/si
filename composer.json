@@ -1,0 +1,17 @@
+{
+    "name": "npi/si",
+    "description": "Sistema de Gestao da Semana de Inovacao e do Premio de Inovacao do TJRR",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=7.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        },
+        "files": [
+            "app/helpers.php"
+        ]
+    }
+}
