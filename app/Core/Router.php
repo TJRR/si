@@ -9,7 +9,14 @@ if (!defined('SI_BOOT')) {
 
 use App\Controllers\AuthController;
 use App\Controllers\CadastroController;
+use App\Controllers\CampoAdminController;
+use App\Controllers\ConcursoAdminController;
+use App\Controllers\EtapaAdminController;
+use App\Controllers\FormularioAdminController;
 use App\Controllers\HomeController;
+use App\Controllers\SubmissaoController;
+use App\Controllers\TemaDesafioAdminController;
+use App\Controllers\TrilhaAdminController;
 use App\Controllers\UsuarioAdminController;
 
 class Router
@@ -19,6 +26,13 @@ class Router
         'cadastro' => CadastroController::class,
         'usuarios' => UsuarioAdminController::class,
         'home' => HomeController::class,
+        'concursos' => ConcursoAdminController::class,
+        'trilhas' => TrilhaAdminController::class,
+        'temas' => TemaDesafioAdminController::class,
+        'etapas' => EtapaAdminController::class,
+        'formularios' => FormularioAdminController::class,
+        'campos' => CampoAdminController::class,
+        'submissao' => SubmissaoController::class,
     ];
 
     public function despachar($r)

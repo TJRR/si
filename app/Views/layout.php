@@ -10,6 +10,10 @@
     <title><?php echo htmlspecialchars($titulo !== null ? $titulo : 'Sistema Premio de Inovacao TJRR', ENT_QUOTES, 'UTF-8'); ?></title>
 </head>
 <body>
+<?php if (!empty($_SESSION['flash'])): ?>
+    <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); ?></p>
+    <?php unset($_SESSION['flash']); ?>
+<?php endif; ?>
 <?php echo $conteudo; ?>
 </body>
 </html>
