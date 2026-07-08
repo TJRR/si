@@ -31,6 +31,17 @@ class EtapaRepository
         return $etapa !== false ? $etapa : null;
     }
 
+    public function buscarPorTrilhaENome($trilhaId, $nome)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM etapas WHERE trilha_id = :trilha_id AND nome = :nome LIMIT 1');
+        $stmt->execute(['trilha_id' => $trilhaId, 'nome' => $nome]);
+
+        $etapa = $stmt->fetch();
+
+        return $etapa !== false ? $etapa : null;
+    }
+
     public function criar($trilhaId, $nome, $descricao, $ordem, $dataInicio, $dataFim, $formularioDinamicoId)
     {
         $pdo = Database::conexao();

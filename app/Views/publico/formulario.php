@@ -3,9 +3,11 @@
     exit('Acesso negado');
 } ?>
 
+<div class="site-form-page">
 <?php if ($erroGeral !== null && $preparo === null): ?>
     <h1>Formulario indisponivel</h1>
     <p style="color:red;"><?php echo htmlspecialchars($erroGeral, ENT_QUOTES, 'UTF-8'); ?></p>
+    </div>
     <?php return; ?>
 <?php endif; ?>
 
@@ -95,3 +97,4 @@
 </template>
 
 <script src="<?php echo config('base_path'); ?>/assets/js/formulario-publico.js"></script>
+</div>

@@ -11,9 +11,11 @@ use App\Controllers\AuthController;
 use App\Controllers\CadastroController;
 use App\Controllers\CampoAdminController;
 use App\Controllers\ConcursoAdminController;
+use App\Controllers\ConteudoAdminController;
 use App\Controllers\EtapaAdminController;
 use App\Controllers\FormularioAdminController;
 use App\Controllers\HomeController;
+use App\Controllers\RevisaoImportacaoController;
 use App\Controllers\SubmissaoController;
 use App\Controllers\TemaDesafioAdminController;
 use App\Controllers\TrilhaAdminController;
@@ -33,6 +35,8 @@ class Router
         'formularios' => FormularioAdminController::class,
         'campos' => CampoAdminController::class,
         'submissao' => SubmissaoController::class,
+        'revisao' => RevisaoImportacaoController::class,
+        'conteudo' => ConteudoAdminController::class,
     ];
 
     public function despachar($r)

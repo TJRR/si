@@ -19,6 +19,16 @@ class ConcursoRepository
         return $pdo->query('SELECT * FROM concursos ORDER BY criado_em DESC')->fetchAll();
     }
 
+    public function buscarAtivo()
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->query("SELECT * FROM concursos WHERE status = 'ativo' ORDER BY criado_em DESC LIMIT 1");
+
+        $concurso = $stmt->fetch();
+
+        return $concurso !== false ? $concurso : null;
+    }
+
     public function buscarPorId($id)
     {
         $pdo = Database::conexao();

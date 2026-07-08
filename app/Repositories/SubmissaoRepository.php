@@ -27,6 +27,24 @@ class SubmissaoRepository
         return (int) $pdo->lastInsertId();
     }
 
+    public function buscarPorEquipe($equipeId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM submissoes WHERE equipe_id = :equipe_id LIMIT 1');
+        $stmt->execute(['equipe_id' => $equipeId]);
+
+        $submissao = $stmt->fetch();
+
+        return $submissao !== false ? $submissao : null;
+    }
+
+    public function vincularEquipe($id, $equipeId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE submissoes SET equipe_id = :equipe_id WHERE id = :id');
+        $stmt->execute(['equipe_id' => $equipeId, 'id' => $id]);
+    }
+
     public function atualizarDadosJson($id, array $dadosJson)
     {
         $pdo = Database::conexao();

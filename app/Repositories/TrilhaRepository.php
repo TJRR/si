@@ -32,6 +32,17 @@ class TrilhaRepository
         return $trilha !== false ? $trilha : null;
     }
 
+    public function buscarPorNome($nome)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM trilhas WHERE nome = :nome LIMIT 1');
+        $stmt->execute(['nome' => $nome]);
+
+        $trilha = $stmt->fetch();
+
+        return $trilha !== false ? $trilha : null;
+    }
+
     public function criar($concursoId, $nome, $descricao, $ordem, $ativo)
     {
         $pdo = Database::conexao();

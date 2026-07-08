@@ -1,0 +1,304 @@
+/*
+ * Identidade visual baseada no site de referencia do NPI/Inovajurr
+ * (https://npi.tjrr.jus.br/4premio/) - paleta extraida do CSS real daquele site.
+ * Aplica-se so as paginas publicas (home, formulario de submissao) - o painel
+ * administrativo usa seletores de classe daqui de proposito ausentes, entao
+ * fica desestilizado (desktop-first, conforme requisito nao-funcional).
+ */
+
+:root {
+    --cor-fundo-escuro-inicio: #10054d;
+    --cor-fundo-escuro-fim: #45108a;
+    --cor-roxo-inicio: #8340ff;
+    --cor-roxo-fim: #5900ff;
+    --cor-azul: #0449c4;
+    --cor-laranja-inicio: #ff6600;
+    --cor-laranja-fim: #ff9955;
+    --cor-branco: #fff;
+    --cor-texto: #222;
+    --cor-texto-suave: #444;
+    --cor-borda: #e5e5e5;
+    --cor-fundo-alt: #f7f7f7;
+    --fonte-titulo: 'Poppins', -apple-system, 'Segoe UI', sans-serif;
+    --fonte-corpo: 'Roboto', -apple-system, 'Segoe UI', sans-serif;
+}
+
+.site-page {
+    font-family: var(--fonte-corpo);
+    color: var(--cor-texto);
+    line-height: 1.5;
+}
+
+.site-page h1,
+.site-page h2,
+.site-page h3,
+.site-page h4 {
+    font-family: var(--fonte-titulo);
+    font-weight: 700;
+}
+
+/* Cabecalho */
+.site-header {
+    background: var(--cor-branco);
+    border-bottom: 1px solid var(--cor-borda);
+    padding: 0.75rem 1rem;
+}
+
+.site-header-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.site-logo {
+    height: 40px;
+}
+
+.site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem 1rem;
+    font-size: 0.9rem;
+}
+
+.site-nav a {
+    color: var(--cor-texto);
+    text-decoration: none;
+}
+
+.site-nav a:hover {
+    color: var(--cor-roxo-fim);
+}
+
+/* Botoes */
+.btn {
+    display: inline-block;
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 2px solid transparent;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, var(--cor-roxo-inicio) 15%, var(--cor-roxo-fim) 65%);
+    color: var(--cor-branco);
+}
+
+.btn-outline {
+    border-color: var(--cor-roxo-fim);
+    color: var(--cor-roxo-fim);
+}
+
+.btn-large {
+    padding: 0.75rem 1.75rem;
+    font-size: 1.05rem;
+}
+
+/* Hero */
+.hero {
+    background: linear-gradient(135deg, var(--cor-fundo-escuro-inicio) 0%, var(--cor-fundo-escuro-fim) 100%);
+    color: var(--cor-branco);
+    text-align: center;
+    padding: 3rem 1.25rem;
+}
+
+.hero-title {
+    font-size: 1.75rem;
+    margin: 0 0 0.5rem;
+}
+
+.hero-subtitle {
+    font-size: 1.05rem;
+    color: #e5d9ff;
+    margin: 0 0 1.5rem;
+}
+
+/* Secoes */
+.site-section {
+    padding: 2.5rem 1.25rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.site-section-alt {
+    background: var(--cor-fundo-alt);
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.site-section-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
+}
+
+.section-title {
+    font-size: 1.4rem;
+    margin: 0 0 1rem;
+    color: var(--cor-fundo-escuro-fim);
+}
+
+.section-text {
+    color: var(--cor-texto-suave);
+    white-space: pre-line;
+}
+
+/* Cronograma */
+.timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.timeline-item {
+    border-left: 4px solid var(--cor-laranja-inicio);
+    padding: 0.5rem 0 0.5rem 1rem;
+}
+
+.timeline-trilha {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--cor-azul);
+}
+
+.timeline-nome {
+    display: block;
+    font-size: 1.05rem;
+}
+
+.timeline-datas {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+}
+
+.timeline-descricao {
+    margin: 0.25rem 0 0;
+    color: var(--cor-texto-suave);
+}
+
+/* Temas */
+.temas-trilha-titulo {
+    margin-top: 1.5rem;
+}
+
+.temas-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.tema-card {
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.tema-nome {
+    margin: 0 0 0.5rem;
+    color: var(--cor-roxo-fim);
+}
+
+.tema-descricao {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--cor-texto-suave);
+}
+
+/* Rodape */
+.site-footer {
+    background: var(--cor-fundo-escuro-inicio);
+    color: var(--cor-branco);
+    padding: 2.5rem 1.25rem;
+    text-align: center;
+}
+
+.site-footer .section-title {
+    color: var(--cor-branco);
+}
+
+.site-footer a {
+    color: #d9c9ff;
+}
+
+.site-footer-links {
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+}
+
+/* Formulario publico de submissao */
+.site-form-page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem;
+}
+
+.site-form-page fieldset {
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.site-form-page input[type="text"],
+.site-form-page input[type="number"],
+.site-form-page input[type="email"],
+.site-form-page input[type="url"],
+.site-form-page select,
+.site-form-page textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem;
+    margin-top: 0.35rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 4px;
+}
+
+.site-form-page button[type="submit"] {
+    background: linear-gradient(45deg, var(--cor-roxo-inicio) 15%, var(--cor-roxo-fim) 65%);
+    color: var(--cor-branco);
+    border: none;
+    padding: 0.75rem 1.75rem;
+    border-radius: 999px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+    .site-header-inner {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.25rem;
+    }
+
+    .temas-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .temas-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
