@@ -12,9 +12,12 @@ use App\Controllers\CadastroController;
 use App\Controllers\CampoAdminController;
 use App\Controllers\ConcursoAdminController;
 use App\Controllers\ConteudoAdminController;
+use App\Controllers\CriterioAvaliacaoAdminController;
 use App\Controllers\EtapaAdminController;
+use App\Controllers\FormulaPontuacaoAdminController;
 use App\Controllers\FormularioAdminController;
 use App\Controllers\HomeController;
+use App\Controllers\RegraDesempateAdminController;
 use App\Controllers\RevisaoImportacaoController;
 use App\Controllers\SubmissaoController;
 use App\Controllers\TemaDesafioAdminController;
@@ -37,6 +40,9 @@ class Router
         'submissao' => SubmissaoController::class,
         'revisao' => RevisaoImportacaoController::class,
         'conteudo' => ConteudoAdminController::class,
+        'criterios' => CriterioAvaliacaoAdminController::class,
+        'formulas' => FormulaPontuacaoAdminController::class,
+        'desempate' => RegraDesempateAdminController::class,
     ];
 
     public function despachar($r)

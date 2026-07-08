@@ -22,4 +22,15 @@ return [
         'client_secret' => 'SEU_CLIENT_SECRET',
         'redirect_uri' => 'http://localhost:8090/index.php?r=auth/googleCallback',
     ],
+    // Em producao: preencher 'user'/'pass' com a conta e senha de app do Google Workspace
+    // ja validadas no spike tecnico (smtp.gmail.com:587). Vazio = notificacoes ficam
+    // registradas como 'falhou' sem quebrar o restante da aplicacao.
+    'smtp' => [
+        'host' => 'smtp.gmail.com',
+        'port' => 587,
+        'user' => '',
+        'pass' => '',
+        'from_email' => 'npi@tjrr.jus.br',
+        'from_name' => 'Premio de Inovacao TJRR',
+    ],
 ];

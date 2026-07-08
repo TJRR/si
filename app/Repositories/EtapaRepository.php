@@ -42,12 +42,23 @@ class EtapaRepository
         return $etapa !== false ? $etapa : null;
     }
 
-    public function criar($trilhaId, $nome, $descricao, $ordem, $dataInicio, $dataFim, $formularioDinamicoId)
-    {
+    public function criar(
+        $trilhaId,
+        $nome,
+        $descricao,
+        $ordem,
+        $dataInicio,
+        $dataFim,
+        $formularioDinamicoId,
+        $regraTransicaoTipo = '',
+        $regraTransicaoValor = ''
+    ) {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'INSERT INTO etapas (trilha_id, nome, descricao, ordem, data_inicio, data_fim, formulario_dinamico_id)
-             VALUES (:trilha_id, :nome, :descricao, :ordem, :data_inicio, :data_fim, :formulario_dinamico_id)'
+            'INSERT INTO etapas (trilha_id, nome, descricao, ordem, data_inicio, data_fim, formulario_dinamico_id,
+                                  regra_transicao_tipo, regra_transicao_valor)
+             VALUES (:trilha_id, :nome, :descricao, :ordem, :data_inicio, :data_fim, :formulario_dinamico_id,
+                     :regra_transicao_tipo, :regra_transicao_valor)'
         );
         $stmt->execute([
             'trilha_id' => $trilhaId,
@@ -57,18 +68,30 @@ class EtapaRepository
             'data_inicio' => $dataInicio !== '' ? $dataInicio : null,
             'data_fim' => $dataFim !== '' ? $dataFim : null,
             'formulario_dinamico_id' => $formularioDinamicoId !== '' ? $formularioDinamicoId : null,
+            'regra_transicao_tipo' => $regraTransicaoTipo !== '' ? $regraTransicaoTipo : null,
+            'regra_transicao_valor' => $regraTransicaoValor !== '' ? $regraTransicaoValor : null,
         ]);
 
         return (int) $pdo->lastInsertId();
     }
 
-    public function atualizar($id, $nome, $descricao, $ordem, $dataInicio, $dataFim, $formularioDinamicoId)
-    {
+    public function atualizar(
+        $id,
+        $nome,
+        $descricao,
+        $ordem,
+        $dataInicio,
+        $dataFim,
+        $formularioDinamicoId,
+        $regraTransicaoTipo = '',
+        $regraTransicaoValor = ''
+    ) {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'UPDATE etapas
              SET nome = :nome, descricao = :descricao, ordem = :ordem, data_inicio = :data_inicio,
-                 data_fim = :data_fim, formulario_dinamico_id = :formulario_dinamico_id
+                 data_fim = :data_fim, formulario_dinamico_id = :formulario_dinamico_id,
+                 regra_transicao_tipo = :regra_transicao_tipo, regra_transicao_valor = :regra_transicao_valor
              WHERE id = :id'
         );
         $stmt->execute([
@@ -78,6 +101,8 @@ class EtapaRepository
             'data_inicio' => $dataInicio !== '' ? $dataInicio : null,
             'data_fim' => $dataFim !== '' ? $dataFim : null,
             'formulario_dinamico_id' => $formularioDinamicoId !== '' ? $formularioDinamicoId : null,
+            'regra_transicao_tipo' => $regraTransicaoTipo !== '' ? $regraTransicaoTipo : null,
+            'regra_transicao_valor' => $regraTransicaoValor !== '' ? $regraTransicaoValor : null,
             'id' => $id,
         ]);
     }

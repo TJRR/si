@@ -23,6 +23,10 @@
                 <a href="<?php echo url('temas/index/' . (int) $trilha['id']); ?>">Temas/Desafios</a>
                 |
                 <a href="<?php echo url('etapas/index/' . (int) $trilha['id']); ?>">Etapas</a>
+                |
+                <a href="<?php echo url('formulas/trilha/' . (int) $trilha['id']); ?>">Formula da nota final</a>
+                |
+                <a href="<?php echo url('desempate/index/' . (int) $trilha['id']); ?>">Desempate</a>
             </td>
         </tr>
         <?php endforeach; ?>

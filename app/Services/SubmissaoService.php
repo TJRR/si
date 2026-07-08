@@ -136,7 +136,40 @@ class SubmissaoService
             return ['sucesso' => false, 'mensagem' => 'Corrija os campos indicados.', 'erros' => $erros];
         }
 
-        return $this->gravar($preparo, $valoresProcessados, array_unique($cpfsEncontrados));
+        $resultado = $this->gravar($preparo, $valoresProcessados, array_unique($cpfsEncontrados));
+
+        if ($resultado['sucesso']) {
+            $this->notificarConfirmacaoSubmissao($preparo, $valoresProcessados, $resultado['submissao_id']);
+        }
+
+        return $resultado;
+    }
+
+    private function notificarConfirmacaoSubmissao(array $preparo, array $valoresProcessados, $submissaoId)
+    {
+        $emailDestinatario = null;
+
+        foreach ($preparo['campos'] as $campo) {
+            if ($campo['tipo'] === 'email' && !empty($valoresProcessados[(int) $campo['id']])) {
+                $emailDestinatario = $valoresProcessados[(int) $campo['id']];
+                break;
+            }
+        }
+
+        if ($emailDestinatario === null) {
+            return;
+        }
+
+        try {
+            (new NotificacaoService())->confirmarSubmissao(
+                $emailDestinatario,
+                $preparo['trilha'],
+                $preparo['etapa'],
+                $submissaoId
+            );
+        } catch (\Exception $e) {
+            // Falha de notificacao nunca deve quebrar a submissao ja gravada.
+        }
     }
 
     private function gravar(array $preparo, array $valoresProcessados, array $cpfs)

@@ -31,6 +31,22 @@
         <input type="date" name="data_fim" value="<?php echo htmlspecialchars($etapa !== null ? (string) $etapa['data_fim'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>
 
+    <label>Regra de transicao para a proxima etapa:
+        <select name="regra_transicao_tipo">
+            <option value="">Nenhuma (etapa final ou sem corte)</option>
+            <?php foreach (['numero_fixo' => 'Numero fixo de equipes classificadas', 'percentual' => 'Percentual classificado', 'nota_corte' => 'Nota de corte'] as $valor => $rotulo): ?>
+                <?php $selecionado = ($etapa !== null && $etapa['regra_transicao_tipo'] === $valor); ?>
+                <option value="<?php echo $valor; ?>" <?php echo $selecionado ? 'selected' : ''; ?>>
+                    <?php echo htmlspecialchars($rotulo, ENT_QUOTES, 'UTF-8'); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </label><br>
+
+    <label>Valor da regra de transicao (nº de equipes, % ou nota, conforme o tipo acima):
+        <input type="text" name="regra_transicao_valor" value="<?php echo htmlspecialchars($etapa !== null && $etapa['regra_transicao_valor'] !== null ? (string) $etapa['regra_transicao_valor'] : '', ENT_QUOTES, 'UTF-8'); ?>">
+    </label><br>
+
     <label>Formulario dinamico vinculado:
         <select name="formulario_dinamico_id">
             <option value="">Nenhum</option>

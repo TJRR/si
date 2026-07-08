@@ -67,7 +67,9 @@ class EtapaAdminController extends Controller
                     $dados['ordem'],
                     $dados['data_inicio'],
                     $dados['data_fim'],
-                    $dados['formulario_dinamico_id']
+                    $dados['formulario_dinamico_id'],
+                    $dados['regra_transicao_tipo'],
+                    $dados['regra_transicao_valor']
                 );
                 $this->redirecionar('etapas/index/' . $trilhaId);
                 return;
@@ -107,7 +109,9 @@ class EtapaAdminController extends Controller
                     $dados['ordem'],
                     $dados['data_inicio'],
                     $dados['data_fim'],
-                    $dados['formulario_dinamico_id']
+                    $dados['formulario_dinamico_id'],
+                    $dados['regra_transicao_tipo'],
+                    $dados['regra_transicao_valor']
                 );
                 $etapa = $this->etapas->buscarPorId($id);
             }
@@ -130,6 +134,8 @@ class EtapaAdminController extends Controller
             'data_inicio' => isset($_POST['data_inicio']) ? $_POST['data_inicio'] : '',
             'data_fim' => isset($_POST['data_fim']) ? $_POST['data_fim'] : '',
             'formulario_dinamico_id' => isset($_POST['formulario_dinamico_id']) ? $_POST['formulario_dinamico_id'] : '',
+            'regra_transicao_tipo' => isset($_POST['regra_transicao_tipo']) ? $_POST['regra_transicao_tipo'] : '',
+            'regra_transicao_valor' => isset($_POST['regra_transicao_valor']) ? str_replace(',', '.', $_POST['regra_transicao_valor']) : '',
         ];
     }
 }
