@@ -30,16 +30,21 @@ usuario `npi_si`). Para o servidor real do TJRR, ajuste `config/local.php`
 com as credenciais de `npi_db3` (nunca commitar esse arquivo — ja esta no
 `.gitignore`).
 
+A secao `google` de `config/local.php` precisa do Client ID/Secret reais do
+Google Cloud Console (projeto `sgsi`) para o login Google funcionar de fato —
+sem eles, o clique em "Entrar com sua conta Google" redireciona normalmente,
+mas a troca do codigo por token falha. Ver secao "Login Google" abaixo.
+
 ## Rodar as migrations
 
 ```bash
 docker compose exec app php database/migrate.php
 ```
 
-Cria as 19 tabelas (schema central: usuarios, perfis, concursos, trilhas,
+Cria as 20 tabelas (schema central: usuarios, perfis, concursos, trilhas,
 etapas, formularios dinamicos, submissoes, criterios, formulas de pontuacao,
-regras de desempate, notificacoes, log de auditoria) e semeia os 3 perfis
-(administrador, suporte, avaliador). E idempotente — pode rodar de novo sem
+regras de desempate, notificacoes, log de auditoria, submissao_cpfs) e semeia
+os 3 perfis (administrador, suporte, avaliador). E idempotente — pode rodar de novo sem
 erro, so aplica o que ainda nao foi aplicado (controle na tabela
 `migracoes_executadas`).
 
@@ -66,6 +71,34 @@ logar depois de aprovado por um Administrador ja existente.
 Este e o mesmo padrao usado no projeto LG Conecta: cadastro sempre
 autoatendido, mas com portao de aprovacao do Administrador.
 
+## Login Google
+
+Fluxo OAuth2 "Authorization Code" implementado via `curl` puro (sem pacote
+Composer), em `app/Core/GoogleOAuth.php`. Mesma regra de aprovacao do
+cadastro manual: **toda conta nova (via Google ou manual) nasce `pendente`**.
+
+- Vinculo de conta por **e-mail exato**: se o e-mail do Google bater com um
+  usuario manual ja existente cujo `google_id` ainda seja nulo, vincula
+  automaticamente; se nao bater com ninguem, cria um usuario novo pendente.
+  Nunca ha "merge" manual de contas por outro campo.
+- `state` aleatorio gravado na sessao antes do redirect (protecao CSRF),
+  validado e descartado (uso unico) no retorno.
+- Nenhum `access_token`/`refresh_token` e armazenado — usado so no momento do
+  login para buscar `sub`/`email`/`name` e descartado.
+- `email_verified=false` do Google e rejeitado.
+
+**Redirect URIs cadastradas no Google Cloud Console** (Client ID tipo
+"Aplicativo da Web", projeto `sgsi`) — precisam bater exatamente com o que a
+aplicacao envia, incluindo a query string:
+- Producao: `https://npi.tjrr.jus.br/si/index.php?r=auth/googleCallback`
+- Dev local (Docker): `http://localhost:8090/index.php?r=auth/googleCallback`
+
+Testar a logica de vinculo/criacao de conta sem depender de um login real no
+Google:
+```bash
+docker compose exec app php database/testar_login_google.php <google_id> <email> <nome> <email_verified 0|1>
+```
+
 ## Seguranca (por que nao ha pasta `public/`)
 
 Como o Joomla ja e dono do `DocumentRoot` do dominio inteiro e o novo
@@ -84,7 +117,7 @@ sistema e so uma subpasta (`/si`), nao ha como isolar `app/`, `config/`,
 - **Scripts de CLI recusam rodar via web**: `database/migrate.php` e
   `database/seed_admin.php` checam `php_sapi_name() !== 'cli'` e retornam 403.
 
-## Rotas (Fase 1)
+## Rotas
 
 Roteamento via query string (`index.php?r=modulo/acao/parametro`), sem
 depender de `.htaccess`/`mod_rewrite`. O prefixo de producao (`/si`) fica
@@ -93,14 +126,26 @@ nenhuma view/controller escreve `/si` na mao.
 
 | Rota | Descricao |
 |---|---|
-| `auth/login` | Formulario e processamento de login |
-| `auth/logout` | Encerra sessao |
-| `cadastro/index` | Autocadastro (nasce pendente) |
-| `usuarios/index` | Lista cadastros pendentes (admin) |
-| `usuarios/aprovar` | Aprova um cadastro pendente (admin) |
-| `usuarios/rejeitar` | Rejeita um cadastro pendente (admin) |
-| `home/index` | Painel pos-login (exige perfil administrador) |
+| `home/index` | **Landing publica** (sem login) — explica o sistema, links de login/cadastro/politica/termos |
+| `home/administrativo` | Painel pos-login (exige perfil administrador) |
 | `home/painel/{concursoId}` | Rota de exemplo p/ papel restrito a um concurso |
+| `auth/login` | Formulario e processamento de login manual |
+| `auth/google` | Inicia o login via Google (redirect para o consentimento) |
+| `auth/googleCallback` | Callback do OAuth Google (cadastrada no Google Cloud Console) |
+| `auth/logout` | Encerra sessao |
+| `cadastro/index` | Autocadastro manual (nasce pendente) |
+| `usuarios/index` | Lista cadastros pendentes (admin) |
+| `usuarios/aprovar` / `usuarios/rejeitar` | Aprova/rejeita um cadastro pendente (admin) |
+| `concursos/index` \| `novo` \| `editar/{id}` | CRUD de Concursos (admin) |
+| `trilhas/index/{concursoId}` \| `novo/{concursoId}` \| `editar/{id}` | CRUD de Trilhas (admin) |
+| `temas/index/{trilhaId}` \| `novo/{trilhaId}` \| `editar/{id}` | CRUD de Temas/Desafios (admin) |
+| `etapas/index/{trilhaId}` \| `novo/{trilhaId}` \| `editar/{id}` | CRUD de Etapas, inclui vincular Formulario Dinamico (admin) |
+| `formularios/index` \| `novo` \| `editar/{id}` | CRUD de Formularios Dinamicos (admin) |
+| `formularios/publicar` \| `arquivar` \| `duplicar` | Transicoes de status do formulario (admin) |
+| `campos/index/{formularioId}` \| `novo/{formularioId}` \| `editar/{id}` \| `mover` \| `remover` | Campos de um formulario (admin, so em rascunho) |
+| `submissao/preencher/{etapaId}` | Formulario publico de submissao (sem login) |
+| `submissao/enviar/{etapaId}` | Processa a submissao (validacoes + upload) |
+| `submissao/sucesso/{submissaoId}` | Confirmacao de envio |
 
 ## Estrutura
 
@@ -109,28 +154,30 @@ Ver plano completo em `/home/f3011432/.claude/plans/ancient-twirling-globe.md`.
 ```
 si/
 ├── index.php              # front controller unico
+├── politica.php           # Politica de Privacidade (publica, fora do roteador)
+├── termos.php             # Termos de Servico (publica, fora do roteador)
 ├── app/
-│   ├── Core/               # Router, Database (PDO), Auth, View, Controller
+│   ├── Core/               # Router, Database (PDO), Auth, View, Controller, GoogleOAuth, Texto
 │   ├── Controllers/
 │   ├── Middleware/          # RoleMiddleware (perfil + concurso)
 │   ├── Repositories/
 │   ├── Services/
+│   ├── Validation/           # CpfValidador, YoutubeValidador, UploadPdfValidador
 │   └── Views/
-├── config/                 # config.php, database.php, local.php (gitignored)
+├── assets/js/               # JS minimo (construtor de campo, formulario publico)
+├── config/                 # config.php, database.php, google.php, local.php (gitignored)
 ├── database/
 │   ├── migrate.php
 │   ├── seed_admin.php
-│   └── migrations/          # 001..019
-├── storage/                 # uploads/, logs/, sessions/
+│   ├── testar_login_google.php
+│   └── migrations/          # 001..020
+├── storage/                 # uploads/submissoes/, logs/, sessions/
 └── docker-compose.yml
 ```
 
-## Gancho para as proximas fases
+## Gancho para a proxima fase
 
-- `usuarios.google_id` e `usuarios.status` ja suportam login Google (Fase 2)
-  com o mesmo fluxo de aprovacao do cadastro manual.
-- `campos_dinamicos.config_json` e `submissoes.dados_json` ja sao colunas
-  JSON nativas do MySQL 8, prontas para o construtor de Formulario Dinamico
-  (Fase 2).
 - `formulas_pontuacao.template_codigo` ja modelado como enum de templates
   pre-definidos (Fase 4), nao editor de expressao livre.
+- Importacao de dados do Google Forms (Fase 3) ainda nao implementada —
+  `equipes`/`participantes` seguem vazias ate la.

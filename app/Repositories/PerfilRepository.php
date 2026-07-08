@@ -11,6 +11,13 @@ use App\Core\Database;
 
 class PerfilRepository
 {
+    public function listar()
+    {
+        $pdo = Database::conexao();
+
+        return $pdo->query('SELECT * FROM perfis ORDER BY nome_exibicao ASC')->fetchAll();
+    }
+
     public function buscarPorChave($chave)
     {
         $pdo = Database::conexao();

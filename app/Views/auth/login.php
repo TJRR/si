@@ -14,4 +14,6 @@
     <button type="submit">Entrar</button>
 </form>
 
+<p><a href="<?php echo url('auth/google'); ?>">Entrar com sua conta Google</a></p>
+
 <p>Ainda nao tem cadastro? <a href="<?php echo url('cadastro/index'); ?>">Cadastre-se</a></p>

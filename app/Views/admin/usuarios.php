@@ -18,6 +18,22 @@
             <td>
                 <form method="post" action="<?php echo url('usuarios/aprovar'); ?>" style="display:inline;">
                     <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
+                    <select name="perfil" required>
+                        <option value="">Perfil...</option>
+                        <?php foreach ($perfis as $perfil): ?>
+                            <option value="<?php echo htmlspecialchars($perfil['chave'], ENT_QUOTES, 'UTF-8'); ?>">
+                                <?php echo htmlspecialchars($perfil['nome_exibicao'], ENT_QUOTES, 'UTF-8'); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <select name="concurso_id">
+                        <option value="">Global (todos os concursos)</option>
+                        <?php foreach ($concursos as $concurso): ?>
+                            <option value="<?php echo (int) $concurso['id']; ?>">
+                                <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                     <button type="submit">Aprovar</button>
                 </form>
                 <form method="post" action="<?php echo url('usuarios/rejeitar'); ?>" style="display:inline;">
