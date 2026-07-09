@@ -10,31 +10,45 @@ $premiacaoTexto = isset($conteudo['premiacao_texto']) ? (string) $conteudo['prem
 $contatoEmail = isset($conteudo['contato_email']) ? (string) $conteudo['contato_email'] : '';
 $contatoTelefone = isset($conteudo['contato_telefone']) ? (string) $conteudo['contato_telefone'] : '';
 $contatoEndereco = isset($conteudo['contato_endereco']) ? (string) $conteudo['contato_endereco'] : '';
+
+$logoSrc = !empty($conteudo['logo_site'])
+    ? config('base_path') . '/assets/' . $conteudo['logo_site']
+    : config('base_path') . '/assets/img/logo-padrao.png';
+$heroImagemFundo = !empty($conteudo['hero_imagem_fundo']) ? config('base_path') . '/assets/' . $conteudo['hero_imagem_fundo'] : null;
+$sobreImagem = !empty($conteudo['sobre_imagem']) ? config('base_path') . '/assets/' . $conteudo['sobre_imagem'] : null;
+$premiacaoImagem = !empty($conteudo['premiacao_imagem']) ? config('base_path') . '/assets/' . $conteudo['premiacao_imagem'] : null;
 ?>
 <div class="site-page">
     <header class="site-header">
         <div class="site-header-inner">
-            <img src="<?php echo config('base_path'); ?>/assets/img/logo.png" alt="INOVAJURR" class="site-logo">
+            <img src="<?php echo htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR" class="site-logo">
             <nav class="site-nav">
                 <a href="#cronograma">Cronograma</a>
                 <a href="#temas">Temas</a>
                 <a href="#premiacao">Premiação</a>
                 <a href="#contato">Contato</a>
-                <a href="<?php echo url('auth/login'); ?>" class="btn btn-outline">Entrar</a>
-                <a href="<?php echo url('cadastro/index'); ?>" class="btn btn-primary">Criar cadastro</a>
+                <a href="<?php echo url('auth/login'); ?>" class="btn btn-bordered">Entrar</a>
             </nav>
         </div>
     </header>
 
-    <section class="hero">
-        <h1 class="hero-title"><?php echo htmlspecialchars($heroTitulo, ENT_QUOTES, 'UTF-8'); ?></h1>
-        <p class="hero-subtitle"><?php echo htmlspecialchars($heroSubtitulo, ENT_QUOTES, 'UTF-8'); ?></p>
-        <a href="<?php echo url('cadastro/index'); ?>" class="btn btn-primary btn-large">Inscreva-se</a>
+    <section class="hero"<?php echo $heroImagemFundo !== null ? ' style="background-image:url(\'' . htmlspecialchars($heroImagemFundo, ENT_QUOTES, 'UTF-8') . '\')"' : ''; ?>>
+        <div class="hero-shape" aria-hidden="true"></div>
+        <div class="hero-conteudo">
+            <h1 class="hero-title"><?php echo htmlspecialchars($heroTitulo, ENT_QUOTES, 'UTF-8'); ?></h1>
+            <p class="hero-subtitle"><?php echo htmlspecialchars($heroSubtitulo, ENT_QUOTES, 'UTF-8'); ?></p>
+            <a href="<?php echo url('cadastro/index'); ?>" class="btn btn-bordered-white btn-large">Inscreva-se</a>
+        </div>
     </section>
 
-    <section class="site-section" id="sobre">
-        <h2 class="section-title">Sobre o Prêmio</h2>
-        <p class="section-text"><?php echo nl2br(htmlspecialchars($sobreTexto, ENT_QUOTES, 'UTF-8')); ?></p>
+    <section class="site-section site-section-com-imagem" id="sobre">
+        <?php if ($sobreImagem !== null): ?>
+            <img src="<?php echo htmlspecialchars($sobreImagem, ENT_QUOTES, 'UTF-8'); ?>" alt="" class="section-imagem">
+        <?php endif; ?>
+        <div>
+            <h2 class="section-title">Sobre o Prêmio</h2>
+            <p class="section-text"><?php echo nl2br(htmlspecialchars($sobreTexto, ENT_QUOTES, 'UTF-8')); ?></p>
+        </div>
     </section>
 
     <section class="site-section site-section-alt" id="cronograma">
@@ -87,9 +101,14 @@ $contatoEndereco = isset($conteudo['contato_endereco']) ? (string) $conteudo['co
     </section>
 
     <section class="site-section site-section-alt" id="premiacao">
-        <div class="site-section-inner">
-            <h2 class="section-title">Premiação</h2>
-            <p class="section-text"><?php echo nl2br(htmlspecialchars($premiacaoTexto, ENT_QUOTES, 'UTF-8')); ?></p>
+        <div class="site-section-inner site-section-com-imagem">
+            <?php if ($premiacaoImagem !== null): ?>
+                <img src="<?php echo htmlspecialchars($premiacaoImagem, ENT_QUOTES, 'UTF-8'); ?>" alt="" class="section-imagem">
+            <?php endif; ?>
+            <div>
+                <h2 class="section-title">Premiação</h2>
+                <p class="section-text"><?php echo nl2br(htmlspecialchars($premiacaoTexto, ENT_QUOTES, 'UTF-8')); ?></p>
+            </div>
         </div>
     </section>
 

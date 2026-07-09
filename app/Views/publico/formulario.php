@@ -88,7 +88,7 @@
         </fieldset>
     <?php endforeach; ?>
 
-    <button type="submit">Enviar</button>
+    <button type="submit" class="btn btn-bordered">Enviar</button>
 </form>
 
 <template id="template-grupo-participante-linha">

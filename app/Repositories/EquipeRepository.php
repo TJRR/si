@@ -71,4 +71,43 @@ class EquipeRepository
         );
         $stmt->execute(['equipe_id' => $equipeId, 'participante_id' => $participanteId]);
     }
+
+    public function listarComContagemParticipantes($trilhaId = null)
+    {
+        $pdo = Database::conexao();
+
+        $sql = 'SELECT e.*, t.nome AS trilha_nome, COUNT(ep.participante_id) AS total_participantes
+                FROM equipes e
+                JOIN trilhas t ON t.id = e.trilha_id
+                LEFT JOIN equipe_participante ep ON ep.equipe_id = e.id';
+
+        $parametros = [];
+
+        if ($trilhaId !== null) {
+            $sql .= ' WHERE e.trilha_id = :trilha_id';
+            $parametros['trilha_id'] = $trilhaId;
+        }
+
+        $sql .= ' GROUP BY e.id ORDER BY t.nome ASC, e.nome_equipe ASC';
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($parametros);
+
+        return $stmt->fetchAll();
+    }
+
+    public function listarParticipantes($equipeId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT p.*, ep.papel
+             FROM participantes p
+             JOIN equipe_participante ep ON ep.participante_id = p.id
+             WHERE ep.equipe_id = :equipe_id
+             ORDER BY ep.papel ASC, p.nome ASC'
+        );
+        $stmt->execute(['equipe_id' => $equipeId]);
+
+        return $stmt->fetchAll();
+    }
 }

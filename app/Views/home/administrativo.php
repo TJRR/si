@@ -4,7 +4,17 @@
 } ?>
 <h1>Bem-vindo, <?php echo htmlspecialchars(\App\Core\Auth::nome(), ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('usuarios/index'); ?>">Cadastros pendentes</a></p>
-<p><a href="<?php echo url('concursos/index'); ?>">Concursos</a></p>
-<p><a href="<?php echo url('formularios/index'); ?>">Formularios Dinamicos</a></p>
-<p><a href="<?php echo url('auth/logout'); ?>">Sair</a></p>
+<div class="admin-dashboard-cards">
+    <div class="admin-stat-card">
+        <span class="admin-stat-numero"><?php echo (int) $totalEquipes; ?></span>
+        <span class="admin-stat-rotulo">Equipes importadas</span>
+    </div>
+    <div class="admin-stat-card">
+        <span class="admin-stat-numero"><?php echo (int) $totalCadastrosPendentes; ?></span>
+        <span class="admin-stat-rotulo">Cadastros pendentes</span>
+    </div>
+    <div class="admin-stat-card">
+        <span class="admin-stat-numero"><?php echo (int) $totalConcursosAtivos; ?></span>
+        <span class="admin-stat-rotulo">Concursos ativos</span>
+    </div>
+</div>

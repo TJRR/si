@@ -6,3 +6,5 @@
 !/storage/uploads/.gitkeep
 /storage/sessions/*
 !/storage/sessions/.gitkeep
+/assets/uploads/*
+!/assets/uploads/.gitkeep

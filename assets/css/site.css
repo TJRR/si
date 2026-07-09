@@ -1,19 +1,19 @@
 /*
  * Identidade visual baseada no site de referencia do NPI/Inovajurr
- * (https://npi.tjrr.jus.br/4premio/) - paleta extraida do CSS real daquele site.
- * Aplica-se so as paginas publicas (home, formulario de submissao) - o painel
- * administrativo usa seletores de classe daqui de proposito ausentes, entao
- * fica desestilizado (desktop-first, conforme requisito nao-funcional).
+ * (https://npi.tjrr.jus.br/4premio/). --cor-primaria-inicio/--cor-primaria-fim
+ * sao definidas em tempo de execucao pelo layout.php (vem de
+ * configuracoes_visuais, editavel pelo Admin) - os valores abaixo sao so o
+ * fallback caso a variavel nao chegue a ser injetada.
+ * Aplica-se as paginas publicas (site-page) e, num bloco proprio abaixo,
+ * ao painel administrativo (body.admin-page) - desktop-first, conforme
+ * requisito nao-funcional (nao precisa ser responsivo, mas precisa ter
+ * identidade visual).
  */
 
 :root {
-    --cor-fundo-escuro-inicio: #10054d;
-    --cor-fundo-escuro-fim: #45108a;
-    --cor-roxo-inicio: #8340ff;
-    --cor-roxo-fim: #5900ff;
-    --cor-azul: #0449c4;
-    --cor-laranja-inicio: #ff6600;
-    --cor-laranja-fim: #ff9955;
+    --cor-primaria-inicio: #FF6600;
+    --cor-primaria-fim: #FF9955;
+    --cor-escura: #191919;
     --cor-branco: #fff;
     --cor-texto: #222;
     --cor-texto-suave: #444;
@@ -22,6 +22,8 @@
     --fonte-titulo: 'Poppins', -apple-system, 'Segoe UI', sans-serif;
     --fonte-corpo: 'Roboto', -apple-system, 'Segoe UI', sans-serif;
 }
+
+/* ===================== Site publico ===================== */
 
 .site-page {
     font-family: var(--fonte-corpo);
@@ -42,6 +44,9 @@
     background: var(--cor-branco);
     border-bottom: 1px solid var(--cor-borda);
     padding: 0.75rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .site-header-inner {
@@ -54,74 +59,173 @@
 }
 
 .site-logo {
-    height: 40px;
+    height: 44px;
 }
 
 .site-nav {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    align-items: center;
     gap: 0.75rem 1rem;
     font-size: 0.9rem;
 }
 
-.site-nav a {
+.site-nav a:not(.btn) {
     color: var(--cor-texto);
     text-decoration: none;
 }
 
-.site-nav a:hover {
-    color: var(--cor-roxo-fim);
+.site-nav a:not(.btn):hover {
+    color: var(--cor-primaria-fim);
 }
 
-/* Botoes */
+/* Botoes
+ * Tecnica igual ao site de referencia: o botao nunca tem fundo solido direto.
+ * ::before (2px maior, atras de tudo) pinta o degrade como um anel de borda;
+ * ::after (do tamanho exato, na frente do anel mas atras do texto) pinta um
+ * preenchimento por cima - por isso parece "so borda". No hover o ::after
+ * some (opacity:0), revelando o degrade inteiro por baixo.
+ * Desvio deliberado do original: texto em repouso usa a cor primaria (nao
+ * um cinza fixo), a pedido do usuario.
+ */
 .btn {
     display: inline-block;
-    padding: 0.5rem 1.1rem;
+    position: relative;
+    z-index: 1;
+    padding: 0.65rem 1.5rem;
     border-radius: 999px;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    outline: 0 none;
     text-decoration: none;
     font-weight: 600;
     font-size: 0.9rem;
-    border: 2px solid transparent;
+    line-height: 1;
+    cursor: pointer;
+    text-align: center;
+    background: transparent;
+    color: var(--cor-primaria-fim);
+    transition: color 0.2s ease;
 }
 
-.btn-primary {
-    background: linear-gradient(45deg, var(--cor-roxo-inicio) 15%, var(--cor-roxo-fim) 65%);
+.btn::before,
+.btn::after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    transition: opacity 0.3s ease;
+}
+
+.btn::before {
+    top: -2px;
+    left: -2px;
+    height: calc(100% + 4px);
+    width: calc(100% + 4px);
+    z-index: -2;
+    background: linear-gradient(45deg, var(--cor-primaria-inicio) 15%, var(--cor-primaria-fim) 65%);
+}
+
+.btn::after {
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+    background: var(--cor-branco);
+}
+
+.btn:hover,
+.btn:focus {
     color: var(--cor-branco);
 }
 
-.btn-outline {
-    border-color: var(--cor-roxo-fim);
-    color: var(--cor-roxo-fim);
+.btn:hover::after,
+.btn:focus::after {
+    opacity: 0;
+}
+
+/* Variante para uso sobre fundo escuro (ex. hero): borda branca real
+   (nao pseudo-elemento), preenchimento em degrade revelado no hover. */
+.btn-bordered-white {
+    border: 2px solid var(--cor-branco);
+    box-sizing: border-box;
+    color: var(--cor-branco);
+}
+
+.btn-bordered-white::before {
+    display: none;
+}
+
+.btn-bordered-white::after {
+    top: -2px;
+    left: -2px;
+    height: calc(100% + 4px);
+    width: calc(100% + 4px);
+    background: linear-gradient(45deg, var(--cor-primaria-inicio) 15%, var(--cor-primaria-fim) 65%);
+    opacity: 0;
+}
+
+.btn-bordered-white:hover,
+.btn-bordered-white:focus {
+    border-color: transparent;
+    color: var(--cor-branco);
+}
+
+.btn-bordered-white:hover::after,
+.btn-bordered-white:focus::after {
+    opacity: 1;
 }
 
 .btn-large {
-    padding: 0.75rem 1.75rem;
+    padding: 0.85rem 2rem;
     font-size: 1.05rem;
 }
 
 /* Hero */
 .hero {
-    background: linear-gradient(135deg, var(--cor-fundo-escuro-inicio) 0%, var(--cor-fundo-escuro-fim) 100%);
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--cor-primaria-inicio) 0%, var(--cor-primaria-fim) 100%);
+    background-size: cover;
+    background-position: center;
     color: var(--cor-branco);
     text-align: center;
-    padding: 3rem 1.25rem;
+    padding: 3.5rem 1.25rem;
+}
+
+.hero-shape {
+    position: absolute;
+    width: 140%;
+    height: 220%;
+    left: -20%;
+    top: -60%;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 45%;
+    transform: rotate(-8deg);
+    pointer-events: none;
+}
+
+.hero-conteudo {
+    position: relative;
+    max-width: 700px;
+    margin: 0 auto;
 }
 
 .hero-title {
-    font-size: 1.75rem;
+    font-size: 1.85rem;
     margin: 0 0 0.5rem;
 }
 
 .hero-subtitle {
     font-size: 1.05rem;
-    color: #e5d9ff;
+    color: rgba(255, 255, 255, 0.9);
     margin: 0 0 1.5rem;
 }
 
 /* Secoes */
 .site-section {
-    padding: 2.5rem 1.25rem;
+    padding: 2.75rem 1.25rem;
     max-width: 900px;
     margin: 0 auto;
 }
@@ -139,10 +243,24 @@
     padding: 0 1.25rem;
 }
 
+.site-section-com-imagem {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: center;
+}
+
+.section-imagem {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
 .section-title {
     font-size: 1.4rem;
     margin: 0 0 1rem;
-    color: var(--cor-fundo-escuro-fim);
+    color: var(--cor-primaria-fim);
 }
 
 .section-text {
@@ -161,8 +279,11 @@
 }
 
 .timeline-item {
-    border-left: 4px solid var(--cor-laranja-inicio);
-    padding: 0.5rem 0 0.5rem 1rem;
+    background: var(--cor-branco);
+    border-left: 4px solid var(--cor-primaria-inicio);
+    border-radius: 0 8px 8px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    padding: 0.75rem 1rem;
 }
 
 .timeline-trilha {
@@ -170,7 +291,8 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--cor-azul);
+    color: var(--cor-primaria-fim);
+    font-weight: 600;
 }
 
 .timeline-nome {
@@ -204,12 +326,13 @@
     background: var(--cor-branco);
     border: 1px solid var(--cor-borda);
     border-radius: 8px;
-    padding: 1rem;
+    padding: 1.1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .tema-nome {
     margin: 0 0 0.5rem;
-    color: var(--cor-roxo-fim);
+    color: var(--cor-primaria-fim);
 }
 
 .tema-descricao {
@@ -220,7 +343,7 @@
 
 /* Rodape */
 .site-footer {
-    background: var(--cor-fundo-escuro-inicio);
+    background: var(--cor-escura);
     color: var(--cor-branco);
     padding: 2.5rem 1.25rem;
     text-align: center;
@@ -231,7 +354,7 @@
 }
 
 .site-footer a {
-    color: #d9c9ff;
+    color: var(--cor-primaria-fim);
 }
 
 .site-footer-links {
@@ -267,15 +390,6 @@
     border-radius: 4px;
 }
 
-.site-form-page button[type="submit"] {
-    background: linear-gradient(45deg, var(--cor-roxo-inicio) 15%, var(--cor-roxo-fim) 65%);
-    color: var(--cor-branco);
-    border: none;
-    padding: 0.75rem 1.75rem;
-    border-radius: 999px;
-    font-weight: 600;
-    cursor: pointer;
-}
 
 /* Desktop */
 @media (min-width: 768px) {
@@ -295,10 +409,401 @@
     .temas-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .site-section-com-imagem {
+        flex-direction: row;
+        text-align: left;
+    }
+
+    .site-section-com-imagem > div {
+        flex: 1;
+    }
 }
 
 @media (min-width: 1024px) {
     .temas-grid {
         grid-template-columns: repeat(3, 1fr);
     }
+}
+
+/* ===================== Painel administrativo ===================== */
+/* Desktop-first de proposito (requisito nao-funcional): nao precisa ser
+   responsivo para celular, mas precisa ter identidade visual - por isso
+   os estilos abaixo miram diretamente nas tags semanticas ja usadas em
+   todas as views de app/Views/admin/**, sem precisar de classe por view. */
+
+body.admin-page {
+    font-family: var(--fonte-corpo);
+    color: var(--cor-texto);
+    background: var(--cor-fundo-alt);
+    margin: 0;
+    padding: 0 0 2.5rem;
+}
+
+body.admin-page .admin-topbar {
+    background: var(--cor-branco);
+    border-bottom: 1px solid var(--cor-borda);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+body.admin-page .admin-topbar img {
+    height: 36px;
+}
+
+body.admin-page .admin-topbar a {
+    color: var(--cor-texto);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+body.admin-page .admin-tabs {
+    background: var(--cor-branco);
+    border-bottom: 3px solid var(--cor-primaria-inicio);
+    padding: 0 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+}
+
+body.admin-page .admin-tab {
+    display: inline-block;
+    padding: 0.85rem 1rem;
+    color: var(--cor-texto-suave);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -3px;
+}
+
+body.admin-page .admin-tab:hover {
+    color: var(--cor-primaria-fim);
+}
+
+body.admin-page .admin-tab.active {
+    color: var(--cor-primaria-fim);
+    border-bottom-color: var(--cor-primaria-fim);
+}
+
+body.admin-page > h1,
+body.admin-page > p,
+body.admin-page > form,
+body.admin-page > table,
+body.admin-page > fieldset {
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    box-sizing: border-box;
+}
+
+body.admin-page h1 {
+    font-family: var(--fonte-titulo);
+    font-size: 1.6rem;
+    color: var(--cor-escura);
+    margin: 0.5rem auto 1rem;
+}
+
+body.admin-page a {
+    color: var(--cor-primaria-fim);
+}
+
+body.admin-page table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--cor-branco);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1.5rem;
+}
+
+body.admin-page table th,
+body.admin-page table td {
+    text-align: left;
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--cor-borda);
+    font-size: 0.9rem;
+}
+
+body.admin-page table th {
+    background: var(--cor-escura);
+    color: var(--cor-branco);
+    font-weight: 600;
+}
+
+body.admin-page table tr:nth-child(even) td {
+    background: var(--cor-fundo-alt);
+}
+
+body.admin-page fieldset {
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+body.admin-page legend {
+    font-family: var(--fonte-titulo);
+    font-weight: 600;
+    color: var(--cor-primaria-fim);
+    padding: 0 0.5rem;
+}
+
+body.admin-page label {
+    display: block;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+body.admin-page input[type="text"],
+body.admin-page input[type="email"],
+body.admin-page input[type="date"],
+body.admin-page input[type="number"],
+body.admin-page select,
+body.admin-page textarea {
+    display: block;
+    margin-top: 0.35rem;
+    padding: 0.5rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+/* Mesma tecnica de .btn/.btn-bordered (anel em degrade + preenchimento
+   branco revelado no hover) via seletor de tag, ja que as views admin nao
+   usam classe no botao. */
+body.admin-page button,
+body.admin-page input[type="submit"] {
+    position: relative;
+    z-index: 1;
+    padding: 0.55rem 1.4rem;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    border-radius: 999px;
+    outline: 0 none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background: transparent;
+    color: var(--cor-primaria-fim);
+    transition: color 0.2s ease;
+}
+
+body.admin-page button::before,
+body.admin-page button::after,
+body.admin-page input[type="submit"]::before,
+body.admin-page input[type="submit"]::after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    transition: opacity 0.3s ease;
+}
+
+body.admin-page button::before,
+body.admin-page input[type="submit"]::before {
+    top: -2px;
+    left: -2px;
+    height: calc(100% + 4px);
+    width: calc(100% + 4px);
+    z-index: -2;
+    background: linear-gradient(45deg, var(--cor-primaria-inicio) 15%, var(--cor-primaria-fim) 65%);
+}
+
+body.admin-page button::after,
+body.admin-page input[type="submit"]::after {
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+    background: var(--cor-branco);
+}
+
+body.admin-page button:hover,
+body.admin-page button:focus,
+body.admin-page input[type="submit"]:hover,
+body.admin-page input[type="submit"]:focus {
+    color: var(--cor-branco);
+}
+
+body.admin-page button:hover::after,
+body.admin-page button:focus::after,
+body.admin-page input[type="submit"]:hover::after,
+body.admin-page input[type="submit"]:focus::after {
+    opacity: 0;
+}
+
+/* Painel (dashboard inicial) */
+.admin-dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin: 0 auto 1.5rem;
+    max-width: 1000px;
+    padding: 0 1.5rem;
+    box-sizing: border-box;
+}
+
+.admin-stat-card {
+    background: var(--cor-branco);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    padding: 1.25rem 1.5rem;
+    border-left: 4px solid var(--cor-primaria-inicio);
+}
+
+.admin-stat-numero {
+    display: block;
+    font-family: var(--fonte-titulo);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--cor-escura);
+}
+
+.admin-stat-rotulo {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+    margin-top: 0.25rem;
+}
+
+/* ===================== Tela de login (convidado) ===================== */
+
+body.guest-page {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem 1rem;
+    background: var(--cor-fundo-alt);
+    font-family: var(--fonte-corpo);
+    box-sizing: border-box;
+}
+
+.guest-card {
+    width: 100%;
+    max-width: 380px;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-borda);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+.guest-logo {
+    display: block;
+    height: 48px;
+    margin: 0 auto 1.5rem;
+}
+
+.guest-titulo {
+    font-family: var(--fonte-titulo);
+    font-size: 1.3rem;
+    text-align: center;
+    margin: 0 0 0.35rem;
+    color: var(--cor-escura);
+}
+
+.guest-subtitulo {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+    margin: 0 0 1.5rem;
+}
+
+.guest-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.7rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    background: var(--cor-branco);
+    color: var(--cor-texto);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    margin-bottom: 1.25rem;
+}
+
+.guest-google:hover {
+    background: var(--cor-fundo-alt);
+}
+
+.guest-divisor {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.75rem;
+    color: var(--cor-texto-suave);
+}
+
+.guest-divisor::before,
+.guest-divisor::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--cor-borda);
+}
+
+.guest-card label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.guest-card input[type="text"],
+.guest-card input[type="email"],
+.guest-card input[type="password"] {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 0.4rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.guest-card button[type="submit"] {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 0.25rem;
+}
+
+.guest-cadastro {
+    text-align: center;
+    font-size: 0.85rem;
+    margin-top: 1.25rem;
+    color: var(--cor-texto-suave);
+}
+
+.guest-voltar {
+    color: var(--cor-texto-suave);
+    text-decoration: none;
+    font-size: 0.8rem;
+}
+
+.guest-voltar:hover {
+    color: var(--cor-primaria-fim);
+}
+
+.guest-copyright {
+    color: #999;
+    font-size: 0.75rem;
 }

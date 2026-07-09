@@ -11,9 +11,11 @@ use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\ConcursoRepository;
 use App\Repositories\ConteudoSiteRepository;
+use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\TemaDesafioRepository;
 use App\Repositories\TrilhaRepository;
+use App\Repositories\UsuarioRepository;
 
 class HomeController extends Controller
 {
@@ -62,7 +64,19 @@ class HomeController extends Controller
     public function administrativo()
     {
         RoleMiddleware::exigir(['administrador']);
-        $this->renderizar('home/administrativo', [], 'Painel');
+
+        $concursosAtivos = array_filter(
+            (new ConcursoRepository())->listar(),
+            function ($concurso) {
+                return $concurso['status'] === 'ativo';
+            }
+        );
+
+        $this->renderizar('home/administrativo', [
+            'totalEquipes' => count((new EquipeRepository())->listarComContagemParticipantes()),
+            'totalCadastrosPendentes' => count((new UsuarioRepository())->listarPendentes()),
+            'totalConcursosAtivos' => count($concursosAtivos),
+        ], 'Painel');
     }
 
     /**

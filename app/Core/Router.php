@@ -20,6 +20,7 @@ use App\Controllers\HomeController;
 use App\Controllers\RegraDesempateAdminController;
 use App\Controllers\RevisaoImportacaoController;
 use App\Controllers\SubmissaoController;
+use App\Controllers\TemaAdminController;
 use App\Controllers\TemaDesafioAdminController;
 use App\Controllers\TrilhaAdminController;
 use App\Controllers\UsuarioAdminController;
@@ -40,6 +41,7 @@ class Router
         'submissao' => SubmissaoController::class,
         'revisao' => RevisaoImportacaoController::class,
         'conteudo' => ConteudoAdminController::class,
+        'tema' => TemaAdminController::class,
         'criterios' => CriterioAvaliacaoAdminController::class,
         'formulas' => FormulaPontuacaoAdminController::class,
         'desempate' => RegraDesempateAdminController::class,

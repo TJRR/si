@@ -39,6 +39,29 @@ class RevisaoImportacaoController extends Controller
         ], 'Conferencia de inscricoes importadas');
     }
 
+    public function equipes()
+    {
+        $this->renderizar('admin/revisao/equipes', [
+            'equipes' => $this->equipes->listarComContagemParticipantes(),
+        ], 'Equipes importadas');
+    }
+
+    public function equipe($id)
+    {
+        $equipe = $this->equipes->buscarPorId((int) $id);
+
+        if ($equipe === null) {
+            $_SESSION['flash'] = 'Equipe nao encontrada.';
+            $this->redirecionar('revisao/equipes');
+            return;
+        }
+
+        $this->renderizar('admin/revisao/equipe', [
+            'equipe' => $equipe,
+            'participantes' => $this->equipes->listarParticipantes($equipe['id']),
+        ], 'Equipe: ' . $equipe['nome_equipe']);
+    }
+
     public function corrigirCpf()
     {
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
