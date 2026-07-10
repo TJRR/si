@@ -30,7 +30,7 @@ class RegraDesempateAdminController extends Controller
 
         if ($trilha === null) {
             http_response_code(404);
-            exit('Trilha nao encontrada.');
+            exit('Trilha não encontrada.');
         }
 
         $this->renderizar('admin/desempate/index', [
@@ -45,7 +45,7 @@ class RegraDesempateAdminController extends Controller
 
         if ($trilha === null) {
             http_response_code(404);
-            exit('Trilha nao encontrada.');
+            exit('Trilha não encontrada.');
         }
 
         $criteriosDisponiveis = $this->regras->listarCriteriosDisponiveisPorTrilha($trilhaId);
@@ -64,7 +64,7 @@ class RegraDesempateAdminController extends Controller
             }
 
             if (!$criterioValido) {
-                $erro = 'Selecione um criterio valido desta trilha.';
+                $erro = 'Selecione um critério válido desta trilha.';
             } else {
                 $this->regras->criar($trilhaId, $criterioAvaliacaoId, $direcao === 'asc' ? 'asc' : 'desc');
                 $this->redirecionar('desempate/index/' . $trilhaId);
@@ -76,7 +76,7 @@ class RegraDesempateAdminController extends Controller
             'erro' => $erro,
             'trilha' => $trilha,
             'criteriosDisponiveis' => $criteriosDisponiveis,
-        ], 'Novo criterio de desempate');
+        ], 'Novo critério de desempate');
     }
 
     public function mover()

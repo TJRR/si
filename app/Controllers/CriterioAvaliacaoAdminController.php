@@ -30,7 +30,7 @@ class CriterioAvaliacaoAdminController extends Controller
 
         if ($etapa === null) {
             http_response_code(404);
-            exit('Etapa nao encontrada.');
+            exit('Etapa não encontrada.');
         }
 
         $lista = $this->criterios->listarPorEtapa($etapaId);
@@ -38,7 +38,7 @@ class CriterioAvaliacaoAdminController extends Controller
             'etapa' => $etapa,
             'criterios' => $lista,
             'somaPesos' => $this->criterios->somaPesosPorEtapa($etapaId),
-        ], 'Criterios de ' . $etapa['nome']);
+        ], 'Critérios de ' . $etapa['nome']);
     }
 
     public function novo($etapaId)
@@ -47,7 +47,7 @@ class CriterioAvaliacaoAdminController extends Controller
 
         if ($etapa === null) {
             http_response_code(404);
-            exit('Etapa nao encontrada.');
+            exit('Etapa não encontrada.');
         }
 
         $erro = null;
@@ -56,11 +56,11 @@ class CriterioAvaliacaoAdminController extends Controller
             $dados = $this->lerDadosFormulario();
 
             if ($dados['nome'] === '') {
-                $erro = 'Informe o nome do criterio.';
+                $erro = 'Informe o nome do critério.';
             } elseif ($dados['codigo'] === '') {
-                $erro = 'Informe o codigo do criterio.';
+                $erro = 'Informe o código do critério.';
             } elseif ($this->criterios->codigoJaExisteNaEtapa($etapaId, $dados['codigo'])) {
-                $erro = 'Ja existe um criterio com este codigo nesta etapa.';
+                $erro = 'Já existe um critério com este código nesta etapa.';
             } else {
                 $this->criterios->criar(
                     $etapaId,
@@ -83,7 +83,7 @@ class CriterioAvaliacaoAdminController extends Controller
             'etapa' => $etapa,
             'criterio' => null,
             'codigoSugerido' => $codigoSugerido,
-        ], 'Novo criterio');
+        ], 'Novo critério');
     }
 
     public function editar($id)
@@ -92,7 +92,7 @@ class CriterioAvaliacaoAdminController extends Controller
 
         if ($criterio === null) {
             http_response_code(404);
-            exit('Criterio nao encontrado.');
+            exit('Critério não encontrado.');
         }
 
         $etapa = $this->etapas->buscarPorId($criterio['etapa_id']);
@@ -102,11 +102,11 @@ class CriterioAvaliacaoAdminController extends Controller
             $dados = $this->lerDadosFormulario();
 
             if ($dados['nome'] === '') {
-                $erro = 'Informe o nome do criterio.';
+                $erro = 'Informe o nome do critério.';
             } elseif ($dados['codigo'] === '') {
-                $erro = 'Informe o codigo do criterio.';
+                $erro = 'Informe o código do critério.';
             } elseif ($this->criterios->codigoJaExisteNaEtapa($criterio['etapa_id'], $dados['codigo'], $id)) {
-                $erro = 'Ja existe um criterio com este codigo nesta etapa.';
+                $erro = 'Já existe um critério com este código nesta etapa.';
             } else {
                 $this->criterios->atualizar(
                     $id,
@@ -125,7 +125,7 @@ class CriterioAvaliacaoAdminController extends Controller
             'erro' => $erro,
             'etapa' => $etapa,
             'criterio' => $criterio,
-        ], 'Editar criterio');
+        ], 'Editar critério');
     }
 
     public function mover()

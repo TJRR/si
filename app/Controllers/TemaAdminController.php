@@ -24,10 +24,11 @@ class TemaAdminController extends Controller
     public function index()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (!empty($_POST['cor_primaria_inicio']) && !empty($_POST['cor_primaria_fim'])) {
+            if (!empty($_POST['cor_primaria_inicio']) && !empty($_POST['cor_primaria_fim']) && !empty($_POST['cor_secundaria'])) {
                 $this->configuracaoVisual->atualizar(
                     trim($_POST['cor_primaria_inicio']),
-                    trim($_POST['cor_primaria_fim'])
+                    trim($_POST['cor_primaria_fim']),
+                    trim($_POST['cor_secundaria'])
                 );
             }
 

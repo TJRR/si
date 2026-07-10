@@ -182,6 +182,17 @@
     font-size: 1.05rem;
 }
 
+/* Botao secundario: mesma tecnica do .btn, mas usa --cor-secundaria (solida,
+   sem degrade) em vez da cor primaria - para acoes secundarias (Reabrir,
+   Cancelar) se distinguirem visualmente das acoes primarias. */
+.btn-secundario {
+    color: var(--cor-secundaria);
+}
+
+.btn-secundario::before {
+    background: var(--cor-secundaria);
+}
+
 /* Hero */
 .hero {
     position: relative;
@@ -637,6 +648,18 @@ body.admin-page button:focus::after,
 body.admin-page input[type="submit"]:hover::after,
 body.admin-page input[type="submit"]:focus::after {
     opacity: 0;
+}
+
+/* Botao secundario no painel: mesma tecnica, cor solida (--cor-secundaria)
+   em vez do degrade primario, para acoes secundarias (Reabrir, Cancelar). */
+body.admin-page button.btn-secundario,
+body.admin-page input.btn-secundario {
+    color: var(--cor-secundaria);
+}
+
+body.admin-page button.btn-secundario::before,
+body.admin-page input.btn-secundario::before {
+    background: var(--cor-secundaria);
 }
 
 /* Painel (dashboard inicial) */

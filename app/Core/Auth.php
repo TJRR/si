@@ -48,6 +48,23 @@ class Auth
         return false;
     }
 
+    /**
+     * Verifica se o usuario possui o perfil em QUALQUER concurso (ou globalmente),
+     * sem exigir um concurso especifico. Usada para decisoes de navegacao (ex.: para
+     * onde mandar o usuario apos o login) — a autorizacao fina por concurso continua
+     * sendo feita por temPerfil() dentro de cada tela.
+     */
+    public static function possuiPerfil($perfil)
+    {
+        foreach (self::perfis() as $vinculo) {
+            if ($vinculo['perfil'] === $perfil) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static function login(array $usuario, array $perfis)
     {
         session_regenerate_id(true);

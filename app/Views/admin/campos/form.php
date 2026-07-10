@@ -19,7 +19,7 @@ $tipoAtual = $campo !== null ? $campo['tipo'] : 'texto';
 ?>
 
 <form method="post" action="<?php echo $campo === null ? url('campos/novo/' . (int) $formulario['id']) : url('campos/editar/' . (int) $campo['id']); ?>">
-    <label>Rotulo:
+    <label>Rótulo:
         <input type="text" name="rotulo" required value="<?php echo htmlspecialchars($campo !== null ? $campo['rotulo'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>
 
@@ -35,14 +35,14 @@ $tipoAtual = $campo !== null ? $campo['tipo'] : 'texto';
 
     <label>
         <input type="checkbox" name="obrigatorio" value="1" <?php echo ($campo !== null && $campo['obrigatorio']) ? 'checked' : ''; ?>>
-        Obrigatorio
+        Obrigatório
     </label><br>
 
     <div id="config-grupo-participantes" style="display:none;">
-        <label>Minimo de participantes:
+        <label>Mínimo de participantes:
             <input type="number" name="minimo_repeticoes" min="1" value="<?php echo isset($configAtual['minimo_repeticoes']) ? (int) $configAtual['minimo_repeticoes'] : 1; ?>">
         </label><br>
-        <label>Maximo de participantes:
+        <label>Máximo de participantes:
             <input type="number" name="maximo_repeticoes" min="1" value="<?php echo isset($configAtual['maximo_repeticoes']) ? (int) $configAtual['maximo_repeticoes'] : 10; ?>">
         </label><br>
     </div>

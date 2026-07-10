@@ -3,11 +3,22 @@
     exit('Acesso negado');
 } ?>
 
-<div class="site-form-page">
+<div class="site-page">
+    <header class="site-header">
+        <div class="site-header-inner">
+            <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR" class="site-logo">
+            <nav class="site-nav">
+                <a href="<?php echo url('home/index'); ?>">Voltar ao início</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="site-form-page">
 <?php if ($erroGeral !== null && $preparo === null): ?>
-    <h1>Formulario indisponivel</h1>
+    <h1>Formulário indisponível</h1>
     <p style="color:red;"><?php echo htmlspecialchars($erroGeral, ENT_QUOTES, 'UTF-8'); ?></p>
     </div>
+</div>
     <?php return; ?>
 <?php endif; ?>
 
@@ -63,7 +74,7 @@
 
                 <?php elseif ($campo['tipo'] === 'upload_pdf'): ?>
                     <input type="file" name="campos[<?php echo $campoId; ?>]" accept="application/pdf" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
-                    <br><small>PDF, ate 15MB.</small>
+                    <br><small>PDF, até 15MB.</small>
 
                 <?php elseif ($campo['tipo'] === 'grupo_participantes'): ?>
                     <?php
@@ -97,4 +108,5 @@
 </template>
 
 <script src="<?php echo config('base_path'); ?>/assets/js/formulario-publico.js"></script>
+    </div>
 </div>

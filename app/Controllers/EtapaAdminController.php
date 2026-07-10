@@ -9,6 +9,7 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
+use App\Repositories\CriterioAvaliacaoRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\FormularioDinamicoRepository;
 use App\Repositories\TrilhaRepository;
@@ -18,6 +19,7 @@ class EtapaAdminController extends Controller
     private $etapas;
     private $trilhas;
     private $formularios;
+    private $criterios;
 
     public function __construct()
     {
@@ -25,6 +27,7 @@ class EtapaAdminController extends Controller
         $this->etapas = new EtapaRepository();
         $this->trilhas = new TrilhaRepository();
         $this->formularios = new FormularioDinamicoRepository();
+        $this->criterios = new CriterioAvaliacaoRepository();
     }
 
     public function index($trilhaId)
@@ -33,7 +36,7 @@ class EtapaAdminController extends Controller
 
         if ($trilha === null) {
             http_response_code(404);
-            exit('Trilha nao encontrada.');
+            exit('Trilha não encontrada.');
         }
 
         $lista = $this->etapas->listarPorTrilha($trilhaId);
@@ -49,7 +52,7 @@ class EtapaAdminController extends Controller
 
         if ($trilha === null) {
             http_response_code(404);
-            exit('Trilha nao encontrada.');
+            exit('Trilha não encontrada.');
         }
 
         $erro = null;
@@ -69,7 +72,8 @@ class EtapaAdminController extends Controller
                     $dados['data_fim'],
                     $dados['formulario_dinamico_id'],
                     $dados['regra_transicao_tipo'],
-                    $dados['regra_transicao_valor']
+                    $dados['regra_transicao_valor'],
+                    $dados['config_avaliacao']
                 );
                 $this->redirecionar('etapas/index/' . $trilhaId);
                 return;
@@ -81,6 +85,7 @@ class EtapaAdminController extends Controller
             'trilha' => $trilha,
             'etapa' => null,
             'formularios' => $this->formularios->listar(),
+            'temCriterios' => false,
         ], 'Nova etapa');
     }
 
@@ -90,7 +95,7 @@ class EtapaAdminController extends Controller
 
         if ($etapa === null) {
             http_response_code(404);
-            exit('Etapa nao encontrada.');
+            exit('Etapa não encontrada.');
         }
 
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
@@ -111,7 +116,8 @@ class EtapaAdminController extends Controller
                     $dados['data_fim'],
                     $dados['formulario_dinamico_id'],
                     $dados['regra_transicao_tipo'],
-                    $dados['regra_transicao_valor']
+                    $dados['regra_transicao_valor'],
+                    $dados['config_avaliacao']
                 );
                 $etapa = $this->etapas->buscarPorId($id);
             }
@@ -122,6 +128,7 @@ class EtapaAdminController extends Controller
             'trilha' => $trilha,
             'etapa' => $etapa,
             'formularios' => $this->formularios->listar(),
+            'temCriterios' => $this->criterios->contarPorEtapa($id) > 0,
         ], 'Editar etapa');
     }
 
@@ -136,6 +143,13 @@ class EtapaAdminController extends Controller
             'formulario_dinamico_id' => isset($_POST['formulario_dinamico_id']) ? $_POST['formulario_dinamico_id'] : '',
             'regra_transicao_tipo' => isset($_POST['regra_transicao_tipo']) ? $_POST['regra_transicao_tipo'] : '',
             'regra_transicao_valor' => isset($_POST['regra_transicao_valor']) ? str_replace(',', '.', $_POST['regra_transicao_valor']) : '',
+            'config_avaliacao' => [
+                'modo_designacao' => isset($_POST['modo_designacao']) ? $_POST['modo_designacao'] : '',
+                'qtd_avaliadores_por_submissao' => isset($_POST['qtd_avaliadores_por_submissao']) ? $_POST['qtd_avaliadores_por_submissao'] : 1,
+                'modo_consolidacao' => isset($_POST['modo_consolidacao']) ? $_POST['modo_consolidacao'] : 'unico',
+                'modo_sigilo' => isset($_POST['modo_sigilo']) ? $_POST['modo_sigilo'] : 'aberto',
+                'modo_avanco' => isset($_POST['modo_avanco']) ? $_POST['modo_avanco'] : 'manual',
+            ],
         ];
     }
 }

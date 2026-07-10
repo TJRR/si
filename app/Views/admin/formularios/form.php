@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1><?php echo $formulario === null ? 'Novo formulario' : 'Editar formulario'; ?></h1>
+<h1><?php echo $formulario === null ? 'Novo formulário' : 'Editar formulário'; ?></h1>
 
 <p><a href="<?php echo url('formularios/index'); ?>">Voltar</a></p>
 
@@ -15,7 +15,7 @@
         <input type="text" name="nome" required value="<?php echo htmlspecialchars($formulario !== null ? $formulario['nome'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>
 
-    <label>Descricao:<br>
+    <label>Descrição:<br>
         <textarea name="descricao" rows="4" cols="50"><?php echo htmlspecialchars($formulario !== null ? (string) $formulario['descricao'] : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
     </label><br>
 
@@ -23,5 +23,5 @@
 </form>
 
 <?php if ($formulario !== null): ?>
-    <p><a href="<?php echo url('campos/index/' . (int) $formulario['id']); ?>">Gerenciar campos deste formulario</a></p>
+    <p><a href="<?php echo url('campos/index/' . (int) $formulario['id']); ?>">Gerenciar campos deste formulário</a></p>
 <?php endif; ?>

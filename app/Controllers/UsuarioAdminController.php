@@ -46,7 +46,7 @@ class UsuarioAdminController extends Controller
         $perfil = $this->perfis->buscarPorChave($perfilChave);
 
         if ($perfil === null) {
-            $_SESSION['flash'] = 'Selecione um perfil valido antes de aprovar.';
+            $_SESSION['flash'] = 'Selecione um perfil válido antes de aprovar.';
             $this->redirecionar('usuarios/index');
             return;
         }

@@ -57,4 +57,18 @@ class ParticipanteRepository
         $stmt = $pdo->prepare('UPDATE participantes SET cpf = :cpf WHERE id = :id');
         $stmt->execute(['cpf' => $cpf, 'id' => $id]);
     }
+
+    public function atualizarDados($id, $nome, $telefone, $cpf)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'UPDATE participantes SET nome = :nome, telefone = :telefone, cpf = :cpf WHERE id = :id'
+        );
+        $stmt->execute([
+            'nome' => $nome,
+            'telefone' => $telefone !== '' ? $telefone : null,
+            'cpf' => $cpf !== '' ? $cpf : null,
+            'id' => $id,
+        ]);
+    }
 }

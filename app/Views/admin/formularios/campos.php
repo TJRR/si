@@ -4,14 +4,14 @@
 } ?>
 <h1>Campos de <?php echo htmlspecialchars($formulario['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('formularios/index'); ?>">Voltar aos formularios</a></p>
+<p><a href="<?php echo url('formularios/index'); ?>">Voltar aos formulários</a></p>
 
-<p>Status do formulario: <strong><?php echo htmlspecialchars($formulario['status'], ENT_QUOTES, 'UTF-8'); ?></strong></p>
+<p>Status do formulário: <strong><?php echo htmlspecialchars($formulario['status'], ENT_QUOTES, 'UTF-8'); ?></strong></p>
 
 <?php $editavel = $formulario['status'] === 'rascunho'; ?>
 
 <?php if (!$editavel): ?>
-    <p style="color:#b06000;">Este formulario ja foi publicado. Para alterar os campos, duplique-o (tela de Formularios) e edite a nova versao.</p>
+    <p style="color:#b06000;">Este formulário já foi publicado. Para alterar os campos, duplique-o (tela de Formulários) e edite a nova versão.</p>
 <?php else: ?>
     <p><a href="<?php echo url('campos/novo/' . (int) $formulario['id']); ?>">+ Novo campo</a></p>
 <?php endif; ?>
@@ -20,13 +20,13 @@
     <p>Nenhum campo cadastrado.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th>Ordem</th><th>Rotulo</th><th>Tipo</th><th>Obrigatorio</th><th>Acoes</th></tr>
+        <tr><th>Ordem</th><th>Rótulo</th><th>Tipo</th><th>Obrigatório</th><th>Ações</th></tr>
         <?php foreach ($campos as $campo): ?>
         <tr>
             <td><?php echo (int) $campo['ordem']; ?></td>
             <td><?php echo htmlspecialchars($campo['rotulo'], ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars($campo['tipo'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo $campo['obrigatorio'] ? 'Sim' : 'Nao'; ?></td>
+            <td><?php echo $campo['obrigatorio'] ? 'Sim' : 'Não'; ?></td>
             <td>
                 <?php if ($editavel): ?>
                     <a href="<?php echo url('campos/editar/' . (int) $campo['id']); ?>">Editar</a>

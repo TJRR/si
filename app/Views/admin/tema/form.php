@@ -13,16 +13,23 @@
         <legend>Cores</legend>
         <p>
             <label>
-                Cor primaria (inicio do degrade)<br>
+                Cor primária (início do degradê)<br>
                 <input type="color" name="cor_primaria_inicio"
                        value="<?php echo htmlspecialchars($configuracaoVisual['cor_primaria_inicio'], ENT_QUOTES, 'UTF-8'); ?>">
             </label>
         </p>
         <p>
             <label>
-                Cor primaria (fim do degrade)<br>
+                Cor primária (fim do degradê)<br>
                 <input type="color" name="cor_primaria_fim"
                        value="<?php echo htmlspecialchars($configuracaoVisual['cor_primaria_fim'], ENT_QUOTES, 'UTF-8'); ?>">
+            </label>
+        </p>
+        <p>
+            <label>
+                Cor secundária (ações secundárias — ex. "Reabrir"/"Voltar")<br>
+                <input type="color" name="cor_secundaria"
+                       value="<?php echo htmlspecialchars($configuracaoVisual['cor_secundaria'], ENT_QUOTES, 'UTF-8'); ?>">
             </label>
         </p>
     </fieldset>

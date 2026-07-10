@@ -37,7 +37,17 @@ $premiacaoImagem = !empty($conteudo['premiacao_imagem']) ? config('base_path') .
         <div class="hero-conteudo">
             <h1 class="hero-title"><?php echo htmlspecialchars($heroTitulo, ENT_QUOTES, 'UTF-8'); ?></h1>
             <p class="hero-subtitle"><?php echo htmlspecialchars($heroSubtitulo, ENT_QUOTES, 'UTF-8'); ?></p>
-            <a href="<?php echo url('cadastro/index'); ?>" class="btn btn-bordered-white btn-large">Inscreva-se</a>
+            <?php if (empty($trilhasComInscricaoAberta)): ?>
+                <p class="hero-subtitle">Inscrições encerradas no momento.</p>
+            <?php elseif (count($trilhasComInscricaoAberta) === 1): ?>
+                <a href="<?php echo url('inscricao/formulario/' . (int) $trilhasComInscricaoAberta[0]['etapa_id']); ?>" class="btn btn-bordered-white btn-large">Inscreva-se</a>
+            <?php else: ?>
+                <?php foreach ($trilhasComInscricaoAberta as $item): ?>
+                    <a href="<?php echo url('inscricao/formulario/' . (int) $item['etapa_id']); ?>" class="btn btn-bordered-white btn-large">
+                        Inscreva-se — <?php echo htmlspecialchars($item['trilha_nome'], ENT_QUOTES, 'UTF-8'); ?>
+                    </a>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </section>
 

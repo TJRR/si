@@ -4,12 +4,25 @@
 } ?>
 <?php
 $ehPainelAdmin = isset($view) && (strpos($view, 'admin/') === 0 || $view === 'home/administrativo');
-$ehPaginaConvidado = isset($view) && in_array($view, ['auth/login', 'auth/cadastro'], true);
-$corPrimaria = (new \App\Repositories\ConfiguracaoVisualRepository())->buscar();
-$corPrimariaInicio = $corPrimaria !== false ? $corPrimaria['cor_primaria_inicio'] : '#FF6600';
-$corPrimariaFim = $corPrimaria !== false ? $corPrimaria['cor_primaria_fim'] : '#FF9955';
+$prefixosPainelInterno = ['admin/', 'avaliacao/', 'participante/'];
+$ehPainelInterno = $ehPainelAdmin;
+if (isset($view) && !$ehPainelInterno) {
+    foreach ($prefixosPainelInterno as $prefixo) {
+        if (strpos($view, $prefixo) === 0) {
+            $ehPainelInterno = true;
+            break;
+        }
+    }
+}
+$ehPaginaConvidado = isset($view) && in_array($view, ['auth/login', 'auth/cadastro', 'auth/definir_senha'], true);
+$corVisual = (new \App\Repositories\ConfiguracaoVisualRepository())->buscar();
+$corPrimariaInicio = $corVisual !== false ? $corVisual['cor_primaria_inicio'] : '#FF6600';
+$corPrimariaFim = $corVisual !== false ? $corVisual['cor_primaria_fim'] : '#FF9955';
+$corSecundaria = $corVisual !== false && !empty($corVisual['cor_secundaria']) ? $corVisual['cor_secundaria'] : '#191919';
 
-if ($ehPainelAdmin || $ehPaginaConvidado) {
+$ehPaginaPublicaComLogo = $ehPainelInterno || $ehPaginaConvidado || (isset($view) && strpos($view, 'publico/') === 0);
+
+if ($ehPaginaPublicaComLogo) {
     $logoConteudo = (new \App\Repositories\ConteudoSiteRepository())->buscarPorChave('logo_site');
     $logoAdminSrc = $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
         ? config('base_path') . '/assets/' . $logoConteudo['arquivo_path']
@@ -20,7 +33,6 @@ if ($ehPainelAdmin) {
     $rotaAtual = isset($_GET['r']) ? trim($_GET['r'], '/') : 'home/index';
     $partesRota = explode('/', $rotaAtual);
     $moduloAtual = $partesRota[0];
-    $acaoAtual = isset($partesRota[1]) ? $partesRota[1] : 'index';
 
     $abasAdmin = [
         ['rotulo' => 'Painel', 'url' => 'home/administrativo', 'ativo' => $moduloAtual === 'home'],
@@ -29,8 +41,6 @@ if ($ehPainelAdmin) {
         ['rotulo' => 'Concursos', 'url' => 'concursos/index', 'ativo' => in_array($moduloAtual, ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate'], true)],
         ['rotulo' => 'Formulários Dinâmicos', 'url' => 'formularios/index', 'ativo' => in_array($moduloAtual, ['formularios', 'campos'], true)],
         ['rotulo' => 'Cadastros pendentes', 'url' => 'usuarios/index', 'ativo' => $moduloAtual === 'usuarios'],
-        ['rotulo' => 'Equipes importadas', 'url' => 'revisao/equipes', 'ativo' => $moduloAtual === 'revisao' && strpos($acaoAtual, 'equipe') === 0],
-        ['rotulo' => 'Conferência de importação', 'url' => 'revisao/index', 'ativo' => $moduloAtual === 'revisao' && strpos($acaoAtual, 'equipe') !== 0],
     ];
 }
 ?>
@@ -47,15 +57,17 @@ if ($ehPainelAdmin) {
         :root {
             --cor-primaria-inicio: <?php echo htmlspecialchars($corPrimariaInicio, ENT_QUOTES, 'UTF-8'); ?>;
             --cor-primaria-fim: <?php echo htmlspecialchars($corPrimariaFim, ENT_QUOTES, 'UTF-8'); ?>;
+            --cor-secundaria: <?php echo htmlspecialchars($corSecundaria, ENT_QUOTES, 'UTF-8'); ?>;
         }
     </style>
 </head>
-<body class="<?php echo $ehPainelAdmin ? 'admin-page' : ($ehPaginaConvidado ? 'guest-page' : ''); ?>">
-<?php if ($ehPainelAdmin): ?>
+<body class="<?php echo $ehPainelInterno ? 'admin-page' : ($ehPaginaConvidado ? 'guest-page' : ''); ?>">
+<?php if ($ehPainelInterno): ?>
     <div class="admin-topbar">
         <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR">
         <a href="<?php echo url('auth/logout'); ?>">Sair</a>
     </div>
+    <?php if ($ehPainelAdmin): ?>
     <nav class="admin-tabs">
         <?php foreach ($abasAdmin as $aba): ?>
             <a class="admin-tab<?php echo $aba['ativo'] ? ' active' : ''; ?>" href="<?php echo url($aba['url']); ?>">
@@ -63,6 +75,7 @@ if ($ehPainelAdmin) {
             </a>
         <?php endforeach; ?>
     </nav>
+    <?php endif; ?>
 <?php endif; ?>
 <?php if (!empty($_SESSION['flash'])): ?>
     <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); ?></p>

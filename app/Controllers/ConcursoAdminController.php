@@ -59,7 +59,7 @@ class ConcursoAdminController extends Controller
 
         if ($concurso === null) {
             http_response_code(404);
-            exit('Concurso nao encontrado.');
+            exit('Concurso não encontrado.');
         }
 
         $erro = null;

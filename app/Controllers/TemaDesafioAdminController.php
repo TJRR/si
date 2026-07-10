@@ -30,7 +30,7 @@ class TemaDesafioAdminController extends Controller
 
         if ($trilha === null) {
             http_response_code(404);
-            exit('Trilha nao encontrada.');
+            exit('Trilha não encontrada.');
         }
 
         $lista = $this->temas->listarPorTrilha($trilhaId);
@@ -46,7 +46,7 @@ class TemaDesafioAdminController extends Controller
 
         if ($trilha === null) {
             http_response_code(404);
-            exit('Trilha nao encontrada.');
+            exit('Trilha não encontrada.');
         }
 
         $erro = null;
@@ -78,7 +78,7 @@ class TemaDesafioAdminController extends Controller
 
         if ($tema === null) {
             http_response_code(404);
-            exit('Tema/desafio nao encontrado.');
+            exit('Tema/desafio não encontrado.');
         }
 
         $trilha = $this->trilhas->buscarPorId($tema['trilha_id']);

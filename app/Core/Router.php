@@ -8,17 +8,22 @@ if (!defined('SI_BOOT')) {
 }
 
 use App\Controllers\AuthController;
+use App\Controllers\AvaliacaoController;
 use App\Controllers\CadastroController;
 use App\Controllers\CampoAdminController;
 use App\Controllers\ConcursoAdminController;
 use App\Controllers\ConteudoAdminController;
 use App\Controllers\CriterioAvaliacaoAdminController;
+use App\Controllers\DesignacaoAdminController;
 use App\Controllers\EtapaAdminController;
 use App\Controllers\FormulaPontuacaoAdminController;
 use App\Controllers\FormularioAdminController;
 use App\Controllers\HomeController;
+use App\Controllers\HomologacaoController;
+use App\Controllers\InscricaoController;
+use App\Controllers\ParticipanteController;
 use App\Controllers\RegraDesempateAdminController;
-use App\Controllers\RevisaoImportacaoController;
+use App\Controllers\ResultadoAdminController;
 use App\Controllers\SubmissaoController;
 use App\Controllers\TemaAdminController;
 use App\Controllers\TemaDesafioAdminController;
@@ -39,12 +44,17 @@ class Router
         'formularios' => FormularioAdminController::class,
         'campos' => CampoAdminController::class,
         'submissao' => SubmissaoController::class,
-        'revisao' => RevisaoImportacaoController::class,
+        'inscricao' => InscricaoController::class,
+        'homologacao' => HomologacaoController::class,
+        'participante' => ParticipanteController::class,
         'conteudo' => ConteudoAdminController::class,
         'tema' => TemaAdminController::class,
         'criterios' => CriterioAvaliacaoAdminController::class,
         'formulas' => FormulaPontuacaoAdminController::class,
         'desempate' => RegraDesempateAdminController::class,
+        'designacoes' => DesignacaoAdminController::class,
+        'avaliacao' => AvaliacaoController::class,
+        'resultados' => ResultadoAdminController::class,
     ];
 
     public function despachar($r)

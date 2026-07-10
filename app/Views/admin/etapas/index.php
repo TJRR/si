@@ -4,14 +4,14 @@
 } ?>
 <h1>Etapas de <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('trilhas/index/' . (int) $trilha['concurso_id']); ?>">Voltar as trilhas</a></p>
+<p><a href="<?php echo url('trilhas/index/' . (int) $trilha['concurso_id']); ?>">Voltar às trilhas</a></p>
 <p><a href="<?php echo url('etapas/novo/' . (int) $trilha['id']); ?>">+ Nova etapa</a></p>
 
 <?php if (empty($etapas)): ?>
     <p>Nenhuma etapa cadastrada.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th>Nome</th><th>Ordem</th><th>Periodo</th><th>Regra de transicao</th><th>Formulario vinculado</th><th>Acoes</th></tr>
+        <tr><th>Nome</th><th>Ordem</th><th>Período</th><th>Regra de transição</th><th>Formulário vinculado</th><th>Ações</th></tr>
         <?php foreach ($etapas as $etapa): ?>
         <tr>
             <td><?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></td>
@@ -25,10 +25,12 @@
             <td><?php echo $etapa['formulario_dinamico_id'] ? '#' . (int) $etapa['formulario_dinamico_id'] : '—'; ?></td>
             <td>
                 <a href="<?php echo url('etapas/editar/' . (int) $etapa['id']); ?>">Editar</a>
-                | <a href="<?php echo url('criterios/index/' . (int) $etapa['id']); ?>">Criterios</a>
-                | <a href="<?php echo url('formulas/etapa/' . (int) $etapa['id']); ?>">Formula</a>
+                | <a href="<?php echo url('criterios/index/' . (int) $etapa['id']); ?>">Critérios</a>
+                | <a href="<?php echo url('formulas/etapa/' . (int) $etapa['id']); ?>">Fórmula</a>
+                | <a href="<?php echo url('designacoes/index/' . (int) $etapa['id']); ?>">Designações</a>
+                | <a href="<?php echo url('resultados/etapa/' . (int) $etapa['id']); ?>">Resultado</a>
                 <?php if ($etapa['formulario_dinamico_id']): ?>
-                    | <a href="<?php echo url('submissao/preencher/' . (int) $etapa['id']); ?>" target="_blank">Ver formulario publico</a>
+                    | <a href="<?php echo url('submissao/preencher/' . (int) $etapa['id']); ?>" target="_blank">Ver formulário público</a>
                 <?php endif; ?>
             </td>
         </tr>

@@ -55,6 +55,27 @@ class UsuarioRepository
         $stmt->execute(['google_id' => $googleId, 'id' => $id]);
     }
 
+    public function criarAprovadoSemSenha($nome, $email)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            "INSERT INTO usuarios (nome, email, status) VALUES (:nome, :email, 'aprovado')"
+        );
+        $stmt->execute([
+            'nome' => $nome,
+            'email' => $email,
+        ]);
+
+        return (int) $pdo->lastInsertId();
+    }
+
+    public function definirSenha($id, $senhaHash)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE usuarios SET senha_hash = :senha_hash WHERE id = :id');
+        $stmt->execute(['senha_hash' => $senhaHash, 'id' => $id]);
+    }
+
     public function criarComGoogle($nome, $email, $googleId)
     {
         $pdo = Database::conexao();

@@ -28,7 +28,7 @@ class CadastroController extends Controller
                 $resultado = (new AuthService())->cadastrar($nome, $email, $senha);
 
                 if ($resultado['sucesso']) {
-                    $sucesso = 'Cadastro realizado. Aguarde a aprovacao do Administrador para acessar o sistema.';
+                    $sucesso = 'Cadastro realizado. Aguarde a aprovação do Administrador para acessar o sistema.';
                 } else {
                     $erro = $resultado['mensagem'];
                 }

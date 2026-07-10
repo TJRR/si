@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Novo criterio de desempate — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Novo critério de desempate — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('desempate/index/' . (int) $trilha['id']); ?>">Voltar</a></p>
 
@@ -11,10 +11,10 @@
 <?php endif; ?>
 
 <?php if (empty($criteriosDisponiveis)): ?>
-    <p>Nenhum criterio cadastrado nas etapas desta trilha ainda. Cadastre os criterios antes de definir o desempate.</p>
+    <p>Nenhum critério cadastrado nas etapas desta trilha ainda. Cadastre os critérios antes de definir o desempate.</p>
 <?php else: ?>
     <form method="post" action="<?php echo url('desempate/novo/' . (int) $trilha['id']); ?>">
-        <label>Criterio (etapa — nome):
+        <label>Critério (etapa — nome):
             <select name="criterio_avaliacao_id">
                 <?php foreach ($criteriosDisponiveis as $criterio): ?>
                     <option value="<?php echo (int) $criterio['id']; ?>">
@@ -24,7 +24,7 @@
             </select>
         </label><br>
 
-        <label>Direcao:
+        <label>Direção:
             <select name="direcao">
                 <option value="desc">Decrescente (maior nota vence)</option>
                 <option value="asc">Crescente (menor nota vence)</option>

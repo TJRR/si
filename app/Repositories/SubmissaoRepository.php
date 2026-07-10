@@ -27,11 +27,39 @@ class SubmissaoRepository
         return (int) $pdo->lastInsertId();
     }
 
+    public function listarPorEtapa($etapaId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT s.*, e.nome_equipe
+             FROM submissoes s
+             LEFT JOIN equipes e ON e.id = s.equipe_id
+             WHERE s.etapa_id = :etapa_id
+             ORDER BY s.id ASC'
+        );
+        $stmt->execute(['etapa_id' => $etapaId]);
+
+        return $stmt->fetchAll();
+    }
+
     public function buscarPorEquipe($equipeId)
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('SELECT * FROM submissoes WHERE equipe_id = :equipe_id LIMIT 1');
         $stmt->execute(['equipe_id' => $equipeId]);
+
+        $submissao = $stmt->fetch();
+
+        return $submissao !== false ? $submissao : null;
+    }
+
+    public function buscarPorEquipeEEtapa($equipeId, $etapaId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT * FROM submissoes WHERE equipe_id = :equipe_id AND etapa_id = :etapa_id LIMIT 1'
+        );
+        $stmt->execute(['equipe_id' => $equipeId, 'etapa_id' => $etapaId]);
 
         $submissao = $stmt->fetch();
 

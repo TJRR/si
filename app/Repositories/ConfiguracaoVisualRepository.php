@@ -18,12 +18,14 @@ class ConfiguracaoVisualRepository
         return $pdo->query('SELECT * FROM configuracoes_visuais WHERE id = 1')->fetch();
     }
 
-    public function atualizar($corPrimariaInicio, $corPrimariaFim)
+    public function atualizar($corPrimariaInicio, $corPrimariaFim, $corSecundaria)
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'UPDATE configuracoes_visuais SET cor_primaria_inicio = :inicio, cor_primaria_fim = :fim WHERE id = 1'
+            'UPDATE configuracoes_visuais
+             SET cor_primaria_inicio = :inicio, cor_primaria_fim = :fim, cor_secundaria = :secundaria
+             WHERE id = 1'
         );
-        $stmt->execute(['inicio' => $corPrimariaInicio, 'fim' => $corPrimariaFim]);
+        $stmt->execute(['inicio' => $corPrimariaInicio, 'fim' => $corPrimariaFim, 'secundaria' => $corSecundaria]);
     }
 }

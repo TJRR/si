@@ -11,7 +11,7 @@
     <p>Nenhum concurso cadastrado.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th>Nome</th><th>Status</th><th>Periodo</th><th>Acoes</th></tr>
+        <tr><th>Nome</th><th>Status</th><th>Período</th><th>Ações</th></tr>
         <?php foreach ($concursos as $concurso): ?>
         <tr>
             <td><?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></td>

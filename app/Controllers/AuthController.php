@@ -10,6 +10,8 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\GoogleOAuth;
+use App\Repositories\TokenSenhaRepository;
+use App\Repositories\UsuarioRepository;
 use App\Services\AuthService;
 
 class AuthController extends Controller
@@ -26,7 +28,7 @@ class AuthController extends Controller
 
             if ($resultado['sucesso']) {
                 Auth::login($resultado['usuario'], $resultado['perfis']);
-                $this->redirecionar('home/administrativo');
+                $this->redirecionar($this->destinoPosLogin());
                 return;
             }
 
@@ -65,14 +67,14 @@ class AuthController extends Controller
         $stateRecebido = isset($_GET['state']) ? $_GET['state'] : null;
 
         if ($stateSessao === null || $stateRecebido === null || !hash_equals($stateSessao, $stateRecebido)) {
-            $this->renderizar('auth/login', ['erro' => 'Sessao de login invalida ou expirada. Tente novamente.'], 'Entrar');
+            $this->renderizar('auth/login', ['erro' => 'Sessão de login inválida ou expirada. Tente novamente.'], 'Entrar');
             return;
         }
 
         $code = isset($_GET['code']) ? $_GET['code'] : null;
 
         if ($code === null) {
-            $this->renderizar('auth/login', ['erro' => 'Nao foi possivel completar o login com Google.'], 'Entrar');
+            $this->renderizar('auth/login', ['erro' => 'Não foi possível completar o login com Google.'], 'Entrar');
             return;
         }
 
@@ -80,10 +82,65 @@ class AuthController extends Controller
 
         if ($resultado['sucesso']) {
             Auth::login($resultado['usuario'], $resultado['perfis']);
-            $this->redirecionar('home/administrativo');
+            $this->redirecionar($this->destinoPosLogin());
             return;
         }
 
         $this->renderizar('auth/login', ['erro' => $resultado['mensagem']], 'Entrar');
+    }
+
+    public function definirSenha($token)
+    {
+        $registro = (new TokenSenhaRepository())->buscarValidoPorToken($token);
+
+        if ($registro === null) {
+            $this->renderizar('auth/definir_senha', [
+                'erro' => 'Este link é inválido ou já expirou. Solicite um novo.',
+                'token' => null,
+            ], 'Definir senha');
+            return;
+        }
+
+        $erro = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $senha = isset($_POST['senha']) ? $_POST['senha'] : '';
+            $confirmacao = isset($_POST['confirmacao']) ? $_POST['confirmacao'] : '';
+
+            if (strlen($senha) < 8) {
+                $erro = 'A senha deve ter ao menos 8 caracteres.';
+            } elseif ($senha !== $confirmacao) {
+                $erro = 'As senhas não conferem.';
+            } else {
+                (new UsuarioRepository())->definirSenha($registro['usuario_id'], password_hash($senha, PASSWORD_DEFAULT));
+                (new TokenSenhaRepository())->marcarUsado($registro['id']);
+
+                $_SESSION['flash'] = 'Senha definida com sucesso. Faça login normalmente.';
+                $this->redirecionar('auth/login');
+                return;
+            }
+        }
+
+        $this->renderizar('auth/definir_senha', [
+            'erro' => $erro,
+            'token' => $token,
+        ], 'Definir senha');
+    }
+
+    private function destinoPosLogin()
+    {
+        if (Auth::possuiPerfil('administrador') || Auth::possuiPerfil('suporte')) {
+            return 'home/administrativo';
+        }
+
+        if (Auth::possuiPerfil('avaliador')) {
+            return 'avaliacao/index';
+        }
+
+        if (Auth::possuiPerfil('participante')) {
+            return 'participante/index';
+        }
+
+        return 'home/administrativo';
     }
 }

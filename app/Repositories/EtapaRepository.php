@@ -42,6 +42,24 @@ class EtapaRepository
         return $etapa !== false ? $etapa : null;
     }
 
+    public function buscarCadastroDaTrilha($trilhaId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM etapas WHERE trilha_id = :trilha_id AND ordem = 1 LIMIT 1');
+        $stmt->execute(['trilha_id' => $trilhaId]);
+
+        $etapa = $stmt->fetch();
+
+        return $etapa !== false ? $etapa : null;
+    }
+
+    public function alternarCapturaAtiva($etapaId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE etapas SET captura_ativa = NOT captura_ativa WHERE id = :id');
+        $stmt->execute(['id' => $etapaId]);
+    }
+
     public function criar(
         $trilhaId,
         $nome,
@@ -51,16 +69,20 @@ class EtapaRepository
         $dataFim,
         $formularioDinamicoId,
         $regraTransicaoTipo = '',
-        $regraTransicaoValor = ''
+        $regraTransicaoValor = '',
+        array $configAvaliacao = []
     ) {
+        $configAvaliacao = $this->normalizarConfigAvaliacao($configAvaliacao);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'INSERT INTO etapas (trilha_id, nome, descricao, ordem, data_inicio, data_fim, formulario_dinamico_id,
-                                  regra_transicao_tipo, regra_transicao_valor)
+                                  regra_transicao_tipo, regra_transicao_valor, modo_designacao,
+                                  qtd_avaliadores_por_submissao, modo_consolidacao, modo_sigilo, modo_avanco)
              VALUES (:trilha_id, :nome, :descricao, :ordem, :data_inicio, :data_fim, :formulario_dinamico_id,
-                     :regra_transicao_tipo, :regra_transicao_valor)'
+                     :regra_transicao_tipo, :regra_transicao_valor, :modo_designacao,
+                     :qtd_avaliadores_por_submissao, :modo_consolidacao, :modo_sigilo, :modo_avanco)'
         );
-        $stmt->execute([
+        $stmt->execute(array_merge([
             'trilha_id' => $trilhaId,
             'nome' => $nome,
             'descricao' => $descricao !== '' ? $descricao : null,
@@ -70,7 +92,7 @@ class EtapaRepository
             'formulario_dinamico_id' => $formularioDinamicoId !== '' ? $formularioDinamicoId : null,
             'regra_transicao_tipo' => $regraTransicaoTipo !== '' ? $regraTransicaoTipo : null,
             'regra_transicao_valor' => $regraTransicaoValor !== '' ? $regraTransicaoValor : null,
-        ]);
+        ], $configAvaliacao));
 
         return (int) $pdo->lastInsertId();
     }
@@ -84,17 +106,21 @@ class EtapaRepository
         $dataFim,
         $formularioDinamicoId,
         $regraTransicaoTipo = '',
-        $regraTransicaoValor = ''
+        $regraTransicaoValor = '',
+        array $configAvaliacao = []
     ) {
+        $configAvaliacao = $this->normalizarConfigAvaliacao($configAvaliacao);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'UPDATE etapas
              SET nome = :nome, descricao = :descricao, ordem = :ordem, data_inicio = :data_inicio,
                  data_fim = :data_fim, formulario_dinamico_id = :formulario_dinamico_id,
-                 regra_transicao_tipo = :regra_transicao_tipo, regra_transicao_valor = :regra_transicao_valor
+                 regra_transicao_tipo = :regra_transicao_tipo, regra_transicao_valor = :regra_transicao_valor,
+                 modo_designacao = :modo_designacao, qtd_avaliadores_por_submissao = :qtd_avaliadores_por_submissao,
+                 modo_consolidacao = :modo_consolidacao, modo_sigilo = :modo_sigilo, modo_avanco = :modo_avanco
              WHERE id = :id'
         );
-        $stmt->execute([
+        $stmt->execute(array_merge([
             'nome' => $nome,
             'descricao' => $descricao !== '' ? $descricao : null,
             'ordem' => $ordem,
@@ -104,6 +130,25 @@ class EtapaRepository
             'regra_transicao_tipo' => $regraTransicaoTipo !== '' ? $regraTransicaoTipo : null,
             'regra_transicao_valor' => $regraTransicaoValor !== '' ? $regraTransicaoValor : null,
             'id' => $id,
-        ]);
+        ], $configAvaliacao));
+    }
+
+    private function normalizarConfigAvaliacao(array $configAvaliacao)
+    {
+        $modoDesignacao = isset($configAvaliacao['modo_designacao']) ? $configAvaliacao['modo_designacao'] : '';
+        $qtdAvaliadores = isset($configAvaliacao['qtd_avaliadores_por_submissao'])
+            ? (int) $configAvaliacao['qtd_avaliadores_por_submissao']
+            : 1;
+        $modoConsolidacao = isset($configAvaliacao['modo_consolidacao']) ? $configAvaliacao['modo_consolidacao'] : 'unico';
+        $modoSigilo = isset($configAvaliacao['modo_sigilo']) ? $configAvaliacao['modo_sigilo'] : 'aberto';
+        $modoAvanco = isset($configAvaliacao['modo_avanco']) ? $configAvaliacao['modo_avanco'] : 'manual';
+
+        return [
+            'modo_designacao' => in_array($modoDesignacao, ['manual', 'aberto', 'automatico'], true) ? $modoDesignacao : null,
+            'qtd_avaliadores_por_submissao' => $qtdAvaliadores > 0 ? $qtdAvaliadores : 1,
+            'modo_consolidacao' => in_array($modoConsolidacao, ['media_criterio', 'media_ne', 'unico'], true) ? $modoConsolidacao : 'unico',
+            'modo_sigilo' => in_array($modoSigilo, ['cego', 'aberto'], true) ? $modoSigilo : 'aberto',
+            'modo_avanco' => in_array($modoAvanco, ['automatico', 'manual'], true) ? $modoAvanco : 'manual',
+        ];
     }
 }

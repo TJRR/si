@@ -30,14 +30,14 @@ class ConteudoAdminController extends Controller
             $this->salvarTextos();
             $this->salvarImagens();
 
-            $_SESSION['flash'] = 'Paginas atualizadas.';
+            $_SESSION['flash'] = 'Páginas atualizadas.';
             $this->redirecionar('conteudo/index');
             return;
         }
 
         $this->renderizar('admin/conteudo/form', [
             'conteudos' => $this->conteudos->listar(),
-        ], 'Paginas');
+        ], 'Páginas');
     }
 
     private function salvarTextos()
@@ -70,7 +70,7 @@ class ConteudoAdminController extends Controller
             $atual = $this->conteudos->buscarPorChave($chave);
 
             if ($atual === null || $atual['tipo'] !== 'imagem') {
-                $_SESSION['flash'] = 'Chave de conteudo invalida.';
+                $_SESSION['flash'] = 'Chave de conteúdo inválida.';
                 continue;
             }
 

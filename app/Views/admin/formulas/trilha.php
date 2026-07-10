@@ -2,9 +2,9 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Formula da nota final — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Fórmula da nota final — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('trilhas/index/' . (int) $trilha['concurso_id']); ?>">Voltar as trilhas</a></p>
+<p><a href="<?php echo url('trilhas/index/' . (int) $trilha['concurso_id']); ?>">Voltar às trilhas</a></p>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -18,13 +18,13 @@
     <?php endif; ?>
 <?php endif; ?>
 
-<p>Define como a Nota Final (NF) da trilha e calculada a partir das notas das etapas. Ex.: Editais 12/2026 e 13/2026
+<p>Define como a Nota Final (NF) da trilha é calculada a partir das notas das etapas. Ex.: Editais 12/2026 e 13/2026
     usam NF = NE2 x 0,4 + NE3 x 0,6.</p>
 
 <?php if (empty($etapasDaTrilha)): ?>
     <p>Nenhuma etapa cadastrada nesta trilha ainda.</p>
 <?php else: ?>
-    <p>Variaveis disponiveis (nota de cada etapa, pela ordem):</p>
+    <p>Variáveis disponíveis (nota de cada etapa, pela ordem):</p>
     <ul>
         <?php foreach ($etapasDaTrilha as $etapaDaTrilha): ?>
             <li><code>NE<?php echo (int) $etapaDaTrilha['ordem']; ?></code>
@@ -33,7 +33,7 @@
     </ul>
 
     <form method="post" action="<?php echo url('formulas/trilha/' . (int) $trilha['id']); ?>">
-        <label>Expressao (ex.: NE2*0.4 + NE3*0.6):<br>
+        <label>Expressão (ex.: NE2*0.4 + NE3*0.6):<br>
             <textarea name="expressao" rows="3" cols="70" required><?php echo htmlspecialchars((string) $expressaoAtual, ENT_QUOTES, 'UTF-8'); ?></textarea>
         </label><br>
 
@@ -46,7 +46,7 @@
             </label><br>
         <?php endforeach; ?>
 
-        <button type="submit" name="acao" value="testar">Testar formula</button>
+        <button type="submit" name="acao" value="testar">Testar fórmula</button>
         <button type="submit" name="acao" value="salvar">Salvar</button>
     </form>
 <?php endif; ?>

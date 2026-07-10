@@ -2,9 +2,9 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Formula de pontuacao — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Fórmula de pontuação — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('etapas/index/' . (int) $etapa['trilha_id']); ?>">Voltar as etapas</a></p>
+<p><a href="<?php echo url('etapas/index/' . (int) $etapa['trilha_id']); ?>">Voltar às etapas</a></p>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -18,14 +18,14 @@
     <?php endif; ?>
 <?php endif; ?>
 
-<p>Define como a Nota da Etapa (NE) desta etapa e calculada, a partir das notas que serao lancadas para cada
-    criterio. Os pesos ja sao conhecidos agora — embuta o peso de cada criterio como numero na propria expressao.</p>
+<p>Define como a Nota da Etapa (NE) desta etapa é calculada, a partir das notas que serão lançadas para cada
+    critério. Os pesos já são conhecidos agora — embuta o peso de cada critério como número na própria expressão.</p>
 
 <?php if (empty($criteriosDaEtapa)): ?>
-    <p>Nenhum criterio cadastrado nesta etapa ainda. Cadastre os criterios em
-        <a href="<?php echo url('criterios/index/' . (int) $etapa['id']); ?>">Criterios</a> antes de escrever a formula.</p>
+    <p>Nenhum critério cadastrado nesta etapa ainda. Cadastre os critérios em
+        <a href="<?php echo url('criterios/index/' . (int) $etapa['id']); ?>">Critérios</a> antes de escrever a fórmula.</p>
 <?php else: ?>
-    <p>Variaveis disponiveis (codigo — nome — peso):</p>
+    <p>Variáveis disponíveis (código — nome — peso):</p>
     <ul>
         <?php foreach ($criteriosDaEtapa as $criterio): ?>
             <li><code><?php echo htmlspecialchars($criterio['codigo'], ENT_QUOTES, 'UTF-8'); ?></code>
@@ -35,7 +35,7 @@
     </ul>
 
     <form method="post" action="<?php echo url('formulas/etapa/' . (int) $etapa['id']); ?>">
-        <label>Expressao (ex.: <?php
+        <label>Expressão (ex.: <?php
             $exemplo = [];
             foreach ($criteriosDaEtapa as $criterio) {
                 $exemplo[] = $criterio['codigo'] . '*' . number_format((float) $criterio['peso'], 2, '.', '');
@@ -53,7 +53,7 @@
             </label><br>
         <?php endforeach; ?>
 
-        <button type="submit" name="acao" value="testar">Testar formula</button>
+        <button type="submit" name="acao" value="testar">Testar fórmula</button>
         <button type="submit" name="acao" value="salvar">Salvar</button>
     </form>
 <?php endif; ?>

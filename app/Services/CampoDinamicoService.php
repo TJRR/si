@@ -14,14 +14,14 @@ class CampoDinamicoService
 {
     const TIPOS = [
         'texto' => 'Texto',
-        'numero' => 'Numero',
+        'numero' => 'Número',
         'cpf' => 'CPF',
         'email' => 'E-mail',
         'telefone' => 'Telefone',
         'link_youtube' => 'Link do YouTube',
-        'selecao_tema_desafio' => 'Selecao de Tema/Desafio',
+        'selecao_tema_desafio' => 'Seleção de Tema/Desafio',
         'upload_pdf' => 'Upload de PDF',
-        'grupo_participantes' => 'Grupo repetivel de participantes',
+        'grupo_participantes' => 'Grupo repetível de participantes',
     ];
 
     private $campos;
@@ -42,11 +42,11 @@ class CampoDinamicoService
         }
 
         if ($rotulo === '') {
-            return ['sucesso' => false, 'mensagem' => 'Informe o rotulo do campo.'];
+            return ['sucesso' => false, 'mensagem' => 'Informe o rótulo do campo.'];
         }
 
         if (!isset(self::TIPOS[$tipo])) {
-            return ['sucesso' => false, 'mensagem' => 'Tipo de campo invalido.'];
+            return ['sucesso' => false, 'mensagem' => 'Tipo de campo inválido.'];
         }
 
         $config = $this->montarConfig($tipo, $configPost);
@@ -60,7 +60,7 @@ class CampoDinamicoService
         $campo = $this->campos->buscarPorId($id);
 
         if ($campo === null) {
-            return ['sucesso' => false, 'mensagem' => 'Campo nao encontrado.'];
+            return ['sucesso' => false, 'mensagem' => 'Campo não encontrado.'];
         }
 
         $erro = $this->validarEstruturaEditavel($campo['formulario_id']);
@@ -70,14 +70,15 @@ class CampoDinamicoService
         }
 
         if ($rotulo === '') {
-            return ['sucesso' => false, 'mensagem' => 'Informe o rotulo do campo.'];
+            return ['sucesso' => false, 'mensagem' => 'Informe o rótulo do campo.'];
         }
 
         if (!isset(self::TIPOS[$tipo])) {
-            return ['sucesso' => false, 'mensagem' => 'Tipo de campo invalido.'];
+            return ['sucesso' => false, 'mensagem' => 'Tipo de campo inválido.'];
         }
 
-        $config = $this->montarConfig($tipo, $configPost);
+        $configAnterior = $campo['config_json'] !== null ? json_decode($campo['config_json'], true) : [];
+        $config = $this->montarConfig($tipo, $configPost, $configAnterior);
         $this->campos->atualizar($id, $rotulo, $tipo, $obrigatorio, $config);
 
         return ['sucesso' => true];
@@ -88,7 +89,7 @@ class CampoDinamicoService
         $campo = $this->campos->buscarPorId($id);
 
         if ($campo === null) {
-            return ['sucesso' => false, 'mensagem' => 'Campo nao encontrado.'];
+            return ['sucesso' => false, 'mensagem' => 'Campo não encontrado.'];
         }
 
         $erro = $this->validarEstruturaEditavel($campo['formulario_id']);
@@ -107,7 +108,7 @@ class CampoDinamicoService
         $campo = $this->campos->buscarPorId($id);
 
         if ($campo === null) {
-            return ['sucesso' => false, 'mensagem' => 'Campo nao encontrado.'];
+            return ['sucesso' => false, 'mensagem' => 'Campo não encontrado.'];
         }
 
         $erro = $this->validarEstruturaEditavel($campo['formulario_id']);
@@ -126,32 +127,42 @@ class CampoDinamicoService
         $formulario = $this->formularios->buscarPorId($formularioId);
 
         if ($formulario === null) {
-            return 'Formulario nao encontrado.';
+            return 'Formulário não encontrado.';
         }
 
         if ($formulario['status'] !== 'rascunho') {
-            return 'Este formulario ja foi publicado. Duplique-o para alterar a estrutura de campos.';
+            return 'Este formulário já foi publicado. Duplique-o para alterar a estrutura de campos.';
         }
 
         return null;
     }
 
-    private function montarConfig($tipo, array $configPost)
+    /**
+     * $configAnterior preserva chaves de uso interno do sistema (ex. "_papel",
+     * usada pela Inscricao de Equipe para saber "isso e o CPF do participante
+     * 3" independente do rotulo) que o Admin nao edita pela UI - sem isso, uma
+     * simples edicao de rotulo/obrigatoriedade apagaria essa marca.
+     */
+    private function montarConfig($tipo, array $configPost, array $configAnterior = [])
     {
         if ($tipo === 'upload_pdf') {
-            return ['tamanho_maximo_mb' => 15];
-        }
-
-        if ($tipo === 'grupo_participantes') {
+            $config = ['tamanho_maximo_mb' => 15];
+        } elseif ($tipo === 'grupo_participantes') {
             $minimo = isset($configPost['minimo_repeticoes']) ? (int) $configPost['minimo_repeticoes'] : 1;
             $maximo = isset($configPost['maximo_repeticoes']) ? (int) $configPost['maximo_repeticoes'] : 10;
 
-            return [
+            $config = [
                 'minimo_repeticoes' => max(1, $minimo),
                 'maximo_repeticoes' => max($minimo, $maximo),
             ];
+        } else {
+            $config = [];
         }
 
-        return [];
+        if (isset($configAnterior['_papel'])) {
+            $config['_papel'] = $configAnterior['_papel'];
+        }
+
+        return $config;
     }
 }

@@ -2,19 +2,19 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Criterios de <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Critérios de <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('etapas/index/' . (int) $etapa['trilha_id']); ?>">Voltar as etapas</a></p>
-<p><a href="<?php echo url('criterios/novo/' . (int) $etapa['id']); ?>">+ Novo criterio</a></p>
+<p><a href="<?php echo url('etapas/index/' . (int) $etapa['trilha_id']); ?>">Voltar às etapas</a></p>
+<p><a href="<?php echo url('criterios/novo/' . (int) $etapa['id']); ?>">+ Novo critério</a></p>
 
 <p>Soma dos pesos: <strong><?php echo number_format($somaPesos, 2, ',', '.'); ?></strong>
-    (a formula <em>media ponderada de criterios</em> usa esta soma como denominador — os editais 2026 usam pesos que somam 10)</p>
+    (a fórmula <em>média ponderada de critérios</em> usa esta soma como denominador — os editais 2026 usam pesos que somam 10)</p>
 
 <?php if (empty($criterios)): ?>
-    <p>Nenhum criterio cadastrado.</p>
+    <p>Nenhum critério cadastrado.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th>Ordem</th><th>Codigo</th><th>Nome</th><th>Peso</th><th>Escala</th><th>Acoes</th></tr>
+        <tr><th>Ordem</th><th>Código</th><th>Nome</th><th>Peso</th><th>Escala</th><th>Ações</th></tr>
         <?php foreach ($criterios as $criterio): ?>
         <tr>
             <td><?php echo (int) $criterio['ordem']; ?></td>

@@ -24,15 +24,15 @@ class AuthService
         $usuario = $this->usuarios->buscarPorEmail($email);
 
         if ($usuario === null || $usuario['senha_hash'] === null) {
-            return ['sucesso' => false, 'mensagem' => 'E-mail ou senha invalidos.'];
+            return ['sucesso' => false, 'mensagem' => 'E-mail ou senha inválidos.'];
         }
 
         if (!password_verify($senha, $usuario['senha_hash'])) {
-            return ['sucesso' => false, 'mensagem' => 'E-mail ou senha invalidos.'];
+            return ['sucesso' => false, 'mensagem' => 'E-mail ou senha inválidos.'];
         }
 
         if ($usuario['status'] === 'pendente') {
-            return ['sucesso' => false, 'mensagem' => 'Cadastro aguardando aprovacao do Administrador.'];
+            return ['sucesso' => false, 'mensagem' => 'Cadastro aguardando aprovação do Administrador.'];
         }
 
         if ($usuario['status'] === 'rejeitado') {
@@ -47,7 +47,7 @@ class AuthService
     public function cadastrar($nome, $email, $senha)
     {
         if ($this->usuarios->buscarPorEmail($email) !== null) {
-            return ['sucesso' => false, 'mensagem' => 'Ja existe um cadastro com este e-mail.'];
+            return ['sucesso' => false, 'mensagem' => 'Já existe um cadastro com este e-mail.'];
         }
 
         $hash = password_hash($senha, PASSWORD_DEFAULT);
@@ -61,13 +61,13 @@ class AuthService
         $token = GoogleOAuth::trocarCodigoPorToken($code);
 
         if ($token === null || !isset($token['access_token'])) {
-            return ['sucesso' => false, 'mensagem' => 'Nao foi possivel autenticar com o Google. Tente novamente.'];
+            return ['sucesso' => false, 'mensagem' => 'Não foi possível autenticar com o Google. Tente novamente.'];
         }
 
         $perfil = GoogleOAuth::buscarPerfil($token['access_token']);
 
         if ($perfil === null || !isset($perfil['sub']) || !isset($perfil['email'])) {
-            return ['sucesso' => false, 'mensagem' => 'Nao foi possivel obter os dados da sua conta Google.'];
+            return ['sucesso' => false, 'mensagem' => 'Não foi possível obter os dados da sua conta Google.'];
         }
 
         return $this->resolverUsuarioGoogle([
@@ -81,7 +81,7 @@ class AuthService
     public function resolverUsuarioGoogle(array $dadosGoogle)
     {
         if (empty($dadosGoogle['email_verified'])) {
-            return ['sucesso' => false, 'mensagem' => 'O e-mail da sua conta Google nao esta verificado.'];
+            return ['sucesso' => false, 'mensagem' => 'O e-mail da sua conta Google não está verificado.'];
         }
 
         $usuario = $this->usuarios->buscarPorGoogleId($dadosGoogle['google_id']);
@@ -102,17 +102,17 @@ class AuthService
                 try {
                     $this->usuarios->vincularGoogleId($usuario['id'], $dadosGoogle['google_id']);
                 } catch (\PDOException $e) {
-                    return ['sucesso' => false, 'mensagem' => 'Nao foi possivel vincular sua conta Google. Entre em contato com o suporte.'];
+                    return ['sucesso' => false, 'mensagem' => 'Não foi possível vincular sua conta Google. Entre em contato com o suporte.'];
                 }
 
                 $usuario['google_id'] = $dadosGoogle['google_id'];
             } else {
-                return ['sucesso' => false, 'mensagem' => 'Este e-mail ja esta vinculado a outra conta Google.'];
+                return ['sucesso' => false, 'mensagem' => 'Este e-mail já está vinculado a outra conta Google.'];
             }
         }
 
         if ($usuario['status'] === 'pendente') {
-            return ['sucesso' => false, 'mensagem' => 'Cadastro aguardando aprovacao do Administrador.'];
+            return ['sucesso' => false, 'mensagem' => 'Cadastro aguardando aprovação do Administrador.'];
         }
 
         if ($usuario['status'] === 'rejeitado') {

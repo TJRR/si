@@ -21,7 +21,7 @@ class NotificacaoService
 
     public function confirmarSubmissao($destinatarioEmail, array $trilha, array $etapa, $submissaoId)
     {
-        $assunto = 'Confirmacao de submissao - ' . $trilha['nome'];
+        $assunto = 'Confirmação de submissão - ' . $trilha['nome'];
         $corpo = $this->montarCorpoConfirmacao($trilha, $etapa, $submissaoId);
 
         $id = $this->notificacoes->criar(
@@ -48,16 +48,59 @@ class NotificacaoService
     private function montarCorpoConfirmacao(array $trilha, array $etapa, $submissaoId)
     {
         return sprintf(
-            '<p>Ola,</p>'
-            . '<p>Recebemos sua submissao para a <strong>%s</strong>, etapa <strong>%s</strong>, '
+            '<p>Olá,</p>'
+            . '<p>Recebemos sua submissão para a <strong>%s</strong>, etapa <strong>%s</strong>, '
             . 'em %s.</p>'
-            . '<p>Numero de protocolo: <strong>%d</strong>.</p>'
-            . '<p>Nenhuma acao adicional e necessaria neste momento.</p>'
-            . '<p>Premio de Inovacao TJRR</p>',
+            . '<p>Número de protocolo: <strong>%d</strong>.</p>'
+            . '<p>Nenhuma ação adicional é necessária neste momento.</p>'
+            . '<p>Prêmio de Inovação TJRR</p>',
             htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'),
             htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'),
             date('d/m/Y H:i'),
             $submissaoId
+        );
+    }
+
+    public function acessoLiberado($destinatarioEmail, $nomeParticipante, $nomeEquipe, $linkDefinirSenha)
+    {
+        $assunto = 'Inscrição homologada — acesso liberado ao sistema';
+        $corpo = $this->montarCorpoAcessoLiberado($nomeParticipante, $nomeEquipe, $linkDefinirSenha);
+
+        $id = $this->notificacoes->criar(
+            'inscricao_homologada',
+            'acesso_liberado',
+            $destinatarioEmail,
+            $assunto,
+            $corpo
+        );
+
+        try {
+            $resultado = Mailer::enviar($destinatarioEmail, $assunto, $corpo);
+        } catch (\Exception $e) {
+            $resultado = ['sucesso' => false, 'erro' => $e->getMessage()];
+        }
+
+        if ($resultado['sucesso']) {
+            $this->notificacoes->marcarEnviada($id);
+        } else {
+            $this->notificacoes->marcarFalhou($id);
+        }
+    }
+
+    private function montarCorpoAcessoLiberado($nomeParticipante, $nomeEquipe, $linkDefinirSenha)
+    {
+        return sprintf(
+            '<p>Olá, %s,</p>'
+            . '<p>A inscrição da equipe <strong>%s</strong> foi homologada.</p>'
+            . '<p>Você já pode acessar o sistema de duas formas:</p>'
+            . '<ul>'
+            . '<li>Clicando em <a href="%s">Definir minha senha</a> e entrando com e-mail e senha; ou</li>'
+            . '<li>Usando o botão "Entrar com Google" com este mesmo e-mail.</li>'
+            . '</ul>'
+            . '<p>Prêmio de Inovação TJRR</p>',
+            htmlspecialchars($nomeParticipante, ENT_QUOTES, 'UTF-8'),
+            htmlspecialchars($nomeEquipe, ENT_QUOTES, 'UTF-8'),
+            htmlspecialchars($linkDefinirSenha, ENT_QUOTES, 'UTF-8')
         );
     }
 }

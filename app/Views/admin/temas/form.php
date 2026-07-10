@@ -15,7 +15,7 @@
         <input type="text" name="nome" required value="<?php echo htmlspecialchars($tema !== null ? $tema['nome'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>
 
-    <label>Descricao longa:<br>
+    <label>Descrição longa:<br>
         <textarea name="descricao_longa" rows="6" cols="60"><?php echo htmlspecialchars($tema !== null ? (string) $tema['descricao_longa'] : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
     </label><br>
 

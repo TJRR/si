@@ -44,23 +44,27 @@ class SubmissaoService
         $etapa = $this->etapas->buscarPorId($etapaId);
 
         if ($etapa === null || $etapa['formulario_dinamico_id'] === null) {
-            return ['sucesso' => false, 'mensagem' => 'Nao ha formulario disponivel para esta etapa.'];
+            return ['sucesso' => false, 'mensagem' => 'Não há formulário disponível para esta etapa.'];
+        }
+
+        if ((int) $etapa['ordem'] === 1) {
+            return ['sucesso' => false, 'mensagem' => 'Esta etapa é de inscrição de equipe, não de submissão.'];
         }
 
         $formulario = $this->formularios->buscarPorId($etapa['formulario_dinamico_id']);
 
         if ($formulario === null || $formulario['status'] !== 'publicado') {
-            return ['sucesso' => false, 'mensagem' => 'Este formulario nao esta disponivel no momento.'];
+            return ['sucesso' => false, 'mensagem' => 'Este formulário não está disponível no momento.'];
         }
 
         $hoje = date('Y-m-d');
 
         if ($etapa['data_inicio'] !== null && $hoje < $etapa['data_inicio']) {
-            return ['sucesso' => false, 'mensagem' => 'O prazo de submissao ainda nao comecou.'];
+            return ['sucesso' => false, 'mensagem' => 'O prazo de submissão ainda não começou.'];
         }
 
         if ($etapa['data_fim'] !== null && $hoje > $etapa['data_fim']) {
-            return ['sucesso' => false, 'mensagem' => 'O prazo de submissao ja foi encerrado.'];
+            return ['sucesso' => false, 'mensagem' => 'O prazo de submissão já foi encerrado.'];
         }
 
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
@@ -117,7 +121,7 @@ class SubmissaoService
         if (!empty($cpfsDuplicadosNaSubmissao)) {
             return [
                 'sucesso' => false,
-                'mensagem' => 'Ha CPFs repetidos dentro da propria submissao: ' . implode(', ', array_unique($cpfsDuplicadosNaSubmissao)),
+                'mensagem' => 'Há CPFs repetidos dentro da própria submissão: ' . implode(', ', array_unique($cpfsDuplicadosNaSubmissao)),
                 'erros' => $erros,
             ];
         }
@@ -126,7 +130,7 @@ class SubmissaoService
             if ($this->submissoes->cpfJaExisteNaTrilha($trilhaId, $cpf)) {
                 return [
                     'sucesso' => false,
-                    'mensagem' => "O CPF {$cpf} ja foi utilizado em outra submissao desta trilha.",
+                    'mensagem' => "O CPF {$cpf} já foi utilizado em outra submissão desta trilha.",
                     'erros' => $erros,
                 ];
             }
@@ -232,7 +236,7 @@ class SubmissaoService
                 }
             }
 
-            return ['sucesso' => false, 'mensagem' => 'Nao foi possivel gravar a submissao. Tente novamente.'];
+            return ['sucesso' => false, 'mensagem' => 'Não foi possível gravar a submissão. Tente novamente.'];
         }
     }
 
@@ -244,7 +248,7 @@ class SubmissaoService
         if ($tipo === 'upload_pdf') {
             if ($arquivoPost === null || $arquivoPost['error'] === UPLOAD_ERR_NO_FILE) {
                 if ($obrigatorio) {
-                    return ['valido' => false, 'mensagem' => 'Campo obrigatorio.'];
+                    return ['valido' => false, 'mensagem' => 'Campo obrigatório.'];
                 }
 
                 return ['valido' => true, 'valor' => null, 'cpfs' => []];
@@ -274,7 +278,7 @@ class SubmissaoService
         $valor = is_string($valorPost) ? trim($valorPost) : $valorPost;
 
         if ($obrigatorio && ($valor === null || $valor === '')) {
-            return ['valido' => false, 'mensagem' => 'Campo obrigatorio.'];
+            return ['valido' => false, 'mensagem' => 'Campo obrigatório.'];
         }
 
         if ($valor === null || $valor === '') {
@@ -287,14 +291,14 @@ class SubmissaoService
 
             case 'numero':
                 if (!is_numeric($valor)) {
-                    return ['valido' => false, 'mensagem' => 'Informe um numero valido.'];
+                    return ['valido' => false, 'mensagem' => 'Informe um número válido.'];
                 }
 
                 return ['valido' => true, 'valor' => $valor + 0, 'cpfs' => []];
 
             case 'cpf':
                 if (!CpfValidador::valido($valor)) {
-                    return ['valido' => false, 'mensagem' => 'CPF invalido.'];
+                    return ['valido' => false, 'mensagem' => 'CPF inválido.'];
                 }
 
                 $cpfNormalizado = CpfValidador::apenasDigitos($valor);
@@ -303,7 +307,7 @@ class SubmissaoService
 
             case 'email':
                 if (filter_var($valor, FILTER_VALIDATE_EMAIL) === false) {
-                    return ['valido' => false, 'mensagem' => 'E-mail invalido.'];
+                    return ['valido' => false, 'mensagem' => 'E-mail inválido.'];
                 }
 
                 return ['valido' => true, 'valor' => $valor, 'cpfs' => []];
@@ -312,21 +316,21 @@ class SubmissaoService
                 $digitos = preg_replace('/\D/', '', $valor);
 
                 if (strlen($digitos) < 10 || strlen($digitos) > 11) {
-                    return ['valido' => false, 'mensagem' => 'Telefone invalido.'];
+                    return ['valido' => false, 'mensagem' => 'Telefone inválido.'];
                 }
 
                 return ['valido' => true, 'valor' => $digitos, 'cpfs' => []];
 
             case 'link_youtube':
                 if (!YoutubeValidador::valido($valor)) {
-                    return ['valido' => false, 'mensagem' => 'Link do YouTube invalido.'];
+                    return ['valido' => false, 'mensagem' => 'Link do YouTube inválido.'];
                 }
 
                 return ['valido' => true, 'valor' => $valor, 'cpfs' => []];
 
             case 'selecao_tema_desafio':
                 if (!in_array((int) $valor, $temasValidos, true)) {
-                    return ['valido' => false, 'mensagem' => 'Selecione um tema/desafio valido.'];
+                    return ['valido' => false, 'mensagem' => 'Selecione um tema/desafio válido.'];
                 }
 
                 return ['valido' => true, 'valor' => (int) $valor, 'cpfs' => []];
@@ -367,7 +371,7 @@ class SubmissaoService
         }
 
         if (count($linhasValidas) > $maximo) {
-            return ['valido' => false, 'mensagem' => "No maximo {$maximo} participante(s)."];
+            return ['valido' => false, 'mensagem' => "No máximo {$maximo} participante(s)."];
         }
 
         $participantes = [];
@@ -381,15 +385,15 @@ class SubmissaoService
             $vinculo = trim(isset($linha['vinculo_profissao']) ? $linha['vinculo_profissao'] : '');
 
             if ($nome === '') {
-                return ['valido' => false, 'mensagem' => 'Nome do participante e obrigatorio.'];
+                return ['valido' => false, 'mensagem' => 'Nome do participante é obrigatório.'];
             }
 
             if (!CpfValidador::valido($cpf)) {
-                return ['valido' => false, 'mensagem' => "CPF invalido para o participante {$nome}."];
+                return ['valido' => false, 'mensagem' => "CPF inválido para o participante {$nome}."];
             }
 
             if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-                return ['valido' => false, 'mensagem' => "E-mail invalido para o participante {$nome}."];
+                return ['valido' => false, 'mensagem' => "E-mail inválido para o participante {$nome}."];
             }
 
             $cpfNormalizado = CpfValidador::apenasDigitos($cpf);

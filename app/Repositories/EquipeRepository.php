@@ -22,6 +22,23 @@ class EquipeRepository
         return $equipe !== false ? $equipe : null;
     }
 
+    public function buscarPorParticipante($participanteId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT e.*
+             FROM equipes e
+             INNER JOIN equipe_participante ep ON ep.equipe_id = e.id
+             WHERE ep.participante_id = :participante_id
+             LIMIT 1'
+        );
+        $stmt->execute(['participante_id' => $participanteId]);
+
+        $equipe = $stmt->fetch();
+
+        return $equipe !== false ? $equipe : null;
+    }
+
     public function buscarPorTrilhaENome($trilhaId, $nomeEquipe)
     {
         $pdo = Database::conexao();
@@ -37,8 +54,8 @@ class EquipeRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'INSERT INTO equipes (trilha_id, nome_equipe, vinculo_institucional, observacoes, importado_em)
-             VALUES (:trilha_id, :nome_equipe, :vinculo_institucional, :observacoes, NOW())'
+            'INSERT INTO equipes (trilha_id, nome_equipe, vinculo_institucional, observacoes)
+             VALUES (:trilha_id, :nome_equipe, :vinculo_institucional, :observacoes)'
         );
         $stmt->execute([
             'trilha_id' => $trilhaId,
@@ -48,6 +65,21 @@ class EquipeRepository
         ]);
 
         return (int) $pdo->lastInsertId();
+    }
+
+    public function cpfJaInscritoNaTrilha($trilhaId, $cpf)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*)
+             FROM equipe_participante ep
+             INNER JOIN equipes e ON e.id = ep.equipe_id
+             INNER JOIN participantes p ON p.id = ep.participante_id
+             WHERE e.trilha_id = :trilha_id AND p.cpf = :cpf'
+        );
+        $stmt->execute(['trilha_id' => $trilhaId, 'cpf' => $cpf]);
+
+        return (int) $stmt->fetchColumn() > 0;
     }
 
     public function vincularParticipante($equipeId, $participanteId, $papel)
@@ -100,7 +132,7 @@ class EquipeRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT p.*, ep.papel
+            'SELECT p.*, ep.papel, ep.status_homologacao
              FROM participantes p
              JOIN equipe_participante ep ON ep.participante_id = p.id
              WHERE ep.equipe_id = :equipe_id
@@ -109,5 +141,79 @@ class EquipeRepository
         $stmt->execute(['equipe_id' => $equipeId]);
 
         return $stmt->fetchAll();
+    }
+
+    public function listarPendentesHomologacaoPorTrilha($trilhaId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            "SELECT ep.id AS vinculo_id, ep.equipe_id, ep.participante_id, ep.papel,
+                    e.nome_equipe, p.nome AS participante_nome, p.cpf, p.email, p.telefone
+             FROM equipe_participante ep
+             INNER JOIN equipes e ON e.id = ep.equipe_id
+             INNER JOIN participantes p ON p.id = ep.participante_id
+             WHERE e.trilha_id = :trilha_id AND ep.status_homologacao = 'pendente'
+             ORDER BY e.nome_equipe ASC, ep.papel ASC"
+        );
+        $stmt->execute(['trilha_id' => $trilhaId]);
+
+        return $stmt->fetchAll();
+    }
+
+    public function buscarVinculoPorId($vinculoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM equipe_participante WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $vinculoId]);
+
+        $registro = $stmt->fetch();
+
+        return $registro !== false ? $registro : null;
+    }
+
+    public function buscarVinculo($equipeId, $participanteId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT * FROM equipe_participante WHERE equipe_id = :equipe_id AND participante_id = :participante_id LIMIT 1'
+        );
+        $stmt->execute(['equipe_id' => $equipeId, 'participante_id' => $participanteId]);
+
+        $registro = $stmt->fetch();
+
+        return $registro !== false ? $registro : null;
+    }
+
+    public function homologarVinculo($vinculoId, $usuarioId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            "UPDATE equipe_participante
+             SET status_homologacao = 'homologado', homologado_por = :usuario_id, homologado_em = NOW(), motivo_rejeicao = NULL
+             WHERE id = :id"
+        );
+        $stmt->execute(['usuario_id' => $usuarioId, 'id' => $vinculoId]);
+    }
+
+    public function rejeitarVinculo($vinculoId, $usuarioId, $motivo)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            "UPDATE equipe_participante
+             SET status_homologacao = 'rejeitado', homologado_por = :usuario_id, homologado_em = NOW(), motivo_rejeicao = :motivo
+             WHERE id = :id"
+        );
+        $stmt->execute(['usuario_id' => $usuarioId, 'motivo' => $motivo, 'id' => $vinculoId]);
+    }
+
+    public function voltarParaPendente($vinculoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            "UPDATE equipe_participante
+             SET status_homologacao = 'pendente', homologado_por = NULL, homologado_em = NULL, motivo_rejeicao = NULL
+             WHERE id = :id"
+        );
+        $stmt->execute(['id' => $vinculoId]);
     }
 }

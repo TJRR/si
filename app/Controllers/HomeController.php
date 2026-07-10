@@ -31,11 +31,19 @@ class HomeController extends Controller
 
         $cronograma = [];
         $temasPorTrilha = [];
+        $trilhasComInscricaoAberta = [];
 
         foreach ($trilhasAtivas as $trilha) {
             foreach ($etapas->listarPorTrilha($trilha['id']) as $etapa) {
                 $etapa['trilha_nome'] = $trilha['nome'];
                 $cronograma[] = $etapa;
+
+                if ((int) $etapa['ordem'] === 1 && $etapa['captura_ativa']) {
+                    $trilhasComInscricaoAberta[] = [
+                        'trilha_nome' => $trilha['nome'],
+                        'etapa_id' => $etapa['id'],
+                    ];
+                }
             }
 
             $temasPorTrilha[] = [
@@ -56,6 +64,7 @@ class HomeController extends Controller
                 'trilhasAtivas' => $trilhasAtivas,
                 'cronograma' => $cronograma,
                 'temasPorTrilha' => $temasPorTrilha,
+                'trilhasComInscricaoAberta' => $trilhasComInscricaoAberta,
             ],
             'Sistema de Gestão da Semana de Inovação e do Prêmio de Inovação do TJRR'
         );

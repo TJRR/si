@@ -27,11 +27,11 @@ class ImagemService
     public function salvar(array $arquivo, $pasta, $larguraMax, $alturaMax)
     {
         if (!preg_match('/^[a-z0-9_\-]+$/', $pasta)) {
-            throw new \RuntimeException('Chave de destino invalida.');
+            throw new \RuntimeException('Chave de destino inválida.');
         }
 
         if (!isset($arquivo['tmp_name']) || !is_uploaded_file($arquivo['tmp_name'])) {
-            throw new \RuntimeException('Upload invalido.');
+            throw new \RuntimeException('Upload inválido.');
         }
 
         if ($arquivo['size'] > self::TAMANHO_MAXIMO) {
@@ -42,25 +42,25 @@ class ImagemService
         $mime = $finfo->file($arquivo['tmp_name']);
 
         if (!isset(self::TIPOS_PERMITIDOS[$mime])) {
-            throw new \RuntimeException('Formato de imagem nao suportado (use JPG, PNG, WEBP ou GIF).');
+            throw new \RuntimeException('Formato de imagem não suportado (use JPG, PNG, WEBP ou GIF).');
         }
 
         $pastaBase = __DIR__ . '/../../assets/uploads/conteudo';
         $pastaFisica = $pastaBase . '/' . $pasta;
 
         if (!is_dir($pastaFisica) && !mkdir($pastaFisica, 0755, true) && !is_dir($pastaFisica)) {
-            throw new \RuntimeException('Nao foi possivel criar a pasta de destino da imagem.');
+            throw new \RuntimeException('Não foi possível criar a pasta de destino da imagem.');
         }
 
         if (!is_writable($pastaFisica)) {
-            throw new \RuntimeException('Pasta de destino da imagem sem permissao de escrita.');
+            throw new \RuntimeException('Pasta de destino da imagem sem permissão de escrita.');
         }
 
         $baseReal = realpath($pastaBase);
         $pastaReal = realpath($pastaFisica);
 
         if ($baseReal === false || $pastaReal === false || strpos($pastaReal, $baseReal) !== 0) {
-            throw new \RuntimeException('Caminho de destino fora da area permitida.');
+            throw new \RuntimeException('Caminho de destino fora da área permitida.');
         }
 
         $nomeArquivo = bin2hex(random_bytes(8));
@@ -118,7 +118,7 @@ class ImagemService
                 return imagecreatefromgif($caminho);
         }
 
-        throw new \RuntimeException('Formato de imagem nao suportado.');
+        throw new \RuntimeException('Formato de imagem não suportado.');
     }
 
     private function redimensionar($imagem, $larguraMax, $alturaMax)

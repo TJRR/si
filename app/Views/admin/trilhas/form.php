@@ -15,7 +15,7 @@
         <input type="text" name="nome" required value="<?php echo htmlspecialchars($trilha !== null ? $trilha['nome'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>
 
-    <label>Descricao:<br>
+    <label>Descrição:<br>
         <textarea name="descricao" rows="4" cols="50"><?php echo htmlspecialchars($trilha !== null ? (string) $trilha['descricao'] : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
     </label><br>
 

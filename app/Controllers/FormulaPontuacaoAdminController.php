@@ -37,7 +37,7 @@ class FormulaPontuacaoAdminController extends Controller
 
         if ($etapa === null) {
             http_response_code(404);
-            exit('Etapa nao encontrada.');
+            exit('Etapa não encontrada.');
         }
 
         $criteriosDaEtapa = $this->criterios->listarPorEtapa($etapaId);
@@ -77,7 +77,7 @@ class FormulaPontuacaoAdminController extends Controller
             'expressaoAtual' => $expressaoAtual,
             'criteriosDaEtapa' => $criteriosDaEtapa,
             'resultadoTeste' => $resultadoTeste,
-        ], 'Formula de pontuacao — ' . $etapa['nome']);
+        ], 'Fórmula de pontuação — ' . $etapa['nome']);
     }
 
     public function trilha($trilhaId)
@@ -86,7 +86,7 @@ class FormulaPontuacaoAdminController extends Controller
 
         if ($trilha === null) {
             http_response_code(404);
-            exit('Trilha nao encontrada.');
+            exit('Trilha não encontrada.');
         }
 
         $etapasDaTrilha = $this->etapas->listarPorTrilha($trilhaId);
@@ -128,7 +128,7 @@ class FormulaPontuacaoAdminController extends Controller
             'expressaoAtual' => $expressaoAtual,
             'etapasDaTrilha' => $etapasDaTrilha,
             'resultadoTeste' => $resultadoTeste,
-        ], 'Formula da nota final — ' . $trilha['nome']);
+        ], 'Fórmula da nota final — ' . $trilha['nome']);
     }
 
     private function testar($expressao, array $variaveisPermitidas)

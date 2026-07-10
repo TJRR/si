@@ -25,7 +25,7 @@ class FormularioAdminController extends Controller
     public function index()
     {
         $lista = $this->formularios->listar();
-        $this->renderizar('admin/formularios/index', ['formularios' => $lista], 'Formularios Dinamicos');
+        $this->renderizar('admin/formularios/index', ['formularios' => $lista], 'Formulários Dinâmicos');
     }
 
     public function novo()
@@ -37,7 +37,7 @@ class FormularioAdminController extends Controller
             $descricao = trim(isset($_POST['descricao']) ? $_POST['descricao'] : '');
 
             if ($nome === '') {
-                $erro = 'Informe o nome do formulario.';
+                $erro = 'Informe o nome do formulário.';
             } else {
                 $id = $this->formularios->criar($nome, $descricao);
                 $this->redirecionar('campos/index/' . $id);
@@ -48,7 +48,7 @@ class FormularioAdminController extends Controller
         $this->renderizar('admin/formularios/form', [
             'erro' => $erro,
             'formulario' => null,
-        ], 'Novo formulario');
+        ], 'Novo formulário');
     }
 
     public function editar($id)
@@ -57,7 +57,7 @@ class FormularioAdminController extends Controller
 
         if ($formulario === null) {
             http_response_code(404);
-            exit('Formulario nao encontrado.');
+            exit('Formulário não encontrado.');
         }
 
         $erro = null;
@@ -67,7 +67,7 @@ class FormularioAdminController extends Controller
             $descricao = trim(isset($_POST['descricao']) ? $_POST['descricao'] : '');
 
             if ($nome === '') {
-                $erro = 'Informe o nome do formulario.';
+                $erro = 'Informe o nome do formulário.';
             } else {
                 $this->formularios->atualizar($id, $nome, $descricao);
                 $formulario = $this->formularios->buscarPorId($id);
@@ -77,7 +77,7 @@ class FormularioAdminController extends Controller
         $this->renderizar('admin/formularios/form', [
             'erro' => $erro,
             'formulario' => $formulario,
-        ], 'Editar formulario');
+        ], 'Editar formulário');
     }
 
     public function publicar()

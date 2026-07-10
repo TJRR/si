@@ -26,7 +26,7 @@ class FormularioDinamicoService
         $formulario = $this->formularios->buscarPorId($id);
 
         if ($formulario === null) {
-            return ['sucesso' => false, 'mensagem' => 'Formulario nao encontrado.'];
+            return ['sucesso' => false, 'mensagem' => 'Formulário não encontrado.'];
         }
 
         if ($this->campos->contarPorFormulario($id) === 0) {
@@ -50,7 +50,7 @@ class FormularioDinamicoService
         $formulario = $this->formularios->buscarPorId($id);
 
         if ($formulario === null) {
-            return ['sucesso' => false, 'mensagem' => 'Formulario nao encontrado.'];
+            return ['sucesso' => false, 'mensagem' => 'Formulário não encontrado.'];
         }
 
         $novoId = $this->formularios->criar(
