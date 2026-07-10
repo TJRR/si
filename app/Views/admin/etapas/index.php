@@ -30,7 +30,10 @@
                 | <a href="<?php echo url('designacoes/index/' . (int) $etapa['id']); ?>">Designações</a>
                 | <a href="<?php echo url('resultados/etapa/' . (int) $etapa['id']); ?>">Resultado</a>
                 <?php if ($etapa['formulario_dinamico_id']): ?>
-                    | <a href="<?php echo url('submissao/preencher/' . (int) $etapa['id']); ?>" target="_blank">Ver formulário público</a>
+                    <?php $urlFormularioPublico = (int) $etapa['ordem'] === 1
+                        ? url('inscricao/formulario/' . (int) $etapa['id'])
+                        : url('submissao/preencher/' . (int) $etapa['id']); ?>
+                    | <a href="<?php echo $urlFormularioPublico; ?>" target="_blank">Ver formulário público</a>
                 <?php endif; ?>
             </td>
         </tr>

@@ -9,7 +9,7 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
-use App\Repositories\CriterioAvaliacaoRepository;
+use App\Repositories\ConcursoRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\FormularioDinamicoRepository;
 use App\Repositories\TrilhaRepository;
@@ -19,7 +19,7 @@ class EtapaAdminController extends Controller
     private $etapas;
     private $trilhas;
     private $formularios;
-    private $criterios;
+    private $concursos;
 
     public function __construct()
     {
@@ -27,7 +27,7 @@ class EtapaAdminController extends Controller
         $this->etapas = new EtapaRepository();
         $this->trilhas = new TrilhaRepository();
         $this->formularios = new FormularioDinamicoRepository();
-        $this->criterios = new CriterioAvaliacaoRepository();
+        $this->concursos = new ConcursoRepository();
     }
 
     public function index($trilhaId)
@@ -39,10 +39,12 @@ class EtapaAdminController extends Controller
             exit('Trilha não encontrada.');
         }
 
+        $concurso = $this->concursos->buscarPorId($trilha['concurso_id']);
         $lista = $this->etapas->listarPorTrilha($trilhaId);
         $this->renderizar('admin/etapas/index', [
             'trilha' => $trilha,
             'etapas' => $lista,
+            'breadcrumb' => $this->montarBreadcrumb($concurso, $trilha),
         ], 'Etapas de ' . $trilha['nome']);
     }
 
@@ -80,12 +82,14 @@ class EtapaAdminController extends Controller
             }
         }
 
+        $concurso = $this->concursos->buscarPorId($trilha['concurso_id']);
+
         $this->renderizar('admin/etapas/form', [
             'erro' => $erro,
             'trilha' => $trilha,
             'etapa' => null,
-            'formularios' => $this->formularios->listar(),
-            'temCriterios' => false,
+            'formularios' => $this->formularios->listar($trilha['concurso_id']),
+            'breadcrumb' => $this->montarBreadcrumb($concurso, $trilha, 'Nova etapa'),
         ], 'Nova etapa');
     }
 
@@ -123,13 +127,30 @@ class EtapaAdminController extends Controller
             }
         }
 
+        $concurso = $this->concursos->buscarPorId($trilha['concurso_id']);
+
         $this->renderizar('admin/etapas/form', [
             'erro' => $erro,
             'trilha' => $trilha,
             'etapa' => $etapa,
-            'formularios' => $this->formularios->listar(),
-            'temCriterios' => $this->criterios->contarPorEtapa($id) > 0,
+            'formularios' => $this->formularios->listar($trilha['concurso_id']),
+            'breadcrumb' => $this->montarBreadcrumb($concurso, $trilha, 'Editar ' . $etapa['nome']),
         ], 'Editar etapa');
+    }
+
+    private function montarBreadcrumb(array $concurso, array $trilha, $itemAtual = null)
+    {
+        $breadcrumb = [
+            ['rotulo' => 'Concursos', 'url' => 'concursos/index'],
+            ['rotulo' => $concurso['nome'], 'url' => 'trilhas/index/' . (int) $concurso['id']],
+            ['rotulo' => $trilha['nome'], 'url' => 'etapas/index/' . (int) $trilha['id']],
+        ];
+
+        if ($itemAtual !== null) {
+            $breadcrumb[] = ['rotulo' => $itemAtual];
+        }
+
+        return $breadcrumb;
     }
 
     private function lerDadosFormulario()

@@ -48,6 +48,10 @@ class TrilhaAdminController extends Controller
         $this->renderizar('admin/trilhas/index', [
             'concurso' => $concurso,
             'trilhas' => $lista,
+            'breadcrumb' => [
+                ['rotulo' => 'Concursos', 'url' => 'concursos/index'],
+                ['rotulo' => $concurso['nome']],
+            ],
         ], 'Trilhas de ' . $concurso['nome']);
     }
 
@@ -101,6 +105,11 @@ class TrilhaAdminController extends Controller
             'erro' => $erro,
             'concurso' => $concurso,
             'trilha' => null,
+            'breadcrumb' => [
+                ['rotulo' => 'Concursos', 'url' => 'concursos/index'],
+                ['rotulo' => $concurso['nome'], 'url' => 'trilhas/index/' . (int) $concurso['id']],
+                ['rotulo' => 'Nova trilha'],
+            ],
         ], 'Nova trilha');
     }
 
@@ -134,6 +143,11 @@ class TrilhaAdminController extends Controller
             'erro' => $erro,
             'concurso' => $concurso,
             'trilha' => $trilha,
+            'breadcrumb' => [
+                ['rotulo' => 'Concursos', 'url' => 'concursos/index'],
+                ['rotulo' => $concurso['nome'], 'url' => 'trilhas/index/' . (int) $concurso['id']],
+                ['rotulo' => 'Editar ' . $trilha['nome']],
+            ],
         ], 'Editar trilha');
     }
 }

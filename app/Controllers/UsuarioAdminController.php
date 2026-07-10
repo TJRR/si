@@ -12,6 +12,7 @@ use App\Middleware\RoleMiddleware;
 use App\Repositories\ConcursoRepository;
 use App\Repositories\PerfilRepository;
 use App\Repositories\UsuarioRepository;
+use App\Services\AcessoParticipanteService;
 
 class UsuarioAdminController extends Controller
 {
@@ -29,12 +30,23 @@ class UsuarioAdminController extends Controller
 
     public function index()
     {
-        $pendentes = $this->usuarios->listarPendentes();
+        $filtroConcursoId = (isset($_GET['concurso_id']) && $_GET['concurso_id'] !== '') ? (int) $_GET['concurso_id'] : null;
+        $lista = $this->usuarios->listarTodos($filtroConcursoId);
+
+        foreach ($lista as &$usuario) {
+            $usuario['perfis'] = $this->usuarios->perfisDoUsuario($usuario['id']);
+        }
+        unset($usuario);
+
         $this->renderizar('admin/usuarios', [
-            'pendentes' => $pendentes,
+            'usuarios' => $lista,
             'perfis' => $this->perfis->listar(),
             'concursos' => $this->concursos->listar(),
-        ], 'Cadastros pendentes');
+            'filtroConcursoId' => $filtroConcursoId,
+            'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
+        ], 'Usuários');
+
+        unset($_SESSION['flash']);
     }
 
     public function aprovar()
@@ -61,5 +73,50 @@ class UsuarioAdminController extends Controller
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $this->usuarios->atualizarStatus($id, 'rejeitado');
         $this->redirecionar('usuarios/index');
+    }
+
+    public function suspender()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $this->usuarios->atualizarAtivo($id, false);
+        $this->redirecionar('usuarios/index');
+    }
+
+    public function reativar()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $this->usuarios->atualizarAtivo($id, true);
+        $this->redirecionar('usuarios/index');
+    }
+
+    public function convidar()
+    {
+        $erro = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
+            $email = trim(isset($_POST['email']) ? $_POST['email'] : '');
+            $perfilChave = isset($_POST['perfil']) ? $_POST['perfil'] : '';
+            $concursoId = (isset($_POST['concurso_id']) && $_POST['concurso_id'] !== '') ? (int) $_POST['concurso_id'] : null;
+
+            $perfil = $this->perfis->buscarPorChave($perfilChave);
+
+            if ($nome === '' || $email === '') {
+                $erro = 'Informe nome e e-mail.';
+            } elseif ($perfil === null) {
+                $erro = 'Selecione um perfil válido.';
+            } else {
+                (new AcessoParticipanteService())->convidarUsuario($nome, $email, $perfil['id'], $concursoId);
+                $_SESSION['flash'] = 'Usuário convidado com sucesso.';
+                $this->redirecionar('usuarios/index');
+                return;
+            }
+        }
+
+        $this->renderizar('admin/usuarios_convidar', [
+            'erro' => $erro,
+            'perfis' => $this->perfis->listar(),
+            'concursos' => $this->concursos->listar(),
+        ], 'Convidar usuário');
     }
 }

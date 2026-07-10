@@ -31,11 +31,13 @@ class AvaliadorDesignacaoService
     }
 
     /**
-     * Distribuicao round-robin: para cada submissao que ainda nao tem a
-     * quantidade de avaliadores configurada na etapa, atribui o(s) avaliador(es)
-     * com menor carga atual na etapa, sem repetir avaliador na mesma submissao.
+     * Calcula (sem persistir) a distribuicao round-robin: para cada submissao
+     * que ainda nao tem a quantidade de avaliadores configurada na etapa,
+     * sugere o(s) avaliador(es) com menor carga atual na etapa, sem repetir
+     * avaliador na mesma submissao. Uma linha por vaga faltante (uma
+     * submissao pode gerar mais de uma linha se qtd_avaliadores_por_submissao > 1).
      */
-    public function distribuirAutomaticamente($etapaId)
+    public function calcularDistribuicao($etapaId)
     {
         $etapa = $this->etapas->buscarPorId($etapaId);
 
@@ -55,28 +57,62 @@ class AvaliadorDesignacaoService
             $carga[(int) $avaliador['id']] = $this->designacoes->contarPorUsuarioNaEtapa($avaliador['id'], $etapaId);
         }
 
+        $candidatos = array_map(function ($avaliador) {
+            return ['id' => (int) $avaliador['id'], 'nome' => $avaliador['nome']];
+        }, $avaliadores);
+
         $quantidadeNecessaria = max(1, (int) $etapa['qtd_avaliadores_por_submissao']);
-        $totalAtribuicoes = 0;
+        $linhas = [];
 
         foreach ($this->submissoes->listarPorEtapa($etapaId) as $submissao) {
             $jaDesignados = array_map('intval', array_column($this->designacoes->listarPorSubmissao($submissao['id']), 'usuario_id'));
             $faltando = $quantidadeNecessaria - count($jaDesignados);
 
             for ($i = 0; $i < $faltando; $i++) {
-                $candidato = $this->escolherMenosCarregado($carga, $jaDesignados);
+                $sugeridoId = $this->escolherMenosCarregado($carga, $jaDesignados);
 
-                if ($candidato === null) {
+                if ($sugeridoId === null) {
                     break;
                 }
 
-                $this->designacoes->criar($submissao['id'], $candidato, null);
-                $carga[$candidato]++;
-                $jaDesignados[] = $candidato;
-                $totalAtribuicoes++;
+                $linhas[] = [
+                    'submissao_id' => (int) $submissao['id'],
+                    'nome_equipe' => $submissao['nome_equipe'],
+                    'candidatos' => $candidatos,
+                    'sugerido_id' => $sugeridoId,
+                ];
+
+                $carga[$sugeridoId]++;
+                $jaDesignados[] = $sugeridoId;
             }
         }
 
-        return $totalAtribuicoes;
+        return $linhas;
+    }
+
+    /**
+     * Persiste as atribuicoes ja revisadas/editadas pelo Admin na tela de
+     * previa. $atribuicoes e uma lista de ['submissao_id' => int, 'usuario_id' => int].
+     */
+    public function confirmarDistribuicao($etapaId, array $atribuicoes, $atribuidoPor = null)
+    {
+        $total = 0;
+
+        foreach ($atribuicoes as $atribuicao) {
+            $submissaoId = (int) $atribuicao['submissao_id'];
+            $usuarioId = (int) $atribuicao['usuario_id'];
+
+            if ($usuarioId <= 0) {
+                continue;
+            }
+
+            if (!$this->designacoes->existeDesignacao($submissaoId, $usuarioId)) {
+                $this->designacoes->criar($submissaoId, $usuarioId, $atribuidoPor);
+                $total++;
+            }
+        }
+
+        return $total;
     }
 
     private function escolherMenosCarregado(array $carga, array $jaDesignados)

@@ -5,7 +5,8 @@
 <h1>Trilhas de <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('concursos/index'); ?>">Voltar aos concursos</a></p>
-<p><a href="<?php echo url('trilhas/novo/' . (int) $concurso['id']); ?>">+ Nova trilha</a></p>
+<p><a href="<?php echo url('trilhas/novo/' . (int) $concurso['id']); ?>">+ Nova trilha</a>
+| <a href="<?php echo url('formularios/index/' . (int) $concurso['id']); ?>">Formulários deste concurso</a></p>
 
 <?php if (empty($trilhas)): ?>
     <p>Nenhuma trilha cadastrada.</p>

@@ -38,9 +38,8 @@ if ($ehPainelAdmin) {
         ['rotulo' => 'Painel', 'url' => 'home/administrativo', 'ativo' => $moduloAtual === 'home'],
         ['rotulo' => 'Páginas', 'url' => 'conteudo/index', 'ativo' => $moduloAtual === 'conteudo'],
         ['rotulo' => 'Tema', 'url' => 'tema/index', 'ativo' => $moduloAtual === 'tema'],
-        ['rotulo' => 'Concursos', 'url' => 'concursos/index', 'ativo' => in_array($moduloAtual, ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate'], true)],
-        ['rotulo' => 'Formulários Dinâmicos', 'url' => 'formularios/index', 'ativo' => in_array($moduloAtual, ['formularios', 'campos'], true)],
-        ['rotulo' => 'Cadastros pendentes', 'url' => 'usuarios/index', 'ativo' => $moduloAtual === 'usuarios'],
+        ['rotulo' => 'Concursos', 'url' => 'concursos/index', 'ativo' => in_array($moduloAtual, ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'resultados', 'homologacao', 'formularios', 'campos'], true)],
+        ['rotulo' => 'Usuários', 'url' => 'usuarios/index', 'ativo' => $moduloAtual === 'usuarios'],
     ];
 }
 ?>
@@ -75,6 +74,9 @@ if ($ehPainelAdmin) {
             </a>
         <?php endforeach; ?>
     </nav>
+    <?php endif; ?>
+    <?php if (!empty($breadcrumb)): ?>
+    <nav class="admin-breadcrumb"><?php echo breadcrumb_html($breadcrumb); ?></nav>
     <?php endif; ?>
 <?php endif; ?>
 <?php if (!empty($_SESSION['flash'])): ?>

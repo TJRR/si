@@ -67,7 +67,7 @@ function camposDaInscricao()
     return $campos;
 }
 
-function criarFormularioSeNaoExistir(FormularioDinamicoRepository $formularios, CampoDinamicoRepository $campos, EtapaRepository $etapas, $etapaId, $nomeFormulario, $descricao)
+function criarFormularioSeNaoExistir(FormularioDinamicoRepository $formularios, CampoDinamicoRepository $campos, EtapaRepository $etapas, $etapaId, $concursoId, $nomeFormulario, $descricao)
 {
     $etapa = $etapas->buscarPorId($etapaId);
 
@@ -81,7 +81,7 @@ function criarFormularioSeNaoExistir(FormularioDinamicoRepository $formularios, 
         return;
     }
 
-    $formularioId = $formularios->criar($nomeFormulario, $descricao, 1, 'rascunho');
+    $formularioId = $formularios->criar($concursoId, $nomeFormulario, $descricao, 1, 'rascunho');
 
     foreach (camposDaInscricao() as $campo) {
         $campos->criar($formularioId, $campo['rotulo'], $campo['tipo'], $campo['obrigatorio'], $campo['papel']);
@@ -127,6 +127,7 @@ criarFormularioSeNaoExistir(
     $campos,
     $etapas,
     $etapaCadastroExterna['id'],
+    $trilhaExterna['concurso_id'],
     'Inscrição de Equipe - Trilha Externa',
     'Inscrição para o público externo do 5º Prêmio de Inovação do TJRR (Edital 12/2026). Não precisa apresentar a ideia neste momento - ela é submetida em etapa posterior, após a homologação.'
 );
@@ -136,6 +137,7 @@ criarFormularioSeNaoExistir(
     $campos,
     $etapas,
     $etapaCadastroInterna['id'],
+    $trilhaInterna['concurso_id'],
     'Inscrição de Equipe - Trilha Interna',
     'Inscrição para membros/servidores do Poder Judiciário do 5º Prêmio de Inovação do TJRR (Edital 13/2026). Não precisa apresentar a ideia neste momento - ela é submetida em etapa posterior, após a homologação.'
 );

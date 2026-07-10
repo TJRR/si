@@ -103,4 +103,46 @@ class NotificacaoService
             htmlspecialchars($linkDefinirSenha, ENT_QUOTES, 'UTF-8')
         );
     }
+
+    public function conviteAdministrativo($destinatarioEmail, $nomeUsuario, $linkDefinirSenha)
+    {
+        $assunto = 'Você foi convidado para o Sistema do Prêmio de Inovação TJRR';
+        $corpo = $this->montarCorpoConviteAdministrativo($nomeUsuario, $linkDefinirSenha);
+
+        $id = $this->notificacoes->criar(
+            'convite_administrativo',
+            'convite_administrativo',
+            $destinatarioEmail,
+            $assunto,
+            $corpo
+        );
+
+        try {
+            $resultado = Mailer::enviar($destinatarioEmail, $assunto, $corpo);
+        } catch (\Exception $e) {
+            $resultado = ['sucesso' => false, 'erro' => $e->getMessage()];
+        }
+
+        if ($resultado['sucesso']) {
+            $this->notificacoes->marcarEnviada($id);
+        } else {
+            $this->notificacoes->marcarFalhou($id);
+        }
+    }
+
+    private function montarCorpoConviteAdministrativo($nomeUsuario, $linkDefinirSenha)
+    {
+        return sprintf(
+            '<p>Olá, %s,</p>'
+            . '<p>Você foi convidado(a) pelo Administrador a acessar o Sistema do Prêmio de Inovação TJRR.</p>'
+            . '<p>Você já pode acessar o sistema de duas formas:</p>'
+            . '<ul>'
+            . '<li>Clicando em <a href="%s">Definir minha senha</a> e entrando com e-mail e senha; ou</li>'
+            . '<li>Usando o botão "Entrar com Google" com este mesmo e-mail.</li>'
+            . '</ul>'
+            . '<p>Prêmio de Inovação TJRR</p>',
+            htmlspecialchars($nomeUsuario, ENT_QUOTES, 'UTF-8'),
+            htmlspecialchars($linkDefinirSenha, ENT_QUOTES, 'UTF-8')
+        );
+    }
 }

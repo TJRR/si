@@ -45,7 +45,7 @@ class FormularioDinamicoService
         return ['sucesso' => true];
     }
 
-    public function duplicar($id)
+    public function duplicar($id, $concursoDestinoId)
     {
         $formulario = $this->formularios->buscarPorId($id);
 
@@ -54,6 +54,7 @@ class FormularioDinamicoService
         }
 
         $novoId = $this->formularios->criar(
+            $concursoDestinoId,
             $formulario['nome'],
             $formulario['descricao'],
             (int) $formulario['versao'] + 1,

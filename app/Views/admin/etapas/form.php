@@ -60,7 +60,6 @@
         </select>
     </label><br>
 
-    <?php if (!empty($temCriterios)): ?>
     <fieldset>
         <legend>Configuração de avaliação desta etapa</legend>
 
@@ -112,7 +111,6 @@
             </select>
         </label>
     </fieldset><br>
-    <?php endif; ?>
 
     <button type="submit">Salvar</button>
 </form>

@@ -11,11 +11,13 @@ use App\Core\Database;
 
 class FormularioDinamicoRepository
 {
-    public function listar()
+    public function listar($concursoId)
     {
         $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM formularios_dinamicos WHERE concurso_id = :concurso_id ORDER BY nome ASC, versao ASC');
+        $stmt->execute(['concurso_id' => $concursoId]);
 
-        return $pdo->query('SELECT * FROM formularios_dinamicos ORDER BY nome ASC, versao ASC')->fetchAll();
+        return $stmt->fetchAll();
     }
 
     public function buscarPorId($id)
@@ -29,13 +31,14 @@ class FormularioDinamicoRepository
         return $formulario !== false ? $formulario : null;
     }
 
-    public function criar($nome, $descricao, $versao = 1, $status = 'rascunho')
+    public function criar($concursoId, $nome, $descricao, $versao = 1, $status = 'rascunho')
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'INSERT INTO formularios_dinamicos (nome, descricao, versao, status) VALUES (:nome, :descricao, :versao, :status)'
+            'INSERT INTO formularios_dinamicos (concurso_id, nome, descricao, versao, status) VALUES (:concurso_id, :nome, :descricao, :versao, :status)'
         );
         $stmt->execute([
+            'concurso_id' => $concursoId,
             'nome' => $nome,
             'descricao' => $descricao !== '' ? $descricao : null,
             'versao' => $versao,

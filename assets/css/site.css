@@ -500,6 +500,19 @@ body.admin-page .admin-tab.active {
     border-bottom-color: var(--cor-primaria-fim);
 }
 
+body.admin-page .admin-breadcrumb {
+    max-width: 1000px;
+    margin: -0.75rem auto 1.5rem;
+    padding: 0 1.5rem;
+    box-sizing: border-box;
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+}
+
+body.admin-page .admin-breadcrumb a {
+    color: var(--cor-texto-suave);
+}
+
 body.admin-page > h1,
 body.admin-page > p,
 body.admin-page > form,

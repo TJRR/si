@@ -99,6 +99,26 @@ class UsuarioRepository
         return $stmt->fetchAll();
     }
 
+    public function listarTodos($concursoId = null)
+    {
+        $pdo = Database::conexao();
+
+        if ($concursoId === null) {
+            return $pdo->query('SELECT * FROM usuarios ORDER BY nome ASC')->fetchAll();
+        }
+
+        $stmt = $pdo->prepare(
+            'SELECT DISTINCT u.*
+             FROM usuarios u
+             INNER JOIN usuario_perfil_concurso upc ON upc.usuario_id = u.id
+             WHERE upc.concurso_id = :concurso_id
+             ORDER BY u.nome ASC'
+        );
+        $stmt->execute(['concurso_id' => $concursoId]);
+
+        return $stmt->fetchAll();
+    }
+
     public function atualizarStatus($id, $status)
     {
         $pdo = Database::conexao();
@@ -106,13 +126,21 @@ class UsuarioRepository
         $stmt->execute(['status' => $status, 'id' => $id]);
     }
 
+    public function atualizarAtivo($id, $ativo)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE usuarios SET ativo = :ativo WHERE id = :id');
+        $stmt->execute(['ativo' => $ativo ? 1 : 0, 'id' => $id]);
+    }
+
     public function perfisDoUsuario($usuarioId)
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT p.chave AS perfil, upc.concurso_id AS concurso_id
+            'SELECT p.chave AS perfil, p.nome_exibicao AS perfil_nome, upc.concurso_id AS concurso_id, c.nome AS concurso_nome
              FROM usuario_perfil_concurso upc
              INNER JOIN perfis p ON p.id = upc.perfil_id
+             LEFT JOIN concursos c ON c.id = upc.concurso_id
              WHERE upc.usuario_id = :usuario_id'
         );
         $stmt->execute(['usuario_id' => $usuarioId]);

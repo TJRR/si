@@ -4,7 +4,7 @@
 } ?>
 <h1>Campos de <?php echo htmlspecialchars($formulario['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('formularios/index'); ?>">Voltar aos formulários</a></p>
+<p><a href="<?php echo url('formularios/index/' . (int) $formulario['concurso_id']); ?>">Voltar aos formulários</a></p>
 
 <p>Status do formulário: <strong><?php echo htmlspecialchars($formulario['status'], ENT_QUOTES, 'UTF-8'); ?></strong></p>
 

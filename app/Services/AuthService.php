@@ -39,6 +39,10 @@ class AuthService
             return ['sucesso' => false, 'mensagem' => 'Cadastro rejeitado. Entre em contato com o NPI.'];
         }
 
+        if ((int) $usuario['ativo'] === 0) {
+            return ['sucesso' => false, 'mensagem' => 'Cadastro suspenso. Entre em contato com o NPI.'];
+        }
+
         $perfis = $this->usuarios->perfisDoUsuario($usuario['id']);
 
         return ['sucesso' => true, 'usuario' => $usuario, 'perfis' => $perfis];
@@ -97,6 +101,7 @@ class AuthService
                     'email' => $dadosGoogle['email'],
                     'google_id' => $dadosGoogle['google_id'],
                     'status' => 'pendente',
+                    'ativo' => 1,
                 ];
             } elseif ($usuario['google_id'] === null) {
                 try {
@@ -117,6 +122,10 @@ class AuthService
 
         if ($usuario['status'] === 'rejeitado') {
             return ['sucesso' => false, 'mensagem' => 'Cadastro rejeitado. Entre em contato com o NPI.'];
+        }
+
+        if ((int) $usuario['ativo'] === 0) {
+            return ['sucesso' => false, 'mensagem' => 'Cadastro suspenso. Entre em contato com o NPI.'];
         }
 
         return [
