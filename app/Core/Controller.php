@@ -9,9 +9,14 @@ if (!defined('SI_BOOT')) {
 
 abstract class Controller
 {
-    protected function renderizar($view, array $dados = [], $titulo = null)
+    protected function renderizar($view, array $dados = [], $titulo = null, array $noAtual = null)
     {
-        View::renderizar($view, $dados, $titulo);
+        if (requisicaoParcial()) {
+            View::renderizarParcial($view, $dados, $titulo, $noAtual);
+            return;
+        }
+
+        View::renderizar($view, $dados, $titulo, $noAtual);
     }
 
     protected function redirecionar($rota)

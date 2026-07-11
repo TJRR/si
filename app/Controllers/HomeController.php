@@ -13,6 +13,7 @@ use App\Repositories\ConcursoRepository;
 use App\Repositories\ConteudoSiteRepository;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
+use App\Repositories\FormularioDinamicoRepository;
 use App\Repositories\TemaDesafioRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioRepository;
@@ -25,6 +26,7 @@ class HomeController extends Controller
         $trilhas = new TrilhaRepository();
         $etapas = new EtapaRepository();
         $temas = new TemaDesafioRepository();
+        $formularios = new FormularioDinamicoRepository();
 
         $concursoAtivo = $concursos->buscarAtivo();
         $trilhasAtivas = $concursoAtivo !== null ? $trilhas->listarPorConcurso($concursoAtivo['id']) : [];
@@ -39,10 +41,16 @@ class HomeController extends Controller
                 $cronograma[] = $etapa;
 
                 if ((int) $etapa['ordem'] === 1 && $etapa['captura_ativa']) {
-                    $trilhasComInscricaoAberta[] = [
-                        'trilha_nome' => $trilha['nome'],
-                        'etapa_id' => $etapa['id'],
-                    ];
+                    $formularioDaEtapa = $etapa['formulario_dinamico_id'] !== null
+                        ? $formularios->buscarPorId($etapa['formulario_dinamico_id'])
+                        : null;
+
+                    if ($formularioDaEtapa !== null && $formularioDaEtapa['status'] === 'publicado') {
+                        $trilhasComInscricaoAberta[] = [
+                            'trilha_nome' => $trilha['nome'],
+                            'etapa_id' => $etapa['id'],
+                        ];
+                    }
                 }
             }
 

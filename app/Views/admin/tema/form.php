@@ -8,7 +8,25 @@
     <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('tema/index'); ?>">
+<form method="post" action="<?php echo url('tema/index'); ?>" enctype="multipart/form-data">
+    <fieldset>
+        <legend>Favicon</legend>
+        <p>
+            Atual:
+            <img src="<?php
+                echo !empty($configuracaoVisual['favicon_path'])
+                    ? htmlspecialchars(config('base_path') . '/assets/' . $configuracaoVisual['favicon_path'], ENT_QUOTES, 'UTF-8')
+                    : htmlspecialchars(config('base_path') . '/assets/img/favicon-padrao.png', ENT_QUOTES, 'UTF-8');
+            ?>" alt="Favicon atual" width="32" height="32">
+        </p>
+        <p>
+            <label>
+                Trocar favicon (PNG):<br>
+                <input type="file" name="favicon" accept="image/png">
+            </label>
+        </p>
+    </fieldset>
+
     <fieldset>
         <legend>Cores</legend>
         <p>

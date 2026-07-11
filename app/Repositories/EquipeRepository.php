@@ -160,6 +160,39 @@ class EquipeRepository
         return $stmt->fetchAll();
     }
 
+    /**
+     * Lista TODAS as inscricoes (vinculos equipe_participante) de uma trilha,
+     * independente do status de homologacao — ao contrario de
+     * listarPendentesHomologacaoPorTrilha(), usada pela tela "Inscritos" para
+     * nao esconder equipes ja homologadas. $status opcional filtra por um dos
+     * valores de equipe_participante.status_homologacao.
+     */
+    public function listarTodosPorTrilha($trilhaId, $status = null)
+    {
+        $pdo = Database::conexao();
+
+        $sql = "SELECT ep.id AS vinculo_id, ep.equipe_id, ep.participante_id, ep.papel, ep.status_homologacao,
+                       ep.motivo_rejeicao, e.nome_equipe, p.nome AS participante_nome, p.cpf, p.email, p.telefone
+                FROM equipe_participante ep
+                INNER JOIN equipes e ON e.id = ep.equipe_id
+                INNER JOIN participantes p ON p.id = ep.participante_id
+                WHERE e.trilha_id = :trilha_id";
+
+        $parametros = ['trilha_id' => $trilhaId];
+
+        if ($status !== null && $status !== '') {
+            $sql .= ' AND ep.status_homologacao = :status';
+            $parametros['status'] = $status;
+        }
+
+        $sql .= ' ORDER BY e.nome_equipe ASC, ep.papel ASC';
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($parametros);
+
+        return $stmt->fetchAll();
+    }
+
     public function buscarVinculoPorId($vinculoId)
     {
         $pdo = Database::conexao();

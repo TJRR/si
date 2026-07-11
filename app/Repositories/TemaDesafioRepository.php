@@ -72,4 +72,16 @@ class TemaDesafioRepository
             'id' => $id,
         ]);
     }
+
+    /**
+     * Remocao real (sem soft-delete) — ver EtapaRepository::remover() para a
+     * explicacao de por que a FK (sem CASCADE) ja protege contra remover um
+     * tema/desafio com equipes vinculadas.
+     */
+    public function remover($id)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('DELETE FROM temas_desafios WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+    }
 }

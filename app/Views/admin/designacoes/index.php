@@ -30,7 +30,8 @@
         <p><strong>Nenhum avaliador vinculado a este concurso ainda.</strong> Aprove um cadastro com perfil "Avaliador" em Usuários antes de designar.</p>
     <?php else: ?>
 
-    <form method="get" action="<?php echo url('designacoes/index/' . (int) $etapa['id']); ?>">
+    <form method="get" action="<?php echo config('base_path'); ?>/index.php">
+        <input type="hidden" name="r" value="designacoes/index/<?php echo (int) $etapa['id']; ?>">
         <label>Filtrar por avaliador:
             <select name="filtro_avaliador">
                 <option value="">Todos</option>
@@ -103,5 +104,3 @@
 
     <?php endif; ?>
 <?php endif; ?>
-
-<script src="<?php echo config('base_path'); ?>/assets/js/designacoes-massa.js"></script>

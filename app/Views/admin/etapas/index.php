@@ -25,16 +25,17 @@
             <td><?php echo $etapa['formulario_dinamico_id'] ? '#' . (int) $etapa['formulario_dinamico_id'] : '—'; ?></td>
             <td>
                 <a href="<?php echo url('etapas/editar/' . (int) $etapa['id']); ?>">Editar</a>
-                | <a href="<?php echo url('criterios/index/' . (int) $etapa['id']); ?>">Critérios</a>
-                | <a href="<?php echo url('formulas/etapa/' . (int) $etapa['id']); ?>">Fórmula</a>
-                | <a href="<?php echo url('designacoes/index/' . (int) $etapa['id']); ?>">Designações</a>
-                | <a href="<?php echo url('resultados/etapa/' . (int) $etapa['id']); ?>">Resultado</a>
-                <?php if ($etapa['formulario_dinamico_id']): ?>
+                <?php if ($etapa['formulario_dinamico_id'] && $etapa['formulario_status'] === 'publicado'): ?>
                     <?php $urlFormularioPublico = (int) $etapa['ordem'] === 1
                         ? url('inscricao/formulario/' . (int) $etapa['id'])
                         : url('submissao/preencher/' . (int) $etapa['id']); ?>
                     | <a href="<?php echo $urlFormularioPublico; ?>" target="_blank">Ver formulário público</a>
                 <?php endif; ?>
+                <form method="post" action="<?php echo url('etapas/remover'); ?>" style="display:inline;" onsubmit="return confirm('Remover esta etapa? Só funciona se ela ainda não tiver critérios, notas ou submissões.');">
+                    <input type="hidden" name="id" value="<?php echo (int) $etapa['id']; ?>">
+                    <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
+                    <button type="submit" class="btn-secundario">Remover</button>
+                </form>
             </td>
         </tr>
         <?php endforeach; ?>

@@ -37,7 +37,24 @@ class TemaDesafioAdminController extends Controller
         $this->renderizar('admin/temas/index', [
             'trilha' => $trilha,
             'temas' => $lista,
-        ], 'Temas/Desafios de ' . $trilha['nome']);
+        ], 'Temas/Desafios de ' . $trilha['nome'], ['tipo' => 'temas', 'id' => (int) $trilhaId]);
+    }
+
+    public function remover()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
+
+        try {
+            $this->temas->remover($id);
+            $_SESSION['flash'] = 'Tema/desafio removido.';
+        } catch (\PDOException $e) {
+            $_SESSION['flash'] = $e->getCode() === '23000'
+                ? 'Não é possível remover: este tema/desafio já tem equipes vinculadas.'
+                : 'Não foi possível remover o tema/desafio.';
+        }
+
+        $this->redirecionar('temas/index/' . $trilhaId);
     }
 
     public function novo($trilhaId)
@@ -69,7 +86,7 @@ class TemaDesafioAdminController extends Controller
             'erro' => $erro,
             'trilha' => $trilha,
             'tema' => null,
-        ], 'Novo tema/desafio');
+        ], 'Novo tema/desafio', ['tipo' => 'temas', 'id' => (int) $trilhaId]);
     }
 
     public function editar($id)
@@ -101,6 +118,6 @@ class TemaDesafioAdminController extends Controller
             'erro' => $erro,
             'trilha' => $trilha,
             'tema' => $tema,
-        ], 'Editar tema/desafio');
+        ], 'Editar tema/desafio', ['tipo' => 'temas', 'id' => (int) $trilha['id']]);
     }
 }

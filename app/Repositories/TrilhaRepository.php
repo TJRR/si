@@ -80,6 +80,18 @@ class TrilhaRepository
         ]);
     }
 
+    /**
+     * Remocao real (sem soft-delete) — ver EtapaRepository::remover() para a
+     * explicacao de por que a FK (sem CASCADE) ja protege contra remover uma
+     * trilha com etapas/equipes/formulas/regras de desempate vinculadas.
+     */
+    public function remover($id)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('DELETE FROM trilhas WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+    }
+
     private function gerarSlugUnico($concursoId, $nome)
     {
         $pdo = Database::conexao();

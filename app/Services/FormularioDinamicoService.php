@@ -38,9 +38,33 @@ class FormularioDinamicoService
         return ['sucesso' => true];
     }
 
+    /**
+     * Tira o formulario do ar mantendo-o ainda "vivo" (pode voltar a ser
+     * publicado, pode ser duplicado) — diferente de arquivar(), que e um
+     * passo mais definitivo (arquivado nao pode mais ser duplicado).
+     */
+    public function despublicar($id)
+    {
+        $this->formularios->atualizarStatus($id, 'despublicado');
+
+        return ['sucesso' => true];
+    }
+
+    /**
+     * So faz sentido a partir de "despublicado" — a tela so oferece o botao
+     * nesse estado, mas o metodo em si nao valida o estado de origem (mesmo
+     * padrao ja usado em publicar()/desarquivar()).
+     */
     public function arquivar($id)
     {
         $this->formularios->atualizarStatus($id, 'arquivado');
+
+        return ['sucesso' => true];
+    }
+
+    public function desarquivar($id)
+    {
+        $this->formularios->atualizarStatus($id, 'despublicado');
 
         return ['sucesso' => true];
     }

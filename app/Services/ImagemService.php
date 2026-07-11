@@ -10,8 +10,10 @@ if (!defined('SI_BOOT')) {
 /**
  * Trata uploads de imagem do CMS do site publico (logo, imagens de secao):
  * redimensiona sem ampliar e converte para WebP quando o GD do ambiente
- * suporta (imagewebp() disponivel). Sem suporte a WebP, guarda o arquivo
- * como o admin enviou, sem redimensionar nem reconverter.
+ * suporta (imagewebp() disponivel). Sem suporte a WebP, ou quando o chamador
+ * passa $converterParaWebp=false (ex.: favicon, que precisa continuar em
+ * PNG/ICO para o navegador reconhecer), guarda o arquivo como o admin
+ * enviou, sem redimensionar nem reconverter.
  */
 class ImagemService
 {
@@ -24,7 +26,7 @@ class ImagemService
 
     private const TAMANHO_MAXIMO = 4 * 1024 * 1024;
 
-    public function salvar(array $arquivo, $pasta, $larguraMax, $alturaMax)
+    public function salvar(array $arquivo, $pasta, $larguraMax, $alturaMax, $converterParaWebp = true)
     {
         if (!preg_match('/^[a-z0-9_\-]+$/', $pasta)) {
             throw new \RuntimeException('Chave de destino inválida.');
@@ -65,7 +67,7 @@ class ImagemService
 
         $nomeArquivo = bin2hex(random_bytes(8));
 
-        if (!function_exists('imagewebp')) {
+        if (!$converterParaWebp || !function_exists('imagewebp')) {
             $extensao = self::TIPOS_PERMITIDOS[$mime];
             $caminhoRelativo = 'uploads/conteudo/' . $pasta . '/' . $nomeArquivo . '.' . $extensao;
 

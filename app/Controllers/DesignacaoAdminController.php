@@ -11,7 +11,6 @@ use App\Core\Auth;
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\AvaliadorDesignacaoRepository;
-use App\Repositories\ConcursoRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\NotaLancadaRepository;
 use App\Repositories\PerfilRepository;
@@ -24,7 +23,6 @@ class DesignacaoAdminController extends Controller
     private $designacoes;
     private $etapas;
     private $trilhas;
-    private $concursos;
     private $perfis;
     private $submissoes;
     private $notas;
@@ -36,7 +34,6 @@ class DesignacaoAdminController extends Controller
         $this->designacoes = new AvaliadorDesignacaoRepository();
         $this->etapas = new EtapaRepository();
         $this->trilhas = new TrilhaRepository();
-        $this->concursos = new ConcursoRepository();
         $this->perfis = new PerfilRepository();
         $this->submissoes = new SubmissaoRepository();
         $this->notas = new NotaLancadaRepository();
@@ -53,7 +50,6 @@ class DesignacaoAdminController extends Controller
         }
 
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
-        $concurso = $this->concursos->buscarPorId($trilha['concurso_id']);
         $avaliadores = $this->perfis->listarUsuariosPorPerfilConcurso('avaliador', $trilha['concurso_id']);
 
         $filtroAvaliador = isset($_GET['filtro_avaliador']) ? $_GET['filtro_avaliador'] : '';
@@ -79,13 +75,7 @@ class DesignacaoAdminController extends Controller
             'filtroAvaliador' => $filtroAvaliador,
             'filtroNota' => $filtroNota,
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
-            'breadcrumb' => [
-                ['rotulo' => 'Concursos', 'url' => 'concursos/index'],
-                ['rotulo' => $concurso['nome'], 'url' => 'trilhas/index/' . (int) $concurso['id']],
-                ['rotulo' => $trilha['nome'], 'url' => 'etapas/index/' . (int) $trilha['id']],
-                ['rotulo' => 'Designações — ' . $etapa['nome']],
-            ],
-        ], 'Designação de avaliadores — ' . $etapa['nome']);
+        ], 'Designação de avaliadores — ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
 
         unset($_SESSION['flash']);
     }
@@ -168,7 +158,6 @@ class DesignacaoAdminController extends Controller
         }
 
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
-        $concurso = $this->concursos->buscarPorId($trilha['concurso_id']);
 
         try {
             $linhas = $this->servico->calcularDistribuicao($etapaId);
@@ -188,14 +177,7 @@ class DesignacaoAdminController extends Controller
             'etapa' => $etapa,
             'trilha' => $trilha,
             'linhas' => $linhas,
-            'breadcrumb' => [
-                ['rotulo' => 'Concursos', 'url' => 'concursos/index'],
-                ['rotulo' => $concurso['nome'], 'url' => 'trilhas/index/' . (int) $concurso['id']],
-                ['rotulo' => $trilha['nome'], 'url' => 'etapas/index/' . (int) $trilha['id']],
-                ['rotulo' => 'Designações — ' . $etapa['nome'], 'url' => 'designacoes/index/' . (int) $etapa['id']],
-                ['rotulo' => 'Prévia da distribuição automática'],
-            ],
-        ], 'Prévia da distribuição — ' . $etapa['nome']);
+        ], 'Prévia da distribuição — ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
     }
 
     public function confirmarDistribuicao()

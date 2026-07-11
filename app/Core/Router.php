@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Controllers\ApuracaoAdminController;
 use App\Controllers\AuthController;
 use App\Controllers\AvaliacaoController;
 use App\Controllers\CadastroController;
@@ -21,6 +22,7 @@ use App\Controllers\FormularioAdminController;
 use App\Controllers\HomeController;
 use App\Controllers\HomologacaoController;
 use App\Controllers\InscricaoController;
+use App\Controllers\NavegacaoController;
 use App\Controllers\ParticipanteController;
 use App\Controllers\RegraDesempateAdminController;
 use App\Controllers\ResultadoAdminController;
@@ -55,6 +57,8 @@ class Router
         'designacoes' => DesignacaoAdminController::class,
         'avaliacao' => AvaliacaoController::class,
         'resultados' => ResultadoAdminController::class,
+        'apuracao' => ApuracaoAdminController::class,
+        'navegacao' => NavegacaoController::class,
     ];
 
     public function despachar($r)

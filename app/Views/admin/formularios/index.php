@@ -22,7 +22,7 @@
                 |
                 <a href="<?php echo url('campos/index/' . (int) $formulario['id']); ?>">Campos</a>
 
-                <?php if ($formulario['status'] === 'rascunho'): ?>
+                <?php if (in_array($formulario['status'], ['rascunho', 'despublicado'], true)): ?>
                     |
                     <form method="post" action="<?php echo url('formularios/publicar'); ?>" style="display:inline;">
                         <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
@@ -32,10 +32,21 @@
 
                 <?php if ($formulario['status'] === 'publicado'): ?>
                     |
+                    <form method="post" action="<?php echo url('formularios/despublicar'); ?>" style="display:inline;">
+                        <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
+                        <button type="submit" class="btn-secundario">Despublicar</button>
+                    </form>
+                <?php endif; ?>
+
+                <?php if ($formulario['status'] === 'despublicado'): ?>
+                    |
                     <form method="post" action="<?php echo url('formularios/arquivar'); ?>" style="display:inline;">
                         <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
-                        <button type="submit">Arquivar</button>
+                        <button type="submit" class="btn-secundario">Arquivar</button>
                     </form>
+                <?php endif; ?>
+
+                <?php if (in_array($formulario['status'], ['publicado', 'despublicado'], true)): ?>
                     |
                     <form method="post" action="<?php echo url('formularios/duplicar'); ?>" style="display:inline;">
                         <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
@@ -52,6 +63,21 @@
                         <button type="submit">Duplicar</button>
                     </form>
                 <?php endif; ?>
+
+                <?php if ($formulario['status'] === 'arquivado'): ?>
+                    |
+                    <form method="post" action="<?php echo url('formularios/desarquivar'); ?>" style="display:inline;">
+                        <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
+                        <button type="submit">Desarquivar</button>
+                    </form>
+                <?php endif; ?>
+
+                |
+                <form method="post" action="<?php echo url('formularios/remover'); ?>" style="display:inline;" onsubmit="return confirm('Remover este formulário? Só funciona se ele ainda não tiver campos, etapas vinculadas ou submissões.');">
+                    <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
+                    <input type="hidden" name="concurso_id" value="<?php echo (int) $concurso['id']; ?>">
+                    <button type="submit" class="btn-secundario">Remover</button>
+                </form>
             </td>
         </tr>
         <?php endforeach; ?>

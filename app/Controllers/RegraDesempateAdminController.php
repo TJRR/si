@@ -67,7 +67,7 @@ class RegraDesempateAdminController extends Controller
                 $erro = 'Selecione um critério válido desta trilha.';
             } else {
                 $this->regras->criar($trilhaId, $criterioAvaliacaoId, $direcao === 'asc' ? 'asc' : 'desc');
-                $this->redirecionar('desempate/index/' . $trilhaId);
+                $this->redirecionar('apuracao/index/' . $trilhaId);
                 return;
             }
         }
@@ -76,7 +76,7 @@ class RegraDesempateAdminController extends Controller
             'erro' => $erro,
             'trilha' => $trilha,
             'criteriosDisponiveis' => $criteriosDisponiveis,
-        ], 'Novo critério de desempate');
+        ], 'Novo critério de desempate', ['tipo' => 'apuracao', 'id' => (int) $trilhaId]);
     }
 
     public function mover()
@@ -86,7 +86,7 @@ class RegraDesempateAdminController extends Controller
         $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
 
         $this->regras->mover($id, $direcao);
-        $this->redirecionar('desempate/index/' . $trilhaId);
+        $this->redirecionar('apuracao/index/' . $trilhaId);
     }
 
     public function remover()
@@ -95,6 +95,6 @@ class RegraDesempateAdminController extends Controller
         $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
 
         $this->regras->remover($id);
-        $this->redirecionar('desempate/index/' . $trilhaId);
+        $this->redirecionar('apuracao/index/' . $trilhaId);
     }
 }

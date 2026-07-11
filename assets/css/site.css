@@ -500,19 +500,6 @@ body.admin-page .admin-tab.active {
     border-bottom-color: var(--cor-primaria-fim);
 }
 
-body.admin-page .admin-breadcrumb {
-    max-width: 1000px;
-    margin: -0.75rem auto 1.5rem;
-    padding: 0 1.5rem;
-    box-sizing: border-box;
-    font-size: 0.85rem;
-    color: var(--cor-texto-suave);
-}
-
-body.admin-page .admin-breadcrumb a {
-    color: var(--cor-texto-suave);
-}
-
 body.admin-page > h1,
 body.admin-page > p,
 body.admin-page > form,
@@ -524,6 +511,164 @@ body.admin-page > fieldset {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
     box-sizing: border-box;
+}
+
+/* ================= Arvore lateral (Fase 8) ================= */
+
+body.admin-page .admin-shell {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    align-items: start;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    box-sizing: border-box;
+    gap: 1.5rem;
+}
+
+body.admin-page .admin-sidebar {
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    padding: 1rem 0.5rem;
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+}
+
+#arvore-admin ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+#arvore-admin .arvore-raiz {
+    padding-left: 0;
+}
+
+#arvore-admin .arvore-filhos {
+    padding-left: 1.1rem;
+}
+
+#arvore-admin .arvore-filhos-fechado {
+    display: none;
+}
+
+#arvore-admin .arvore-linha {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.35rem;
+    border-radius: 4px;
+}
+
+#arvore-admin .arvore-no.ativo > .arvore-linha {
+    background: var(--cor-fundo-alt);
+}
+
+#arvore-admin .arvore-no.ativo > .arvore-linha .arvore-rotulo {
+    color: var(--cor-primaria-fim);
+    font-weight: 600;
+}
+
+#arvore-admin .arvore-caret {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--cor-texto-suave);
+    font-size: 0.65rem;
+    line-height: 1;
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    margin: 0;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease;
+}
+
+#arvore-admin .arvore-caret.aberto {
+    transform: rotate(90deg);
+}
+
+#arvore-admin .arvore-caret.carregando {
+    opacity: 0.4;
+}
+
+#arvore-admin .arvore-spacer {
+    display: inline-block;
+    width: 14px;
+    flex: 0 0 auto;
+}
+
+#arvore-admin .arvore-rotulo {
+    color: var(--cor-texto);
+    text-decoration: none;
+    font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#arvore-admin .arvore-rotulo:hover {
+    color: var(--cor-primaria-fim);
+}
+
+#arvore-admin .arvore-vazio {
+    color: var(--cor-texto-suave);
+    font-size: 0.8rem;
+    font-style: italic;
+    padding: 0.25rem 0.35rem;
+}
+
+body.admin-page .admin-conteudo-wrapper {
+    min-width: 0;
+}
+
+body.admin-page .abas-secundarias {
+    background: var(--cor-branco);
+    border-bottom: 2px solid var(--cor-borda);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+body.admin-page .aba-secundaria {
+    display: inline-block;
+    padding: 0.65rem 0.85rem;
+    color: var(--cor-texto-suave);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+
+body.admin-page .aba-secundaria:hover {
+    color: var(--cor-primaria-fim);
+}
+
+body.admin-page .aba-secundaria.active {
+    color: var(--cor-primaria-fim);
+    border-bottom-color: var(--cor-primaria-fim);
+}
+
+body.admin-page #conteudo-admin > h1,
+body.admin-page #conteudo-admin > h2,
+body.admin-page #conteudo-admin > p,
+body.admin-page #conteudo-admin > form,
+body.admin-page #conteudo-admin > table,
+body.admin-page #conteudo-admin > fieldset {
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 body.admin-page h1 {

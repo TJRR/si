@@ -32,18 +32,11 @@
             </td>
             <td>
                 <a href="<?php echo url('trilhas/editar/' . (int) $trilha['id']); ?>">Editar</a>
-                |
-                <a href="<?php echo url('temas/index/' . (int) $trilha['id']); ?>">Temas/Desafios</a>
-                |
-                <a href="<?php echo url('etapas/index/' . (int) $trilha['id']); ?>">Etapas</a>
-                |
-                <a href="<?php echo url('homologacao/index/' . (int) $trilha['id']); ?>">Homologação</a>
-                |
-                <a href="<?php echo url('formulas/trilha/' . (int) $trilha['id']); ?>">Fórmula da nota final</a>
-                |
-                <a href="<?php echo url('desempate/index/' . (int) $trilha['id']); ?>">Desempate</a>
-                |
-                <a href="<?php echo url('resultados/trilha/' . (int) $trilha['id']); ?>">Resultado final</a>
+                <form method="post" action="<?php echo url('trilhas/remover'); ?>" style="display:inline;" onsubmit="return confirm('Remover esta trilha? Só funciona se ela ainda não tiver etapas, equipes ou outros dados vinculados.');">
+                    <input type="hidden" name="id" value="<?php echo (int) $trilha['id']; ?>">
+                    <input type="hidden" name="concurso_id" value="<?php echo (int) $concurso['id']; ?>">
+                    <button type="submit" class="btn-secundario">Remover</button>
+                </form>
             </td>
         </tr>
         <?php endforeach; ?>

@@ -9,7 +9,6 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
-use App\Repositories\ConcursoRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\FormularioDinamicoRepository;
 use App\Repositories\TrilhaRepository;
@@ -19,7 +18,6 @@ class EtapaAdminController extends Controller
     private $etapas;
     private $trilhas;
     private $formularios;
-    private $concursos;
 
     public function __construct()
     {
@@ -27,7 +25,6 @@ class EtapaAdminController extends Controller
         $this->etapas = new EtapaRepository();
         $this->trilhas = new TrilhaRepository();
         $this->formularios = new FormularioDinamicoRepository();
-        $this->concursos = new ConcursoRepository();
     }
 
     public function index($trilhaId)
@@ -39,13 +36,24 @@ class EtapaAdminController extends Controller
             exit('Trilha não encontrada.');
         }
 
-        $concurso = $this->concursos->buscarPorId($trilha['concurso_id']);
         $lista = $this->etapas->listarPorTrilha($trilhaId);
+
+        $statusPorFormulario = [];
+        foreach ($this->formularios->listar($trilha['concurso_id']) as $formulario) {
+            $statusPorFormulario[(int) $formulario['id']] = $formulario['status'];
+        }
+
+        foreach ($lista as &$etapa) {
+            $etapa['formulario_status'] = $etapa['formulario_dinamico_id'] !== null && isset($statusPorFormulario[(int) $etapa['formulario_dinamico_id']])
+                ? $statusPorFormulario[(int) $etapa['formulario_dinamico_id']]
+                : null;
+        }
+        unset($etapa);
+
         $this->renderizar('admin/etapas/index', [
             'trilha' => $trilha,
             'etapas' => $lista,
-            'breadcrumb' => $this->montarBreadcrumb($concurso, $trilha),
-        ], 'Etapas de ' . $trilha['nome']);
+        ], 'Etapas de ' . $trilha['nome'], ['tipo' => 'etapas', 'id' => (int) $trilhaId]);
     }
 
     public function novo($trilhaId)
@@ -82,15 +90,12 @@ class EtapaAdminController extends Controller
             }
         }
 
-        $concurso = $this->concursos->buscarPorId($trilha['concurso_id']);
-
         $this->renderizar('admin/etapas/form', [
             'erro' => $erro,
             'trilha' => $trilha,
             'etapa' => null,
             'formularios' => $this->formularios->listar($trilha['concurso_id']),
-            'breadcrumb' => $this->montarBreadcrumb($concurso, $trilha, 'Nova etapa'),
-        ], 'Nova etapa');
+        ], 'Nova etapa', ['tipo' => 'etapas', 'id' => (int) $trilhaId]);
     }
 
     public function editar($id)
@@ -127,30 +132,48 @@ class EtapaAdminController extends Controller
             }
         }
 
-        $concurso = $this->concursos->buscarPorId($trilha['concurso_id']);
-
         $this->renderizar('admin/etapas/form', [
             'erro' => $erro,
             'trilha' => $trilha,
             'etapa' => $etapa,
             'formularios' => $this->formularios->listar($trilha['concurso_id']),
-            'breadcrumb' => $this->montarBreadcrumb($concurso, $trilha, 'Editar ' . $etapa['nome']),
-        ], 'Editar etapa');
+        ], 'Editar etapa', ['tipo' => 'etapa', 'id' => (int) $id]);
     }
 
-    private function montarBreadcrumb(array $concurso, array $trilha, $itemAtual = null)
+    public function remover()
     {
-        $breadcrumb = [
-            ['rotulo' => 'Concursos', 'url' => 'concursos/index'],
-            ['rotulo' => $concurso['nome'], 'url' => 'trilhas/index/' . (int) $concurso['id']],
-            ['rotulo' => $trilha['nome'], 'url' => 'etapas/index/' . (int) $trilha['id']],
-        ];
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
 
-        if ($itemAtual !== null) {
-            $breadcrumb[] = ['rotulo' => $itemAtual];
+        try {
+            $this->etapas->remover($id);
+            $_SESSION['flash'] = 'Etapa removida.';
+        } catch (\PDOException $e) {
+            $_SESSION['flash'] = $e->getCode() === '23000'
+                ? 'Não é possível remover: esta etapa já tem critérios, fórmula, avaliações ou submissões vinculadas.'
+                : 'Não foi possível remover a etapa.';
         }
 
-        return $breadcrumb;
+        $this->redirecionar('etapas/index/' . $trilhaId);
+    }
+
+    public function formularioVinculado($etapaId)
+    {
+        $etapa = $this->etapas->buscarPorId($etapaId);
+
+        if ($etapa === null) {
+            http_response_code(404);
+            exit('Etapa não encontrada.');
+        }
+
+        $formulario = $etapa['formulario_dinamico_id'] !== null
+            ? $this->formularios->buscarPorId($etapa['formulario_dinamico_id'])
+            : null;
+
+        $this->renderizar('admin/etapas/formulario_vinculado', [
+            'etapa' => $etapa,
+            'formulario' => $formulario,
+        ], 'Formulário vinculado — ' . $etapa['nome'], ['tipo' => 'formulario_vinculado', 'id' => (int) $etapaId]);
     }
 
     private function lerDadosFormulario()

@@ -34,8 +34,24 @@ class FormularioAdminController extends Controller
             'concurso' => $concurso,
             'concursos' => $this->concursos->listar(),
             'formularios' => $lista,
-            'breadcrumb' => $this->montarBreadcrumb($concurso),
-        ], 'Formulários de ' . $concurso['nome']);
+        ], 'Formulários de ' . $concurso['nome'], ['tipo' => 'formularios', 'id' => (int) $concursoId]);
+    }
+
+    public function remover()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $concursoId = (int) (isset($_POST['concurso_id']) ? $_POST['concurso_id'] : 0);
+
+        try {
+            $this->formularios->remover($id);
+            $_SESSION['flash'] = 'Formulário removido.';
+        } catch (\PDOException $e) {
+            $_SESSION['flash'] = $e->getCode() === '23000'
+                ? 'Não é possível remover: este formulário já tem campos, etapas vinculadas ou submissões.'
+                : 'Não foi possível remover o formulário.';
+        }
+
+        $this->redirecionar('formularios/index/' . $concursoId);
     }
 
     public function novo($concursoId)
@@ -60,8 +76,7 @@ class FormularioAdminController extends Controller
             'erro' => $erro,
             'concurso' => $concurso,
             'formulario' => null,
-            'breadcrumb' => $this->montarBreadcrumb($concurso, 'Novo formulário'),
-        ], 'Novo formulário');
+        ], 'Novo formulário', ['tipo' => 'formularios', 'id' => (int) $concursoId]);
     }
 
     public function editar($id)
@@ -92,8 +107,7 @@ class FormularioAdminController extends Controller
             'erro' => $erro,
             'concurso' => $concurso,
             'formulario' => $formulario,
-            'breadcrumb' => $this->montarBreadcrumb($concurso, 'Editar ' . $formulario['nome']),
-        ], 'Editar formulário');
+        ], 'Editar formulário', ['tipo' => 'formularios', 'id' => (int) $concurso['id']]);
     }
 
     public function publicar()
@@ -101,7 +115,20 @@ class FormularioAdminController extends Controller
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $formulario = $this->formularios->buscarPorId($id);
         $resultado = (new FormularioDinamicoService())->publicar($id);
-        $this->redirecionarComMensagem($formulario, $resultado);
+
+        if (!$resultado['sucesso']) {
+            $_SESSION['flash'] = $resultado['mensagem'];
+        }
+
+        $this->redirecionar($this->destinoAposAcao($formulario));
+    }
+
+    public function despublicar()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $formulario = $this->formularios->buscarPorId($id);
+        (new FormularioDinamicoService())->despublicar($id);
+        $this->redirecionar($this->destinoAposAcao($formulario));
     }
 
     public function arquivar()
@@ -109,7 +136,30 @@ class FormularioAdminController extends Controller
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $formulario = $this->formularios->buscarPorId($id);
         (new FormularioDinamicoService())->arquivar($id);
-        $this->redirecionar('formularios/index/' . (int) $formulario['concurso_id']);
+        $this->redirecionar($this->destinoAposAcao($formulario));
+    }
+
+    public function desarquivar()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $formulario = $this->formularios->buscarPorId($id);
+        (new FormularioDinamicoService())->desarquivar($id);
+        $this->redirecionar($this->destinoAposAcao($formulario));
+    }
+
+    /**
+     * Publicar/despublicar/arquivar/desarquivar podem ser disparados tanto da
+     * lista de Formularios quanto da aba "Formulario vinculado" de uma Etapa
+     * — volta pra onde a acao veio, usando o etapa_id (so enviado por essa
+     * aba) como sinal de onde a requisicao se originou.
+     */
+    private function destinoAposAcao(array $formulario)
+    {
+        $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
+
+        return $etapaId > 0
+            ? 'etapas/formularioVinculado/' . $etapaId
+            : 'formularios/index/' . (int) $formulario['concurso_id'];
     }
 
     public function duplicar()
@@ -137,27 +187,5 @@ class FormularioAdminController extends Controller
         }
 
         return $concurso;
-    }
-
-    private function montarBreadcrumb(array $concurso, $itemAtual = null)
-    {
-        $breadcrumb = [
-            ['rotulo' => 'Concursos', 'url' => 'concursos/index'],
-            ['rotulo' => $concurso['nome'], 'url' => 'trilhas/index/' . (int) $concurso['id']],
-            ['rotulo' => 'Formulários', 'url' => 'formularios/index/' . (int) $concurso['id']],
-        ];
-
-        if ($itemAtual !== null) {
-            $breadcrumb[] = ['rotulo' => $itemAtual];
-        }
-
-        return $breadcrumb;
-    }
-
-    private function redirecionarComMensagem($formulario, array $resultado)
-    {
-        // Mensagens de sucesso/erro simples via flash de sessao (sem lib externa).
-        $_SESSION['flash'] = $resultado['sucesso'] ? null : $resultado['mensagem'];
-        $this->redirecionar('formularios/index/' . (int) $formulario['concurso_id']);
     }
 }

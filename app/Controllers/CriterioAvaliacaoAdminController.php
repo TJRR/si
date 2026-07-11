@@ -38,7 +38,7 @@ class CriterioAvaliacaoAdminController extends Controller
             'etapa' => $etapa,
             'criterios' => $lista,
             'somaPesos' => $this->criterios->somaPesosPorEtapa($etapaId),
-        ], 'Critérios de ' . $etapa['nome']);
+        ], 'Critérios de ' . $etapa['nome'], ['tipo' => 'criterios', 'id' => (int) $etapaId]);
     }
 
     public function novo($etapaId)
@@ -83,7 +83,7 @@ class CriterioAvaliacaoAdminController extends Controller
             'etapa' => $etapa,
             'criterio' => null,
             'codigoSugerido' => $codigoSugerido,
-        ], 'Novo critério');
+        ], 'Novo critério', ['tipo' => 'criterios', 'id' => (int) $etapaId]);
     }
 
     public function editar($id)
@@ -125,7 +125,7 @@ class CriterioAvaliacaoAdminController extends Controller
             'erro' => $erro,
             'etapa' => $etapa,
             'criterio' => $criterio,
-        ], 'Editar critério');
+        ], 'Editar critério', ['tipo' => 'criterios', 'id' => (int) $etapa['id']]);
     }
 
     public function mover()

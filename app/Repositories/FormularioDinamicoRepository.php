@@ -65,4 +65,16 @@ class FormularioDinamicoRepository
         $stmt = $pdo->prepare('UPDATE formularios_dinamicos SET status = :status WHERE id = :id');
         $stmt->execute(['status' => $status, 'id' => $id]);
     }
+
+    /**
+     * Remocao real (sem soft-delete) — ver EtapaRepository::remover() para a
+     * explicacao de por que a FK (sem CASCADE) ja protege contra remover um
+     * formulario com campos, etapas vinculadas ou submissoes.
+     */
+    public function remover($id)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('DELETE FROM formularios_dinamicos WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+    }
 }

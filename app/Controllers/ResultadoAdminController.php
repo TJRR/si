@@ -63,7 +63,7 @@ class ResultadoAdminController extends Controller
             'ranking' => $ranking,
             'publicado' => $publicado,
             'erro' => $erro,
-        ], 'Resultado — ' . $etapa['nome']);
+        ], 'Resultado — ' . $etapa['nome'], ['tipo' => 'resultado_etapa', 'id' => (int) $etapaId]);
     }
 
     public function publicarEtapa()
@@ -112,7 +112,7 @@ class ResultadoAdminController extends Controller
             'ranking' => $ranking,
             'publicado' => $publicado,
             'erro' => $erro,
-        ], 'Resultado final — ' . $trilha['nome']);
+        ], 'Resultado final — ' . $trilha['nome'], ['tipo' => 'apuracao', 'id' => (int) $trilhaId]);
     }
 
     public function publicarTrilha()
@@ -125,13 +125,13 @@ class ResultadoAdminController extends Controller
             $_SESSION['flash'] = $e->getMessage();
         }
 
-        $this->redirecionar('resultados/trilha/' . $trilhaId);
+        $this->redirecionar('apuracao/index/' . $trilhaId);
     }
 
     public function reabrirTrilha()
     {
         $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
         $this->servicoTrilha->reabrir($trilhaId);
-        $this->redirecionar('resultados/trilha/' . $trilhaId);
+        $this->redirecionar('apuracao/index/' . $trilhaId);
     }
 }

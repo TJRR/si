@@ -60,6 +60,19 @@ class EtapaRepository
         $stmt->execute(['id' => $etapaId]);
     }
 
+    /**
+     * Remoção real (sem soft-delete). Nenhuma FK que aponta para etapas tem
+     * ON DELETE CASCADE, entao o proprio banco recusa (PDOException, SQLSTATE
+     * 23000) remover uma etapa que ja tenha criterios/formula/submissoes/notas
+     * vinculadas — o controller trata esse erro com uma mensagem amigavel.
+     */
+    public function remover($id)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('DELETE FROM etapas WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+    }
+
     public function criar(
         $trilhaId,
         $nome,

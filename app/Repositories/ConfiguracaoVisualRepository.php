@@ -28,4 +28,11 @@ class ConfiguracaoVisualRepository
         );
         $stmt->execute(['inicio' => $corPrimariaInicio, 'fim' => $corPrimariaFim, 'secundaria' => $corSecundaria]);
     }
+
+    public function atualizarFavicon($caminhoRelativo)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE configuracoes_visuais SET favicon_path = :favicon_path WHERE id = 1');
+        $stmt->execute(['favicon_path' => $caminhoRelativo]);
+    }
 }

@@ -11,7 +11,8 @@
     <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="get" action="<?php echo url('usuarios/index'); ?>">
+<form method="get" action="<?php echo config('base_path'); ?>/index.php">
+    <input type="hidden" name="r" value="usuarios/index">
     <label>Filtrar por concurso:
         <select name="concurso_id">
             <option value="">Todos</option>

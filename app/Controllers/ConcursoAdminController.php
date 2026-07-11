@@ -50,10 +50,6 @@ class ConcursoAdminController extends Controller
         $this->renderizar('admin/concursos/form', [
             'erro' => $erro,
             'concurso' => null,
-            'breadcrumb' => [
-                ['rotulo' => 'Concursos', 'url' => 'concursos/index'],
-                ['rotulo' => 'Novo concurso'],
-            ],
         ], 'Novo concurso');
     }
 
@@ -86,10 +82,6 @@ class ConcursoAdminController extends Controller
         $this->renderizar('admin/concursos/form', [
             'erro' => $erro,
             'concurso' => $concurso,
-            'breadcrumb' => [
-                ['rotulo' => 'Concursos', 'url' => 'concursos/index'],
-                ['rotulo' => 'Editar ' . $concurso['nome']],
-            ],
-        ], 'Editar concurso');
+        ], 'Editar concurso', ['tipo' => 'concurso', 'id' => (int) $id]);
     }
 }

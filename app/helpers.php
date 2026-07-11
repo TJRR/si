@@ -30,17 +30,11 @@ function urlAbsoluta($rota)
 }
 
 /**
- * Monta o HTML do breadcrumb a partir de um array de ['rotulo' => ..., 'url' => ...].
- * O item sem 'url' (normalmente o ultimo) vira texto simples, nao link.
+ * Indica se a requisicao atual veio do JS de navegacao da arvore (fetch com o
+ * cabecalho X-Requisicao: parcial), pedindo so o fragmento de conteudo em vez
+ * da pagina completa com layout.
  */
-function breadcrumb_html(array $itens)
+function requisicaoParcial()
 {
-    $partes = [];
-
-    foreach ($itens as $item) {
-        $rotulo = htmlspecialchars($item['rotulo'], ENT_QUOTES, 'UTF-8');
-        $partes[] = !empty($item['url']) ? '<a href="' . url($item['url']) . '">' . $rotulo . '</a>' : $rotulo;
-    }
-
-    return implode(' &gt; ', $partes);
+    return isset($_SERVER['HTTP_X_REQUISICAO']) && $_SERVER['HTTP_X_REQUISICAO'] === 'parcial';
 }

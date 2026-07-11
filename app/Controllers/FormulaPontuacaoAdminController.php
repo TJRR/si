@@ -60,7 +60,7 @@ class FormulaPontuacaoAdminController extends Controller
                     $erro = $validacao['mensagem'];
                 } else {
                     $this->formulas->salvarParaEtapa($etapaId, $expressaoAtual);
-                    $this->redirecionar('etapas/index/' . (int) $etapa['trilha_id']);
+                    $this->redirecionar('formulas/etapa/' . (int) $etapaId);
                     return;
                 }
             }
@@ -77,7 +77,7 @@ class FormulaPontuacaoAdminController extends Controller
             'expressaoAtual' => $expressaoAtual,
             'criteriosDaEtapa' => $criteriosDaEtapa,
             'resultadoTeste' => $resultadoTeste,
-        ], 'Fórmula de pontuação — ' . $etapa['nome']);
+        ], 'Fórmula de pontuação — ' . $etapa['nome'], ['tipo' => 'formula_etapa', 'id' => (int) $etapaId]);
     }
 
     public function trilha($trilhaId)
@@ -111,7 +111,7 @@ class FormulaPontuacaoAdminController extends Controller
                     $erro = $validacao['mensagem'];
                 } else {
                     $this->formulas->salvarParaTrilha($trilhaId, $expressaoAtual);
-                    $this->redirecionar('trilhas/index/' . (int) $trilha['concurso_id']);
+                    $this->redirecionar('apuracao/index/' . (int) $trilhaId);
                     return;
                 }
             }
@@ -128,7 +128,7 @@ class FormulaPontuacaoAdminController extends Controller
             'expressaoAtual' => $expressaoAtual,
             'etapasDaTrilha' => $etapasDaTrilha,
             'resultadoTeste' => $resultadoTeste,
-        ], 'Fórmula da nota final — ' . $trilha['nome']);
+        ], 'Fórmula da nota final — ' . $trilha['nome'], ['tipo' => 'apuracao', 'id' => (int) $trilhaId]);
     }
 
     private function testar($expressao, array $variaveisPermitidas)

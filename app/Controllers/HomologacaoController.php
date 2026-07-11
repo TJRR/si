@@ -38,11 +38,14 @@ class HomologacaoController extends Controller
             exit('Trilha não encontrada.');
         }
 
+        $status = isset($_GET['status']) ? $_GET['status'] : '';
+
         $this->renderizar('admin/homologacao/index', [
             'trilha' => $trilha,
-            'pendentes' => $this->equipes->listarPendentesHomologacaoPorTrilha($trilhaId),
+            'inscricoes' => $this->equipes->listarTodosPorTrilha($trilhaId, $status),
+            'statusFiltro' => $status,
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
-        ], 'Homologação de inscrições — ' . $trilha['nome']);
+        ], 'Inscritos — ' . $trilha['nome'], ['tipo' => 'inscritos', 'id' => (int) $trilhaId]);
 
         unset($_SESSION['flash']);
     }
@@ -52,17 +55,8 @@ class HomologacaoController extends Controller
         $vinculoId = (int) (isset($_POST['vinculo_id']) ? $_POST['vinculo_id'] : 0);
         $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
 
-        $vinculo = $this->equipes->buscarVinculoPorId($vinculoId);
-
-        if ($vinculo !== null) {
-            $participante = $this->participantes->buscarPorId($vinculo['participante_id']);
-            $equipe = $this->equipes->buscarPorId($vinculo['equipe_id']);
-
-            $this->equipes->homologarVinculo($vinculoId, Auth::usuarioId());
-            (new AcessoParticipanteService())->liberarAcesso($participante, $trilhaId, $equipe['nome_equipe']);
-
-            $_SESSION['flash'] = 'Participante homologado e acesso liberado.';
-        }
+        $this->homologarUmVinculo($vinculoId, $trilhaId);
+        $_SESSION['flash'] = 'Participante homologado e acesso liberado.';
 
         $this->redirecionar('homologacao/index/' . $trilhaId);
     }
@@ -77,5 +71,47 @@ class HomologacaoController extends Controller
         $_SESSION['flash'] = 'Participante rejeitado.';
 
         $this->redirecionar('homologacao/index/' . $trilhaId);
+    }
+
+    public function homologarEmMassa()
+    {
+        $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
+        $vinculoIds = isset($_POST['vinculo_ids']) && is_array($_POST['vinculo_ids']) ? $_POST['vinculo_ids'] : [];
+
+        foreach ($vinculoIds as $vinculoId) {
+            $this->homologarUmVinculo((int) $vinculoId, $trilhaId);
+        }
+
+        $_SESSION['flash'] = count($vinculoIds) . ' inscrição(ões) homologada(s).';
+        $this->redirecionar('homologacao/index/' . $trilhaId);
+    }
+
+    public function rejeitarEmMassa()
+    {
+        $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
+        $vinculoIds = isset($_POST['vinculo_ids']) && is_array($_POST['vinculo_ids']) ? $_POST['vinculo_ids'] : [];
+        $motivo = trim(isset($_POST['motivo']) ? $_POST['motivo'] : '');
+
+        foreach ($vinculoIds as $vinculoId) {
+            $this->equipes->rejeitarVinculo((int) $vinculoId, Auth::usuarioId(), $motivo !== '' ? $motivo : null);
+        }
+
+        $_SESSION['flash'] = count($vinculoIds) . ' inscrição(ões) rejeitada(s).';
+        $this->redirecionar('homologacao/index/' . $trilhaId);
+    }
+
+    private function homologarUmVinculo($vinculoId, $trilhaId)
+    {
+        $vinculo = $this->equipes->buscarVinculoPorId($vinculoId);
+
+        if ($vinculo === null) {
+            return;
+        }
+
+        $participante = $this->participantes->buscarPorId($vinculo['participante_id']);
+        $equipe = $this->equipes->buscarPorId($vinculo['equipe_id']);
+
+        $this->equipes->homologarVinculo($vinculoId, Auth::usuarioId());
+        (new AcessoParticipanteService())->liberarAcesso($participante, $trilhaId, $equipe['nome_equipe']);
     }
 }

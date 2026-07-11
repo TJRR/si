@@ -48,11 +48,7 @@ class TrilhaAdminController extends Controller
         $this->renderizar('admin/trilhas/index', [
             'concurso' => $concurso,
             'trilhas' => $lista,
-            'breadcrumb' => [
-                ['rotulo' => 'Concursos', 'url' => 'concursos/index'],
-                ['rotulo' => $concurso['nome']],
-            ],
-        ], 'Trilhas de ' . $concurso['nome']);
+        ], 'Trilhas de ' . $concurso['nome'], ['tipo' => 'trilhas', 'id' => (int) $concursoId]);
     }
 
     public function alternarInscricoes($trilhaId)
@@ -73,6 +69,23 @@ class TrilhaAdminController extends Controller
         }
 
         $this->redirecionar('trilhas/index/' . (int) $trilha['concurso_id']);
+    }
+
+    public function remover()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $concursoId = (int) (isset($_POST['concurso_id']) ? $_POST['concurso_id'] : 0);
+
+        try {
+            $this->trilhas->remover($id);
+            $_SESSION['flash'] = 'Trilha removida.';
+        } catch (\PDOException $e) {
+            $_SESSION['flash'] = $e->getCode() === '23000'
+                ? 'Não é possível remover: esta trilha já tem etapas, equipes, fórmula ou regras de desempate vinculadas.'
+                : 'Não foi possível remover a trilha.';
+        }
+
+        $this->redirecionar('trilhas/index/' . $concursoId);
     }
 
     public function novo($concursoId)
@@ -105,12 +118,7 @@ class TrilhaAdminController extends Controller
             'erro' => $erro,
             'concurso' => $concurso,
             'trilha' => null,
-            'breadcrumb' => [
-                ['rotulo' => 'Concursos', 'url' => 'concursos/index'],
-                ['rotulo' => $concurso['nome'], 'url' => 'trilhas/index/' . (int) $concurso['id']],
-                ['rotulo' => 'Nova trilha'],
-            ],
-        ], 'Nova trilha');
+        ], 'Nova trilha', ['tipo' => 'trilhas', 'id' => (int) $concursoId]);
     }
 
     public function editar($id)
@@ -143,11 +151,6 @@ class TrilhaAdminController extends Controller
             'erro' => $erro,
             'concurso' => $concurso,
             'trilha' => $trilha,
-            'breadcrumb' => [
-                ['rotulo' => 'Concursos', 'url' => 'concursos/index'],
-                ['rotulo' => $concurso['nome'], 'url' => 'trilhas/index/' . (int) $concurso['id']],
-                ['rotulo' => 'Editar ' . $trilha['nome']],
-            ],
-        ], 'Editar trilha');
+        ], 'Editar trilha', ['tipo' => 'trilha', 'id' => (int) $id]);
     }
 }
