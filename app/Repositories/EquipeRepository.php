@@ -67,6 +67,44 @@ class EquipeRepository
         return (int) $pdo->lastInsertId();
     }
 
+    public function atualizar($equipeId, $nomeEquipe, $vinculoInstitucional, $observacoes)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'UPDATE equipes SET nome_equipe = :nome_equipe, vinculo_institucional = :vinculo_institucional, observacoes = :observacoes
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'nome_equipe' => $nomeEquipe,
+            'vinculo_institucional' => $vinculoInstitucional !== '' ? $vinculoInstitucional : null,
+            'observacoes' => $observacoes !== '' ? $observacoes : null,
+            'id' => $equipeId,
+        ]);
+    }
+
+    public function alterarLider($equipeId, $novoLiderParticipanteId)
+    {
+        $pdo = Database::conexao();
+        $pdo->beginTransaction();
+
+        try {
+            $rebaixar = $pdo->prepare(
+                "UPDATE equipe_participante SET papel = 'integrante' WHERE equipe_id = :equipe_id AND papel = 'lider'"
+            );
+            $rebaixar->execute(['equipe_id' => $equipeId]);
+
+            $promover = $pdo->prepare(
+                "UPDATE equipe_participante SET papel = 'lider' WHERE equipe_id = :equipe_id AND participante_id = :participante_id"
+            );
+            $promover->execute(['equipe_id' => $equipeId, 'participante_id' => $novoLiderParticipanteId]);
+
+            $pdo->commit();
+        } catch (\Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
+
     public function cpfJaInscritoNaTrilha($trilhaId, $cpf)
     {
         $pdo = Database::conexao();

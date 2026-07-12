@@ -113,6 +113,7 @@ class ParticipanteController extends Controller
         $trilha = $this->trilhas->buscarPorId($equipe['trilha_id']);
         $tema = $equipe['tema_desafio_id'] !== null ? $this->temas->buscarPorId($equipe['tema_desafio_id']) : null;
         $colegas = $this->equipes->listarParticipantes($equipe['id']);
+        $vinculoAtual = $this->equipes->buscarVinculo($equipe['id'], $participante['id']);
 
         $this->renderizar('participante/minha_equipe', [
             'equipe' => $equipe,
@@ -120,7 +121,68 @@ class ParticipanteController extends Controller
             'tema' => $tema,
             'colegas' => $colegas,
             'participanteAtualId' => $participante['id'],
+            'ehLider' => $vinculoAtual !== null && $vinculoAtual['papel'] === 'lider',
         ], 'Minha equipe');
+    }
+
+    public function editarEquipe()
+    {
+        $equipe = $this->equipeDoLiderAtual();
+
+        $erro = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nomeEquipe = trim(isset($_POST['nome_equipe']) ? $_POST['nome_equipe'] : '');
+            $vinculoInstitucional = trim(isset($_POST['vinculo_institucional']) ? $_POST['vinculo_institucional'] : '');
+            $observacoes = trim(isset($_POST['observacoes']) ? $_POST['observacoes'] : '');
+
+            if ($nomeEquipe === '') {
+                $erro = 'Informe o nome da equipe.';
+            } else {
+                $this->equipes->atualizar($equipe['id'], $nomeEquipe, $vinculoInstitucional, $observacoes);
+                $this->redirecionar('participante/minhaEquipe');
+                return;
+            }
+        }
+
+        $this->renderizar('participante/editar_equipe', [
+            'equipe' => $equipe,
+            'erro' => $erro,
+        ], 'Editar equipe');
+    }
+
+    public function trocarLider()
+    {
+        $equipe = $this->equipeDoLiderAtual();
+        $colegasHomologados = array_values(array_filter(
+            $this->equipes->listarParticipantes($equipe['id']),
+            function ($colega) {
+                return $colega['status_homologacao'] === 'homologado';
+            }
+        ));
+
+        $erro = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $novoLiderId = isset($_POST['novo_lider_id']) ? (int) $_POST['novo_lider_id'] : 0;
+            $idsValidos = array_map(function ($colega) {
+                return (int) $colega['id'];
+            }, $colegasHomologados);
+
+            if (!in_array($novoLiderId, $idsValidos, true)) {
+                $erro = 'Selecione um integrante homologado da equipe.';
+            } else {
+                $this->equipes->alterarLider($equipe['id'], $novoLiderId);
+                $this->redirecionar('participante/minhaEquipe');
+                return;
+            }
+        }
+
+        $this->renderizar('participante/trocar_lider', [
+            'equipe' => $equipe,
+            'colegas' => $colegasHomologados,
+            'erro' => $erro,
+        ], 'Trocar líder');
     }
 
     public function submissoes()
@@ -169,5 +231,31 @@ class ParticipanteController extends Controller
         $participantes = $this->usuarioParticipante->participantesDoUsuario(Auth::usuarioId());
 
         return !empty($participantes) ? $participantes[0] : null;
+    }
+
+    private function equipeDoLiderAtual()
+    {
+        $participante = $this->participanteAtual();
+
+        if ($participante === null) {
+            http_response_code(404);
+            exit('Nenhum participante vinculado a esta conta.');
+        }
+
+        $equipe = $this->equipes->buscarPorParticipante($participante['id']);
+
+        if ($equipe === null) {
+            http_response_code(404);
+            exit('Nenhuma equipe encontrada para este participante.');
+        }
+
+        $vinculo = $this->equipes->buscarVinculo($equipe['id'], $participante['id']);
+
+        if ($vinculo === null || $vinculo['papel'] !== 'lider') {
+            http_response_code(403);
+            exit('Acesso negado: apenas o líder da equipe pode gerenciar esses dados.');
+        }
+
+        return $equipe;
     }
 }

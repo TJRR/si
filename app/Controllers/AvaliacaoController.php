@@ -11,12 +11,14 @@ use App\Core\Auth;
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\AvaliadorDesignacaoRepository;
+use App\Repositories\CampoDinamicoRepository;
 use App\Repositories\ConcursoRepository;
 use App\Repositories\CriterioAvaliacaoRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\NotaLancadaRepository;
 use App\Repositories\ResultadoEtapaRepository;
 use App\Repositories\SubmissaoRepository;
+use App\Repositories\TemaDesafioRepository;
 use App\Repositories\TrilhaRepository;
 
 class AvaliacaoController extends Controller
@@ -29,6 +31,8 @@ class AvaliacaoController extends Controller
     private $designacoes;
     private $notas;
     private $resultadosEtapa;
+    private $camposDinamicos;
+    private $temas;
 
     public function __construct()
     {
@@ -41,6 +45,8 @@ class AvaliacaoController extends Controller
         $this->designacoes = new AvaliadorDesignacaoRepository();
         $this->notas = new NotaLancadaRepository();
         $this->resultadosEtapa = new ResultadoEtapaRepository();
+        $this->camposDinamicos = new CampoDinamicoRepository();
+        $this->temas = new TemaDesafioRepository();
     }
 
     public function index()
@@ -128,25 +134,9 @@ class AvaliacaoController extends Controller
 
     public function notar($submissaoId)
     {
-        $submissao = $this->submissoes->buscarPorId($submissaoId);
-
-        if ($submissao === null) {
-            http_response_code(404);
-            exit('Submissão não encontrada.');
-        }
-
-        $etapa = $this->etapas->buscarPorId($submissao['etapa_id']);
-        $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
-
-        if (!Auth::temPerfil('avaliador', $trilha['concurso_id'])) {
-            http_response_code(403);
-            exit('Acesso negado: você não é avaliador deste concurso.');
-        }
-
-        if ($etapa['modo_designacao'] !== 'aberto' && !$this->designacoes->existeDesignacao($submissaoId, Auth::usuarioId())) {
-            http_response_code(403);
-            exit('Acesso negado: esta submissão não foi designada a você.');
-        }
+        $contexto = $this->carregarSubmissaoAutorizada($submissaoId);
+        $submissao = $contexto['submissao'];
+        $etapa = $contexto['etapa'];
 
         $resultadoPublicado = $this->resultadosEtapa->buscarPorSubmissaoEEtapa($submissaoId, $etapa['id']) !== null;
         $criteriosDaEtapa = $this->criterios->listarPorEtapa($etapa['id']);
@@ -187,6 +177,86 @@ class AvaliacaoController extends Controller
             'resultadoPublicado' => $resultadoPublicado,
             'sigiloCego' => $etapa['modo_sigilo'] === 'cego',
             'erro' => $erro,
+            'conteudoSubmissao' => $this->montarConteudoSubmissao($submissao),
         ], 'Lançar notas — Submissão #' . (int) $submissaoId);
+    }
+
+    public function baixarArquivo($submissaoId, $campoId)
+    {
+        $contexto = $this->carregarSubmissaoAutorizada($submissaoId);
+        $submissao = $contexto['submissao'];
+
+        $dados = json_decode((string) $submissao['dados_json'], true);
+        $valores = isset($dados['campos']) && is_array($dados['campos']) ? $dados['campos'] : [];
+        $valor = isset($valores[(string) $campoId]) ? $valores[(string) $campoId] : null;
+
+        if (!is_array($valor) || !isset($valor['caminho_relativo'])) {
+            http_response_code(404);
+            exit('Arquivo não encontrado.');
+        }
+
+        $caminho = __DIR__ . '/../../storage/uploads/' . $valor['caminho_relativo'];
+
+        if (!file_exists($caminho)) {
+            http_response_code(404);
+            exit('Arquivo não encontrado.');
+        }
+
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: inline; filename="' . basename($valor['nome_original']) . '"');
+        header('Content-Length: ' . filesize($caminho));
+        readfile($caminho);
+        exit;
+    }
+
+    private function carregarSubmissaoAutorizada($submissaoId)
+    {
+        $submissao = $this->submissoes->buscarPorId($submissaoId);
+
+        if ($submissao === null) {
+            http_response_code(404);
+            exit('Submissão não encontrada.');
+        }
+
+        $etapa = $this->etapas->buscarPorId($submissao['etapa_id']);
+        $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
+
+        if (!Auth::temPerfil('avaliador', $trilha['concurso_id'])) {
+            http_response_code(403);
+            exit('Acesso negado: você não é avaliador deste concurso.');
+        }
+
+        if ($etapa['modo_designacao'] !== 'aberto' && !$this->designacoes->existeDesignacao($submissaoId, Auth::usuarioId())) {
+            http_response_code(403);
+            exit('Acesso negado: esta submissão não foi designada a você.');
+        }
+
+        return ['submissao' => $submissao, 'etapa' => $etapa, 'trilha' => $trilha];
+    }
+
+    private function montarConteudoSubmissao(array $submissao)
+    {
+        if ($submissao['formulario_dinamico_id'] === null) {
+            return [];
+        }
+
+        $campos = $this->camposDinamicos->listarPorFormulario($submissao['formulario_dinamico_id']);
+        $dados = json_decode((string) $submissao['dados_json'], true);
+        $valores = isset($dados['campos']) && is_array($dados['campos']) ? $dados['campos'] : [];
+
+        $conteudo = [];
+
+        foreach ($campos as $campo) {
+            $valor = array_key_exists((string) $campo['id'], $valores) ? $valores[(string) $campo['id']] : null;
+
+            if ($campo['tipo'] === 'selecao_tema_desafio' && $valor !== null) {
+                $tema = $this->temas->buscarPorId((int) $valor);
+                $valor = $tema !== null ? $tema['nome'] : $valor;
+            }
+
+            $conteudo[] = ['campo' => $campo, 'valor' => $valor];
+        }
+
+        return $conteudo;
     }
 }

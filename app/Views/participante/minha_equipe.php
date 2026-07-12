@@ -14,6 +14,14 @@
 <p><strong>Trilha:</strong> <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></p>
 <p><strong>Tema/Desafio:</strong> <?php echo $tema !== null ? htmlspecialchars($tema['nome'], ENT_QUOTES, 'UTF-8') : 'ainda não escolhido (será definido na submissão da ideia)'; ?></p>
 
+<?php if ($ehLider): ?>
+    <p>
+        <a href="<?php echo url('participante/editarEquipe'); ?>">Editar equipe</a>
+        |
+        <a href="<?php echo url('participante/trocarLider'); ?>">Trocar líder</a>
+    </p>
+<?php endif; ?>
+
 <h2>Integrantes</h2>
 <table border="1" cellpadding="6">
     <tr><th>Nome</th><th>Papel</th><th>Situação da inscrição</th></tr>

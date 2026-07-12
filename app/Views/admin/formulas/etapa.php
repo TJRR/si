@@ -34,16 +34,23 @@
         <?php endforeach; ?>
     </ul>
 
+    <?php
+        $somaPesos = 0;
+        foreach ($criteriosDaEtapa as $criterio) {
+            $somaPesos += (float) $criterio['peso'];
+        }
+        $exemplo = [];
+        foreach ($criteriosDaEtapa as $criterio) {
+            $exemplo[] = $criterio['codigo'] . '*' . number_format((float) $criterio['peso'], 2, '.', '');
+        }
+    ?>
     <form method="post" action="<?php echo url('formulas/etapa/' . (int) $etapa['id']); ?>">
         <label>Expressão (ex.: <?php
-            $exemplo = [];
-            foreach ($criteriosDaEtapa as $criterio) {
-                $exemplo[] = $criterio['codigo'] . '*' . number_format((float) $criterio['peso'], 2, '.', '');
-            }
-            echo htmlspecialchars('(' . implode(' + ', $exemplo) . ') / 10', ENT_QUOTES, 'UTF-8');
+            echo htmlspecialchars('(' . implode(' + ', $exemplo) . ') / ' . number_format($somaPesos, 2, '.', ''), ENT_QUOTES, 'UTF-8');
         ?>):<br>
             <textarea name="expressao" rows="3" cols="70" required><?php echo htmlspecialchars((string) $expressaoAtual, ENT_QUOTES, 'UTF-8'); ?></textarea>
         </label><br>
+        <button type="button" onclick="gerarFormulaPonderada()">Gerar fórmula a partir dos pesos</button><br><br>
 
         <p>Testar com valores de exemplo (nota que cada criterio teria):</p>
         <?php foreach ($criteriosDaEtapa as $criterio): ?>
@@ -56,4 +63,16 @@
         <button type="submit" name="acao" value="testar">Testar fórmula</button>
         <button type="submit" name="acao" value="salvar">Salvar</button>
     </form>
+
+    <script>
+        var criteriosDaEtapa = <?php echo json_encode(array_map(function ($c) {
+            return ['codigo' => $c['codigo'], 'peso' => (float) $c['peso']];
+        }, $criteriosDaEtapa)); ?>;
+
+        function gerarFormulaPonderada() {
+            var somaPesos = criteriosDaEtapa.reduce(function (soma, c) { return soma + c.peso; }, 0);
+            var termos = criteriosDaEtapa.map(function (c) { return c.codigo + '*' + c.peso; }).join(' + ');
+            document.querySelector('textarea[name="expressao"]').value = '(' + termos + ') / ' + somaPesos;
+        }
+    </script>
 <?php endif; ?>

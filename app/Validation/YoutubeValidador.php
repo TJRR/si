@@ -21,4 +21,15 @@ class YoutubeValidador
 
         return (bool) preg_match($padrao, $url);
     }
+
+    public static function extrairId($url)
+    {
+        $padrao = '#^https?://(www\.)?(youtube\.com/(?:watch\?v=|embed/|shorts/)([\w-]+)|youtu\.be/([\w-]+))#i';
+
+        if (!preg_match($padrao, trim((string) $url), $grupos)) {
+            return null;
+        }
+
+        return $grupos[3] !== '' ? $grupos[3] : $grupos[4];
+    }
 }

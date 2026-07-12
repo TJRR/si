@@ -80,7 +80,7 @@
 
         <label>Consolidação quando mais de um avaliador nota a mesma submissão:
             <select name="modo_consolidacao">
-                <?php foreach (['unico' => 'Só 1 avaliador esperado (sem consolidação)', 'media_criterio' => 'Média por critério, fórmula roda 1x', 'media_ne' => 'Média das notas finais (NE) individuais'] as $valor => $rotulo): ?>
+                <?php foreach (['unico' => 'Só 1 avaliador esperado', 'media_criterio' => 'Média por critério, fórmula roda 1x', 'media_ne' => 'Média das notas finais (NE) individuais'] as $valor => $rotulo): ?>
                     <?php $selecionado = ($etapa !== null && $etapa['modo_consolidacao'] === $valor); ?>
                     <option value="<?php echo $valor; ?>" <?php echo $selecionado ? 'selected' : ''; ?>>
                         <?php echo htmlspecialchars($rotulo, ENT_QUOTES, 'UTF-8'); ?>
