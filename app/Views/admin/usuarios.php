@@ -2,6 +2,14 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
+<?php
+$todasCategorias = [];
+foreach ($concursos as $concurso) {
+    foreach (isset($categoriasPorConcurso[(int) $concurso['id']]) ? $categoriasPorConcurso[(int) $concurso['id']] : [] as $categoria) {
+        $todasCategorias[] = ['id' => $categoria['id'], 'nome' => $categoria['nome'], 'concurso_nome' => $concurso['nome']];
+    }
+}
+?>
 <h1>Usuários</h1>
 
 <p><a href="<?php echo url('home/administrativo'); ?>">Voltar ao painel</a></p>
@@ -47,7 +55,31 @@
                 <?php else: ?>
                     <?php foreach ($usuario['perfis'] as $vinculo): ?>
                         <?php echo htmlspecialchars($vinculo['perfil_nome'], ENT_QUOTES, 'UTF-8'); ?>
-                        (<?php echo htmlspecialchars($vinculo['concurso_nome'] !== null ? $vinculo['concurso_nome'] : 'Global', ENT_QUOTES, 'UTF-8'); ?>)<br>
+                        (<?php echo htmlspecialchars($vinculo['concurso_nome'] !== null ? $vinculo['concurso_nome'] : 'Global', ENT_QUOTES, 'UTF-8'); ?>)
+
+                        <?php if ($vinculo['perfil'] === 'avaliador' && $vinculo['concurso_id'] !== null): ?>
+                            <?php $categoriasDoConcurso = isset($categoriasPorConcurso[(int) $vinculo['concurso_id']]) ? $categoriasPorConcurso[(int) $vinculo['concurso_id']] : []; ?>
+                            <br>Categoria:
+                            <?php if (empty($categoriasDoConcurso)): ?>
+                                <em>nenhuma categoria cadastrada neste concurso</em>
+                            <?php else: ?>
+                                <form method="post" action="<?php echo url('usuarios/definirCategoria'); ?>" style="display:inline;">
+                                    <input type="hidden" name="usuario_id" value="<?php echo (int) $usuario['id']; ?>">
+                                    <input type="hidden" name="concurso_id" value="<?php echo (int) $vinculo['concurso_id']; ?>">
+                                    <select name="categoria_avaliador_id">
+                                        <option value="">Sem categoria</option>
+                                        <?php foreach ($categoriasDoConcurso as $categoria): ?>
+                                            <option value="<?php echo (int) $categoria['id']; ?>"
+                                                <?php echo (!empty($vinculo['categoria_atual']) && (int) $vinculo['categoria_atual']['categoria_avaliador_id'] === (int) $categoria['id']) ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($categoria['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="submit">Salvar</button>
+                                </form>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                        <br>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </td>
@@ -80,6 +112,14 @@
                             <?php foreach ($concursos as $concurso): ?>
                                 <option value="<?php echo (int) $concurso['id']; ?>">
                                     <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <select name="categoria_avaliador_id" title="Categoria de avaliador (só é usada se o perfil for Avaliador; precisa bater com o concurso escolhido acima)">
+                            <option value="">Sem categoria de avaliador</option>
+                            <?php foreach ($todasCategorias as $categoria): ?>
+                                <option value="<?php echo (int) $categoria['id']; ?>">
+                                    <?php echo htmlspecialchars($categoria['nome'] . ' — ' . $categoria['concurso_nome'], ENT_QUOTES, 'UTF-8'); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>

@@ -32,7 +32,7 @@ if ($ehPaginaPublicaComLogo) {
         : config('base_path') . '/assets/img/logo-padrao.png';
 }
 
-$modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao'];
+$modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'vagasAvaliador', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao', 'categoriasAvaliador'];
 
 if ($ehPainelAdmin) {
     $rotaAtual = isset($_GET['r']) ? trim($_GET['r'], '/') : 'home/index';

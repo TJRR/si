@@ -12,6 +12,7 @@ use App\Controllers\AuthController;
 use App\Controllers\AvaliacaoController;
 use App\Controllers\CadastroController;
 use App\Controllers\CampoAdminController;
+use App\Controllers\CategoriaAvaliadorAdminController;
 use App\Controllers\ConcursoAdminController;
 use App\Controllers\ConteudoAdminController;
 use App\Controllers\CriterioAvaliacaoAdminController;
@@ -31,6 +32,7 @@ use App\Controllers\TemaAdminController;
 use App\Controllers\TemaDesafioAdminController;
 use App\Controllers\TrilhaAdminController;
 use App\Controllers\UsuarioAdminController;
+use App\Controllers\VagaAvaliadorAdminController;
 
 class Router
 {
@@ -55,6 +57,8 @@ class Router
         'formulas' => FormulaPontuacaoAdminController::class,
         'desempate' => RegraDesempateAdminController::class,
         'designacoes' => DesignacaoAdminController::class,
+        'categoriasAvaliador' => CategoriaAvaliadorAdminController::class,
+        'vagasAvaliador' => VagaAvaliadorAdminController::class,
         'avaliacao' => AvaliacaoController::class,
         'resultados' => ResultadoAdminController::class,
         'apuracao' => ApuracaoAdminController::class,

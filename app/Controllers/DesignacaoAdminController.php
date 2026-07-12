@@ -160,7 +160,9 @@ class DesignacaoAdminController extends Controller
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
 
         try {
-            $linhas = $this->servico->calcularDistribuicao($etapaId);
+            $linhas = $etapa['modo_designacao'] === 'sorteio_categoria'
+                ? $this->servico->calcularDistribuicaoPorCategoria($etapaId)
+                : $this->servico->calcularDistribuicao($etapaId);
         } catch (\RuntimeException $e) {
             $_SESSION['flash'] = $e->getMessage();
             $this->redirecionar('designacoes/index/' . $etapaId);

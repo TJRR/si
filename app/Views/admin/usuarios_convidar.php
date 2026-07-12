@@ -2,6 +2,14 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
+<?php
+$todasCategorias = [];
+foreach ($concursos as $concurso) {
+    foreach (isset($categoriasPorConcurso[(int) $concurso['id']]) ? $categoriasPorConcurso[(int) $concurso['id']] : [] as $categoria) {
+        $todasCategorias[] = ['id' => $categoria['id'], 'nome' => $categoria['nome'], 'concurso_nome' => $concurso['nome']];
+    }
+}
+?>
 <h1>Convidar usuário</h1>
 
 <p><a href="<?php echo url('usuarios/index'); ?>">Voltar</a></p>
@@ -36,6 +44,17 @@
             <?php foreach ($concursos as $concurso): ?>
                 <option value="<?php echo (int) $concurso['id']; ?>">
                     <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </label><br>
+
+    <label>Categoria de avaliador (só é usada se o perfil for Avaliador; precisa bater com o concurso escolhido acima):
+        <select name="categoria_avaliador_id">
+            <option value="">Sem categoria de avaliador</option>
+            <?php foreach ($todasCategorias as $categoria): ?>
+                <option value="<?php echo (int) $categoria['id']; ?>">
+                    <?php echo htmlspecialchars($categoria['nome'] . ' — ' . $categoria['concurso_nome'], ENT_QUOTES, 'UTF-8'); ?>
                 </option>
             <?php endforeach; ?>
         </select>

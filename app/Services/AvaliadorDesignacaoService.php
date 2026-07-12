@@ -7,7 +7,9 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Repositories\AvaliadorCategoriaRepository;
 use App\Repositories\AvaliadorDesignacaoRepository;
+use App\Repositories\EtapaCategoriaAvaliadorRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\PerfilRepository;
 use App\Repositories\SubmissaoRepository;
@@ -20,6 +22,8 @@ class AvaliadorDesignacaoService
     private $trilhas;
     private $perfis;
     private $submissoes;
+    private $avaliadorCategorias;
+    private $etapaCategorias;
 
     public function __construct()
     {
@@ -28,6 +32,8 @@ class AvaliadorDesignacaoService
         $this->trilhas = new TrilhaRepository();
         $this->perfis = new PerfilRepository();
         $this->submissoes = new SubmissaoRepository();
+        $this->avaliadorCategorias = new AvaliadorCategoriaRepository();
+        $this->etapaCategorias = new EtapaCategoriaAvaliadorRepository();
     }
 
     /**
@@ -91,6 +97,84 @@ class AvaliadorDesignacaoService
     }
 
     /**
+     * Calcula (sem persistir) o sorteio garantindo 1 avaliador de cada
+     * categoria configurada em etapa_categoria_avaliadores por submissao
+     * (Fase 10). Para cada vaga faltante, sorteia aleatoriamente entre os
+     * avaliadores da categoria empatados na menor carga -- mesma garantia de
+     * equilibrio do round-robin acima, mas sem repetir sempre o mesmo trio.
+     */
+    public function calcularDistribuicaoPorCategoria($etapaId)
+    {
+        $etapa = $this->etapas->buscarPorId($etapaId);
+
+        if ($etapa === null) {
+            throw new \RuntimeException('Etapa não encontrada.');
+        }
+
+        $vagas = $this->etapaCategorias->listarPorEtapa($etapaId);
+
+        if (empty($vagas)) {
+            throw new \RuntimeException('Configure as vagas por categoria desta etapa antes de sortear.');
+        }
+
+        $carga = [];
+        $candidatosPorCategoria = [];
+
+        foreach ($vagas as $vaga) {
+            $categoriaId = (int) $vaga['categoria_avaliador_id'];
+            $avaliadores = $this->avaliadorCategorias->listarUsuariosPorCategoria($categoriaId);
+
+            if (empty($avaliadores)) {
+                throw new \RuntimeException('A categoria "' . $vaga['categoria_nome'] . '" não tem nenhum avaliador vinculado ainda.');
+            }
+
+            $candidatosPorCategoria[$categoriaId] = array_map(function ($avaliador) {
+                return ['id' => (int) $avaliador['id'], 'nome' => $avaliador['nome']];
+            }, $avaliadores);
+
+            foreach ($avaliadores as $avaliador) {
+                $carga[(int) $avaliador['id']] = $this->designacoes->contarPorUsuarioNaEtapa($avaliador['id'], $etapaId);
+            }
+        }
+
+        $linhas = [];
+
+        foreach ($this->submissoes->listarPorEtapa($etapaId) as $submissao) {
+            $jaDesignadosGeral = array_map('intval', array_column($this->designacoes->listarPorSubmissao($submissao['id']), 'usuario_id'));
+
+            foreach ($vagas as $vaga) {
+                $categoriaId = (int) $vaga['categoria_avaliador_id'];
+                $quantidadeNecessaria = max(1, (int) $vaga['quantidade']);
+                $candidatosCategoria = $candidatosPorCategoria[$categoriaId];
+
+                $jaDesignadosNaCategoria = array_intersect($jaDesignadosGeral, array_column($candidatosCategoria, 'id'));
+                $faltando = $quantidadeNecessaria - count($jaDesignadosNaCategoria);
+
+                for ($i = 0; $i < $faltando; $i++) {
+                    $sugeridoId = $this->sortearMenosCarregado($carga, $candidatosCategoria, $jaDesignadosGeral);
+
+                    if ($sugeridoId === null) {
+                        break;
+                    }
+
+                    $linhas[] = [
+                        'submissao_id' => (int) $submissao['id'],
+                        'nome_equipe' => $submissao['nome_equipe'],
+                        'categoria_nome' => $vaga['categoria_nome'],
+                        'candidatos' => $candidatosCategoria,
+                        'sugerido_id' => $sugeridoId,
+                    ];
+
+                    $carga[$sugeridoId]++;
+                    $jaDesignadosGeral[] = $sugeridoId;
+                }
+            }
+        }
+
+        return $linhas;
+    }
+
+    /**
      * Persiste as atribuicoes ja revisadas/editadas pelo Admin na tela de
      * previa. $atribuicoes e uma lista de ['submissao_id' => int, 'usuario_id' => int].
      */
@@ -132,5 +216,39 @@ class AvaliadorDesignacaoService
         }
 
         return $melhorId;
+    }
+
+    /**
+     * Sorteia aleatoriamente entre os candidatos da categoria empatados na
+     * menor carga -- mesma logica de escolherMenosCarregado(), trocando "o
+     * primeiro empatado" por um sorteio entre os empatados.
+     */
+    private function sortearMenosCarregado(array $carga, array $candidatosCategoria, array $jaDesignados)
+    {
+        $menorCarga = null;
+        $empatados = [];
+
+        foreach ($candidatosCategoria as $candidato) {
+            $id = $candidato['id'];
+
+            if (in_array($id, $jaDesignados, true)) {
+                continue;
+            }
+
+            $quantidade = $carga[$id];
+
+            if ($menorCarga === null || $quantidade < $menorCarga) {
+                $menorCarga = $quantidade;
+                $empatados = [$id];
+            } elseif ($quantidade === $menorCarga) {
+                $empatados[] = $id;
+            }
+        }
+
+        if (empty($empatados)) {
+            return null;
+        }
+
+        return $empatados[array_rand($empatados)];
     }
 }

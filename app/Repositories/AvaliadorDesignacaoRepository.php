@@ -15,9 +15,14 @@ class AvaliadorDesignacaoRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT ad.*, u.nome AS usuario_nome
+            'SELECT ad.*, u.nome AS usuario_nome, ca.nome AS categoria_nome
              FROM avaliador_designacoes ad
              INNER JOIN usuarios u ON u.id = ad.usuario_id
+             INNER JOIN submissoes s ON s.id = ad.submissao_id
+             INNER JOIN etapas e ON e.id = s.etapa_id
+             INNER JOIN trilhas t ON t.id = e.trilha_id
+             LEFT JOIN avaliador_categorias ac ON ac.usuario_id = ad.usuario_id AND ac.concurso_id = t.concurso_id
+             LEFT JOIN categorias_avaliador ca ON ca.id = ac.categoria_avaliador_id
              WHERE ad.submissao_id = :submissao_id
              ORDER BY u.nome ASC'
         );

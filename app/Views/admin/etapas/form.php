@@ -65,7 +65,7 @@
 
         <label>Designação de avaliadores:
             <select name="modo_designacao">
-                <?php foreach (['' => 'Não definido', 'manual' => 'Admin atribui manualmente', 'aberto' => 'Todo avaliador da trilha vê tudo', 'automatico' => 'Distribuição automática balanceada'] as $valor => $rotulo): ?>
+                <?php foreach (['' => 'Não definido', 'manual' => 'Admin atribui manualmente', 'aberto' => 'Todo avaliador da trilha vê tudo', 'automatico' => 'Distribuição automática balanceada', 'sorteio_categoria' => 'Sorteio aleatório garantindo 1 avaliador de cada categoria'] as $valor => $rotulo): ?>
                     <?php $selecionado = ($etapa !== null && (string) $etapa['modo_designacao'] === (string) $valor); ?>
                     <option value="<?php echo $valor; ?>" <?php echo $selecionado ? 'selected' : ''; ?>>
                         <?php echo htmlspecialchars($rotulo, ENT_QUOTES, 'UTF-8'); ?>
@@ -74,7 +74,7 @@
             </select>
         </label><br>
 
-        <label>Quantidade de avaliadores por submissão (usada em "atribui manualmente"/"distribuição automática"):
+        <label>Quantidade de avaliadores por submissão (usada em "atribui manualmente"/"distribuição automática"; ignorada em "sorteio por categoria", que usa a tela "Vagas por categoria" da etapa):
             <input type="number" name="qtd_avaliadores_por_submissao" min="1" value="<?php echo $etapa !== null ? (int) $etapa['qtd_avaliadores_por_submissao'] : 1; ?>">
         </label><br>
 

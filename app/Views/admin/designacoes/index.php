@@ -15,14 +15,19 @@
         'manual' => 'Admin atribui manualmente',
         'aberto' => 'Todo avaliador da trilha vê tudo (não precisa designar)',
         'automatico' => 'Distribuição automática balanceada',
+        'sorteio_categoria' => 'Sorteio aleatório garantindo 1 avaliador de cada categoria',
     ][$etapa['modo_designacao']] ?? 'Não definido — edite a etapa e configure antes de designar';
 ?></strong></p>
+
+<?php if ($etapa['modo_designacao'] === 'sorteio_categoria'): ?>
+    <p><a href="<?php echo url('vagasAvaliador/index/' . (int) $etapa['id']); ?>">Configurar vagas por categoria</a></p>
+<?php endif; ?>
 
 <?php if ($etapa['modo_designacao'] === 'aberto'): ?>
     <p>Como o modo é "aberto", qualquer avaliador vinculado a este concurso já pode notar todas as submissões desta etapa — não há necessidade de designar manualmente.</p>
 <?php else: ?>
 
-    <?php if ($etapa['modo_designacao'] === 'automatico'): ?>
+    <?php if ($etapa['modo_designacao'] === 'automatico' || $etapa['modo_designacao'] === 'sorteio_categoria'): ?>
         <p><a href="<?php echo url('designacoes/distribuir/' . (int) $etapa['id']); ?>">Distribuir automaticamente (ver prévia antes de confirmar)</a></p>
     <?php endif; ?>
 
@@ -83,6 +88,9 @@
                     <?php else: ?>
                         <?php foreach ($submissao['designacoes'] as $designacao): ?>
                             <?php echo htmlspecialchars($designacao['usuario_nome'], ENT_QUOTES, 'UTF-8'); ?>
+                            <?php if (!empty($designacao['categoria_nome'])): ?>
+                                <em>(<?php echo htmlspecialchars($designacao['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?>)</em>
+                            <?php endif; ?>
                             (<button type="submit" form="remover-<?php echo (int) $designacao['id']; ?>">Remover</button>)<br>
                         <?php endforeach; ?>
                     <?php endif; ?>

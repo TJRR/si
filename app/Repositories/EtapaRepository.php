@@ -157,7 +157,7 @@ class EtapaRepository
         $modoAvanco = isset($configAvaliacao['modo_avanco']) ? $configAvaliacao['modo_avanco'] : 'manual';
 
         return [
-            'modo_designacao' => in_array($modoDesignacao, ['manual', 'aberto', 'automatico'], true) ? $modoDesignacao : null,
+            'modo_designacao' => in_array($modoDesignacao, ['manual', 'aberto', 'automatico', 'sorteio_categoria'], true) ? $modoDesignacao : null,
             'qtd_avaliadores_por_submissao' => $qtdAvaliadores > 0 ? $qtdAvaliadores : 1,
             'modo_consolidacao' => in_array($modoConsolidacao, ['media_criterio', 'media_ne', 'unico'], true) ? $modoConsolidacao : 'unico',
             'modo_sigilo' => in_array($modoSigilo, ['cego', 'aberto'], true) ? $modoSigilo : 'aberto',

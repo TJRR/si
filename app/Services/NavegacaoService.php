@@ -32,6 +32,7 @@ class NavegacaoService
             ['tipo' => 'criterios', 'rotulo' => 'Critérios', 'rota' => 'criterios/index'],
             ['tipo' => 'formula_etapa', 'rotulo' => 'Fórmula', 'rota' => 'formulas/etapa'],
             ['tipo' => 'designacoes', 'rotulo' => 'Avaliadores', 'rota' => 'designacoes/index'],
+            ['tipo' => 'vagas_avaliador', 'rotulo' => 'Vagas por categoria', 'rota' => 'vagasAvaliador/index'],
             ['tipo' => 'resultado_etapa', 'rotulo' => 'Resultado', 'rota' => 'resultados/etapa'],
             ['tipo' => 'formulario_vinculado', 'rotulo' => 'Formulário vinculado', 'rota' => 'etapas/formularioVinculado'],
         ],
@@ -46,6 +47,7 @@ class NavegacaoService
         'criterios' => 'etapa',
         'formula_etapa' => 'etapa',
         'designacoes' => 'etapa',
+        'vagas_avaliador' => 'etapa',
         'resultado_etapa' => 'etapa',
         'formulario_vinculado' => 'etapa',
     ];
@@ -85,7 +87,7 @@ class NavegacaoService
         $trilhas = new TrilhaRepository();
         $etapas = new EtapaRepository();
 
-        if (in_array($tipo, ['concurso', 'formularios', 'trilhas'], true)) {
+        if (in_array($tipo, ['concurso', 'formularios', 'trilhas', 'categorias_avaliador'], true)) {
             $concurso = $concursos->buscarPorId($id);
 
             if ($concurso === null) {
@@ -98,6 +100,8 @@ class NavegacaoService
                 $caminho[] = self::noFormularios($concurso);
             } elseif ($tipo === 'trilhas') {
                 $caminho[] = self::noTrilhas($concurso);
+            } elseif ($tipo === 'categorias_avaliador') {
+                $caminho[] = self::noCategoriasAvaliador($concurso);
             }
 
             return $caminho;
@@ -171,7 +175,7 @@ class NavegacaoService
                     return [];
                 }
 
-                return [self::noFormularios($concurso), self::noTrilhas($concurso)];
+                return [self::noFormularios($concurso), self::noTrilhas($concurso), self::noCategoriasAvaliador($concurso)];
 
             case 'trilhas':
                 $lista = [];
@@ -222,6 +226,17 @@ class NavegacaoService
             'rotulo' => 'Formulários',
             'folha' => true,
             'url' => 'formularios/index/' . (int) $concurso['id'],
+        ];
+    }
+
+    private static function noCategoriasAvaliador(array $concurso)
+    {
+        return [
+            'tipo' => 'categorias_avaliador',
+            'id' => (int) $concurso['id'],
+            'rotulo' => 'Categorias de avaliador',
+            'folha' => true,
+            'url' => 'categoriasAvaliador/index/' . (int) $concurso['id'],
         ];
     }
 
