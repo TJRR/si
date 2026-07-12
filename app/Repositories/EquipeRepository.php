@@ -170,7 +170,7 @@ class EquipeRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT p.*, ep.papel, ep.status_homologacao
+            'SELECT p.*, ep.papel, ep.status_homologacao, ep.motivo_rejeicao
              FROM participantes p
              JOIN equipe_participante ep ON ep.participante_id = p.id
              WHERE ep.equipe_id = :equipe_id

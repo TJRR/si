@@ -24,6 +24,7 @@ use App\Controllers\HomeController;
 use App\Controllers\HomologacaoController;
 use App\Controllers\InscricaoController;
 use App\Controllers\NavegacaoController;
+use App\Controllers\NotificacaoPainelController;
 use App\Controllers\ParticipanteController;
 use App\Controllers\RegraDesempateAdminController;
 use App\Controllers\ResultadoAdminController;
@@ -63,6 +64,7 @@ class Router
         'resultados' => ResultadoAdminController::class,
         'apuracao' => ApuracaoAdminController::class,
         'navegacao' => NavegacaoController::class,
+        'notificacoesPainel' => NotificacaoPainelController::class,
     ];
 
     public function despachar($r)

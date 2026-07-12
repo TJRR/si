@@ -20,6 +20,7 @@ use App\Repositories\ResultadoEtapaRepository;
 use App\Repositories\SubmissaoRepository;
 use App\Repositories\TemaDesafioRepository;
 use App\Repositories\TrilhaRepository;
+use App\Services\ResultadoEtapaService;
 
 class AvaliacaoController extends Controller
 {
@@ -33,6 +34,7 @@ class AvaliacaoController extends Controller
     private $resultadosEtapa;
     private $camposDinamicos;
     private $temas;
+    private $servicoResultado;
 
     public function __construct()
     {
@@ -47,6 +49,7 @@ class AvaliacaoController extends Controller
         $this->resultadosEtapa = new ResultadoEtapaRepository();
         $this->camposDinamicos = new CampoDinamicoRepository();
         $this->temas = new TemaDesafioRepository();
+        $this->servicoResultado = new ResultadoEtapaService();
     }
 
     public function index()
@@ -161,6 +164,7 @@ class AvaliacaoController extends Controller
             }
 
             if ($erro === null) {
+                $this->tentarPublicacaoAutomatica($etapa);
                 $this->redirecionar('avaliacao/submissoes/' . (int) $etapa['id']);
                 return;
             }
@@ -178,6 +182,36 @@ class AvaliacaoController extends Controller
             'erro' => $erro,
             'conteudoSubmissao' => $this->montarConteudoSubmissao($submissao),
         ], 'Lançar notas — Submissão #' . (int) $submissaoId);
+    }
+
+    /**
+     * Gatilho do modo_avanco='automatico' (Fase 12): como o projeto nao tem
+     * cron/scheduler, o disparo acontece aqui, logo apos qualquer lancamento
+     * de nota bem sucedido - se a etapa inteira ja estiver com avaliacao
+     * completa, publica sozinha (publicado_por = null identifica que foi o
+     * sistema, nao um Admin). Se a formula ainda nao estiver configurada,
+     * ResultadoEtapaService::calcularRanking lanca RuntimeException - nesse
+     * caso so ignora e o Admin publica manualmente depois, como hoje.
+     */
+    private function tentarPublicacaoAutomatica(array $etapa)
+    {
+        if ($etapa['modo_avanco'] !== 'automatico') {
+            return;
+        }
+
+        if ($this->resultadosEtapa->jaPublicado($etapa['id'])) {
+            return;
+        }
+
+        if (!$this->servicoResultado->avaliacaoCompleta($etapa['id'])) {
+            return;
+        }
+
+        try {
+            $this->servicoResultado->publicar($etapa['id'], null);
+        } catch (\RuntimeException $e) {
+            // Formula/critérios ainda incompletos - Admin publica manualmente depois.
+        }
     }
 
     public function baixarArquivo($submissaoId, $campoId)

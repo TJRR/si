@@ -33,4 +33,20 @@ class UsuarioParticipanteRepository
 
         return $stmt->fetchAll();
     }
+
+    /**
+     * Inverso de participantesDoUsuario() - usado para descobrir a quem
+     * notificar quando um evento acontece do lado do participante (ex.:
+     * rejeicao de inscricao), retorna os ids de usuario vinculados.
+     */
+    public function usuariosDoParticipante($participanteId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT usuario_id FROM usuario_participante WHERE participante_id = :participante_id'
+        );
+        $stmt->execute(['participante_id' => $participanteId]);
+
+        return array_map('intval', $stmt->fetchAll(\PDO::FETCH_COLUMN));
+    }
 }

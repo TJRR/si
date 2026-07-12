@@ -34,6 +34,12 @@ if ($ehPaginaPublicaComLogo) {
 
 $modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'vagasAvaliador', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao', 'categoriasAvaliador'];
 
+if ($ehPainelInterno && \App\Core\Auth::autenticado()) {
+    $repoNotificacoes = new \App\Repositories\NotificacaoPainelRepository();
+    $notificacoesRecentes = $repoNotificacoes->listarRecentes(\App\Core\Auth::usuarioId());
+    $notificacoesNaoLidas = $repoNotificacoes->contarNaoLidas(\App\Core\Auth::usuarioId());
+}
+
 if ($ehPainelAdmin) {
     $rotaAtual = isset($_GET['r']) ? trim($_GET['r'], '/') : 'home/index';
     $partesRota = explode('/', $rotaAtual);
@@ -71,7 +77,41 @@ if ($ehPainelAdmin) {
 <?php if ($ehPainelInterno): ?>
     <div class="admin-topbar">
         <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR">
-        <a href="<?php echo url('auth/logout'); ?>">Sair</a>
+        <div class="admin-topbar-acoes">
+            <div class="notificacoes-sino-wrapper">
+                <button type="button" id="notificacoes-sino-botao" class="notificacoes-sino-botao" aria-haspopup="true" aria-expanded="false" aria-controls="notificacoes-sino-painel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                    <?php if (!empty($notificacoesNaoLidas)): ?>
+                        <span class="notificacoes-sino-badge"><?php echo $notificacoesNaoLidas > 9 ? '9+' : $notificacoesNaoLidas; ?></span>
+                    <?php endif; ?>
+                </button>
+                <div id="notificacoes-sino-painel" class="notificacoes-sino-painel">
+                    <div class="notificacoes-sino-cabecalho">
+                        <span>Notificações</span>
+                        <?php if (!empty($notificacoesNaoLidas)): ?>
+                            <form method="post" action="<?php echo url('notificacoesPainel/marcarTodasLidas'); ?>">
+                                <button type="submit" class="notificacoes-sino-marcar-todas">Marcar todas como lidas</button>
+                            </form>
+                        <?php endif; ?>
+                    </div>
+                    <div class="notificacoes-sino-lista">
+                        <?php if (empty($notificacoesRecentes)): ?>
+                            <p class="notificacoes-sino-vazio">Nenhuma notificação ainda.</p>
+                        <?php else: ?>
+                            <?php foreach ($notificacoesRecentes as $notificacao): ?>
+                                <a class="notificacoes-sino-item<?php echo empty($notificacao['lida']) ? ' nao-lida' : ''; ?>" href="<?php echo url('notificacoesPainel/abrir/' . (int) $notificacao['id']); ?>">
+                                    <span class="notificacoes-sino-titulo"><?php echo htmlspecialchars($notificacao['titulo'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span class="notificacoes-sino-mensagem"><?php echo htmlspecialchars($notificacao['mensagem'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                </a>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            <a href="<?php echo url('auth/logout'); ?>">Sair</a>
+        </div>
     </div>
     <?php if ($ehPainelAdmin): ?>
     <nav class="admin-tabs">
@@ -111,6 +151,9 @@ if ($ehPainelAdmin) {
     <script src="<?php echo config('base_path'); ?>/assets/js/navegacao-arvore.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/navegacao-arvore.js'); ?>" defer></script>
 <?php else: ?>
     <?php echo $conteudo; ?>
+<?php endif; ?>
+<?php if ($ehPainelInterno): ?>
+    <script src="<?php echo config('base_path'); ?>/assets/js/notificacoes-sino.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/notificacoes-sino.js'); ?>" defer></script>
 <?php endif; ?>
 </body>
 </html>

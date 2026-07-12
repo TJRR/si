@@ -53,6 +53,24 @@ class EtapaRepository
         return $etapa !== false ? $etapa : null;
     }
 
+    /**
+     * Etapa imediatamente anterior na trilha, pela ordem (nao assume ordem-1
+     * contiguo, ja que etapas podem ter sido removidas no meio) - usada para
+     * a trava de classificacao antes de liberar a submissao da proxima etapa.
+     */
+    public function buscarAnteriorNaTrilha($trilhaId, $ordemAtual)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT * FROM etapas WHERE trilha_id = :trilha_id AND ordem < :ordem ORDER BY ordem DESC LIMIT 1'
+        );
+        $stmt->execute(['trilha_id' => $trilhaId, 'ordem' => $ordemAtual]);
+
+        $etapa = $stmt->fetch();
+
+        return $etapa !== false ? $etapa : null;
+    }
+
     public function alternarCapturaAtiva($etapaId)
     {
         $pdo = Database::conexao();

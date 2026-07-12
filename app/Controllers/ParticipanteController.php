@@ -12,6 +12,7 @@ use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
+use App\Repositories\NotificacaoPainelRepository;
 use App\Repositories\ParticipanteRepository;
 use App\Repositories\TemaDesafioRepository;
 use App\Repositories\TrilhaRepository;
@@ -26,6 +27,7 @@ class ParticipanteController extends Controller
     private $trilhas;
     private $etapas;
     private $temas;
+    private $notificacoes;
 
     public function __construct()
     {
@@ -36,6 +38,7 @@ class ParticipanteController extends Controller
         $this->trilhas = new TrilhaRepository();
         $this->etapas = new EtapaRepository();
         $this->temas = new TemaDesafioRepository();
+        $this->notificacoes = new NotificacaoPainelRepository();
     }
 
     public function index()
@@ -76,6 +79,7 @@ class ParticipanteController extends Controller
                         $vinculo = $this->equipes->buscarVinculo($equipe['id'], $participante['id']);
                         if ($vinculo !== null) {
                             $this->equipes->voltarParaPendente($vinculo['id']);
+                            $this->notificacoes->removerPorTipo(Auth::usuarioId(), 'equipe_rejeitada');
                         }
                     }
                     $sucesso = 'Dados atualizados. Como o CPF mudou, sua inscrição volta para conferência do Suporte.';
@@ -229,8 +233,35 @@ class ParticipanteController extends Controller
     private function participanteAtual()
     {
         $participantes = $this->usuarioParticipante->participantesDoUsuario(Auth::usuarioId());
+        $participante = !empty($participantes) ? $participantes[0] : null;
 
-        return !empty($participantes) ? $participantes[0] : null;
+        if ($participante !== null) {
+            $this->sincronizarAlertaCpf($participante);
+        }
+
+        return $participante;
+    }
+
+    /**
+     * CPF invalido/nao informado nao bloqueia o acesso - so gera um alerta no
+     * sino de notificacoes, que some sozinho quando o participante corrigir
+     * (ver App\Repositories\NotificacaoPainelRepository::garantirUnica/removerPorTipo).
+     */
+    private function sincronizarAlertaCpf(array $participante)
+    {
+        $usuarioId = Auth::usuarioId();
+
+        if (!CpfValidador::valido($participante['cpf'])) {
+            $this->notificacoes->garantirUnica(
+                $usuarioId,
+                'cpf_invalido',
+                'CPF inválido',
+                'Seu cadastro está com um CPF inválido ou não informado. Corrija em "Meus dados".',
+                ['url' => url('participante/meusDados')]
+            );
+        } else {
+            $this->notificacoes->removerPorTipo($usuarioId, 'cpf_invalido');
+        }
     }
 
     private function equipeDoLiderAtual()

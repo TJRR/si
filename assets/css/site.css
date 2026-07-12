@@ -470,6 +470,134 @@ body.admin-page .admin-topbar a {
     font-size: 0.9rem;
 }
 
+body.admin-page .admin-topbar-acoes {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.notificacoes-sino-wrapper {
+    position: relative;
+}
+
+.notificacoes-sino-botao {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--cor-texto-suave);
+    padding: 0.35rem;
+    display: flex;
+    align-items: center;
+}
+
+.notificacoes-sino-botao:hover {
+    color: var(--cor-texto);
+}
+
+.notificacoes-sino-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #cc3333;
+    color: var(--cor-branco);
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+}
+
+.notificacoes-sino-painel {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: 320px;
+    max-width: 90vw;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 50;
+}
+
+.notificacoes-sino-painel.aberto {
+    display: block;
+}
+
+.notificacoes-sino-cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--cor-borda);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--cor-texto-suave);
+}
+
+.notificacoes-sino-marcar-todas {
+    background: none;
+    border: none;
+    color: var(--cor-primaria-inicio);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.notificacoes-sino-lista {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.notificacoes-sino-item {
+    display: block;
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--cor-fundo-alt);
+    text-decoration: none;
+    color: var(--cor-texto);
+}
+
+.notificacoes-sino-item:last-child {
+    border-bottom: none;
+}
+
+.notificacoes-sino-item.nao-lida {
+    background: #fff4ec;
+}
+
+.notificacoes-sino-item:hover {
+    background: var(--cor-fundo-alt);
+}
+
+.notificacoes-sino-titulo {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.notificacoes-sino-mensagem {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--cor-texto-suave);
+    margin-top: 0.15rem;
+}
+
+.notificacoes-sino-vazio {
+    padding: 1.5rem 0.9rem;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+}
+
 body.admin-page .admin-tabs {
     background: var(--cor-branco);
     border-bottom: 3px solid var(--cor-primaria-inicio);

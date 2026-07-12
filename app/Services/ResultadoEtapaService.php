@@ -8,6 +8,7 @@ if (!defined('SI_BOOT')) {
 }
 
 use App\Core\ExpressaoAritmetica;
+use App\Repositories\AvaliadorDesignacaoRepository;
 use App\Repositories\CriterioAvaliacaoRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\FormulaPontuacaoRepository;
@@ -32,6 +33,7 @@ class ResultadoEtapaService
     private $notas;
     private $regrasDesempate;
     private $resultados;
+    private $designacoes;
 
     public function __construct()
     {
@@ -42,6 +44,47 @@ class ResultadoEtapaService
         $this->notas = new NotaLancadaRepository();
         $this->regrasDesempate = new RegraDesempateRepository();
         $this->resultados = new ResultadoEtapaRepository();
+        $this->designacoes = new AvaliadorDesignacaoRepository();
+    }
+
+    /**
+     * Usado pelo gatilho de modo_avanco='automatico' (AvaliacaoController::notar)
+     * para saber se ja da' para publicar sozinho: toda submissao da etapa
+     * precisa ter, de cada avaliador designado, nota lancada para todos os
+     * criterios - mesma checagem que AvaliacaoController::submissoes() ja
+     * faz por submissao/avaliador, so que agregada para a etapa inteira.
+     */
+    public function avaliacaoCompleta($etapaId)
+    {
+        $totalCriterios = $this->criterios->contarPorEtapa($etapaId);
+
+        if ($totalCriterios === 0) {
+            return false;
+        }
+
+        $submissoes = $this->submissoes->listarPorEtapa($etapaId);
+
+        if (empty($submissoes)) {
+            return false;
+        }
+
+        foreach ($submissoes as $submissao) {
+            $designacoes = $this->designacoes->listarPorSubmissao($submissao['id']);
+
+            if (empty($designacoes)) {
+                return false;
+            }
+
+            foreach ($designacoes as $designacao) {
+                $notasLancadas = $this->notas->contarNotasPorUsuario($submissao['id'], $designacao['usuario_id']);
+
+                if ($notasLancadas < $totalCriterios) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     public function calcularRanking($etapaId)

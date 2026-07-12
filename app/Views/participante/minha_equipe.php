@@ -40,6 +40,9 @@
                 'rejeitado' => 'Rejeitado',
             ][$colega['status_homologacao']];
             ?>
+            <?php if ($colega['status_homologacao'] === 'rejeitado' && !empty($colega['motivo_rejeicao'])): ?>
+                <br><small><?php echo htmlspecialchars($colega['motivo_rejeicao'], ENT_QUOTES, 'UTF-8'); ?></small>
+            <?php endif; ?>
         </td>
     </tr>
     <?php endforeach; ?>

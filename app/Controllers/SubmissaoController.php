@@ -10,8 +10,10 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
+use App\Repositories\CriterioAvaliacaoRepository;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
+use App\Repositories\ResultadoEtapaRepository;
 use App\Repositories\SubmissaoRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Services\CampoDinamicoService;
@@ -23,12 +25,7 @@ class SubmissaoController extends Controller
     {
         RoleMiddleware::exigirEmQualquerConcurso(['participante']);
 
-        $equipeId = $this->equipeHomologadaDoParticipante($etapaId);
-
-        if ($equipeId === null) {
-            http_response_code(403);
-            exit('Acesso negado: sua inscrição ainda não foi homologada, ou não pertence à trilha desta etapa.');
-        }
+        $equipeId = $this->equipeAutorizadaOuAbortar($etapaId);
 
         $preparo = (new SubmissaoService())->preparar($etapaId);
 
@@ -55,12 +52,7 @@ class SubmissaoController extends Controller
     {
         RoleMiddleware::exigirEmQualquerConcurso(['participante']);
 
-        $equipeId = $this->equipeHomologadaDoParticipante($etapaId);
-
-        if ($equipeId === null) {
-            http_response_code(403);
-            exit('Acesso negado: sua inscrição ainda não foi homologada, ou não pertence à trilha desta etapa.');
-        }
+        $equipeId = $this->equipeAutorizadaOuAbortar($etapaId);
 
         $resultado = (new SubmissaoService())->processar($etapaId, $_POST, $_FILES);
 
@@ -93,13 +85,42 @@ class SubmissaoController extends Controller
     }
 
     /**
+     * Wrapper de equipeHomologadaDoParticipante() para preencher()/enviar():
+     * trata tanto o retorno null (mensagem generica ja existente) quanto a
+     * RuntimeException especifica da trava de classificacao (item 4 da Fase 12).
+     */
+    private function equipeAutorizadaOuAbortar($etapaId)
+    {
+        try {
+            $equipeId = $this->equipeHomologadaDoParticipante($etapaId);
+        } catch (\RuntimeException $e) {
+            http_response_code(403);
+            exit(htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
+        }
+
+        if ($equipeId === null) {
+            http_response_code(403);
+            exit('Acesso negado: sua inscrição ainda não foi homologada, ou não pertence à trilha desta etapa.');
+        }
+
+        return $equipeId;
+    }
+
+    /**
      * So quem foi homologado e tem acesso liberado (perfil "participante")
      * pode submeter, e so na trilha da propria equipe - retorna o equipe_id
-     * ja validado, ou null se nao autorizado.
+     * ja validado, ou null se nao autorizado (homologacao/trilha).
+     *
+     * Para etapas com ordem > 1 cuja etapa anterior tenha criterios de
+     * avaliacao (ou seja, e' uma etapa avaliada, nao so um cadastro), exige
+     * que a equipe tenha sido classificada no resultado publicado da etapa
+     * anterior - lanca RuntimeException com mensagem especifica quando
+     * bloqueia por esse motivo.
      */
     private function equipeHomologadaDoParticipante($etapaId)
     {
-        $etapa = (new EtapaRepository())->buscarPorId($etapaId);
+        $etapas = new EtapaRepository();
+        $etapa = $etapas->buscarPorId($etapaId);
 
         if ($etapa === null) {
             return null;
@@ -124,6 +145,44 @@ class SubmissaoController extends Controller
             return null;
         }
 
+        if ((int) $etapa['ordem'] > 1) {
+            $this->exigirClassificacaoNaEtapaAnterior($etapa, (int) $equipe['id'], $etapas);
+        }
+
         return (int) $equipe['id'];
+    }
+
+    private function exigirClassificacaoNaEtapaAnterior(array $etapa, $equipeId, EtapaRepository $etapas)
+    {
+        $etapaAnterior = $etapas->buscarAnteriorNaTrilha($etapa['trilha_id'], (int) $etapa['ordem']);
+
+        if ($etapaAnterior === null) {
+            return;
+        }
+
+        $temCriterios = (new CriterioAvaliacaoRepository())->contarPorEtapa($etapaAnterior['id']) > 0;
+
+        if (!$temCriterios) {
+            return;
+        }
+
+        $resultados = new ResultadoEtapaRepository();
+
+        if (!$resultados->jaPublicado($etapaAnterior['id'])) {
+            throw new \RuntimeException(
+                'O resultado da etapa anterior ("' . $etapaAnterior['nome'] . '") ainda não foi publicado.'
+            );
+        }
+
+        $submissaoAnterior = (new SubmissaoRepository())->buscarPorEquipeEEtapa($equipeId, $etapaAnterior['id']);
+        $resultado = $submissaoAnterior !== null
+            ? $resultados->buscarPorSubmissaoEEtapa($submissaoAnterior['id'], $etapaAnterior['id'])
+            : null;
+
+        if ($resultado === null || !$resultado['classificado']) {
+            throw new \RuntimeException(
+                'Sua equipe não foi classificada na etapa anterior ("' . $etapaAnterior['nome'] . '").'
+            );
+        }
     }
 }
