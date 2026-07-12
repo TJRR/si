@@ -75,22 +75,33 @@
 
 <h2>Notas por critério</h2>
 <form method="post" action="<?php echo url('avaliacao/notar/' . (int) $submissao['id']); ?>">
-    <table border="1" cellpadding="6">
-        <tr><th>Critério</th><th>Escala</th><th>Nota</th></tr>
-        <?php foreach ($criterios as $criterio): ?>
-        <tr>
-            <td><?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo number_format((float) $criterio['escala_min'], 1, ',', '.'); ?> a <?php echo number_format((float) $criterio['escala_max'], 1, ',', '.'); ?></td>
-            <td>
+    <nav class="abas-criterios">
+        <?php foreach ($criterios as $indice => $criterio): ?>
+            <a href="#" class="aba-criterio<?php echo $indice === 0 ? ' active' : ''; ?>" data-aba-criterio="criterio-<?php echo (int) $criterio['id']; ?>">
+                <?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>
+            </a>
+        <?php endforeach; ?>
+    </nav>
+
+    <?php foreach ($criterios as $indice => $criterio): ?>
+        <div class="painel-criterio" id="criterio-<?php echo (int) $criterio['id']; ?>" style="<?php echo $indice === 0 ? '' : 'display:none;'; ?>">
+            <h3><?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?></h3>
+            <?php if (!empty($criterio['descricao'])): ?>
+                <p><?php echo nl2br(htmlspecialchars($criterio['descricao'], ENT_QUOTES, 'UTF-8')); ?></p>
+            <?php endif; ?>
+            <p>Escala: <?php echo number_format((float) $criterio['escala_min'], 1, ',', '.'); ?> a <?php echo number_format((float) $criterio['escala_max'], 1, ',', '.'); ?></p>
+            <label>
+                Nota
                 <input type="text"
                        name="nota[<?php echo (int) $criterio['id']; ?>]"
                        value="<?php echo isset($notasAtuais[$criterio['id']]) ? htmlspecialchars((string) $notasAtuais[$criterio['id']]['nota'], ENT_QUOTES, 'UTF-8') : ''; ?>"
                        <?php echo $resultadoPublicado ? 'readonly' : ''; ?>>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </table>
+            </label>
+        </div>
+    <?php endforeach; ?>
+
     <?php if (!$resultadoPublicado): ?>
         <button type="submit">Salvar notas</button>
     <?php endif; ?>
 </form>
+<script src="<?php echo config('base_path'); ?>/assets/js/abas-avaliador.js"></script>

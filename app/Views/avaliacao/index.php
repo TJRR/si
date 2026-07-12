@@ -7,12 +7,21 @@
 <?php if (empty($etapas)): ?>
     <p>Nenhuma etapa com avaliação em aberto no momento para os concursos em que você é avaliador.</p>
 <?php else: ?>
-    <table border="1" cellpadding="6">
-        <tr><th>Concurso</th><th>Trilha</th><th>Etapa</th><th>Período</th><th>Ações</th></tr>
-        <?php foreach ($etapas as $etapa): ?>
+    <?php $concursoAtual = null; $trilhaAtual = null; ?>
+    <?php foreach ($etapas as $etapa): ?>
+        <?php if ($etapa['concurso_nome'] !== $concursoAtual): ?>
+            <?php if ($trilhaAtual !== null): echo '</table>'; endif; ?>
+            <?php $concursoAtual = $etapa['concurso_nome']; $trilhaAtual = null; ?>
+            <h2><?php echo htmlspecialchars($concursoAtual, ENT_QUOTES, 'UTF-8'); ?></h2>
+        <?php endif; ?>
+        <?php if ($etapa['trilha_nome'] !== $trilhaAtual): ?>
+            <?php if ($trilhaAtual !== null): echo '</table>'; endif; ?>
+            <?php $trilhaAtual = $etapa['trilha_nome']; ?>
+            <h3><?php echo htmlspecialchars($trilhaAtual, ENT_QUOTES, 'UTF-8'); ?></h3>
+            <table border="1" cellpadding="6">
+                <tr><th>Etapa</th><th>Período</th><th>Ações</th></tr>
+        <?php endif; ?>
         <tr>
-            <td><?php echo htmlspecialchars($etapa['concurso_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo htmlspecialchars($etapa['trilha_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></td>
             <td>
                 <?php echo htmlspecialchars((string) $etapa['data_inicio'], ENT_QUOTES, 'UTF-8'); ?>
@@ -21,6 +30,6 @@
             </td>
             <td><a href="<?php echo url('avaliacao/submissoes/' . (int) $etapa['id']); ?>">Ver submissões</a></td>
         </tr>
-        <?php endforeach; ?>
+    <?php endforeach; ?>
     </table>
 <?php endif; ?>

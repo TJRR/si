@@ -658,6 +658,63 @@ body.admin-page .aba-secundaria.active {
     border-bottom-color: var(--cor-primaria-fim);
 }
 
+/* Abas por criterio na tela de lancamento de notas do avaliador (avaliacao/notar.php).
+   Client-side (mesmo form, sem navegacao de rota) — visual espelha .aba-secundaria,
+   mas classes proprias porque o mecanismo e diferente. */
+body.admin-page .abas-criterios {
+    background: var(--cor-branco);
+    border-bottom: 2px solid var(--cor-borda);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+body.admin-page .aba-criterio {
+    display: inline-block;
+    padding: 0.65rem 0.85rem;
+    color: var(--cor-texto-suave);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+
+body.admin-page .aba-criterio:hover {
+    color: var(--cor-primaria-fim);
+}
+
+body.admin-page .aba-criterio.active {
+    color: var(--cor-primaria-fim);
+    border-bottom-color: var(--cor-primaria-fim);
+}
+
+/* Indicador granular "X/N criterios" na lista de submissoes do avaliador. */
+body.admin-page .status-avaliacao {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+body.admin-page .status-avaliacao.completa {
+    background: #e3f6e8;
+    color: #1e7d3c;
+}
+
+body.admin-page .status-avaliacao.parcial {
+    background: #fdf1dc;
+    color: #a0630d;
+}
+
+body.admin-page .status-avaliacao.pendente {
+    background: var(--cor-fundo-alt);
+    color: var(--cor-texto-suave);
+}
+
 body.admin-page #conteudo-admin > h1,
 body.admin-page #conteudo-admin > h2,
 body.admin-page #conteudo-admin > p,

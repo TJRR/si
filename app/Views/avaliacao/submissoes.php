@@ -6,28 +6,29 @@
 
 <p><a href="<?php echo url('avaliacao/index'); ?>">Voltar às minhas etapas</a></p>
 
-<?php if ($sigiloCego): ?>
-    <p><em>Esta etapa é de avaliação cega: os dados da equipe/participantes ficam ocultos, você vê apenas o número da submissão e o tema.</em></p>
-<?php endif; ?>
-
 <?php if (empty($submissoes)): ?>
     <p>Nenhuma submissão designada a você nesta etapa ainda.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th>Submissão</th><?php if (!$sigiloCego): ?><th>Equipe</th><?php endif; ?><th>Sua avaliação</th><th>Ações</th></tr>
+        <tr><th><?php echo $sigiloCego ? 'Submissão' : 'Equipe'; ?></th><th>Status</th><th>Ações</th></tr>
         <?php foreach ($submissoes as $submissao): ?>
         <tr>
-            <td>#<?php echo (int) $submissao['id']; ?></td>
-            <?php if (!$sigiloCego): ?>
-                <td><?php echo htmlspecialchars($submissao['nome_equipe'] !== null ? $submissao['nome_equipe'] : '—', ENT_QUOTES, 'UTF-8'); ?></td>
-            <?php endif; ?>
+            <td>
+                <?php if ($sigiloCego): ?>
+                    #<?php echo (int) $submissao['id']; ?>
+                <?php else: ?>
+                    <?php echo htmlspecialchars($submissao['nome_equipe'] !== null ? $submissao['nome_equipe'] : '—', ENT_QUOTES, 'UTF-8'); ?>
+                <?php endif; ?>
+            </td>
             <td>
                 <?php if ($submissao['resultado_publicado']): ?>
-                    Resultado já publicado
+                    <span class="status-avaliacao completa">Resultado publicado</span>
                 <?php elseif ($submissao['avaliacao_completa']): ?>
-                    Completa
+                    <span class="status-avaliacao completa"><?php echo (int) $submissao['criterios_notados']; ?>/<?php echo (int) $submissao['total_criterios']; ?> critérios</span>
+                <?php elseif ($submissao['criterios_notados'] > 0): ?>
+                    <span class="status-avaliacao parcial"><?php echo (int) $submissao['criterios_notados']; ?>/<?php echo (int) $submissao['total_criterios']; ?> critérios</span>
                 <?php else: ?>
-                    Pendente
+                    <span class="status-avaliacao pendente">0/<?php echo (int) $submissao['total_criterios']; ?> critérios</span>
                 <?php endif; ?>
             </td>
             <td><a href="<?php echo url('avaliacao/notar/' . (int) $submissao['id']); ?>">

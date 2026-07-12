@@ -115,11 +115,10 @@ class AvaliacaoController extends Controller
         $totalCriterios = $this->criterios->contarPorEtapa($etapaId);
 
         foreach ($lista as &$submissao) {
-            $submissao['avaliacao_completa'] = $this->notas->avaliacaoCompletaPorUsuario(
-                $submissao['id'],
-                Auth::usuarioId(),
-                $totalCriterios
-            );
+            $criteriosNotados = $this->notas->contarNotasPorUsuario($submissao['id'], Auth::usuarioId());
+            $submissao['criterios_notados'] = $criteriosNotados;
+            $submissao['total_criterios'] = $totalCriterios;
+            $submissao['avaliacao_completa'] = $totalCriterios > 0 && $criteriosNotados >= $totalCriterios;
             $submissao['resultado_publicado'] = $this->resultadosEtapa->buscarPorSubmissaoEEtapa($submissao['id'], $etapaId) !== null;
         }
         unset($submissao);

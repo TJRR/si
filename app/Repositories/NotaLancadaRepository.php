@@ -57,7 +57,7 @@ class NotaLancadaRepository
         ]);
     }
 
-    public function avaliacaoCompletaPorUsuario($submissaoId, $usuarioId, $totalCriterios)
+    public function contarNotasPorUsuario($submissaoId, $usuarioId)
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
@@ -66,6 +66,6 @@ class NotaLancadaRepository
         );
         $stmt->execute(['submissao_id' => $submissaoId, 'usuario_id' => $usuarioId]);
 
-        return (int) $stmt->fetchColumn() >= $totalCriterios && $totalCriterios > 0;
+        return (int) $stmt->fetchColumn();
     }
 }
