@@ -195,9 +195,10 @@ class AvaliacaoController extends Controller
             exit('Arquivo não encontrado.');
         }
 
-        $caminho = __DIR__ . '/../../storage/uploads/' . $valor['caminho_relativo'];
+        $baseDir = realpath(__DIR__ . '/../../storage/uploads');
+        $caminho = realpath($baseDir . '/' . $valor['caminho_relativo']);
 
-        if (!file_exists($caminho)) {
+        if ($caminho === false || strpos($caminho, $baseDir . DIRECTORY_SEPARATOR) !== 0 || !is_file($caminho)) {
             http_response_code(404);
             exit('Arquivo não encontrado.');
         }
