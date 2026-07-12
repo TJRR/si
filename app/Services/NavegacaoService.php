@@ -63,9 +63,22 @@ class NavegacaoService
         }
 
         $grupo = self::$grupoPorTipo[$tipo];
+        $definicoes = self::$abasPorGrupo[$grupo];
+
+        if ($grupo === 'etapa') {
+            $etapa = (new EtapaRepository())->buscarPorId($id);
+
+            if ($etapa !== null && $etapa['mecanismo_avaliacao'] !== 'avaliadores') {
+                $tiposPermitidos = ['etapa', 'formulario_vinculado'];
+                $definicoes = array_values(array_filter($definicoes, function ($definicao) use ($tiposPermitidos) {
+                    return in_array($definicao['tipo'], $tiposPermitidos, true);
+                }));
+            }
+        }
+
         $abas = [];
 
-        foreach (self::$abasPorGrupo[$grupo] as $definicao) {
+        foreach ($definicoes as $definicao) {
             $abas[] = [
                 'rotulo' => $definicao['rotulo'],
                 'url' => $definicao['rota'] . '/' . (int) $id,

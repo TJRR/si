@@ -108,10 +108,12 @@ class EtapaRepository
         $stmt = $pdo->prepare(
             'INSERT INTO etapas (trilha_id, nome, descricao, ordem, data_inicio, data_fim, formulario_dinamico_id,
                                   regra_transicao_tipo, regra_transicao_valor, modo_designacao,
-                                  qtd_avaliadores_por_submissao, modo_consolidacao, modo_sigilo, modo_avanco)
+                                  qtd_avaliadores_por_submissao, modo_consolidacao, modo_sigilo, modo_avanco,
+                                  mecanismo_avaliacao)
              VALUES (:trilha_id, :nome, :descricao, :ordem, :data_inicio, :data_fim, :formulario_dinamico_id,
                      :regra_transicao_tipo, :regra_transicao_valor, :modo_designacao,
-                     :qtd_avaliadores_por_submissao, :modo_consolidacao, :modo_sigilo, :modo_avanco)'
+                     :qtd_avaliadores_por_submissao, :modo_consolidacao, :modo_sigilo, :modo_avanco,
+                     :mecanismo_avaliacao)'
         );
         $stmt->execute(array_merge([
             'trilha_id' => $trilhaId,
@@ -148,7 +150,8 @@ class EtapaRepository
                  data_fim = :data_fim, formulario_dinamico_id = :formulario_dinamico_id,
                  regra_transicao_tipo = :regra_transicao_tipo, regra_transicao_valor = :regra_transicao_valor,
                  modo_designacao = :modo_designacao, qtd_avaliadores_por_submissao = :qtd_avaliadores_por_submissao,
-                 modo_consolidacao = :modo_consolidacao, modo_sigilo = :modo_sigilo, modo_avanco = :modo_avanco
+                 modo_consolidacao = :modo_consolidacao, modo_sigilo = :modo_sigilo, modo_avanco = :modo_avanco,
+                 mecanismo_avaliacao = :mecanismo_avaliacao
              WHERE id = :id'
         );
         $stmt->execute(array_merge([
@@ -173,6 +176,7 @@ class EtapaRepository
         $modoConsolidacao = isset($configAvaliacao['modo_consolidacao']) ? $configAvaliacao['modo_consolidacao'] : 'unico';
         $modoSigilo = isset($configAvaliacao['modo_sigilo']) ? $configAvaliacao['modo_sigilo'] : 'aberto';
         $modoAvanco = isset($configAvaliacao['modo_avanco']) ? $configAvaliacao['modo_avanco'] : 'manual';
+        $mecanismoAvaliacao = isset($configAvaliacao['mecanismo_avaliacao']) ? $configAvaliacao['mecanismo_avaliacao'] : '';
 
         return [
             'modo_designacao' => in_array($modoDesignacao, ['manual', 'aberto', 'automatico', 'sorteio_categoria'], true) ? $modoDesignacao : null,
@@ -180,6 +184,7 @@ class EtapaRepository
             'modo_consolidacao' => in_array($modoConsolidacao, ['media_criterio', 'media_ne', 'unico'], true) ? $modoConsolidacao : 'unico',
             'modo_sigilo' => in_array($modoSigilo, ['cego', 'aberto'], true) ? $modoSigilo : 'aberto',
             'modo_avanco' => in_array($modoAvanco, ['automatico', 'manual'], true) ? $modoAvanco : 'manual',
+            'mecanismo_avaliacao' => in_array($mecanismoAvaliacao, ['nenhuma', 'administrador', 'avaliadores'], true) ? $mecanismoAvaliacao : 'nenhuma',
         ];
     }
 }

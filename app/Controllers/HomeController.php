@@ -17,6 +17,7 @@ use App\Repositories\FormularioDinamicoRepository;
 use App\Repositories\TemaDesafioRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioRepository;
+use App\Services\ResultadoEtapaService;
 
 class HomeController extends Controller
 {
@@ -27,6 +28,7 @@ class HomeController extends Controller
         $etapas = new EtapaRepository();
         $temas = new TemaDesafioRepository();
         $formularios = new FormularioDinamicoRepository();
+        $servicoResultadoEtapa = new ResultadoEtapaService();
 
         $concursoAtivo = $concursos->buscarAtivo();
         $trilhasAtivas = $concursoAtivo !== null ? $trilhas->listarPorConcurso($concursoAtivo['id']) : [];
@@ -34,11 +36,20 @@ class HomeController extends Controller
         $cronograma = [];
         $temasPorTrilha = [];
         $trilhasComInscricaoAberta = [];
+        $etapasComResultadoPublicado = [];
 
         foreach ($trilhasAtivas as $trilha) {
             foreach ($etapas->listarPorTrilha($trilha['id']) as $etapa) {
                 $etapa['trilha_nome'] = $trilha['nome'];
                 $cronograma[] = $etapa;
+
+                if ($servicoResultadoEtapa->jaPublicado($etapa['id'])) {
+                    $etapasComResultadoPublicado[] = [
+                        'etapa_id' => $etapa['id'],
+                        'etapa_nome' => $etapa['nome'],
+                        'trilha_nome' => $trilha['nome'],
+                    ];
+                }
 
                 if ((int) $etapa['ordem'] === 1 && $etapa['captura_ativa']) {
                     $formularioDaEtapa = $etapa['formulario_dinamico_id'] !== null
@@ -73,6 +84,7 @@ class HomeController extends Controller
                 'cronograma' => $cronograma,
                 'temasPorTrilha' => $temasPorTrilha,
                 'trilhasComInscricaoAberta' => $trilhasComInscricaoAberta,
+                'etapasComResultadoPublicado' => $etapasComResultadoPublicado,
             ],
             'Sistema de Gestão da Semana de Inovação e do Prêmio de Inovação do TJRR'
         );

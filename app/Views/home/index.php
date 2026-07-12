@@ -88,6 +88,21 @@ $premiacaoImagem = !empty($conteudo['premiacao_imagem']) ? config('base_path') .
         </div>
     </section>
 
+    <?php if (!empty($etapasComResultadoPublicado)): ?>
+        <section class="site-section" id="resultados">
+            <h2 class="section-title">Resultados</h2>
+            <ul>
+                <?php foreach ($etapasComResultadoPublicado as $item): ?>
+                    <li>
+                        <a href="<?php echo url('resultadosPublicos/etapa/' . (int) $item['etapa_id']); ?>">
+                            <?php echo htmlspecialchars($item['trilha_nome'] . ' — ' . $item['etapa_nome'], ENT_QUOTES, 'UTF-8'); ?>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </section>
+    <?php endif; ?>
+
     <section class="site-section" id="temas">
         <h2 class="section-title">Temas e Desafios</h2>
         <?php if (empty($temasPorTrilha)): ?>

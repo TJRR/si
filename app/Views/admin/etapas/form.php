@@ -60,7 +60,18 @@
         </select>
     </label><br>
 
-    <fieldset>
+    <label>Mecanismo de avaliação:
+        <select name="mecanismo_avaliacao" id="campo-mecanismo-avaliacao">
+            <?php foreach (['nenhuma' => 'Nenhuma', 'administrador' => 'Pelo Administrador (ex.: homologação de cadastro)', 'avaliadores' => 'Por Avaliadores'] as $valor => $rotulo): ?>
+                <?php $selecionado = ($etapa !== null && $etapa['mecanismo_avaliacao'] === $valor); ?>
+                <option value="<?php echo $valor; ?>" <?php echo $selecionado ? 'selected' : ''; ?>>
+                    <?php echo htmlspecialchars($rotulo, ENT_QUOTES, 'UTF-8'); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </label><br>
+
+    <fieldset id="fieldset-avaliacao-por-avaliadores">
         <legend>Configuração de avaliação desta etapa</legend>
 
         <label>Designação de avaliadores:
@@ -114,3 +125,17 @@
 
     <button type="submit">Salvar</button>
 </form>
+
+<script>
+(function () {
+    var select = document.getElementById('campo-mecanismo-avaliacao');
+    var fieldset = document.getElementById('fieldset-avaliacao-por-avaliadores');
+
+    function atualizar() {
+        fieldset.style.display = select.value === 'avaliadores' ? '' : 'none';
+    }
+
+    select.addEventListener('change', atualizar);
+    atualizar();
+})();
+</script>

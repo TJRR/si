@@ -28,6 +28,7 @@ use App\Controllers\NotificacaoPainelController;
 use App\Controllers\ParticipanteController;
 use App\Controllers\RegraDesempateAdminController;
 use App\Controllers\ResultadoAdminController;
+use App\Controllers\ResultadoPublicoController;
 use App\Controllers\SubmissaoController;
 use App\Controllers\TemaAdminController;
 use App\Controllers\TemaDesafioAdminController;
@@ -62,6 +63,7 @@ class Router
         'vagasAvaliador' => VagaAvaliadorAdminController::class,
         'avaliacao' => AvaliacaoController::class,
         'resultados' => ResultadoAdminController::class,
+        'resultadosPublicos' => ResultadoPublicoController::class,
         'apuracao' => ApuracaoAdminController::class,
         'navegacao' => NavegacaoController::class,
         'notificacoesPainel' => NotificacaoPainelController::class,

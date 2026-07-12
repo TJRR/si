@@ -33,6 +33,17 @@ class ParticipanteRepository
         return $participante !== false ? $participante : null;
     }
 
+    public function buscarPorEmail($email)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM participantes WHERE email = :email LIMIT 1');
+        $stmt->execute(['email' => $email]);
+
+        $participante = $stmt->fetch();
+
+        return $participante !== false ? $participante : null;
+    }
+
     public function criar($nome, $cpf, $email, $telefone, $vinculoProfissao)
     {
         $pdo = Database::conexao();

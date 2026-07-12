@@ -10,7 +10,6 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
-use App\Repositories\CriterioAvaliacaoRepository;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\ResultadoEtapaRepository;
@@ -111,11 +110,12 @@ class SubmissaoController extends Controller
      * pode submeter, e so na trilha da propria equipe - retorna o equipe_id
      * ja validado, ou null se nao autorizado (homologacao/trilha).
      *
-     * Para etapas com ordem > 1 cuja etapa anterior tenha criterios de
-     * avaliacao (ou seja, e' uma etapa avaliada, nao so um cadastro), exige
-     * que a equipe tenha sido classificada no resultado publicado da etapa
-     * anterior - lanca RuntimeException com mensagem especifica quando
-     * bloqueia por esse motivo.
+     * Para etapas com ordem > 1 cuja etapa anterior tenha
+     * mecanismo_avaliacao = 'avaliadores' (ou seja, e' uma etapa avaliada por
+     * avaliadores, nao um cadastro homologado pelo Admin nem uma etapa sem
+     * avaliacao), exige que a equipe tenha sido classificada no resultado
+     * publicado da etapa anterior - lanca RuntimeException com mensagem
+     * especifica quando bloqueia por esse motivo.
      */
     private function equipeHomologadaDoParticipante($etapaId)
     {
@@ -160,9 +160,7 @@ class SubmissaoController extends Controller
             return;
         }
 
-        $temCriterios = (new CriterioAvaliacaoRepository())->contarPorEtapa($etapaAnterior['id']) > 0;
-
-        if (!$temCriterios) {
+        if ($etapaAnterior['mecanismo_avaliacao'] !== 'avaliadores') {
             return;
         }
 
