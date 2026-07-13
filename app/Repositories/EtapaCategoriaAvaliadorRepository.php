@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class EtapaCategoriaAvaliadorRepository
@@ -64,5 +65,7 @@ class EtapaCategoriaAvaliadorRepository
             $pdo->rollBack();
             throw $e;
         }
+
+        Auditoria::registrar('salvar_quantidades', 'etapa_categoria_avaliadores', $etapaId, null, ['quantidades_por_categoria_id' => $quantidadesPorCategoriaId]);
     }
 }

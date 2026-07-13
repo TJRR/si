@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class SubmissaoRepository
@@ -23,8 +24,15 @@ class SubmissaoRepository
             'formulario_dinamico_id' => $formularioDinamicoId,
             'dados_json' => json_encode($dadosJson),
         ]);
+        $id = (int) $pdo->lastInsertId();
 
-        return (int) $pdo->lastInsertId();
+        Auditoria::registrar('criar', 'submissoes', $id, null, [
+            'etapa_id' => $etapaId,
+            'formulario_dinamico_id' => $formularioDinamicoId,
+            'dados_json' => $dadosJson,
+        ]);
+
+        return $id;
     }
 
     public function listarPorEtapa($etapaId)
@@ -68,19 +76,25 @@ class SubmissaoRepository
 
     public function vincularEquipe($id, $equipeId)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('UPDATE submissoes SET equipe_id = :equipe_id WHERE id = :id');
         $stmt->execute(['equipe_id' => $equipeId, 'id' => $id]);
+
+        Auditoria::registrar('vincular_equipe', 'submissoes', $id, $antes, ['equipe_id' => $equipeId]);
     }
 
     public function atualizarDadosJson($id, array $dadosJson)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('UPDATE submissoes SET dados_json = :dados_json WHERE id = :id');
         $stmt->execute([
             'dados_json' => json_encode($dadosJson),
             'id' => $id,
         ]);
+
+        Auditoria::registrar('atualizar', 'submissoes', $id, $antes, ['dados_json' => $dadosJson]);
     }
 
     public function buscarPorId($id)
@@ -113,6 +127,11 @@ class SubmissaoRepository
         );
         $stmt->execute([
             'submissao_id' => $submissaoId,
+            'trilha_id' => $trilhaId,
+            'cpf' => $cpf,
+        ]);
+
+        Auditoria::registrar('inserir_cpf', 'submissoes', $submissaoId, null, [
             'trilha_id' => $trilhaId,
             'cpf' => $cpf,
         ]);

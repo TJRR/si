@@ -20,13 +20,23 @@
             <strong>Resultado final publicado.</strong>
             <form method="post" action="<?php echo url('resultados/reabrirTrilha'); ?>" style="display:inline;">
                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                <button type="submit" class="btn-secundario" onclick="return confirm('Reabrir apaga o resultado final publicado. Confirmar?');">Reabrir</button>
+                <button type="submit" class="btn-icone" title="Reabrir" onclick="return confirm('Reabrir apaga o resultado final publicado. Confirmar?');">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="1 4 1 10 7 10"></polyline>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                </button>
             </form>
         <?php else: ?>
             <strong>Prévia (ainda não publicada)</strong> — recalculada a cada acesso.
             <form method="post" action="<?php echo url('resultados/publicarTrilha'); ?>" style="display:inline;">
                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                <button type="submit" onclick="return confirm('Publicar congela a colocação final desta trilha. Confirmar?');">Confirmar e publicar</button>
+                <button type="submit" class="btn-icone" title="Confirmar e publicar" onclick="return confirm('Publicar congela a colocação final desta trilha. Confirmar?');">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </button>
             </form>
         <?php endif; ?>
     </p>

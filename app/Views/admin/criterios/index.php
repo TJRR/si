@@ -23,25 +23,49 @@
             <td><?php echo number_format((float) $criterio['peso'], 2, ',', '.'); ?></td>
             <td><?php echo number_format((float) $criterio['escala_min'], 1, ',', '.'); ?> a <?php echo number_format((float) $criterio['escala_max'], 1, ',', '.'); ?></td>
             <td>
-                <a href="<?php echo url('criterios/editar/' . (int) $criterio['id']); ?>">Editar</a>
-
-                <form method="post" action="<?php echo url('criterios/mover'); ?>" style="display:inline;">
-                    <input type="hidden" name="id" value="<?php echo (int) $criterio['id']; ?>">
-                    <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
-                    <input type="hidden" name="direcao" value="cima">
-                    <button type="submit">Cima</button>
-                </form>
-                <form method="post" action="<?php echo url('criterios/mover'); ?>" style="display:inline;">
-                    <input type="hidden" name="id" value="<?php echo (int) $criterio['id']; ?>">
-                    <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
-                    <input type="hidden" name="direcao" value="baixo">
-                    <button type="submit">Baixo</button>
-                </form>
-                <form method="post" action="<?php echo url('criterios/remover'); ?>" style="display:inline;">
-                    <input type="hidden" name="id" value="<?php echo (int) $criterio['id']; ?>">
-                    <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
-                    <button type="submit">Remover</button>
-                </form>
+                <div class="acoes-icones">
+                    <a href="<?php echo url('criterios/editar/' . (int) $criterio['id']); ?>" class="btn-icone" title="Editar">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </a>
+                    <form method="post" action="<?php echo url('criterios/mover'); ?>">
+                        <input type="hidden" name="id" value="<?php echo (int) $criterio['id']; ?>">
+                        <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
+                        <input type="hidden" name="direcao" value="cima">
+                        <button type="submit" class="btn-icone" title="Mover para cima">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <line x1="12" y1="19" x2="12" y2="5"></line>
+                                <polyline points="5 12 12 5 19 12"></polyline>
+                            </svg>
+                        </button>
+                    </form>
+                    <form method="post" action="<?php echo url('criterios/mover'); ?>">
+                        <input type="hidden" name="id" value="<?php echo (int) $criterio['id']; ?>">
+                        <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
+                        <input type="hidden" name="direcao" value="baixo">
+                        <button type="submit" class="btn-icone" title="Mover para baixo">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <polyline points="19 12 12 19 5 12"></polyline>
+                            </svg>
+                        </button>
+                    </form>
+                    <form method="post" action="<?php echo url('criterios/remover'); ?>">
+                        <input type="hidden" name="id" value="<?php echo (int) $criterio['id']; ?>">
+                        <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
+                        <button type="submit" class="btn-icone" title="Remover">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                <path d="M10 11v6"></path>
+                                <path d="M14 11v6"></path>
+                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
             </td>
         </tr>
         <?php endforeach; ?>

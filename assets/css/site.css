@@ -23,6 +23,16 @@
     --fonte-corpo: 'Roboto', -apple-system, 'Segoe UI', sans-serif;
 }
 
+/* Reserva o espaco da barra de rolagem vertical sempre, mesmo em paginas
+   curtas que nao precisam rolar - sem isso, o conteudo "pula" alguns
+   pixels pra esquerda/direita toda vez que uma pagina passa a ter barra de
+   rolagem e outra nao. Ao contrario de "overflow-y: scroll" (forca a barra
+   a aparecer sempre, mesmo sem necessidade), scrollbar-gutter so reserva o
+   espaco - a barra em si continua some/aparece conforme o conteudo precisa. */
+html {
+    scrollbar-gutter: stable;
+}
+
 /* ===================== Site publico ===================== */
 
 .site-page {
@@ -191,6 +201,56 @@
 
 .btn-secundario::before {
     background: var(--cor-secundaria);
+}
+
+/* Botao so-icone: acoes compactas em tabelas administrativas (ex.: coluna
+   "Acoes" da lista de usuarios) - usa title="" nativo do navegador como
+   tooltip em vez de texto visivel. Seletor com tag+classe pra vencer a regra
+   generica "body.admin-page button" (mais especifica que uma classe sozinha),
+   que senao esmaga o icone com o padding/pill do botao padrao do painel. */
+body.admin-page button.btn-icone,
+body.admin-page a.btn-icone {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    background: var(--cor-branco);
+    color: var(--cor-texto-suave);
+    cursor: pointer;
+    box-sizing: border-box;
+    text-decoration: none;
+}
+
+body.admin-page button.btn-icone::before,
+body.admin-page button.btn-icone::after {
+    content: none;
+}
+
+body.admin-page button.btn-icone:hover,
+body.admin-page button.btn-icone:focus,
+body.admin-page a.btn-icone:hover,
+body.admin-page a.btn-icone:focus {
+    background: var(--cor-fundo-alt);
+    color: var(--cor-texto);
+}
+
+/* Agrupa varios icones de acao lado a lado (ex.: coluna "Acoes" de uma
+   tabela) - flex explicito em vez de depender de display:inline em cada
+   form/a individualmente, que e fragil dentro de celulas de tabela. */
+.acoes-icones {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.acoes-icones form {
+    margin: 0;
+    display: inline-flex;
 }
 
 /* Hero */
@@ -454,6 +514,20 @@ body.admin-page {
 body.admin-page .admin-topbar {
     background: var(--cor-branco);
     border-bottom: 1px solid var(--cor-borda);
+}
+
+/* Container compartilhado que alinha o conteudo do topbar e da barra de
+   abas com a mesma largura maxima do conteudo abaixo (.admin-shell, 1400px)
+   - sem isso, em telas largas o topbar/abas ficam colados nas bordas da
+   janela enquanto o conteudo fica centralizado num bloco mais estreito. */
+body.admin-page .admin-largura-max {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+}
+
+body.admin-page .admin-topbar .admin-largura-max {
     padding: 0.75rem 1.5rem;
     display: flex;
     align-items: center;
@@ -480,19 +554,41 @@ body.admin-page .admin-topbar-acoes {
     position: relative;
 }
 
-.notificacoes-sino-botao {
+/* 3 icones do topbar (sino de notificacoes, Meu perfil, Sair) - mesmo
+   tamanho/borda/hover pra formar um conjunto visual unico. Seletor com tag
+   (button/a) + classe pra vencer a regra generica "body.admin-page button"
+   do painel (que senao aplica seu proprio padding/pill e o !important da
+   especificidade ganha da classe sozinha). */
+body.admin-page button.notificacoes-sino-botao,
+body.admin-page a.topbar-icone {
     position: relative;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--cor-texto-suave);
-    padding: 0.35rem;
-    display: flex;
+    width: 2.25rem;
+    height: 2.25rem;
+    box-sizing: border-box;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    border: 1px solid var(--cor-borda);
+    border-radius: 50%;
+    background: var(--cor-branco);
+    color: var(--cor-texto-suave);
+    padding: 0;
+    cursor: pointer;
+    text-decoration: none;
 }
 
-.notificacoes-sino-botao:hover {
+body.admin-page button.notificacoes-sino-botao::before,
+body.admin-page button.notificacoes-sino-botao::after {
+    content: none;
+}
+
+body.admin-page button.notificacoes-sino-botao:hover,
+body.admin-page button.notificacoes-sino-botao:focus,
+body.admin-page a.topbar-icone:hover,
+body.admin-page a.topbar-icone:focus {
+    background: var(--cor-fundo-alt);
     color: var(--cor-texto);
+    border-color: var(--cor-texto-suave);
 }
 
 .notificacoes-sino-badge {
@@ -601,11 +697,14 @@ body.admin-page .admin-topbar-acoes {
 body.admin-page .admin-tabs {
     background: var(--cor-branco);
     border-bottom: 3px solid var(--cor-primaria-inicio);
+    margin-bottom: 1.5rem;
+}
+
+body.admin-page .admin-tabs .admin-largura-max {
     padding: 0 1.5rem;
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem;
-    margin-bottom: 1.5rem;
 }
 
 body.admin-page .admin-tab {
@@ -628,11 +727,12 @@ body.admin-page .admin-tab.active {
     border-bottom-color: var(--cor-primaria-fim);
 }
 
-body.admin-page > h1,
-body.admin-page > p,
-body.admin-page > form,
-body.admin-page > table,
-body.admin-page > fieldset {
+/* Recuo/largura das paginas "planas" (fora da arvore de Concursos) - um
+   unico wrapper em vez de listar tag por tag, pra nao repetir o bug de
+   titulo/tabela cortado sempre que uma view nova usa uma tag que a lista
+   antiga nao previa (ja aconteceu com h2/h3 em avaliacao/index e
+   usuarios_editar). */
+body.admin-page .admin-conteudo-flat {
     max-width: 1000px;
     margin-left: auto;
     margin-right: auto;
@@ -843,17 +943,14 @@ body.admin-page .status-avaliacao.pendente {
     color: var(--cor-texto-suave);
 }
 
-body.admin-page #conteudo-admin > h1,
-body.admin-page #conteudo-admin > h2,
-body.admin-page #conteudo-admin > p,
-body.admin-page #conteudo-admin > form,
-body.admin-page #conteudo-admin > table,
-body.admin-page #conteudo-admin > fieldset {
-    max-width: none;
-    margin-left: 0;
-    margin-right: 0;
-    padding-left: 0;
-    padding-right: 0;
+/* Recuo do conteudo dentro da arvore (#conteudo-admin) fica no proprio
+   container, no mesmo valor de .abas-secundarias (0.5rem), em vez de listar
+   tag por tag (h1/p/form/table/fieldset) - repetia o mesmo bug de alinhamento
+   toda vez que uma view usava uma tag nova (ja aconteceu com h2/h3) e ficava
+   sempre 0.5rem fora de alinhamento com a barra de abas secundarias. */
+body.admin-page #conteudo-admin {
+    padding: 0 0.5rem;
+    box-sizing: border-box;
 }
 
 body.admin-page h1 {

@@ -17,7 +17,7 @@ class ConcursoAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador']);
+        RoleMiddleware::exigir(['administrador', 'suporte']);
         $this->concursos = new ConcursoRepository();
     }
 
@@ -29,6 +29,7 @@ class ConcursoAdminController extends Controller
 
     public function novo()
     {
+        RoleMiddleware::exigir(['administrador']);
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -65,6 +66,7 @@ class ConcursoAdminController extends Controller
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            RoleMiddleware::exigir(['administrador']);
             $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
             $descricao = trim(isset($_POST['descricao']) ? $_POST['descricao'] : '');
             $dataInicio = isset($_POST['data_inicio']) ? $_POST['data_inicio'] : '';
@@ -83,5 +85,22 @@ class ConcursoAdminController extends Controller
             'erro' => $erro,
             'concurso' => $concurso,
         ], 'Editar concurso', ['tipo' => 'concurso', 'id' => (int) $id]);
+    }
+
+    public function remover()
+    {
+        RoleMiddleware::exigir(['administrador']);
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+
+        try {
+            $this->concursos->remover($id);
+            $_SESSION['flash'] = 'Concurso removido.';
+        } catch (\PDOException $e) {
+            $_SESSION['flash'] = $e->getCode() === '23000'
+                ? 'Não é possível remover: este concurso já tem trilhas, formulários ou categorias de avaliador vinculados.'
+                : 'Não foi possível remover o concurso.';
+        }
+
+        $this->redirecionar('concursos/index');
     }
 }

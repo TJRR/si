@@ -33,7 +33,7 @@ class ApuracaoAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador']);
+        RoleMiddleware::exigir(['administrador', 'suporte']);
         $this->trilhas = new TrilhaRepository();
         $this->etapas = new EtapaRepository();
         $this->formulas = new FormulaPontuacaoRepository();

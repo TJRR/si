@@ -19,16 +19,22 @@
         <?php endforeach; ?>
     </ul>
 
+    <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
     <form method="post" action="<?php echo url('formulas/trilha/' . (int) $trilha['id']); ?>">
         <label>Expressão (ex.: NE2*0.4 + NE3*0.6):<br>
             <textarea name="expressao" rows="3" cols="70" required><?php echo htmlspecialchars((string) $expressaoAtual, ENT_QUOTES, 'UTF-8'); ?></textarea>
         </label><br>
         <button type="submit" name="acao" value="salvar">Salvar fórmula</button>
     </form>
+    <?php else: ?>
+        <p><strong>Expressão atual:</strong> <?php echo htmlspecialchars((string) $expressaoAtual, ENT_QUOTES, 'UTF-8'); ?></p>
+    <?php endif; ?>
 <?php endif; ?>
 
 <h2>Desempate</h2>
+<?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
 <p><a href="<?php echo url('desempate/novo/' . (int) $trilha['id']); ?>">+ Novo critério de desempate</a></p>
+<?php endif; ?>
 <p>Ordem de aplicação em caso de empate na Nota Final (1ª linha tem prioridade):</p>
 
 <?php if (empty($regras)): ?>
@@ -43,23 +49,47 @@
             <td><?php echo htmlspecialchars($regra['criterio_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo $regra['direcao'] === 'asc' ? 'Crescente' : 'Decrescente (maior nota vence)'; ?></td>
             <td>
-                <form method="post" action="<?php echo url('desempate/mover'); ?>" style="display:inline;">
-                    <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
-                    <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                    <input type="hidden" name="direcao" value="cima">
-                    <button type="submit">Cima</button>
-                </form>
-                <form method="post" action="<?php echo url('desempate/mover'); ?>" style="display:inline;">
-                    <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
-                    <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                    <input type="hidden" name="direcao" value="baixo">
-                    <button type="submit">Baixo</button>
-                </form>
-                <form method="post" action="<?php echo url('desempate/remover'); ?>" style="display:inline;">
-                    <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
-                    <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                    <button type="submit">Remover</button>
-                </form>
+                <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
+                <div class="acoes-icones">
+                    <form method="post" action="<?php echo url('desempate/mover'); ?>">
+                        <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
+                        <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
+                        <input type="hidden" name="direcao" value="cima">
+                        <button type="submit" class="btn-icone" title="Mover para cima">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <line x1="12" y1="19" x2="12" y2="5"></line>
+                                <polyline points="5 12 12 5 19 12"></polyline>
+                            </svg>
+                        </button>
+                    </form>
+                    <form method="post" action="<?php echo url('desempate/mover'); ?>">
+                        <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
+                        <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
+                        <input type="hidden" name="direcao" value="baixo">
+                        <button type="submit" class="btn-icone" title="Mover para baixo">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <polyline points="19 12 12 19 5 12"></polyline>
+                            </svg>
+                        </button>
+                    </form>
+                    <form method="post" action="<?php echo url('desempate/remover'); ?>">
+                        <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
+                        <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
+                        <button type="submit" class="btn-icone" title="Remover">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                <path d="M10 11v6"></path>
+                                <path d="M14 11v6"></path>
+                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+                <?php else: ?>
+                    —
+                <?php endif; ?>
             </td>
         </tr>
         <?php endforeach; ?>
@@ -76,16 +106,30 @@
     <p>
         <?php if ($publicado): ?>
             <strong>Resultado final publicado.</strong>
+            <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
             <form method="post" action="<?php echo url('resultados/reabrirTrilha'); ?>" style="display:inline;">
                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                <button type="submit" class="btn-secundario" onclick="return confirm('Reabrir apaga o resultado final publicado. Confirmar?');">Reabrir</button>
+                <button type="submit" class="btn-icone" title="Reabrir" onclick="return confirm('Reabrir apaga o resultado final publicado. Confirmar?');">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="1 4 1 10 7 10"></polyline>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                </button>
             </form>
+            <?php endif; ?>
         <?php else: ?>
             <strong>Prévia (ainda não publicada)</strong> — recalculada a cada acesso.
+            <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
             <form method="post" action="<?php echo url('resultados/publicarTrilha'); ?>" style="display:inline;">
                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                <button type="submit" onclick="return confirm('Publicar congela a colocação final desta trilha. Confirmar?');">Confirmar e publicar</button>
+                <button type="submit" class="btn-icone" title="Confirmar e publicar" onclick="return confirm('Publicar congela a colocação final desta trilha. Confirmar?');">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </button>
             </form>
+            <?php endif; ?>
         <?php endif; ?>
     </p>
 

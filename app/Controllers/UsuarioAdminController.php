@@ -37,6 +37,10 @@ class UsuarioAdminController extends Controller
     public function index()
     {
         $filtroConcursoId = (isset($_GET['concurso_id']) && $_GET['concurso_id'] !== '') ? (int) $_GET['concurso_id'] : null;
+        $filtroPerfil = isset($_GET['perfil']) && $_GET['perfil'] !== '' ? $_GET['perfil'] : null;
+        $ordenar = isset($_GET['ordenar']) ? $_GET['ordenar'] : 'nome';
+        $direcao = isset($_GET['direcao']) && $_GET['direcao'] === 'desc' ? 'desc' : 'asc';
+
         $lista = $this->usuarios->listarTodos($filtroConcursoId);
 
         $categoriasPorConcurso = [];
@@ -56,16 +60,64 @@ class UsuarioAdminController extends Controller
         }
         unset($usuario);
 
+        if ($filtroPerfil !== null) {
+            $lista = array_values(array_filter($lista, function ($usuario) use ($filtroPerfil) {
+                foreach ($usuario['perfis'] as $vinculo) {
+                    if ($vinculo['perfil'] === $filtroPerfil) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }));
+        }
+
+        $lista = $this->ordenarUsuarios($lista, $ordenar, $direcao);
+
         $this->renderizar('admin/usuarios', [
             'usuarios' => $lista,
             'perfis' => $this->perfis->listar(),
             'concursos' => $this->concursos->listar(),
             'categoriasPorConcurso' => $categoriasPorConcurso,
             'filtroConcursoId' => $filtroConcursoId,
+            'filtroPerfil' => $filtroPerfil,
+            'ordenar' => $ordenar,
+            'direcao' => $direcao,
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
         ], 'Usuários');
 
         unset($_SESSION['flash']);
+    }
+
+    private function ordenarUsuarios(array $lista, $ordenar, $direcao)
+    {
+        $chaveDe = function ($usuario) use ($ordenar) {
+            switch ($ordenar) {
+                case 'email':
+                    return mb_strtolower($usuario['email']);
+                case 'status':
+                    return mb_strtolower($usuario['status']);
+                case 'perfis':
+                    return mb_strtolower(implode(', ', array_map(function ($vinculo) {
+                        return $vinculo['perfil_nome'];
+                    }, $usuario['perfis'])));
+                case 'acesso':
+                    return ($usuario['senha_hash'] !== null ? '1' : '0') . ($usuario['google_id'] !== null ? '1' : '0');
+                case 'nome':
+                default:
+                    return mb_strtolower($usuario['nome']);
+            }
+        };
+
+        usort($lista, function ($a, $b) use ($chaveDe) {
+            return strcmp($chaveDe($a), $chaveDe($b));
+        });
+
+        if ($direcao === 'desc') {
+            $lista = array_reverse($lista);
+        }
+
+        return $lista;
     }
 
     public function aprovar()
@@ -96,19 +148,71 @@ class UsuarioAdminController extends Controller
         $this->redirecionar('usuarios/index');
     }
 
-    public function definirCategoria()
+    public function editar($id)
     {
-        $usuarioId = (int) (isset($_POST['usuario_id']) ? $_POST['usuario_id'] : 0);
-        $concursoId = (int) (isset($_POST['concurso_id']) ? $_POST['concurso_id'] : 0);
-        $categoriaAvaliadorId = (int) (isset($_POST['categoria_avaliador_id']) ? $_POST['categoria_avaliador_id'] : 0);
+        $usuario = $this->usuarios->buscarPorId($id);
 
-        if ($usuarioId > 0 && $concursoId > 0 && $categoriaAvaliadorId > 0
-            && $this->categoriaPertenceAoConcurso($categoriaAvaliadorId, $concursoId)) {
-            $this->avaliadorCategorias->atribuir($usuarioId, $concursoId, $categoriaAvaliadorId);
-            $_SESSION['flash'] = 'Categoria de avaliador atualizada.';
+        if ($usuario === null) {
+            http_response_code(404);
+            exit('Usuário não encontrado.');
         }
 
-        $this->redirecionar('usuarios/index');
+        $perfisDoUsuario = $this->usuarios->perfisDoUsuario($id);
+        $vinculoAtual = !empty($perfisDoUsuario) ? $perfisDoUsuario[0] : null;
+
+        if ($vinculoAtual !== null && $vinculoAtual['perfil'] === 'avaliador' && $vinculoAtual['concurso_id'] !== null) {
+            $vinculoAtual['categoria_atual'] = $this->avaliadorCategorias->categoriaDoUsuario($id, $vinculoAtual['concurso_id']);
+        }
+
+        $categoriasPorConcurso = [];
+        foreach ($this->concursos->listar() as $concurso) {
+            $categoriasPorConcurso[(int) $concurso['id']] = $this->categoriasAvaliador->listarPorConcurso($concurso['id']);
+        }
+
+        $this->renderizar('admin/usuarios_editar', [
+            'usuario' => $usuario,
+            'vinculoAtual' => $vinculoAtual,
+            'perfis' => $this->perfis->listar(),
+            'concursos' => $this->concursos->listar(),
+            'categoriasPorConcurso' => $categoriasPorConcurso,
+            'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
+        ], 'Editar usuário — ' . $usuario['nome']);
+
+        unset($_SESSION['flash']);
+    }
+
+    /**
+     * Um unico "Salvar" na tela de edicao: nome + perfil (a regra do projeto
+     * e que um usuario tem no maximo 1 perfil, entao trocar o perfil aqui
+     * substitui o vinculo anterior por completo, em vez de somar mais um).
+     */
+    public function salvarEdicao()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
+        $perfilChave = isset($_POST['perfil']) ? $_POST['perfil'] : '';
+        $concursoId = (isset($_POST['concurso_id']) && $_POST['concurso_id'] !== '') ? (int) $_POST['concurso_id'] : null;
+        $categoriaAvaliadorId = (isset($_POST['categoria_avaliador_id']) && $_POST['categoria_avaliador_id'] !== '')
+            ? (int) $_POST['categoria_avaliador_id']
+            : null;
+
+        if ($nome !== '') {
+            $this->usuarios->atualizarNome($id, $nome);
+        }
+
+        $perfil = $this->perfis->buscarPorChave($perfilChave);
+
+        if ($perfil !== null) {
+            $this->perfis->substituirPerfil($id, $perfil['id'], $concursoId);
+
+            if ($perfil['chave'] === 'avaliador' && $categoriaAvaliadorId !== null && $concursoId !== null
+                && $this->categoriaPertenceAoConcurso($categoriaAvaliadorId, $concursoId)) {
+                $this->avaliadorCategorias->atribuir($id, $concursoId, $categoriaAvaliadorId);
+            }
+        }
+
+        $_SESSION['flash'] = 'Usuário atualizado.';
+        $this->redirecionar('usuarios/editar/' . $id);
     }
 
     private function categoriaPertenceAoConcurso($categoriaAvaliadorId, $concursoId)

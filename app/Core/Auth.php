@@ -65,6 +65,28 @@ class Auth
         return false;
     }
 
+    /**
+     * Home/painel de cada perfil - usada tanto no redirecionamento pos-login
+     * quanto no link "Voltar ao painel" de telas comuns a todos os perfis
+     * (ex.: Meu perfil).
+     */
+    public static function destinoPainel()
+    {
+        if (self::possuiPerfil('administrador') || self::possuiPerfil('suporte')) {
+            return 'home/administrativo';
+        }
+
+        if (self::possuiPerfil('avaliador')) {
+            return 'avaliacao/index';
+        }
+
+        if (self::possuiPerfil('participante')) {
+            return 'participante/index';
+        }
+
+        return 'home/administrativo';
+    }
+
     public static function login(array $usuario, array $perfis)
     {
         session_regenerate_id(true);
@@ -79,5 +101,33 @@ class Auth
         $_SESSION = [];
         session_unset();
         session_destroy();
+    }
+
+    /**
+     * Checa se a sessao autenticada ja passou do tempo limite de inatividade.
+     * Se sim, encerra a sessao, registra 'logout_timeout' na auditoria e retorna
+     * false (quem chamou deve redirecionar pro login). Se nao, atualiza o
+     * timestamp de ultima atividade e retorna true.
+     */
+    public static function validarAtividade($timeoutSegundos)
+    {
+        if (!self::autenticado()) {
+            return true;
+        }
+
+        $agora = time();
+        $ultima = isset($_SESSION['ultima_atividade']) ? $_SESSION['ultima_atividade'] : $agora;
+
+        if (($agora - $ultima) > $timeoutSegundos) {
+            $usuarioId = self::usuarioId();
+            self::logout();
+            Auditoria::registrar('logout_timeout', 'usuarios', $usuarioId, null, null, 'Sessao expirada por inatividade.', $usuarioId);
+
+            return false;
+        }
+
+        $_SESSION['ultima_atividade'] = $agora;
+
+        return true;
     }
 }

@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class ConteudoSiteRepository
@@ -44,15 +45,21 @@ class ConteudoSiteRepository
 
     public function atualizarValor($chave, $valor)
     {
+        $antes = $this->buscarPorChave($chave);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('UPDATE conteudos_site SET valor = :valor WHERE chave = :chave');
         $stmt->execute(['valor' => $valor, 'chave' => $chave]);
+
+        Auditoria::registrar('atualizar_valor', 'conteudos_site', null, $antes, ['chave' => $chave, 'valor' => $valor]);
     }
 
     public function atualizarImagem($chave, $arquivoPath)
     {
+        $antes = $this->buscarPorChave($chave);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('UPDATE conteudos_site SET arquivo_path = :arquivo_path WHERE chave = :chave');
         $stmt->execute(['arquivo_path' => $arquivoPath, 'chave' => $chave]);
+
+        Auditoria::registrar('atualizar_imagem', 'conteudos_site', null, $antes, ['chave' => $chave, 'arquivo_path' => $arquivoPath]);
     }
 }

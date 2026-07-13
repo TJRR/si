@@ -92,7 +92,7 @@ class HomeController extends Controller
 
     public function administrativo()
     {
-        RoleMiddleware::exigir(['administrador']);
+        RoleMiddleware::exigir(['administrador', 'suporte']);
 
         $concursosAtivos = array_filter(
             (new ConcursoRepository())->listar(),

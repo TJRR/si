@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 use App\Core\Texto;
 
@@ -49,20 +50,25 @@ class ConcursoRepository
             'INSERT INTO concursos (nome, slug, descricao, data_inicio, data_fim, status)
              VALUES (:nome, :slug, :descricao, :data_inicio, :data_fim, :status)'
         );
-        $stmt->execute([
+        $dados = [
             'nome' => $nome,
             'slug' => $slug,
             'descricao' => $descricao !== '' ? $descricao : null,
             'data_inicio' => $dataInicio !== '' ? $dataInicio : null,
             'data_fim' => $dataFim !== '' ? $dataFim : null,
             'status' => $status,
-        ]);
+        ];
+        $stmt->execute($dados);
+        $id = (int) $pdo->lastInsertId();
 
-        return (int) $pdo->lastInsertId();
+        Auditoria::registrar('criar', 'concursos', $id, null, $dados);
+
+        return $id;
     }
 
     public function atualizar($id, $nome, $descricao, $dataInicio, $dataFim, $status)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
 
         $stmt = $pdo->prepare(
@@ -71,14 +77,31 @@ class ConcursoRepository
                  data_fim = :data_fim, status = :status
              WHERE id = :id'
         );
-        $stmt->execute([
+        $depois = [
             'nome' => $nome,
             'descricao' => $descricao !== '' ? $descricao : null,
             'data_inicio' => $dataInicio !== '' ? $dataInicio : null,
             'data_fim' => $dataFim !== '' ? $dataFim : null,
             'status' => $status,
-            'id' => $id,
-        ]);
+        ];
+        $stmt->execute($depois + ['id' => $id]);
+
+        Auditoria::registrar('atualizar', 'concursos', $id, $antes, $depois);
+    }
+
+    /**
+     * Remocao real (sem soft-delete) — ver TrilhaRepository::remover() para a
+     * explicacao de por que a FK (sem CASCADE) ja protege contra remover um
+     * concurso com trilhas/formularios/categorias de avaliador vinculados.
+     */
+    public function remover($id)
+    {
+        $antes = $this->buscarPorId($id);
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('DELETE FROM concursos WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+
+        Auditoria::registrar('remover', 'concursos', $id, $antes, null);
     }
 
     private function gerarSlugUnico($nome)

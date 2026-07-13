@@ -19,7 +19,7 @@ class NavegacaoController extends Controller
 {
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador']);
+        RoleMiddleware::exigir(['administrador', 'suporte']);
     }
 
     public function filhos($tipo, $id)

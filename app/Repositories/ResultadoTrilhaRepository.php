@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class ResultadoTrilhaRepository
@@ -64,6 +65,11 @@ class ResultadoTrilhaRepository
             $pdo->rollBack();
             throw $e;
         }
+
+        Auditoria::registrar('publicar', 'resultados_trilha', $trilhaId, null, [
+            'linhas' => $linhas,
+            'publicado_por' => $usuarioId,
+        ]);
     }
 
     public function reabrir($trilhaId)
@@ -71,5 +77,7 @@ class ResultadoTrilhaRepository
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('DELETE FROM resultados_trilha WHERE trilha_id = :trilha_id');
         $stmt->execute(['trilha_id' => $trilhaId]);
+
+        Auditoria::registrar('reabrir', 'resultados_trilha', $trilhaId, null, null);
     }
 }

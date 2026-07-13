@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class CriterioAvaliacaoRepository
@@ -82,7 +83,7 @@ class CriterioAvaliacaoRepository
             'INSERT INTO criterios_avaliacao (etapa_id, codigo, nome, descricao, peso, escala_min, escala_max, ordem)
              VALUES (:etapa_id, :codigo, :nome, :descricao, :peso, :escala_min, :escala_max, :ordem)'
         );
-        $stmt->execute([
+        $dados = [
             'etapa_id' => $etapaId,
             'codigo' => $codigo,
             'nome' => $nome,
@@ -91,13 +92,18 @@ class CriterioAvaliacaoRepository
             'escala_min' => $escalaMin,
             'escala_max' => $escalaMax,
             'ordem' => $ordem,
-        ]);
+        ];
+        $stmt->execute($dados);
+        $id = (int) $pdo->lastInsertId();
 
-        return (int) $pdo->lastInsertId();
+        Auditoria::registrar('criar', 'criterios_avaliacao', $id, null, $dados);
+
+        return $id;
     }
 
     public function atualizar($id, $codigo, $nome, $descricao, $peso, $escalaMin, $escalaMax)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'UPDATE criterios_avaliacao
@@ -105,22 +111,27 @@ class CriterioAvaliacaoRepository
                  escala_min = :escala_min, escala_max = :escala_max
              WHERE id = :id'
         );
-        $stmt->execute([
+        $depois = [
             'codigo' => $codigo,
             'nome' => $nome,
             'descricao' => $descricao !== '' ? $descricao : null,
             'peso' => $peso,
             'escala_min' => $escalaMin,
             'escala_max' => $escalaMax,
-            'id' => $id,
-        ]);
+        ];
+        $stmt->execute($depois + ['id' => $id]);
+
+        Auditoria::registrar('atualizar', 'criterios_avaliacao', $id, $antes, $depois);
     }
 
     public function remover($id)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('DELETE FROM criterios_avaliacao WHERE id = :id');
         $stmt->execute(['id' => $id]);
+
+        Auditoria::registrar('remover', 'criterios_avaliacao', $id, $antes, null);
     }
 
     public function mover($id, $direcao)
@@ -159,5 +170,7 @@ class CriterioAvaliacaoRepository
             $pdo->rollBack();
             throw $e;
         }
+
+        Auditoria::registrar('mover', 'criterios_avaliacao', $id, ['ordem' => $criterio['ordem']], ['ordem' => $vizinho['ordem'], 'trocado_com_id' => $vizinho['id']]);
     }
 }

@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class TemaDesafioRepository
@@ -49,28 +50,35 @@ class TemaDesafioRepository
             'INSERT INTO temas_desafios (trilha_id, nome, descricao_longa, ativo)
              VALUES (:trilha_id, :nome, :descricao_longa, :ativo)'
         );
-        $stmt->execute([
+        $dados = [
             'trilha_id' => $trilhaId,
             'nome' => $nome,
             'descricao_longa' => $descricaoLonga !== '' ? $descricaoLonga : null,
             'ativo' => $ativo,
-        ]);
+        ];
+        $stmt->execute($dados);
+        $id = (int) $pdo->lastInsertId();
 
-        return (int) $pdo->lastInsertId();
+        Auditoria::registrar('criar', 'temas_desafios', $id, null, $dados);
+
+        return $id;
     }
 
     public function atualizar($id, $nome, $descricaoLonga, $ativo)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'UPDATE temas_desafios SET nome = :nome, descricao_longa = :descricao_longa, ativo = :ativo WHERE id = :id'
         );
-        $stmt->execute([
+        $depois = [
             'nome' => $nome,
             'descricao_longa' => $descricaoLonga !== '' ? $descricaoLonga : null,
             'ativo' => $ativo,
-            'id' => $id,
-        ]);
+        ];
+        $stmt->execute($depois + ['id' => $id]);
+
+        Auditoria::registrar('atualizar', 'temas_desafios', $id, $antes, $depois);
     }
 
     /**
@@ -80,8 +88,11 @@ class TemaDesafioRepository
      */
     public function remover($id)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('DELETE FROM temas_desafios WHERE id = :id');
         $stmt->execute(['id' => $id]);
+
+        Auditoria::registrar('remover', 'temas_desafios', $id, $antes, null);
     }
 }

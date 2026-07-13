@@ -21,7 +21,7 @@ class EtapaAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador']);
+        RoleMiddleware::exigir(['administrador', 'suporte']);
         $this->etapas = new EtapaRepository();
         $this->trilhas = new TrilhaRepository();
         $this->formularios = new FormularioDinamicoRepository();
@@ -58,6 +58,7 @@ class EtapaAdminController extends Controller
 
     public function novo($trilhaId)
     {
+        RoleMiddleware::exigir(['administrador']);
         $trilha = $this->trilhas->buscarPorId($trilhaId);
 
         if ($trilha === null) {
@@ -111,6 +112,7 @@ class EtapaAdminController extends Controller
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            RoleMiddleware::exigir(['administrador']);
             $dados = $this->lerDadosFormulario();
 
             if ($dados['nome'] === '') {
@@ -142,6 +144,7 @@ class EtapaAdminController extends Controller
 
     public function remover()
     {
+        RoleMiddleware::exigir(['administrador']);
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
 

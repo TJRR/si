@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class AvaliadorDesignacaoRepository
@@ -86,11 +87,15 @@ class AvaliadorDesignacaoRepository
             'INSERT INTO avaliador_designacoes (submissao_id, usuario_id, atribuido_por)
              VALUES (:submissao_id, :usuario_id, :atribuido_por)'
         );
-        $stmt->execute([
+        $dados = [
             'submissao_id' => $submissaoId,
             'usuario_id' => $usuarioId,
             'atribuido_por' => $atribuidoPor,
-        ]);
+        ];
+        $stmt->execute($dados);
+        $id = (int) $pdo->lastInsertId();
+
+        Auditoria::registrar('criar', 'avaliador_designacoes', $id, null, $dados);
     }
 
     public function remover($id)
@@ -98,5 +103,7 @@ class AvaliadorDesignacaoRepository
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('DELETE FROM avaliador_designacoes WHERE id = :id');
         $stmt->execute(['id' => $id]);
+
+        Auditoria::registrar('remover', 'avaliador_designacoes', $id, null, null);
     }
 }

@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class FormulaPontuacaoRepository
@@ -44,11 +45,15 @@ class FormulaPontuacaoRepository
             );
             $stmt->execute(['etapa_id' => $etapaId, 'expressao' => $expressao]);
 
+            Auditoria::registrar('salvar_para_etapa', 'formulas_pontuacao', $etapaId, null, ['expressao' => $expressao]);
+
             return;
         }
 
         $stmt = $pdo->prepare('UPDATE formulas_pontuacao SET expressao = :expressao WHERE id = :id');
         $stmt->execute(['expressao' => $expressao, 'id' => $existente['id']]);
+
+        Auditoria::registrar('salvar_para_etapa', 'formulas_pontuacao', $etapaId, ['expressao' => $existente['expressao']], ['expressao' => $expressao]);
     }
 
     public function salvarParaTrilha($trilhaId, $expressao)
@@ -62,10 +67,14 @@ class FormulaPontuacaoRepository
             );
             $stmt->execute(['trilha_id' => $trilhaId, 'expressao' => $expressao]);
 
+            Auditoria::registrar('salvar_para_trilha', 'formulas_pontuacao', $trilhaId, null, ['expressao' => $expressao]);
+
             return;
         }
 
         $stmt = $pdo->prepare('UPDATE formulas_pontuacao SET expressao = :expressao WHERE id = :id');
         $stmt->execute(['expressao' => $expressao, 'id' => $existente['id']]);
+
+        Auditoria::registrar('salvar_para_trilha', 'formulas_pontuacao', $trilhaId, ['expressao' => $existente['expressao']], ['expressao' => $expressao]);
     }
 }

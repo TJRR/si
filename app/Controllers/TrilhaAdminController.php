@@ -21,7 +21,7 @@ class TrilhaAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador']);
+        RoleMiddleware::exigir(['administrador', 'suporte']);
         $this->trilhas = new TrilhaRepository();
         $this->concursos = new ConcursoRepository();
         $this->etapas = new EtapaRepository();
@@ -53,6 +53,7 @@ class TrilhaAdminController extends Controller
 
     public function alternarInscricoes($trilhaId)
     {
+        RoleMiddleware::exigir(['administrador']);
         $trilha = $this->trilhas->buscarPorId($trilhaId);
 
         if ($trilha === null) {
@@ -73,6 +74,7 @@ class TrilhaAdminController extends Controller
 
     public function remover()
     {
+        RoleMiddleware::exigir(['administrador']);
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $concursoId = (int) (isset($_POST['concurso_id']) ? $_POST['concurso_id'] : 0);
 
@@ -90,6 +92,7 @@ class TrilhaAdminController extends Controller
 
     public function novo($concursoId)
     {
+        RoleMiddleware::exigir(['administrador']);
         $concurso = $this->concursos->buscarPorId($concursoId);
 
         if ($concurso === null) {
@@ -134,6 +137,7 @@ class TrilhaAdminController extends Controller
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            RoleMiddleware::exigir(['administrador']);
             $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
             $descricao = trim(isset($_POST['descricao']) ? $_POST['descricao'] : '');
             $ordem = (int) (isset($_POST['ordem']) ? $_POST['ordem'] : 0);

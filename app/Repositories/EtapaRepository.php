@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class EtapaRepository
@@ -73,9 +74,12 @@ class EtapaRepository
 
     public function alternarCapturaAtiva($etapaId)
     {
+        $antes = $this->buscarPorId($etapaId);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('UPDATE etapas SET captura_ativa = NOT captura_ativa WHERE id = :id');
         $stmt->execute(['id' => $etapaId]);
+
+        Auditoria::registrar('alternar_captura_ativa', 'etapas', $etapaId, $antes, null);
     }
 
     /**
@@ -86,9 +90,12 @@ class EtapaRepository
      */
     public function remover($id)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('DELETE FROM etapas WHERE id = :id');
         $stmt->execute(['id' => $id]);
+
+        Auditoria::registrar('remover', 'etapas', $id, $antes, null);
     }
 
     public function criar(
@@ -115,7 +122,7 @@ class EtapaRepository
                      :qtd_avaliadores_por_submissao, :modo_consolidacao, :modo_sigilo, :modo_avanco,
                      :mecanismo_avaliacao)'
         );
-        $stmt->execute(array_merge([
+        $dados = array_merge([
             'trilha_id' => $trilhaId,
             'nome' => $nome,
             'descricao' => $descricao !== '' ? $descricao : null,
@@ -125,9 +132,13 @@ class EtapaRepository
             'formulario_dinamico_id' => $formularioDinamicoId !== '' ? $formularioDinamicoId : null,
             'regra_transicao_tipo' => $regraTransicaoTipo !== '' ? $regraTransicaoTipo : null,
             'regra_transicao_valor' => $regraTransicaoValor !== '' ? $regraTransicaoValor : null,
-        ], $configAvaliacao));
+        ], $configAvaliacao);
+        $stmt->execute($dados);
+        $id = (int) $pdo->lastInsertId();
 
-        return (int) $pdo->lastInsertId();
+        Auditoria::registrar('criar', 'etapas', $id, null, $dados);
+
+        return $id;
     }
 
     public function atualizar(
@@ -142,6 +153,7 @@ class EtapaRepository
         $regraTransicaoValor = '',
         array $configAvaliacao = []
     ) {
+        $antes = $this->buscarPorId($id);
         $configAvaliacao = $this->normalizarConfigAvaliacao($configAvaliacao);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
@@ -154,7 +166,7 @@ class EtapaRepository
                  mecanismo_avaliacao = :mecanismo_avaliacao
              WHERE id = :id'
         );
-        $stmt->execute(array_merge([
+        $depois = array_merge([
             'nome' => $nome,
             'descricao' => $descricao !== '' ? $descricao : null,
             'ordem' => $ordem,
@@ -163,8 +175,10 @@ class EtapaRepository
             'formulario_dinamico_id' => $formularioDinamicoId !== '' ? $formularioDinamicoId : null,
             'regra_transicao_tipo' => $regraTransicaoTipo !== '' ? $regraTransicaoTipo : null,
             'regra_transicao_valor' => $regraTransicaoValor !== '' ? $regraTransicaoValor : null,
-            'id' => $id,
-        ], $configAvaliacao));
+        ], $configAvaliacao);
+        $stmt->execute($depois + ['id' => $id]);
+
+        Auditoria::registrar('atualizar', 'etapas', $id, $antes, $depois);
     }
 
     private function normalizarConfigAvaliacao(array $configAvaliacao)

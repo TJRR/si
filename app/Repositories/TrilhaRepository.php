@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 use App\Core\Texto;
 
@@ -52,32 +53,39 @@ class TrilhaRepository
             'INSERT INTO trilhas (concurso_id, nome, slug, descricao, ordem, ativo)
              VALUES (:concurso_id, :nome, :slug, :descricao, :ordem, :ativo)'
         );
-        $stmt->execute([
+        $dados = [
             'concurso_id' => $concursoId,
             'nome' => $nome,
             'slug' => $slug,
             'descricao' => $descricao !== '' ? $descricao : null,
             'ordem' => $ordem,
             'ativo' => $ativo,
-        ]);
+        ];
+        $stmt->execute($dados);
+        $id = (int) $pdo->lastInsertId();
 
-        return (int) $pdo->lastInsertId();
+        Auditoria::registrar('criar', 'trilhas', $id, null, $dados);
+
+        return $id;
     }
 
     public function atualizar($id, $nome, $descricao, $ordem, $ativo)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
 
         $stmt = $pdo->prepare(
             'UPDATE trilhas SET nome = :nome, descricao = :descricao, ordem = :ordem, ativo = :ativo WHERE id = :id'
         );
-        $stmt->execute([
+        $depois = [
             'nome' => $nome,
             'descricao' => $descricao !== '' ? $descricao : null,
             'ordem' => $ordem,
             'ativo' => $ativo,
-            'id' => $id,
-        ]);
+        ];
+        $stmt->execute($depois + ['id' => $id]);
+
+        Auditoria::registrar('atualizar', 'trilhas', $id, $antes, $depois);
     }
 
     /**
@@ -87,9 +95,12 @@ class TrilhaRepository
      */
     public function remover($id)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('DELETE FROM trilhas WHERE id = :id');
         $stmt->execute(['id' => $id]);
+
+        Auditoria::registrar('remover', 'trilhas', $id, $antes, null);
     }
 
     private function gerarSlugUnico($concursoId, $nome)

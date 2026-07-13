@@ -49,28 +49,54 @@
                     <?php endif; ?>
                 </td>
                 <td>
-                    <?php if ($item['status_homologacao'] !== 'homologado'): ?>
-                        <form method="post" action="<?php echo url('homologacao/homologar'); ?>" style="display:inline;">
-                            <input type="hidden" name="vinculo_id" value="<?php echo (int) $item['vinculo_id']; ?>">
-                            <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                            <button type="submit">Homologar</button>
-                        </form>
-                    <?php endif; ?>
-                    <?php if ($item['status_homologacao'] !== 'rejeitado'): ?>
-                        <form method="post" action="<?php echo url('homologacao/rejeitar'); ?>" style="display:inline;" onsubmit="return confirm('Rejeitar esta inscrição?');">
-                            <input type="hidden" name="vinculo_id" value="<?php echo (int) $item['vinculo_id']; ?>">
-                            <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                            <button type="submit" class="btn-secundario">Rejeitar</button>
-                        </form>
-                    <?php endif; ?>
+                    <div class="acoes-icones">
+                        <?php if ($item['status_homologacao'] !== 'homologado'): ?>
+                            <form method="post" action="<?php echo url('homologacao/homologar'); ?>">
+                                <input type="hidden" name="vinculo_id" value="<?php echo (int) $item['vinculo_id']; ?>">
+                                <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
+                                <button type="submit" class="btn-icone" title="Homologar">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                    </svg>
+                                </button>
+                            </form>
+                        <?php endif; ?>
+                        <?php if ($item['status_homologacao'] !== 'rejeitado'): ?>
+                            <form method="post" action="<?php echo url('homologacao/rejeitar'); ?>" onsubmit="return confirm('Rejeitar esta inscrição?');">
+                                <input type="hidden" name="vinculo_id" value="<?php echo (int) $item['vinculo_id']; ?>">
+                                <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
+                                <button type="submit" class="btn-icone" title="Rejeitar">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                                    </svg>
+                                </button>
+                            </form>
+                        <?php endif; ?>
+                    </div>
                 </td>
             </tr>
             <?php endforeach; ?>
         </table>
 
         <p>Com os selecionados:
-            <button type="submit" formaction="<?php echo url('homologacao/homologarEmMassa'); ?>">Homologar selecionados</button>
-            <button type="submit" formaction="<?php echo url('homologacao/rejeitarEmMassa'); ?>" class="btn-secundario" onclick="return confirm('Rejeitar todas as inscrições selecionadas?');">Rejeitar selecionados</button>
+            <span class="acoes-icones" style="display:inline-flex;">
+                <button type="submit" formaction="<?php echo url('homologacao/homologarEmMassa'); ?>" class="btn-icone" title="Homologar selecionados">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </button>
+                <button type="submit" formaction="<?php echo url('homologacao/rejeitarEmMassa'); ?>" class="btn-icone" title="Rejeitar selecionados" onclick="return confirm('Rejeitar todas as inscrições selecionadas?');">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                </button>
+            </span>
         </p>
     </form>
 <?php endif; ?>

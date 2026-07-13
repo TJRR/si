@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class TokenSenhaRepository
@@ -25,6 +26,13 @@ class TokenSenhaRepository
             'token' => $token,
             'tipo' => $tipo,
             'horas' => $validadeHoras,
+        ]);
+        $id = (int) $pdo->lastInsertId();
+
+        Auditoria::registrar('criar', 'tokens_senha', $id, null, [
+            'usuario_id' => $usuarioId,
+            'tipo' => $tipo,
+            'validade_horas' => $validadeHoras,
         ]);
 
         return $token;
@@ -50,5 +58,7 @@ class TokenSenhaRepository
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('UPDATE tokens_senha SET usado_em = NOW() WHERE id = :id');
         $stmt->execute(['id' => $id]);
+
+        Auditoria::registrar('marcar_usado', 'tokens_senha', $id, null, null);
     }
 }

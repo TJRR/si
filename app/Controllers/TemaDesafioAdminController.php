@@ -19,7 +19,7 @@ class TemaDesafioAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador']);
+        RoleMiddleware::exigir(['administrador', 'suporte']);
         $this->temas = new TemaDesafioRepository();
         $this->trilhas = new TrilhaRepository();
     }
@@ -42,6 +42,7 @@ class TemaDesafioAdminController extends Controller
 
     public function remover()
     {
+        RoleMiddleware::exigir(['administrador']);
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
 
@@ -59,6 +60,7 @@ class TemaDesafioAdminController extends Controller
 
     public function novo($trilhaId)
     {
+        RoleMiddleware::exigir(['administrador']);
         $trilha = $this->trilhas->buscarPorId($trilhaId);
 
         if ($trilha === null) {
@@ -102,6 +104,7 @@ class TemaDesafioAdminController extends Controller
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            RoleMiddleware::exigir(['administrador']);
             $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
             $descricaoLonga = trim(isset($_POST['descricao_longa']) ? $_POST['descricao_longa'] : '');
             $ativo = isset($_POST['ativo']) ? 1 : 0;

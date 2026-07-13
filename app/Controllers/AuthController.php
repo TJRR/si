@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\GoogleOAuth;
@@ -28,7 +29,8 @@ class AuthController extends Controller
 
             if ($resultado['sucesso']) {
                 Auth::login($resultado['usuario'], $resultado['perfis']);
-                $this->redirecionar($this->destinoPosLogin());
+                Auditoria::registrar('login', 'usuarios', $resultado['usuario']['id']);
+                $this->redirecionar(Auth::destinoPainel());
                 return;
             }
 
@@ -40,6 +42,8 @@ class AuthController extends Controller
 
     public function logout()
     {
+        $usuarioId = Auth::usuarioId();
+        Auditoria::registrar('logout', 'usuarios', $usuarioId, null, null, null, $usuarioId);
         Auth::logout();
         $this->redirecionar('auth/login');
     }
@@ -82,7 +86,8 @@ class AuthController extends Controller
 
         if ($resultado['sucesso']) {
             Auth::login($resultado['usuario'], $resultado['perfis']);
-            $this->redirecionar($this->destinoPosLogin());
+            Auditoria::registrar('login', 'usuarios', $resultado['usuario']['id']);
+            $this->redirecionar(Auth::destinoPainel());
             return;
         }
 
@@ -125,22 +130,5 @@ class AuthController extends Controller
             'erro' => $erro,
             'token' => $token,
         ], 'Definir senha');
-    }
-
-    private function destinoPosLogin()
-    {
-        if (Auth::possuiPerfil('administrador') || Auth::possuiPerfil('suporte')) {
-            return 'home/administrativo';
-        }
-
-        if (Auth::possuiPerfil('avaliador')) {
-            return 'avaliacao/index';
-        }
-
-        if (Auth::possuiPerfil('participante')) {
-            return 'participante/index';
-        }
-
-        return 'home/administrativo';
     }
 }

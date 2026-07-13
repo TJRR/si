@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class CategoriaAvaliadorRepository
@@ -56,22 +57,32 @@ class CategoriaAvaliadorRepository
         $stmt = $pdo->prepare(
             'INSERT INTO categorias_avaliador (concurso_id, nome) VALUES (:concurso_id, :nome)'
         );
-        $stmt->execute(['concurso_id' => $concursoId, 'nome' => $nome]);
+        $dados = ['concurso_id' => $concursoId, 'nome' => $nome];
+        $stmt->execute($dados);
+        $id = (int) $pdo->lastInsertId();
 
-        return (int) $pdo->lastInsertId();
+        Auditoria::registrar('criar', 'categorias_avaliador', $id, null, $dados);
+
+        return $id;
     }
 
     public function atualizar($id, $nome)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('UPDATE categorias_avaliador SET nome = :nome WHERE id = :id');
         $stmt->execute(['nome' => $nome, 'id' => $id]);
+
+        Auditoria::registrar('atualizar', 'categorias_avaliador', $id, $antes, ['nome' => $nome]);
     }
 
     public function remover($id)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('DELETE FROM categorias_avaliador WHERE id = :id');
         $stmt->execute(['id' => $id]);
+
+        Auditoria::registrar('remover', 'categorias_avaliador', $id, $antes, null);
     }
 }

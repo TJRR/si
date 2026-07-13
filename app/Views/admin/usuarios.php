@@ -9,6 +9,27 @@ foreach ($concursos as $concurso) {
         $todasCategorias[] = ['id' => $categoria['id'], 'nome' => $categoria['nome'], 'concurso_nome' => $concurso['nome']];
     }
 }
+
+function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConcursoId, $filtroPerfil)
+{
+    $novaDirecao = ($ordenar === $coluna && $direcao === 'asc') ? 'desc' : 'asc';
+    $params = array_filter([
+        'concurso_id' => $filtroConcursoId,
+        'perfil' => $filtroPerfil,
+        'ordenar' => $coluna,
+        'direcao' => $novaDirecao,
+    ], function ($valor) {
+        return $valor !== null && $valor !== '';
+    });
+
+    $seta = '';
+    if ($ordenar === $coluna) {
+        $seta = $direcao === 'asc' ? ' ▲' : ' ▼';
+    }
+
+    return '<a href="' . config('base_path') . '/index.php?' . htmlspecialchars(http_build_query($params + ['r' => 'usuarios/index']), ENT_QUOTES, 'UTF-8') . '">'
+        . htmlspecialchars($rotulo, ENT_QUOTES, 'UTF-8') . $seta . '</a>';
+}
 ?>
 <h1>Usuários</h1>
 
@@ -31,14 +52,32 @@ foreach ($concursos as $concurso) {
             <?php endforeach; ?>
         </select>
     </label>
+    <label>Filtrar por perfil:
+        <select name="perfil">
+            <option value="">Todos</option>
+            <?php foreach ($perfis as $perfil): ?>
+                <option value="<?php echo htmlspecialchars($perfil['chave'], ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filtroPerfil === $perfil['chave'] ? 'selected' : ''; ?>>
+                    <?php echo htmlspecialchars($perfil['nome_exibicao'], ENT_QUOTES, 'UTF-8'); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </label>
     <button type="submit">Filtrar</button>
+    <a href="<?php echo url('usuarios/index'); ?>">Limpar filtros</a>
 </form>
 
 <?php if (empty($usuarios)): ?>
     <p>Nenhum usuário encontrado.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th>Nome</th><th>E-mail</th><th>Status</th><th>Perfis</th><th>Acesso</th><th>Ações</th></tr>
+        <tr>
+            <th><?php echo usuarios_link_ordenar('Nome', 'nome', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil); ?></th>
+            <th><?php echo usuarios_link_ordenar('E-mail', 'email', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil); ?></th>
+            <th><?php echo usuarios_link_ordenar('Status', 'status', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil); ?></th>
+            <th><?php echo usuarios_link_ordenar('Perfis', 'perfis', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil); ?></th>
+            <th><?php echo usuarios_link_ordenar('Acesso', 'acesso', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil); ?></th>
+            <th>Ações</th>
+        </tr>
         <?php foreach ($usuarios as $usuario): ?>
         <tr>
             <td><?php echo htmlspecialchars($usuario['nome'], ENT_QUOTES, 'UTF-8'); ?></td>
@@ -56,27 +95,11 @@ foreach ($concursos as $concurso) {
                     <?php foreach ($usuario['perfis'] as $vinculo): ?>
                         <?php echo htmlspecialchars($vinculo['perfil_nome'], ENT_QUOTES, 'UTF-8'); ?>
                         (<?php echo htmlspecialchars($vinculo['concurso_nome'] !== null ? $vinculo['concurso_nome'] : 'Global', ENT_QUOTES, 'UTF-8'); ?>)
-
                         <?php if ($vinculo['perfil'] === 'avaliador' && $vinculo['concurso_id'] !== null): ?>
-                            <?php $categoriasDoConcurso = isset($categoriasPorConcurso[(int) $vinculo['concurso_id']]) ? $categoriasPorConcurso[(int) $vinculo['concurso_id']] : []; ?>
-                            <br>Categoria:
-                            <?php if (empty($categoriasDoConcurso)): ?>
-                                <em>nenhuma categoria cadastrada neste concurso</em>
+                            <?php if (!empty($vinculo['categoria_atual'])): ?>
+                                — Categoria: <?php echo htmlspecialchars($vinculo['categoria_atual']['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?>
                             <?php else: ?>
-                                <form method="post" action="<?php echo url('usuarios/definirCategoria'); ?>" style="display:inline;">
-                                    <input type="hidden" name="usuario_id" value="<?php echo (int) $usuario['id']; ?>">
-                                    <input type="hidden" name="concurso_id" value="<?php echo (int) $vinculo['concurso_id']; ?>">
-                                    <select name="categoria_avaliador_id">
-                                        <option value="">Sem categoria</option>
-                                        <?php foreach ($categoriasDoConcurso as $categoria): ?>
-                                            <option value="<?php echo (int) $categoria['id']; ?>"
-                                                <?php echo (!empty($vinculo['categoria_atual']) && (int) $vinculo['categoria_atual']['categoria_avaliador_id'] === (int) $categoria['id']) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($categoria['nome'], ENT_QUOTES, 'UTF-8'); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <button type="submit">Salvar</button>
-                                </form>
+                                — <em>sem categoria</em>
                             <?php endif; ?>
                         <?php endif; ?>
                         <br>
@@ -99,7 +122,7 @@ foreach ($concursos as $concurso) {
                 <?php if ($usuario['status'] === 'pendente'): ?>
                     <form method="post" action="<?php echo url('usuarios/aprovar'); ?>" style="display:inline;">
                         <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
-                        <select name="perfil" required>
+                        <select name="perfil" id="campo-perfil-aprovar-<?php echo (int) $usuario['id']; ?>" required>
                             <option value="">Perfil...</option>
                             <?php foreach ($perfis as $perfil): ?>
                                 <option value="<?php echo htmlspecialchars($perfil['chave'], ENT_QUOTES, 'UTF-8'); ?>">
@@ -115,33 +138,77 @@ foreach ($concursos as $concurso) {
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <select name="categoria_avaliador_id" title="Categoria de avaliador (só é usada se o perfil for Avaliador; precisa bater com o concurso escolhido acima)">
-                            <option value="">Sem categoria de avaliador</option>
-                            <?php foreach ($todasCategorias as $categoria): ?>
-                                <option value="<?php echo (int) $categoria['id']; ?>">
-                                    <?php echo htmlspecialchars($categoria['nome'] . ' — ' . $categoria['concurso_nome'], ENT_QUOTES, 'UTF-8'); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <button type="submit">Aprovar</button>
+                        <span id="campo-categoria-wrapper-<?php echo (int) $usuario['id']; ?>">
+                            <select name="categoria_avaliador_id" title="Categoria de avaliador (precisa bater com o concurso escolhido acima)">
+                                <option value="">Sem categoria de avaliador</option>
+                                <?php foreach ($todasCategorias as $categoria): ?>
+                                    <option value="<?php echo (int) $categoria['id']; ?>">
+                                        <?php echo htmlspecialchars($categoria['nome'] . ' — ' . $categoria['concurso_nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </span>
+                        <button type="submit" class="btn-icone" title="Aprovar">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </button>
                     </form>
+                    <script>
+                    (function () {
+                        var select = document.getElementById('campo-perfil-aprovar-<?php echo (int) $usuario['id']; ?>');
+                        var wrapper = document.getElementById('campo-categoria-wrapper-<?php echo (int) $usuario['id']; ?>');
+
+                        function atualizar() {
+                            wrapper.style.display = select.value === 'avaliador' ? '' : 'none';
+                        }
+
+                        select.addEventListener('change', atualizar);
+                        atualizar();
+                    })();
+                    </script>
                     <form method="post" action="<?php echo url('usuarios/rejeitar'); ?>" style="display:inline;">
                         <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
-                        <button type="submit">Rejeitar</button>
+                        <button type="submit" class="btn-icone" title="Rejeitar">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                            </svg>
+                        </button>
                     </form>
                 <?php endif; ?>
 
-                <?php if ($usuario['ativo']): ?>
-                    <form method="post" action="<?php echo url('usuarios/suspender'); ?>" style="display:inline;">
-                        <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
-                        <button type="submit" class="btn-secundario" onclick="return confirm('Suspender este usuário? Ele não conseguirá mais fazer login.');">Suspender</button>
-                    </form>
-                <?php else: ?>
-                    <form method="post" action="<?php echo url('usuarios/reativar'); ?>" style="display:inline;">
-                        <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
-                        <button type="submit">Reativar</button>
-                    </form>
-                <?php endif; ?>
+                <div class="acoes-icones">
+                    <a href="<?php echo url('usuarios/editar/' . (int) $usuario['id']); ?>" class="btn-icone" title="Editar usuário">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </a>
+                    <?php if ($usuario['ativo']): ?>
+                        <form method="post" action="<?php echo url('usuarios/suspender'); ?>">
+                            <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
+                            <button type="submit" class="btn-icone" title="Suspender" onclick="return confirm('Suspender este usuário? Ele não conseguirá mais fazer login.');">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                                </svg>
+                            </button>
+                        </form>
+                    <?php else: ?>
+                        <form method="post" action="<?php echo url('usuarios/reativar'); ?>">
+                            <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
+                            <button type="submit" class="btn-icone" title="Reativar">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                </div>
             </td>
         </tr>
         <?php endforeach; ?>

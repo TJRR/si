@@ -18,6 +18,10 @@ $logoSrc = $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
         <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
     <?php endif; ?>
 
+    <?php if (!empty($_GET['expirado'])): ?>
+        <p style="color:red;">Sua sessão expirou por inatividade. Entre novamente.</p>
+    <?php endif; ?>
+
     <a href="<?php echo url('auth/google'); ?>" class="guest-google">
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

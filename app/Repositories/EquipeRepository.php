@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class EquipeRepository
@@ -57,29 +58,36 @@ class EquipeRepository
             'INSERT INTO equipes (trilha_id, nome_equipe, vinculo_institucional, observacoes)
              VALUES (:trilha_id, :nome_equipe, :vinculo_institucional, :observacoes)'
         );
-        $stmt->execute([
+        $dados = [
             'trilha_id' => $trilhaId,
             'nome_equipe' => $nomeEquipe,
             'vinculo_institucional' => $vinculoInstitucional !== '' ? $vinculoInstitucional : null,
             'observacoes' => $observacoes !== '' ? $observacoes : null,
-        ]);
+        ];
+        $stmt->execute($dados);
+        $id = (int) $pdo->lastInsertId();
 
-        return (int) $pdo->lastInsertId();
+        Auditoria::registrar('criar', 'equipes', $id, null, $dados);
+
+        return $id;
     }
 
     public function atualizar($equipeId, $nomeEquipe, $vinculoInstitucional, $observacoes)
     {
+        $antes = $this->buscarPorId($equipeId);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'UPDATE equipes SET nome_equipe = :nome_equipe, vinculo_institucional = :vinculo_institucional, observacoes = :observacoes
              WHERE id = :id'
         );
-        $stmt->execute([
+        $depois = [
             'nome_equipe' => $nomeEquipe,
             'vinculo_institucional' => $vinculoInstitucional !== '' ? $vinculoInstitucional : null,
             'observacoes' => $observacoes !== '' ? $observacoes : null,
-            'id' => $equipeId,
-        ]);
+        ];
+        $stmt->execute($depois + ['id' => $equipeId]);
+
+        Auditoria::registrar('atualizar', 'equipes', $equipeId, $antes, $depois);
     }
 
     public function alterarLider($equipeId, $novoLiderParticipanteId)
@@ -103,6 +111,8 @@ class EquipeRepository
             $pdo->rollBack();
             throw $e;
         }
+
+        Auditoria::registrar('alterar_lider', 'equipes', $equipeId, null, ['novo_lider_participante_id' => $novoLiderParticipanteId]);
     }
 
     public function cpfJaInscritoNaTrilha($trilhaId, $cpf)
@@ -126,20 +136,26 @@ class EquipeRepository
         $stmt = $pdo->prepare(
             'INSERT INTO equipe_participante (equipe_id, participante_id, papel) VALUES (:equipe_id, :participante_id, :papel)'
         );
-        $stmt->execute([
+        $dados = [
             'equipe_id' => $equipeId,
             'participante_id' => $participanteId,
             'papel' => $papel,
-        ]);
+        ];
+        $stmt->execute($dados);
+
+        Auditoria::registrar('vincular_participante', 'equipes', $equipeId, null, $dados);
     }
 
     public function desvincularParticipante($equipeId, $participanteId)
     {
+        $antes = $this->buscarVinculo($equipeId, $participanteId);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'DELETE FROM equipe_participante WHERE equipe_id = :equipe_id AND participante_id = :participante_id'
         );
         $stmt->execute(['equipe_id' => $equipeId, 'participante_id' => $participanteId]);
+
+        Auditoria::registrar('desvincular_participante', 'equipes', $equipeId, $antes, null);
     }
 
     public function listarComContagemParticipantes($trilhaId = null)
@@ -257,6 +273,7 @@ class EquipeRepository
 
     public function homologarVinculo($vinculoId, $usuarioId)
     {
+        $antes = $this->buscarVinculoPorId($vinculoId);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             "UPDATE equipe_participante
@@ -264,10 +281,16 @@ class EquipeRepository
              WHERE id = :id"
         );
         $stmt->execute(['usuario_id' => $usuarioId, 'id' => $vinculoId]);
+
+        Auditoria::registrar('homologar_vinculo', 'equipes', $vinculoId, $antes, [
+            'usuario_id' => $usuarioId,
+            'status_homologacao' => 'homologado',
+        ]);
     }
 
     public function rejeitarVinculo($vinculoId, $usuarioId, $motivo)
     {
+        $antes = $this->buscarVinculoPorId($vinculoId);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             "UPDATE equipe_participante
@@ -275,10 +298,17 @@ class EquipeRepository
              WHERE id = :id"
         );
         $stmt->execute(['usuario_id' => $usuarioId, 'motivo' => $motivo, 'id' => $vinculoId]);
+
+        Auditoria::registrar('rejeitar_vinculo', 'equipes', $vinculoId, $antes, [
+            'usuario_id' => $usuarioId,
+            'motivo' => $motivo,
+            'status_homologacao' => 'rejeitado',
+        ]);
     }
 
     public function voltarParaPendente($vinculoId)
     {
+        $antes = $this->buscarVinculoPorId($vinculoId);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             "UPDATE equipe_participante
@@ -286,5 +316,7 @@ class EquipeRepository
              WHERE id = :id"
         );
         $stmt->execute(['id' => $vinculoId]);
+
+        Auditoria::registrar('voltar_para_pendente', 'equipes', $vinculoId, $antes, ['status_homologacao' => 'pendente']);
     }
 }

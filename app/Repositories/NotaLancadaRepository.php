@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class NotaLancadaRepository
@@ -54,6 +55,12 @@ class NotaLancadaRepository
             'usuario_id' => $usuarioId,
             'nota' => $nota,
             'nota_atualizada' => $nota,
+        ]);
+
+        Auditoria::registrar('salvar', 'notas_lancadas', $submissaoId, null, [
+            'criterio_avaliacao_id' => $criterioAvaliacaoId,
+            'usuario_id' => $usuarioId,
+            'nota' => $nota,
         ]);
     }
 

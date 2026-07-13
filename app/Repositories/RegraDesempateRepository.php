@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class RegraDesempateRepository
@@ -67,21 +68,28 @@ class RegraDesempateRepository
             'INSERT INTO regras_desempate (trilha_id, ordem, criterio_avaliacao_id, direcao)
              VALUES (:trilha_id, :ordem, :criterio_avaliacao_id, :direcao)'
         );
-        $stmt->execute([
+        $dados = [
             'trilha_id' => $trilhaId,
             'ordem' => $ordem,
             'criterio_avaliacao_id' => $criterioAvaliacaoId,
             'direcao' => $direcao,
-        ]);
+        ];
+        $stmt->execute($dados);
+        $id = (int) $pdo->lastInsertId();
 
-        return (int) $pdo->lastInsertId();
+        Auditoria::registrar('criar', 'regras_desempate', $id, null, $dados);
+
+        return $id;
     }
 
     public function remover($id)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('DELETE FROM regras_desempate WHERE id = :id');
         $stmt->execute(['id' => $id]);
+
+        Auditoria::registrar('remover', 'regras_desempate', $id, $antes, null);
     }
 
     public function mover($id, $direcao)
@@ -120,5 +128,7 @@ class RegraDesempateRepository
             $pdo->rollBack();
             throw $e;
         }
+
+        Auditoria::registrar('mover', 'regras_desempate', $id, ['ordem' => $regra['ordem']], ['ordem' => $vizinho['ordem'], 'trocado_com_id' => $vizinho['id']]);
     }
 }

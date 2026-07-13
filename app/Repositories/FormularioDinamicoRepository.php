@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class FormularioDinamicoRepository
@@ -37,33 +38,43 @@ class FormularioDinamicoRepository
         $stmt = $pdo->prepare(
             'INSERT INTO formularios_dinamicos (concurso_id, nome, descricao, versao, status) VALUES (:concurso_id, :nome, :descricao, :versao, :status)'
         );
-        $stmt->execute([
+        $dados = [
             'concurso_id' => $concursoId,
             'nome' => $nome,
             'descricao' => $descricao !== '' ? $descricao : null,
             'versao' => $versao,
             'status' => $status,
-        ]);
+        ];
+        $stmt->execute($dados);
+        $id = (int) $pdo->lastInsertId();
 
-        return (int) $pdo->lastInsertId();
+        Auditoria::registrar('criar', 'formularios_dinamicos', $id, null, $dados);
+
+        return $id;
     }
 
     public function atualizar($id, $nome, $descricao)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('UPDATE formularios_dinamicos SET nome = :nome, descricao = :descricao WHERE id = :id');
-        $stmt->execute([
+        $depois = [
             'nome' => $nome,
             'descricao' => $descricao !== '' ? $descricao : null,
-            'id' => $id,
-        ]);
+        ];
+        $stmt->execute($depois + ['id' => $id]);
+
+        Auditoria::registrar('atualizar', 'formularios_dinamicos', $id, $antes, $depois);
     }
 
     public function atualizarStatus($id, $status)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('UPDATE formularios_dinamicos SET status = :status WHERE id = :id');
         $stmt->execute(['status' => $status, 'id' => $id]);
+
+        Auditoria::registrar('atualizar_status', 'formularios_dinamicos', $id, $antes, ['status' => $status]);
     }
 
     /**
@@ -73,8 +84,11 @@ class FormularioDinamicoRepository
      */
     public function remover($id)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('DELETE FROM formularios_dinamicos WHERE id = :id');
         $stmt->execute(['id' => $id]);
+
+        Auditoria::registrar('remover', 'formularios_dinamicos', $id, $antes, null);
     }
 }

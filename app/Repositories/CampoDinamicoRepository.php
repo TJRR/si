@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class CampoDinamicoRepository
@@ -56,40 +57,50 @@ class CampoDinamicoRepository
             'INSERT INTO campos_dinamicos (formulario_id, ordem, rotulo, tipo, obrigatorio, config_json)
              VALUES (:formulario_id, :ordem, :rotulo, :tipo, :obrigatorio, :config_json)'
         );
-        $stmt->execute([
+        $dados = [
             'formulario_id' => $formularioId,
             'ordem' => $ordem,
             'rotulo' => $rotulo,
             'tipo' => $tipo,
             'obrigatorio' => $obrigatorio,
             'config_json' => json_encode($config),
-        ]);
+        ];
+        $stmt->execute($dados);
+        $id = (int) $pdo->lastInsertId();
 
-        return (int) $pdo->lastInsertId();
+        Auditoria::registrar('criar', 'campos_dinamicos', $id, null, $dados);
+
+        return $id;
     }
 
     public function atualizar($id, $rotulo, $tipo, $obrigatorio, array $config)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'UPDATE campos_dinamicos
              SET rotulo = :rotulo, tipo = :tipo, obrigatorio = :obrigatorio, config_json = :config_json
              WHERE id = :id'
         );
-        $stmt->execute([
+        $depois = [
             'rotulo' => $rotulo,
             'tipo' => $tipo,
             'obrigatorio' => $obrigatorio,
             'config_json' => json_encode($config),
-            'id' => $id,
-        ]);
+        ];
+        $stmt->execute($depois + ['id' => $id]);
+
+        Auditoria::registrar('atualizar', 'campos_dinamicos', $id, $antes, $depois);
     }
 
     public function remover($id)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('DELETE FROM campos_dinamicos WHERE id = :id');
         $stmt->execute(['id' => $id]);
+
+        Auditoria::registrar('remover', 'campos_dinamicos', $id, $antes, null);
     }
 
     public function mover($id, $direcao)
@@ -128,6 +139,8 @@ class CampoDinamicoRepository
             $pdo->rollBack();
             throw $e;
         }
+
+        Auditoria::registrar('mover', 'campos_dinamicos', $id, ['ordem' => $campo['ordem']], ['ordem' => $vizinho['ordem'], 'trocado_com_id' => $vizinho['id']]);
     }
 
     public function copiarTodosParaOutroFormulario($formularioOrigemId, $formularioDestinoId)

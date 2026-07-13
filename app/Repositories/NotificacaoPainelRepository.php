@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 /**
@@ -30,8 +31,17 @@ class NotificacaoPainelRepository
             'mensagem' => $mensagem,
             'dados' => $dados !== null ? json_encode($dados) : null,
         ]);
+        $id = (int) $pdo->lastInsertId();
 
-        return (int) $pdo->lastInsertId();
+        Auditoria::registrar('criar', 'notificacoes_painel', $id, null, [
+            'usuario_id' => $usuarioId,
+            'tipo' => $tipo,
+            'titulo' => $titulo,
+            'mensagem' => $mensagem,
+            'dados' => $dados,
+        ]);
+
+        return $id;
     }
 
     /**
@@ -68,6 +78,8 @@ class NotificacaoPainelRepository
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('DELETE FROM notificacoes_painel WHERE usuario_id = :usuario_id AND tipo = :tipo');
         $stmt->execute(['usuario_id' => $usuarioId, 'tipo' => $tipo]);
+
+        Auditoria::registrar('remover_por_tipo', 'notificacoes_painel', $usuarioId, null, ['tipo' => $tipo]);
     }
 
     public function listarRecentes($usuarioId, $limite = 10)
@@ -103,9 +115,12 @@ class NotificacaoPainelRepository
 
     public function marcarLida($id)
     {
+        $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('UPDATE notificacoes_painel SET lida = 1 WHERE id = :id');
         $stmt->execute(['id' => $id]);
+
+        Auditoria::registrar('marcar_lida', 'notificacoes_painel', $id, $antes, ['lida' => 1]);
     }
 
     public function marcarTodasLidas($usuarioId)
@@ -113,5 +128,7 @@ class NotificacaoPainelRepository
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('UPDATE notificacoes_painel SET lida = 1 WHERE usuario_id = :usuario_id AND lida = 0');
         $stmt->execute(['usuario_id' => $usuarioId]);
+
+        Auditoria::registrar('marcar_todas_lidas', 'notificacoes_painel', $usuarioId, null, ['lida' => 1]);
     }
 }

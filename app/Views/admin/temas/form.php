@@ -10,19 +10,22 @@
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
+<?php $somenteLeitura = !\App\Core\Auth::possuiPerfil('administrador'); $desabilitado = $somenteLeitura ? 'disabled' : ''; ?>
 <form method="post" action="<?php echo $tema === null ? url('temas/novo/' . (int) $trilha['id']) : url('temas/editar/' . (int) $tema['id']); ?>">
     <label>Nome:
-        <input type="text" name="nome" required value="<?php echo htmlspecialchars($tema !== null ? $tema['nome'] : '', ENT_QUOTES, 'UTF-8'); ?>">
+        <input type="text" name="nome" required value="<?php echo htmlspecialchars($tema !== null ? $tema['nome'] : '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $desabilitado; ?>>
     </label><br>
 
     <label>Descrição longa:<br>
-        <textarea name="descricao_longa" rows="6" cols="60"><?php echo htmlspecialchars($tema !== null ? (string) $tema['descricao_longa'] : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
+        <textarea name="descricao_longa" rows="6" cols="60" <?php echo $desabilitado; ?>><?php echo htmlspecialchars($tema !== null ? (string) $tema['descricao_longa'] : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
     </label><br>
 
     <label>
-        <input type="checkbox" name="ativo" value="1" <?php echo ($tema === null || $tema['ativo']) ? 'checked' : ''; ?>>
+        <input type="checkbox" name="ativo" value="1" <?php echo ($tema === null || $tema['ativo']) ? 'checked' : ''; ?> <?php echo $desabilitado; ?>>
         Ativo
     </label><br>
 
+    <?php if (!$somenteLeitura): ?>
     <button type="submit">Salvar</button>
+    <?php endif; ?>
 </form>

@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class ResultadoEtapaRepository
@@ -82,6 +83,11 @@ class ResultadoEtapaRepository
             $pdo->rollBack();
             throw $e;
         }
+
+        Auditoria::registrar('publicar', 'resultados_etapa', $etapaId, null, [
+            'linhas' => $linhas,
+            'publicado_por' => $usuarioId,
+        ]);
     }
 
     public function reabrir($etapaId)
@@ -89,5 +95,7 @@ class ResultadoEtapaRepository
         $pdo = Database::conexao();
         $stmt = $pdo->prepare('DELETE FROM resultados_etapa WHERE etapa_id = :etapa_id');
         $stmt->execute(['etapa_id' => $etapaId]);
+
+        Auditoria::registrar('reabrir', 'resultados_etapa', $etapaId, null, null);
     }
 }

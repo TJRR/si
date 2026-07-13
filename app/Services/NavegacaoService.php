@@ -66,10 +66,16 @@ class NavegacaoService
         $definicoes = self::$abasPorGrupo[$grupo];
 
         if ($grupo === 'etapa') {
-            $etapa = (new EtapaRepository())->buscarPorId($id);
+            if (!\App\Core\Auth::possuiPerfil('administrador')) {
+                $tiposPermitidos = ['etapa'];
+            } else {
+                $etapa = (new EtapaRepository())->buscarPorId($id);
+                $tiposPermitidos = ($etapa !== null && $etapa['mecanismo_avaliacao'] !== 'avaliadores')
+                    ? ['etapa', 'formulario_vinculado']
+                    : null;
+            }
 
-            if ($etapa !== null && $etapa['mecanismo_avaliacao'] !== 'avaliadores') {
-                $tiposPermitidos = ['etapa', 'formulario_vinculado'];
+            if ($tiposPermitidos !== null) {
                 $definicoes = array_values(array_filter($definicoes, function ($definicao) use ($tiposPermitidos) {
                     return in_array($definicao['tipo'], $tiposPermitidos, true);
                 }));
@@ -188,7 +194,11 @@ class NavegacaoService
                     return [];
                 }
 
-                return [self::noFormularios($concurso), self::noTrilhas($concurso), self::noCategoriasAvaliador($concurso)];
+                if (!\App\Core\Auth::possuiPerfil('administrador')) {
+                    return [self::noTrilhas($concurso)];
+                }
+
+                return [self::noCategoriasAvaliador($concurso), self::noFormularios($concurso), self::noTrilhas($concurso)];
 
             case 'trilhas':
                 $lista = [];

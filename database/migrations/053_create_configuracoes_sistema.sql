@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS configuracoes_sistema (
+    id TINYINT UNSIGNED NOT NULL PRIMARY KEY,
+    sessao_timeout_minutos SMALLINT UNSIGNED NOT NULL DEFAULT 30,
+    atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO configuracoes_sistema (id, sessao_timeout_minutos)
+VALUES (1, 30);

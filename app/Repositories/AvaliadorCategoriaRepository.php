@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class AvaliadorCategoriaRepository
@@ -17,6 +18,7 @@ class AvaliadorCategoriaRepository
      */
     public function atribuir($usuarioId, $concursoId, $categoriaAvaliadorId)
     {
+        $antes = $this->categoriaDoUsuario($usuarioId, $concursoId);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'INSERT INTO avaliador_categorias (usuario_id, concurso_id, categoria_avaliador_id)
@@ -27,6 +29,12 @@ class AvaliadorCategoriaRepository
             'usuario_id' => $usuarioId,
             'concurso_id' => $concursoId,
             'categoria_id' => $categoriaAvaliadorId,
+        ]);
+
+        Auditoria::registrar('atribuir', 'avaliador_categorias', $usuarioId, $antes, [
+            'usuario_id' => $usuarioId,
+            'concurso_id' => $concursoId,
+            'categoria_avaliador_id' => $categoriaAvaliadorId,
         ]);
     }
 

@@ -162,6 +162,21 @@ class FormularioAdminController extends Controller
             : 'formularios/index/' . (int) $formulario['concurso_id'];
     }
 
+    public function duplicarConfirmar($id)
+    {
+        $formulario = $this->formularios->buscarPorId($id);
+
+        if ($formulario === null) {
+            http_response_code(404);
+            exit('Formulário não encontrado.');
+        }
+
+        $this->renderizar('admin/formularios/duplicar', [
+            'formulario' => $formulario,
+            'concursos' => $this->concursos->listar(),
+        ], 'Duplicar formulário');
+    }
+
     public function duplicar()
     {
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);

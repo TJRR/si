@@ -4,7 +4,7 @@
 } ?>
 <?php
 $ehPainelAdmin = isset($view) && (strpos($view, 'admin/') === 0 || $view === 'home/administrativo');
-$prefixosPainelInterno = ['admin/', 'avaliacao/', 'participante/'];
+$prefixosPainelInterno = ['admin/', 'avaliacao/', 'participante/', 'meuPerfil/'];
 $ehPainelInterno = $ehPainelAdmin;
 if (isset($view) && !$ehPainelInterno) {
     foreach ($prefixosPainelInterno as $prefixo) {
@@ -48,11 +48,20 @@ if ($ehPainelAdmin) {
 
     $abasAdmin = [
         ['rotulo' => 'Painel', 'url' => 'home/administrativo', 'ativo' => $moduloAtual === 'home'],
-        ['rotulo' => 'Páginas', 'url' => 'conteudo/index', 'ativo' => $moduloAtual === 'conteudo'],
-        ['rotulo' => 'Tema', 'url' => 'tema/index', 'ativo' => $moduloAtual === 'tema'],
-        ['rotulo' => 'Concursos', 'url' => 'concursos/index', 'ativo' => $ehEscopoArvore],
-        ['rotulo' => 'Usuários', 'url' => 'usuarios/index', 'ativo' => $moduloAtual === 'usuarios'],
     ];
+
+    if (\App\Core\Auth::possuiPerfil('administrador')) {
+        $abasAdmin[] = ['rotulo' => 'Páginas', 'url' => 'conteudo/index', 'ativo' => $moduloAtual === 'conteudo'];
+        $abasAdmin[] = ['rotulo' => 'Tema', 'url' => 'tema/index', 'ativo' => $moduloAtual === 'tema'];
+        $abasAdmin[] = ['rotulo' => 'Auditoria', 'url' => 'auditoria/index', 'ativo' => $moduloAtual === 'auditoria'];
+        $abasAdmin[] = ['rotulo' => 'Configurações', 'url' => 'configuracoes/index', 'ativo' => $moduloAtual === 'configuracoes'];
+    }
+
+    $abasAdmin[] = ['rotulo' => 'Concursos', 'url' => 'concursos/index', 'ativo' => $ehEscopoArvore];
+
+    if (\App\Core\Auth::possuiPerfil('administrador')) {
+        $abasAdmin[] = ['rotulo' => 'Usuários', 'url' => 'usuarios/index', 'ativo' => $moduloAtual === 'usuarios'];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -76,10 +85,11 @@ if ($ehPainelAdmin) {
 <body class="<?php echo $ehPainelInterno ? 'admin-page' : ($ehPaginaConvidado ? 'guest-page' : ''); ?>">
 <?php if ($ehPainelInterno): ?>
     <div class="admin-topbar">
+      <div class="admin-largura-max">
         <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR">
         <div class="admin-topbar-acoes">
             <div class="notificacoes-sino-wrapper">
-                <button type="button" id="notificacoes-sino-botao" class="notificacoes-sino-botao" aria-haspopup="true" aria-expanded="false" aria-controls="notificacoes-sino-painel">
+                <button type="button" id="notificacoes-sino-botao" class="notificacoes-sino-botao" title="Notificações" aria-haspopup="true" aria-expanded="false" aria-controls="notificacoes-sino-painel">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                     </svg>
@@ -110,16 +120,31 @@ if ($ehPainelAdmin) {
                     </div>
                 </div>
             </div>
-            <a href="<?php echo url('auth/logout'); ?>">Sair</a>
+            <a href="<?php echo url('meuPerfil/index'); ?>" class="topbar-icone" title="Meu perfil">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </a>
+            <a href="<?php echo url('auth/logout'); ?>" class="topbar-icone" title="Sair">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </a>
         </div>
+      </div>
     </div>
     <?php if ($ehPainelAdmin): ?>
     <nav class="admin-tabs">
+      <div class="admin-largura-max">
         <?php foreach ($abasAdmin as $aba): ?>
             <a class="admin-tab<?php echo $aba['ativo'] ? ' active' : ''; ?>" href="<?php echo url($aba['url']); ?>">
                 <?php echo htmlspecialchars($aba['rotulo'], ENT_QUOTES, 'UTF-8'); ?>
             </a>
         <?php endforeach; ?>
+      </div>
     </nav>
     <?php endif; ?>
 <?php endif; ?>
@@ -150,7 +175,7 @@ if ($ehPainelAdmin) {
     <script>window.SI_BASE_PATH = <?php echo json_encode(config('base_path')); ?>;</script>
     <script src="<?php echo config('base_path'); ?>/assets/js/navegacao-arvore.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/navegacao-arvore.js'); ?>" defer></script>
 <?php else: ?>
-    <?php echo $conteudo; ?>
+    <div class="admin-conteudo-flat"><?php echo $conteudo; ?></div>
 <?php endif; ?>
 <?php if ($ehPainelInterno): ?>
     <script src="<?php echo config('base_path'); ?>/assets/js/notificacoes-sino.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/notificacoes-sino.js'); ?>" defer></script>
