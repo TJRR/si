@@ -4,8 +4,6 @@
 } ?>
 <h1>Meu perfil</h1>
 
-<p><a href="<?php echo url($destinoPainel); ?>">Voltar ao painel</a></p>
-
 <?php if (!empty($flash)): ?>
     <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
@@ -29,5 +27,8 @@
 
     <p>E-mail: <?php echo htmlspecialchars($usuario['email'], ENT_QUOTES, 'UTF-8'); ?> (não editável)</p>
 
-    <button type="submit">Salvar</button>
+    <div class="form-acoes">
+        <a href="<?php echo url($destinoPainel); ?>" class="btn-voltar">Voltar</a>
+        <button type="submit">Salvar</button>
+    </div>
 </form>

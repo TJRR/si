@@ -10,12 +10,13 @@ foreach ($concursos as $concurso) {
     }
 }
 
-function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConcursoId, $filtroPerfil)
+function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $busca)
 {
     $novaDirecao = ($ordenar === $coluna && $direcao === 'asc') ? 'desc' : 'asc';
     $params = array_filter([
         'concurso_id' => $filtroConcursoId,
         'perfil' => $filtroPerfil,
+        'busca' => $busca,
         'ordenar' => $coluna,
         'direcao' => $novaDirecao,
     ], function ($valor) {
@@ -31,51 +32,70 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
         . htmlspecialchars($rotulo, ENT_QUOTES, 'UTF-8') . $seta . '</a>';
 }
 ?>
-<h1>Usuários</h1>
-
-<p><a href="<?php echo url('home/administrativo'); ?>">Voltar ao painel</a></p>
-<p><a href="<?php echo url('usuarios/convidar'); ?>">+ Convidar usuário</a></p>
+<div class="pagina-titulo-acoes">
+    <h1>Usuários</h1>
+    <div class="pagina-titulo-botoes">
+        <a href="<?php echo url('usuarios/convidar'); ?>" class="btn-acao">+ Convidar usuário</a>
+        <a href="<?php echo url('home/administrativo'); ?>" class="btn-voltar">Voltar</a>
+    </div>
+</div>
 
 <?php if (!empty($flash)): ?>
     <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="get" action="<?php echo config('base_path'); ?>/index.php">
-    <input type="hidden" name="r" value="usuarios/index">
-    <label>Filtrar por concurso:
-        <select name="concurso_id">
-            <option value="">Todos</option>
-            <?php foreach ($concursos as $concurso): ?>
-                <option value="<?php echo (int) $concurso['id']; ?>" <?php echo $filtroConcursoId === (int) $concurso['id'] ? 'selected' : ''; ?>>
-                    <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </label>
-    <label>Filtrar por perfil:
-        <select name="perfil">
-            <option value="">Todos</option>
-            <?php foreach ($perfis as $perfil): ?>
-                <option value="<?php echo htmlspecialchars($perfil['chave'], ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filtroPerfil === $perfil['chave'] ? 'selected' : ''; ?>>
-                    <?php echo htmlspecialchars($perfil['nome_exibicao'], ENT_QUOTES, 'UTF-8'); ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </label>
-    <button type="submit">Filtrar</button>
-    <a href="<?php echo url('usuarios/index'); ?>">Limpar filtros</a>
-</form>
+<div class="filtros-barra-wrapper">
+    <form method="get" action="<?php echo config('base_path'); ?>/index.php" class="filtros-barra">
+        <input type="hidden" name="r" value="usuarios/index">
+        <label class="filtro-busca">Busca:
+            <input type="text" name="busca" placeholder="Nome, e-mail, status, perfil, acesso..." value="<?php echo htmlspecialchars((string) $busca, ENT_QUOTES, 'UTF-8'); ?>">
+        </label>
+        <label>Concurso:
+            <select name="concurso_id">
+                <option value="">Todos</option>
+                <?php foreach ($concursos as $concurso): ?>
+                    <option value="<?php echo (int) $concurso['id']; ?>" <?php echo $filtroConcursoId === (int) $concurso['id'] ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <label>Perfil:
+            <select name="perfil">
+                <option value="">Todos</option>
+                <?php foreach ($perfis as $perfil): ?>
+                    <option value="<?php echo htmlspecialchars($perfil['chave'], ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filtroPerfil === $perfil['chave'] ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($perfil['nome_exibicao'], ENT_QUOTES, 'UTF-8'); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <div class="filtros-barra-acoes">
+            <button type="submit" class="btn-icone" title="Filtrar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+            </button>
+            <a href="<?php echo url('usuarios/index'); ?>" class="btn-icone" title="Limpar filtros">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+            </a>
+        </div>
+    </form>
+</div>
 
 <?php if (empty($usuarios)): ?>
     <p>Nenhum usuário encontrado.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
         <tr>
-            <th><?php echo usuarios_link_ordenar('Nome', 'nome', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil); ?></th>
-            <th><?php echo usuarios_link_ordenar('E-mail', 'email', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil); ?></th>
-            <th><?php echo usuarios_link_ordenar('Status', 'status', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil); ?></th>
-            <th><?php echo usuarios_link_ordenar('Perfis', 'perfis', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil); ?></th>
-            <th><?php echo usuarios_link_ordenar('Acesso', 'acesso', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil); ?></th>
+            <th><?php echo usuarios_link_ordenar('Nome', 'nome', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $busca); ?></th>
+            <th><?php echo usuarios_link_ordenar('E-mail', 'email', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $busca); ?></th>
+            <th><?php echo usuarios_link_ordenar('Status', 'status', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $busca); ?></th>
+            <th><?php echo usuarios_link_ordenar('Perfis', 'perfis', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $busca); ?></th>
+            <th><?php echo usuarios_link_ordenar('Acesso', 'acesso', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $busca); ?></th>
             <th>Ações</th>
         </tr>
         <?php foreach ($usuarios as $usuario): ?>

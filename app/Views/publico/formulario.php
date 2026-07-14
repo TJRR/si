@@ -8,7 +8,7 @@
         <div class="site-header-inner">
             <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR" class="site-logo">
             <nav class="site-nav">
-                <a href="<?php echo url('home/index'); ?>">Voltar ao início</a>
+                <a href="<?php echo url('participante/index'); ?>" class="btn">Voltar</a>
             </nav>
         </div>
     </header>
@@ -51,7 +51,7 @@
                     <input type="number" step="any" name="campos[<?php echo $campoId; ?>]" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
 
                 <?php elseif ($campo['tipo'] === 'cpf'): ?>
-                    <input type="text" name="campos[<?php echo $campoId; ?>]" placeholder="000.000.000-00" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
+                    <input type="text" name="campos[<?php echo $campoId; ?>]" class="campo-cpf-validar" placeholder="000.000.000-00" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
 
                 <?php elseif ($campo['tipo'] === 'email'): ?>
                     <input type="email" name="campos[<?php echo $campoId; ?>]" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
@@ -108,5 +108,6 @@
 </template>
 
 <script src="<?php echo config('base_path'); ?>/assets/js/formulario-publico.js"></script>
+<script src="<?php echo config('base_path'); ?>/assets/js/cpf-validador.js"></script>
     </div>
 </div>

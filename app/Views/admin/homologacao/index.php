@@ -23,16 +23,28 @@
 <?php if (empty($inscricoes)): ?>
     <p>Nenhuma inscrição encontrada<?php echo $statusFiltro !== '' ? ' com este filtro' : ' nesta trilha'; ?>.</p>
 <?php else: ?>
+    <!--
+        form-acoes-em-massa fica vazio, so' com trilha_id, e os controles que
+        pertencem a ele (checkboxes da tabela + botoes em massa no fim da
+        pagina) se associam via atributo form="form-acoes-em-massa" em vez de
+        aninhamento de <form> - HTML nao permite <form> dentro de <form>
+        (era o caso antes, com a tabela inteira dentro deste form: o
+        navegador descarta o form aninhado, entao os botoes "Homologar"/
+        "Rejeitar" de cada linha acabavam submetendo ESTE form em vez do
+        deles, sem action nenhuma - por isso o botao "nao funcionava").
+    -->
     <form method="post" id="form-acoes-em-massa">
         <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-        <table border="1" cellpadding="6">
+    </form>
+
+    <table border="1" cellpadding="6">
             <tr>
                 <th><input type="checkbox" onclick="document.querySelectorAll('.marcar-linha').forEach(function(c){c.checked=this.checked;}, this)"></th>
                 <th>Equipe</th><th>Participante</th><th>Papel</th><th>CPF</th><th>E-mail</th><th>Telefone</th><th>Status</th><th>Ações</th>
             </tr>
             <?php foreach ($inscricoes as $item): ?>
             <tr>
-                <td><input type="checkbox" class="marcar-linha" name="vinculo_ids[]" value="<?php echo (int) $item['vinculo_id']; ?>"></td>
+                <td><input type="checkbox" class="marcar-linha" name="vinculo_ids[]" value="<?php echo (int) $item['vinculo_id']; ?>" form="form-acoes-em-massa"></td>
                 <td><?php echo htmlspecialchars($item['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></td>
                 <td><?php echo htmlspecialchars($item['participante_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
                 <td><?php echo $item['papel'] === 'lider' ? 'Líder' : 'Integrante'; ?></td>
@@ -79,24 +91,23 @@
                 </td>
             </tr>
             <?php endforeach; ?>
-        </table>
+    </table>
 
-        <p>Com os selecionados:
-            <span class="acoes-icones" style="display:inline-flex;">
-                <button type="submit" formaction="<?php echo url('homologacao/homologarEmMassa'); ?>" class="btn-icone" title="Homologar selecionados">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                </button>
-                <button type="submit" formaction="<?php echo url('homologacao/rejeitarEmMassa'); ?>" class="btn-icone" title="Rejeitar selecionados" onclick="return confirm('Rejeitar todas as inscrições selecionadas?');">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="15" y1="9" x2="9" y2="15"></line>
-                        <line x1="9" y1="9" x2="15" y2="15"></line>
-                    </svg>
-                </button>
-            </span>
-        </p>
-    </form>
+    <p>Com os selecionados:
+        <span class="acoes-icones" style="display:inline-flex;">
+            <button type="submit" form="form-acoes-em-massa" formaction="<?php echo url('homologacao/homologarEmMassa'); ?>" class="btn-icone" title="Homologar selecionados">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </button>
+            <button type="submit" form="form-acoes-em-massa" formaction="<?php echo url('homologacao/rejeitarEmMassa'); ?>" class="btn-icone" title="Rejeitar selecionados" onclick="return confirm('Rejeitar todas as inscrições selecionadas?');">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+            </button>
+        </span>
+    </p>
 <?php endif; ?>

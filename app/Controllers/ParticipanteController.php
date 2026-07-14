@@ -43,63 +43,6 @@ class ParticipanteController extends Controller
 
     public function index()
     {
-        $this->redirecionar('participante/minhaEquipe');
-    }
-
-    public function meusDados()
-    {
-        $participante = $this->participanteAtual();
-
-        if ($participante === null) {
-            http_response_code(404);
-            exit('Nenhum participante vinculado a esta conta.');
-        }
-
-        $erro = null;
-        $sucesso = null;
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
-            $telefone = trim(isset($_POST['telefone']) ? $_POST['telefone'] : '');
-            $cpf = trim(isset($_POST['cpf']) ? $_POST['cpf'] : '');
-
-            if ($nome === '') {
-                $erro = 'Informe o nome.';
-            } elseif ($cpf !== '' && !CpfValidador::valido($cpf)) {
-                $erro = 'CPF inválido.';
-            } else {
-                $cpfNormalizado = CpfValidador::apenasDigitos($cpf);
-                $cpfMudou = $cpfNormalizado !== $participante['cpf'];
-
-                $this->participantes->atualizarDados($participante['id'], $nome, $telefone, $cpfNormalizado);
-
-                if ($cpfMudou) {
-                    $equipe = $this->equipes->buscarPorParticipante($participante['id']);
-                    if ($equipe !== null) {
-                        $vinculo = $this->equipes->buscarVinculo($equipe['id'], $participante['id']);
-                        if ($vinculo !== null) {
-                            $this->equipes->voltarParaPendente($vinculo['id']);
-                            $this->notificacoes->removerPorTipo(Auth::usuarioId(), 'equipe_rejeitada');
-                        }
-                    }
-                    $sucesso = 'Dados atualizados. Como o CPF mudou, sua inscrição volta para conferência do Suporte.';
-                } else {
-                    $sucesso = 'Dados atualizados.';
-                }
-
-                $participante = $this->participantes->buscarPorId($participante['id']);
-            }
-        }
-
-        $this->renderizar('participante/meus_dados', [
-            'participante' => $participante,
-            'erro' => $erro,
-            'sucesso' => $sucesso,
-        ], 'Meus dados');
-    }
-
-    public function minhaEquipe()
-    {
         $participante = $this->participanteAtual();
 
         if ($participante === null) {
@@ -118,15 +61,87 @@ class ParticipanteController extends Controller
         $tema = $equipe['tema_desafio_id'] !== null ? $this->temas->buscarPorId($equipe['tema_desafio_id']) : null;
         $colegas = $this->equipes->listarParticipantes($equipe['id']);
         $vinculoAtual = $this->equipes->buscarVinculo($equipe['id'], $participante['id']);
+        $homologado = $vinculoAtual !== null && $vinculoAtual['status_homologacao'] === 'homologado';
 
-        $this->renderizar('participante/minha_equipe', [
+        $etapas = [];
+        if ($homologado) {
+            $etapas = array_values(array_filter(
+                $this->etapas->listarPorTrilha($equipe['trilha_id']),
+                function ($etapa) {
+                    return (int) $etapa['ordem'] > 1 && $etapa['formulario_dinamico_id'] !== null;
+                }
+            ));
+        }
+
+        $this->renderizar('participante/painel', [
             'equipe' => $equipe,
             'trilha' => $trilha,
             'tema' => $tema,
             'colegas' => $colegas,
             'participanteAtualId' => $participante['id'],
             'ehLider' => $vinculoAtual !== null && $vinculoAtual['papel'] === 'lider',
-        ], 'Minha equipe');
+            'homologado' => $homologado,
+            'etapas' => $etapas,
+        ], 'Minha inscrição');
+    }
+
+    public function meusDados()
+    {
+        $participante = $this->participanteAtual();
+
+        if ($participante === null) {
+            http_response_code(404);
+            exit('Nenhum participante vinculado a esta conta.');
+        }
+
+        $this->processarEdicaoDados($participante, url('participante/meusDados'), 'Meus dados');
+    }
+
+    /**
+     * Reaproveita o mesmo formulario/fluxo de meusDados() para o lider
+     * editar o cadastro de outro integrante da equipe - a permissao e'
+     * sempre validada no servidor (validarPermissaoEdicao), nunca so pela
+     * ausencia/presenca do icone na tela.
+     */
+    public function editarIntegrante($participanteId)
+    {
+        $euAtual = $this->participanteAtual();
+
+        if ($euAtual === null) {
+            http_response_code(404);
+            exit('Nenhum participante vinculado a esta conta.');
+        }
+
+        $alvo = $this->validarPermissaoEdicao($euAtual, $participanteId);
+        $titulo = (int) $alvo['id'] === (int) $euAtual['id']
+            ? 'Meus dados'
+            : 'Editar dados de ' . $alvo['nome'];
+
+        $this->processarEdicaoDados($alvo, url('participante/editarIntegrante/' . (int) $alvo['id']), $titulo);
+    }
+
+    /**
+     * Promove outro integrante homologado a lider da equipe - substitui a
+     * antiga tela dedicada "Trocar lider" por uma acao inline na tabela de
+     * integrantes (Fase 15). EquipeRepository::alterarLider() ja audita.
+     */
+    public function promoverLider($participanteId)
+    {
+        $equipe = $this->equipeDoLiderAtual();
+        $novoLiderId = (int) $participanteId;
+        $vinculoAlvo = $this->equipes->buscarVinculo($equipe['id'], $novoLiderId);
+
+        if ($vinculoAlvo === null || $vinculoAlvo['status_homologacao'] !== 'homologado' || $vinculoAlvo['papel'] === 'lider') {
+            $_SESSION['flash'] = 'Não foi possível promover: selecione um integrante homologado, diferente do líder atual.';
+            $this->redirecionar('participante/index');
+            return;
+        }
+
+        $alvo = $this->participantes->buscarPorId($novoLiderId);
+        $this->equipes->alterarLider($equipe['id'], $novoLiderId);
+
+        $_SESSION['flash'] = 'Liderança da equipe transferida para "' . $alvo['nome'] . '".';
+        $this->redirecionar('participante/index');
     }
 
     public function editarEquipe()
@@ -144,7 +159,7 @@ class ParticipanteController extends Controller
                 $erro = 'Informe o nome da equipe.';
             } else {
                 $this->equipes->atualizar($equipe['id'], $nomeEquipe, $vinculoInstitucional, $observacoes);
-                $this->redirecionar('participante/minhaEquipe');
+                $this->redirecionar('participante/index');
                 return;
             }
         }
@@ -153,81 +168,6 @@ class ParticipanteController extends Controller
             'equipe' => $equipe,
             'erro' => $erro,
         ], 'Editar equipe');
-    }
-
-    public function trocarLider()
-    {
-        $equipe = $this->equipeDoLiderAtual();
-        $colegasHomologados = array_values(array_filter(
-            $this->equipes->listarParticipantes($equipe['id']),
-            function ($colega) {
-                return $colega['status_homologacao'] === 'homologado';
-            }
-        ));
-
-        $erro = null;
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $novoLiderId = isset($_POST['novo_lider_id']) ? (int) $_POST['novo_lider_id'] : 0;
-            $idsValidos = array_map(function ($colega) {
-                return (int) $colega['id'];
-            }, $colegasHomologados);
-
-            if (!in_array($novoLiderId, $idsValidos, true)) {
-                $erro = 'Selecione um integrante homologado da equipe.';
-            } else {
-                $this->equipes->alterarLider($equipe['id'], $novoLiderId);
-                $this->redirecionar('participante/minhaEquipe');
-                return;
-            }
-        }
-
-        $this->renderizar('participante/trocar_lider', [
-            'equipe' => $equipe,
-            'colegas' => $colegasHomologados,
-            'erro' => $erro,
-        ], 'Trocar líder');
-    }
-
-    public function submissoes()
-    {
-        $participante = $this->participanteAtual();
-
-        if ($participante === null) {
-            http_response_code(404);
-            exit('Nenhum participante vinculado a esta conta.');
-        }
-
-        $equipe = $this->equipes->buscarPorParticipante($participante['id']);
-
-        if ($equipe === null) {
-            http_response_code(404);
-            exit('Nenhuma equipe encontrada para este participante.');
-        }
-
-        $vinculo = $this->equipes->buscarVinculo($equipe['id'], $participante['id']);
-
-        if ($vinculo === null || $vinculo['status_homologacao'] !== 'homologado') {
-            $this->renderizar('participante/submissoes', [
-                'equipe' => $equipe,
-                'homologado' => false,
-                'etapas' => [],
-            ], 'Submissões');
-            return;
-        }
-
-        $etapasDaTrilha = array_values(array_filter(
-            $this->etapas->listarPorTrilha($equipe['trilha_id']),
-            function ($etapa) {
-                return (int) $etapa['ordem'] > 1 && $etapa['formulario_dinamico_id'] !== null;
-            }
-        ));
-
-        $this->renderizar('participante/submissoes', [
-            'equipe' => $equipe,
-            'homologado' => true,
-            'etapas' => $etapasDaTrilha,
-        ], 'Submissões');
     }
 
     private function participanteAtual()
@@ -288,5 +228,118 @@ class ParticipanteController extends Controller
         }
 
         return $equipe;
+    }
+
+    /**
+     * Fluxo de edicao de cadastro (nome/telefone/CPF) compartilhado por
+     * meusDados() (autoedicao) e editarIntegrante() (lider editando outro
+     * integrante) - a unica diferenca entre os dois casos e' qual
+     * participante e' passado aqui, ja validado por quem chamou.
+     */
+    private function processarEdicaoDados(array $participante, $actionUrl, $titulo)
+    {
+        $erro = null;
+        $sucesso = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
+            $telefone = trim(isset($_POST['telefone']) ? $_POST['telefone'] : '');
+            $cpf = trim(isset($_POST['cpf']) ? $_POST['cpf'] : '');
+
+            if ($nome === '') {
+                $erro = 'Informe o nome.';
+            } elseif ($cpf !== '' && !CpfValidador::valido($cpf)) {
+                $erro = 'CPF inválido.';
+            } else {
+                $cpfNormalizado = CpfValidador::apenasDigitos($cpf);
+                $cpfMudou = $cpfNormalizado !== $participante['cpf'];
+
+                $this->participantes->atualizarDados($participante['id'], $nome, $telefone, $cpfNormalizado);
+
+                if ($cpfMudou) {
+                    $this->aposMudarCpf($participante);
+                    $sucesso = 'Dados atualizados. Como o CPF mudou, a inscrição volta para conferência do Suporte.';
+                } else {
+                    $sucesso = 'Dados atualizados.';
+                }
+
+                $participante = $this->participantes->buscarPorId($participante['id']);
+            }
+        }
+
+        $this->renderizar('participante/meus_dados', [
+            'participante' => $participante,
+            'erro' => $erro,
+            'sucesso' => $sucesso,
+            'actionUrl' => $actionUrl,
+            'tituloPagina' => $titulo,
+        ], $titulo);
+    }
+
+    /**
+     * Quando o CPF muda, o vinculo do participante-alvo volta para pendente
+     * e o alerta de "inscricao rejeitada" e' limpo nas contas de usuario
+     * ligadas a ELE (usuariosDoParticipante), nao na de quem esta editando -
+     * importante porque o lider pode estar editando o cadastro de outro
+     * integrante (ver editarIntegrante()).
+     */
+    private function aposMudarCpf(array $participante)
+    {
+        $equipe = $this->equipes->buscarPorParticipante($participante['id']);
+
+        if ($equipe === null) {
+            return;
+        }
+
+        $vinculo = $this->equipes->buscarVinculo($equipe['id'], $participante['id']);
+
+        if ($vinculo === null) {
+            return;
+        }
+
+        $this->equipes->voltarParaPendente($vinculo['id']);
+
+        foreach ($this->usuarioParticipante->usuariosDoParticipante($participante['id']) as $usuarioId) {
+            $this->notificacoes->removerPorTipo($usuarioId, 'equipe_rejeitada');
+        }
+    }
+
+    /**
+     * Autoedicao (participanteId == eu mesmo) e' sempre permitida; editar
+     * outro integrante exige que eu seja o lider homologado da equipe E que
+     * o alvo pertenca a essa mesma equipe - validado aqui no servidor,
+     * nunca so pela ausencia do icone na tela (Fase 15, Melhoria 1).
+     */
+    private function validarPermissaoEdicao(array $euAtual, $participanteId)
+    {
+        $participanteId = (int) $participanteId;
+
+        if ($participanteId === (int) $euAtual['id']) {
+            return $euAtual;
+        }
+
+        $equipe = $this->equipes->buscarPorParticipante($euAtual['id']);
+        $meuVinculo = $equipe !== null ? $this->equipes->buscarVinculo($equipe['id'], $euAtual['id']) : null;
+
+        if ($equipe === null || $meuVinculo === null || $meuVinculo['papel'] !== 'lider') {
+            http_response_code(403);
+            exit('Acesso negado: apenas o líder da equipe pode editar dados de outro integrante.');
+        }
+
+        $vinculoAlvo = $this->equipes->buscarVinculo($equipe['id'], $participanteId);
+
+        if ($vinculoAlvo === null) {
+            http_response_code(403);
+            exit('Acesso negado: este integrante não pertence à sua equipe.');
+        }
+
+        $alvo = $this->participantes->buscarPorId($participanteId);
+
+        if ($alvo === null) {
+            http_response_code(404);
+            exit('Participante não encontrado.');
+        }
+
+        return $alvo;
     }
 }

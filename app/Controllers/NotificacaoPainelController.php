@@ -29,9 +29,17 @@ class NotificacaoPainelController extends Controller
     {
         $notificacao = $this->notificacoes->buscarPorId($id);
 
-        if ($notificacao === null || (int) $notificacao['usuario_id'] !== Auth::usuarioId()) {
-            http_response_code(404);
-            exit('Notificação não encontrada.');
+        if ($notificacao === null) {
+            // A notificacao pode ter sido removida pelo auto-cura (ex.: CPF
+            // corrigido em outra aba) entre a lista do sino carregar e o
+            // clique - nao e' um erro do usuario, so segue pro painel dele.
+            $this->redirecionar(Auth::destinoPainel());
+            return;
+        }
+
+        if ((int) $notificacao['usuario_id'] !== (int) Auth::usuarioId()) {
+            http_response_code(403);
+            exit('Acesso negado.');
         }
 
         $this->notificacoes->marcarLida($id);
@@ -40,6 +48,27 @@ class NotificacaoPainelController extends Controller
         $destino = $dados !== null && !empty($dados['url']) ? $dados['url'] : url('home/index');
 
         header('Location: ' . $destino);
+        exit;
+    }
+
+    public function marcarLida($id)
+    {
+        $notificacao = $this->notificacoes->buscarPorId($id);
+
+        if ($notificacao === null) {
+            $this->redirecionar(Auth::destinoPainel());
+            return;
+        }
+
+        if ((int) $notificacao['usuario_id'] !== (int) Auth::usuarioId()) {
+            http_response_code(403);
+            exit('Acesso negado.');
+        }
+
+        $this->notificacoes->marcarLida($id);
+
+        $voltar = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : url('home/index');
+        header('Location: ' . $voltar);
         exit;
     }
 

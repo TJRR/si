@@ -38,6 +38,7 @@ class UsuarioAdminController extends Controller
     {
         $filtroConcursoId = (isset($_GET['concurso_id']) && $_GET['concurso_id'] !== '') ? (int) $_GET['concurso_id'] : null;
         $filtroPerfil = isset($_GET['perfil']) && $_GET['perfil'] !== '' ? $_GET['perfil'] : null;
+        $busca = isset($_GET['busca']) && trim($_GET['busca']) !== '' ? trim($_GET['busca']) : null;
         $ordenar = isset($_GET['ordenar']) ? $_GET['ordenar'] : 'nome';
         $direcao = isset($_GET['direcao']) && $_GET['direcao'] === 'desc' ? 'desc' : 'asc';
 
@@ -72,6 +73,12 @@ class UsuarioAdminController extends Controller
             }));
         }
 
+        if ($busca !== null) {
+            $lista = array_values(array_filter($lista, function ($usuario) use ($busca) {
+                return $this->usuarioBateComBusca($usuario, $busca);
+            }));
+        }
+
         $lista = $this->ordenarUsuarios($lista, $ordenar, $direcao);
 
         $this->renderizar('admin/usuarios', [
@@ -81,12 +88,40 @@ class UsuarioAdminController extends Controller
             'categoriasPorConcurso' => $categoriasPorConcurso,
             'filtroConcursoId' => $filtroConcursoId,
             'filtroPerfil' => $filtroPerfil,
+            'busca' => $busca,
             'ordenar' => $ordenar,
             'direcao' => $direcao,
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
         ], 'Usuários');
 
         unset($_SESSION['flash']);
+    }
+
+    /**
+     * Busca livre da tela Usuarios - casa nome, e-mail, status, nomes de
+     * perfil e tipo de acesso (Senha/Google/Nenhum ainda), o mesmo texto
+     * que ja aparece nas colunas da tabela.
+     */
+    private function usuarioBateComBusca(array $usuario, $busca)
+    {
+        $tiposAcesso = [];
+        if ($usuario['senha_hash'] !== null) {
+            $tiposAcesso[] = 'Senha';
+        }
+        if ($usuario['google_id'] !== null) {
+            $tiposAcesso[] = 'Google';
+        }
+        $textoAcesso = !empty($tiposAcesso) ? implode(' ', $tiposAcesso) : 'Nenhum ainda';
+
+        $nomesPerfis = implode(' ', array_map(function ($vinculo) {
+            return $vinculo['perfil_nome'];
+        }, $usuario['perfis']));
+
+        $textoBusca = mb_strtolower(
+            $usuario['nome'] . ' ' . $usuario['email'] . ' ' . $usuario['status'] . ' ' . $nomesPerfis . ' ' . $textoAcesso
+        );
+
+        return mb_strpos($textoBusca, mb_strtolower($busca)) !== false;
     }
 
     private function ordenarUsuarios(array $lista, $ordenar, $direcao)

@@ -4,8 +4,6 @@
 } ?>
 <h1><?php echo $formulario === null ? 'Novo formulário' : 'Editar formulário'; ?> — <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('formularios/index/' . (int) $concurso['id']); ?>">Voltar</a></p>
-
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
@@ -19,7 +17,10 @@
         <textarea name="descricao" rows="4" cols="50"><?php echo htmlspecialchars($formulario !== null ? (string) $formulario['descricao'] : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
     </label><br>
 
-    <button type="submit">Salvar</button>
+    <div class="form-acoes">
+        <a href="<?php echo url('formularios/index/' . (int) $concurso['id']); ?>" class="btn-voltar">Voltar</a>
+        <button type="submit">Salvar</button>
+    </div>
 </form>
 
 <?php if ($formulario !== null): ?>

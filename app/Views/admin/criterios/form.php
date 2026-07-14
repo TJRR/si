@@ -4,8 +4,6 @@
 } ?>
 <h1><?php echo $criterio === null ? 'Novo critério' : 'Editar critério'; ?> — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('criterios/index/' . (int) $etapa['id']); ?>">Voltar</a></p>
-
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
@@ -35,5 +33,8 @@
         <input type="text" name="escala_max" value="<?php echo $criterio !== null ? number_format((float) $criterio['escala_max'], 1, ',', '') : '10'; ?>">
     </label><br>
 
-    <button type="submit">Salvar</button>
+    <div class="form-acoes">
+        <a href="<?php echo url('criterios/index/' . (int) $etapa['id']); ?>" class="btn-voltar">Voltar</a>
+        <button type="submit">Salvar</button>
+    </div>
 </form>

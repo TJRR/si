@@ -8,7 +8,7 @@
         <div class="site-header-inner">
             <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR" class="site-logo">
             <nav class="site-nav">
-                <a href="<?php echo url('home/index'); ?>">Voltar ao início</a>
+                <a href="<?php echo url('home/index'); ?>" class="btn">Voltar ao início</a>
             </nav>
         </div>
     </header>
@@ -44,7 +44,7 @@
                 <?php echo $campo['obrigatorio'] ? '*' : ''; ?>
 
                 <?php if ($campo['tipo'] === 'cpf'): ?>
-                    <input type="text" name="campos[<?php echo $campoId; ?>]" placeholder="000.000.000-00" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
+                    <input type="text" name="campos[<?php echo $campoId; ?>]" class="campo-cpf-validar" placeholder="000.000.000-00" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
                 <?php elseif ($campo['tipo'] === 'email'): ?>
                     <input type="email" name="campos[<?php echo $campoId; ?>]" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
                 <?php elseif ($campo['tipo'] === 'telefone'): ?>
@@ -64,3 +64,5 @@
 </form>
     </div>
 </div>
+
+<script src="<?php echo config('base_path'); ?>/assets/js/cpf-validador.js"></script>

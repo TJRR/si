@@ -12,6 +12,13 @@ use App\Core\Database;
 
 class ParticipanteRepository
 {
+    public function contarTodos()
+    {
+        $pdo = Database::conexao();
+
+        return (int) $pdo->query('SELECT COUNT(*) FROM participantes')->fetchColumn();
+    }
+
     public function buscarPorId($id)
     {
         $pdo = Database::conexao();
@@ -45,6 +52,20 @@ class ParticipanteRepository
         return $participante !== false ? $participante : null;
     }
 
+    /**
+     * Nome nao e' unico entre participantes - devolve todos os que baterem,
+     * pra quem chamar decidir (ex.: script de setup de teste que pede pra
+     * escolher pelo id se houver mais de um resultado).
+     */
+    public function buscarTodosPorNome($nome)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM participantes WHERE nome = :nome');
+        $stmt->execute(['nome' => $nome]);
+
+        return $stmt->fetchAll();
+    }
+
     public function criar($nome, $cpf, $email, $telefone, $vinculoProfissao)
     {
         $pdo = Database::conexao();
@@ -75,6 +96,22 @@ class ParticipanteRepository
         $stmt->execute(['cpf' => $cpf, 'id' => $id]);
 
         Auditoria::registrar('atualizar_cpf', 'participantes', $id, $antes, ['cpf' => $cpf]);
+    }
+
+    /**
+     * So' existe para o script de setup de ambiente de teste
+     * (database/definir_email_teste.php) - nao ha' nenhuma tela (nem admin,
+     * nem autoedicao) que altere o e-mail de um participante, de proposito
+     * (e' o identificador do vinculo com a conta de login).
+     */
+    public function atualizarEmail($id, $email)
+    {
+        $antes = $this->buscarPorId($id);
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE participantes SET email = :email WHERE id = :id');
+        $stmt->execute(['email' => $email, 'id' => $id]);
+
+        Auditoria::registrar('atualizar_email_teste', 'participantes', $id, $antes, ['email' => $email]);
     }
 
     public function atualizarDados($id, $nome, $telefone, $cpf)

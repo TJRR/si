@@ -37,13 +37,7 @@ class AcessoParticipanteService
         $this->trilhas = new TrilhaRepository();
     }
 
-    /**
-     * $enviarEmail=false e usado por scripts de apoio (ex.:
-     * database/liberar_acesso_teste.php) pra liberar acesso de teste sem
-     * disparar nenhum e-mail - o fluxo normal (via HomologacaoController)
-     * sempre chama com o padrao (true).
-     */
-    public function liberarAcesso(array $participante, $trilhaId, $nomeEquipe, $enviarEmail = true)
+    public function liberarAcesso(array $participante, $trilhaId, $nomeEquipe)
     {
         if (empty($participante['email'])) {
             return;
@@ -60,10 +54,6 @@ class AcessoParticipanteService
         );
 
         $this->usuarioParticipante->vincular($resultado['usuario_id'], $participante['id']);
-
-        if (!$enviarEmail) {
-            return;
-        }
 
         $token = $this->tokens->criar($resultado['usuario_id'], 'definir');
         $link = urlAbsoluta('auth/definirSenha/' . $token);

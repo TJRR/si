@@ -76,6 +76,24 @@ class PerfilRepository
         return (int) $stmt->fetchColumn() > 0;
     }
 
+    /**
+     * Contagem global (todos os concursos) de usuarios distintos com um
+     * dado perfil - usado no card "Avaliadores" do painel administrativo.
+     */
+    public function contarDistintosPorPerfil($perfilChave)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(DISTINCT upc.usuario_id)
+             FROM usuario_perfil_concurso upc
+             INNER JOIN perfis p ON p.id = upc.perfil_id
+             WHERE p.chave = :chave'
+        );
+        $stmt->execute(['chave' => $perfilChave]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
     public function listarUsuariosPorPerfilConcurso($perfilChave, $concursoId)
     {
         $pdo = Database::conexao();

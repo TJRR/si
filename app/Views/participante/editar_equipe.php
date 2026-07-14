@@ -4,8 +4,6 @@
 } ?>
 <h1>Editar equipe</h1>
 
-<p><a href="<?php echo url('participante/minhaEquipe'); ?>">Voltar para minha equipe</a></p>
-
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
@@ -23,5 +21,8 @@
         <textarea name="observacoes" rows="4" cols="50"><?php echo htmlspecialchars((string) $equipe['observacoes'], ENT_QUOTES, 'UTF-8'); ?></textarea>
     </label><br>
 
-    <button type="submit">Salvar</button>
+    <div class="form-acoes">
+        <a href="<?php echo url('participante/index'); ?>" class="btn-voltar">Voltar</a>
+        <button type="submit">Salvar</button>
+    </div>
 </form>

@@ -21,9 +21,13 @@
             <td><?php echo (int) $etapa['ordem']; ?></td>
             <td><?php echo htmlspecialchars($rotulosMecanismo[$etapa['mecanismo_avaliacao']], ENT_QUOTES, 'UTF-8'); ?></td>
             <td>
-                <?php echo htmlspecialchars((string) $etapa['data_inicio'], ENT_QUOTES, 'UTF-8'); ?>
-                a
-                <?php echo htmlspecialchars((string) $etapa['data_fim'], ENT_QUOTES, 'UTF-8'); ?>
+                <?php if ($etapa['data_inicio'] === null && $etapa['data_fim'] === null): ?>
+                    Período não definido
+                <?php else: ?>
+                    <?php echo htmlspecialchars(formatarData($etapa['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
+                    a
+                    <?php echo htmlspecialchars(formatarData($etapa['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
+                <?php endif; ?>
             </td>
             <td><?php echo $etapa['regra_transicao_tipo'] !== null ? htmlspecialchars($etapa['regra_transicao_tipo'] . ': ' . $etapa['regra_transicao_valor'], ENT_QUOTES, 'UTF-8') : '—'; ?></td>
             <td><?php echo $etapa['formulario_dinamico_id'] ? '#' . (int) $etapa['formulario_dinamico_id'] : '—'; ?></td>

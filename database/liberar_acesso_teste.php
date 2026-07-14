@@ -1,18 +1,21 @@
 <?php
 
 /**
- * Libera acesso de teste para UM participante especifico, pelo e-mail, SEM
- * enviar nenhum e-mail (nem tentativa) - diferente de
- * enviar_convites_homologados_historicos.php, que processa todos os vinculos
- * homologados sem acesso E dispara e-mail de verdade para cada um.
+ * Vincula um usuario JA CADASTRADO (perfil e senha ja definidos manualmente
+ * pelo Admin) ao participante de mesmo e-mail - caso do participante cujo
+ * cadastro de acesso foi feito manualmente (perfil "participante" atribuido
+ * direto na tela de Usuarios), mas ficou sem o vinculo com a equipe porque
+ * esse vinculo so e criado automaticamente pelo fluxo normal de homologacao
+ * (HomologacaoController).
+ *
+ * Nao cria usuario, nao atribui perfil, nao mexe em senha, nao envia e-mail -
+ * so faz o INSERT em usuario_participante que estava faltando.
  *
  * Uso (so um --email por execucao):
  *   php database/liberar_acesso_teste.php --email=fulano@exemplo.com
  *   php database/liberar_acesso_teste.php --email=fulano@exemplo.com --confirmar
  *
  * Por padrao roda em modo consulta (dry-run): so mostra o que seria feito.
- * Precisa que o vinculo equipe_participante deste participante ja esteja
- * 'homologado' (senao nao faz sentido liberar acesso).
  */
 
 if (php_sapi_name() !== 'cli') {
@@ -26,7 +29,8 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use App\Repositories\EquipeRepository;
 use App\Repositories\ParticipanteRepository;
-use App\Services\AcessoParticipanteService;
+use App\Repositories\UsuarioParticipanteRepository;
+use App\Repositories\UsuarioRepository;
 
 $confirmar = in_array('--confirmar', $argv, true);
 $email = null;
@@ -42,8 +46,16 @@ if ($email === null || $email === '') {
     exit(1);
 }
 
+$usuarios = new UsuarioRepository();
 $participantes = new ParticipanteRepository();
 $equipes = new EquipeRepository();
+
+$usuario = $usuarios->buscarPorEmail($email);
+
+if ($usuario === null) {
+    echo "Nenhum usuario cadastrado com o e-mail \"$email\". Cadastre o usuario (com perfil \"participante\") antes de rodar este script.\n";
+    exit(1);
+}
 
 $participante = $participantes->buscarPorEmail($email);
 
@@ -54,22 +66,10 @@ if ($participante === null) {
 
 $equipe = $equipes->buscarPorParticipante($participante['id']);
 
-if ($equipe === null) {
-    echo "Participante encontrado ({$participante['nome']}), mas sem equipe vinculada.\n";
-    exit(1);
-}
-
-$vinculo = $equipes->buscarVinculo($equipe['id'], $participante['id']);
-
-if ($vinculo === null || $vinculo['status_homologacao'] !== 'homologado') {
-    echo "O vinculo deste participante com a equipe \"{$equipe['nome_equipe']}\" nao esta homologado "
-        . "(status atual: " . ($vinculo['status_homologacao'] ?? 'sem vinculo') . "). Nada foi feito.\n";
-    exit(1);
-}
-
-echo "Participante: {$participante['nome']} <{$email}>\n";
-echo "Equipe: {$equipe['nome_equipe']}\n";
-echo "Isso vai criar/aprovar a conta de usuario, atribuir o perfil 'participante' e vincular ao participante -- SEM enviar nenhum e-mail.\n";
+echo "Usuario: {$usuario['nome']} <{$email}> (id {$usuario['id']})\n";
+echo "Participante: {$participante['nome']} (id {$participante['id']})\n";
+echo $equipe !== null ? "Equipe: {$equipe['nome_equipe']}\n" : "Aviso: este participante ainda nao tem equipe vinculada.\n";
+echo "Isso vai vincular este usuario a este participante (tabela usuario_participante) -- nada mais e alterado.\n";
 
 if (!$confirmar) {
     echo "\nModo consulta (dry-run). Nada foi alterado.\n";
@@ -77,6 +77,6 @@ if (!$confirmar) {
     exit;
 }
 
-(new AcessoParticipanteService())->liberarAcesso($participante, $equipe['trilha_id'], $equipe['nome_equipe'], false);
+(new UsuarioParticipanteRepository())->vincular($usuario['id'], $participante['id']);
 
-echo "\nAcesso liberado (sem e-mail enviado). O usuario ja pode entrar com Google usando este e-mail, ou você pode gerar uma senha para ele diretamente no banco se precisar de login por senha.\n";
+echo "\nVinculado. O usuario ja pode logar (com a senha ja definida) e ver a equipe/submissoes normalmente.\n";

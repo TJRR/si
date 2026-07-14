@@ -8,7 +8,7 @@
         <div class="site-header-inner">
             <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR" class="site-logo">
             <nav class="site-nav">
-                <a href="<?php echo url('home/index'); ?>">Voltar ao início</a>
+                <a href="<?php echo url('home/index'); ?>" class="btn">Voltar ao início</a>
             </nav>
         </div>
     </header>

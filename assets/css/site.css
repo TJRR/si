@@ -638,40 +638,45 @@ body.admin-page a.topbar-icone:focus {
     color: var(--cor-texto-suave);
 }
 
-.notificacoes-sino-marcar-todas {
-    background: none;
-    border: none;
-    color: var(--cor-primaria-inicio);
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-transform: none;
-    letter-spacing: normal;
-}
-
 .notificacoes-sino-lista {
     max-height: 320px;
     overflow-y: auto;
 }
 
-.notificacoes-sino-item {
-    display: block;
-    padding: 0.6rem 0.9rem;
+/* Cada notificacao e' uma linha com o link (titulo+mensagem, leva a
+   marcarLida()+abrir a tela de tratamento) e, quando nao lida, um icone
+   separado (marcarLida() sozinho, sem navegar) - ver Fase 15 Bug 2. */
+.notificacoes-sino-linha {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.6rem 0.4rem 0.9rem;
     border-bottom: 1px solid var(--cor-fundo-alt);
+}
+
+.notificacoes-sino-linha:last-child {
+    border-bottom: none;
+}
+
+.notificacoes-sino-linha.nao-lida {
+    background: #fff4ec;
+}
+
+.notificacoes-sino-linha:hover {
+    background: var(--cor-fundo-alt);
+}
+
+.notificacoes-sino-item {
+    flex: 1;
+    min-width: 0;
+    padding: 0.2rem 0;
     text-decoration: none;
     color: var(--cor-texto);
 }
 
-.notificacoes-sino-item:last-child {
-    border-bottom: none;
-}
-
-.notificacoes-sino-item.nao-lida {
-    background: #fff4ec;
-}
-
-.notificacoes-sino-item:hover {
-    background: var(--cor-fundo-alt);
+.notificacoes-sino-linha form {
+    margin: 0;
+    flex-shrink: 0;
 }
 
 .notificacoes-sino-titulo {
@@ -731,9 +736,12 @@ body.admin-page .admin-tab.active {
    unico wrapper em vez de listar tag por tag, pra nao repetir o bug de
    titulo/tabela cortado sempre que uma view nova usa uma tag que a lista
    antiga nao previa (ja aconteceu com h2/h3 em avaliacao/index e
-   usuarios_editar). */
+   usuarios_editar). 1400px pra bater com .admin-largura-max/.admin-shell -
+   antes era 1000px, deixando Painel/Paginas/Tema/Auditoria/Configuracoes/
+   Usuarios visivelmente mais estreitos que o topbar/abas e que a tela
+   Concursos (que usa a arvore, .admin-shell, 1400px). */
 body.admin-page .admin-conteudo-flat {
-    max-width: 1000px;
+    max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
     padding-left: 1.5rem;
@@ -943,6 +951,32 @@ body.admin-page .status-avaliacao.pendente {
     color: var(--cor-texto-suave);
 }
 
+/* Pill de status generico (mesma tecnica de .status-avaliacao, mas para
+   homologacao de equipe/integrante em vez de avaliacao) - Fase 15,
+   tela unica do participante. */
+.status-pill {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-pill.verde {
+    background: #e3f6e8;
+    color: #1e7d3c;
+}
+
+.status-pill.laranja {
+    background: #fdf1dc;
+    color: #a0630d;
+}
+
+.status-pill.vermelho {
+    background: #fbe4e4;
+    color: #a3242c;
+}
+
 /* Recuo do conteudo dentro da arvore (#conteudo-admin) fica no proprio
    container, no mesmo valor de .abas-secundarias (0.5rem), em vez de listar
    tag por tag (h1/p/form/table/fieldset) - repetia o mesmo bug de alinhamento
@@ -1102,15 +1136,237 @@ body.admin-page input.btn-secundario::before {
     background: var(--cor-secundaria);
 }
 
+/* Link "Voltar" estilizado como botao secundario (mesma tecnica de anel em
+   degrade + preenchimento solido dos demais botoes do painel, mas fixo na
+   cor secundaria porque "Voltar" nunca e' a acao primaria da tela) - Fase 15
+   Bug 6: padroniza o antigo link solto "Voltar"/"Voltar ao painel" acima do
+   formulario como botao ao lado do Salvar. */
+body.admin-page a.btn-voltar {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    padding: 0.55rem 1.4rem;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    border-radius: 999px;
+    outline: 0 none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background: transparent;
+    color: var(--cor-secundaria);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+body.admin-page a.btn-voltar::before,
+body.admin-page a.btn-voltar::after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    transition: opacity 0.3s ease;
+}
+
+body.admin-page a.btn-voltar::before {
+    top: -2px;
+    left: -2px;
+    height: calc(100% + 4px);
+    width: calc(100% + 4px);
+    z-index: -2;
+    background: var(--cor-secundaria);
+}
+
+body.admin-page a.btn-voltar::after {
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+    background: var(--cor-branco);
+}
+
+body.admin-page a.btn-voltar:hover,
+body.admin-page a.btn-voltar:focus {
+    color: var(--cor-branco);
+}
+
+body.admin-page a.btn-voltar:hover::after,
+body.admin-page a.btn-voltar:focus::after {
+    opacity: 0;
+}
+
+/* Agrupa o botao "Voltar" com a acao primaria (Salvar/Adicionar/Convidar) no
+   rodape do formulario, lado a lado. */
+.form-acoes {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Barra de filtros horizontal (Fase 15, tela Auditoria) - grid fluido em vez
+   de empilhar cada <label> na vertical; auto-fit/minmax reflow sozinho pra
+   menos colunas em telas estreitas, sem precisar de media query separada
+   pra isso. Fundo levemente destacado (--cor-fundo-alt) pra virar um
+   "card" de filtros, coerente com o resto do painel. */
+body.admin-page .filtros-barra-wrapper {
+    background: var(--cor-fundo-alt);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+body.admin-page .filtros-barra {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    align-items: end;
+}
+
+body.admin-page .filtros-barra label {
+    margin-bottom: 0;
+}
+
+/* Sem isso, o input/select fica com a largura "natural" do navegador em vez
+   de preencher a celula do grid, deixando o gap entre campos inconsistente. */
+body.admin-page .filtros-barra input,
+body.admin-page .filtros-barra select {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Busca livre fica mais estreita que os demais campos, de proposito. */
+body.admin-page .filtros-barra .filtro-busca input {
+    max-width: 200px;
+}
+
+.filtros-barra-acoes {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Linha "X registros encontrados" + exportar CSV, acima da tabela. */
+.auditoria-resumo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--cor-texto-suave);
+}
+
+/* Rolagem horizontal da tabela em telas estreitas, sem quebrar o layout da
+   pagina - a tabela em si mantem largura minima legivel. */
+.tabela-scroll {
+    overflow-x: auto;
+}
+
+.auditoria-paginacao {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Titulo da pagina + acao (ex.: Voltar) na mesma linha, alinhados nas
+   pontas - usado quando o botao Voltar nao faz mais sentido solto abaixo
+   do titulo (Fase 15, tela Auditoria). */
+.pagina-titulo-acoes {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+
+body.admin-page .pagina-titulo-acoes h1 {
+    margin: 0;
+}
+
+/* Agrupa os botoes do lado direito da linha de titulo (ex.: Salvar/+Novo
+   ao lado de Voltar), pra nao depender so' do space-between do wrapper
+   quando ha mais de um botao. */
+.pagina-titulo-botoes {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* Link estilizado como botao primario (mesma tecnica do botao padrao do
+   painel, mas aplicada a uma <a>) - usado pras acoes de "+ Novo X" que
+   agora sobem pra linha do titulo ao lado de Voltar, em vez de link de
+   texto solto. */
+body.admin-page a.btn-acao {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    padding: 0.55rem 1.4rem;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    border-radius: 999px;
+    outline: 0 none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background: transparent;
+    color: var(--cor-primaria-fim);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+body.admin-page a.btn-acao::before,
+body.admin-page a.btn-acao::after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    transition: opacity 0.3s ease;
+}
+
+body.admin-page a.btn-acao::before {
+    top: -2px;
+    left: -2px;
+    height: calc(100% + 4px);
+    width: calc(100% + 4px);
+    z-index: -2;
+    background: linear-gradient(45deg, var(--cor-primaria-inicio) 15%, var(--cor-primaria-fim) 65%);
+}
+
+body.admin-page a.btn-acao::after {
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+    background: var(--cor-branco);
+}
+
+body.admin-page a.btn-acao:hover,
+body.admin-page a.btn-acao:focus {
+    color: var(--cor-branco);
+}
+
+body.admin-page a.btn-acao:hover::after,
+body.admin-page a.btn-acao:focus::after {
+    opacity: 0;
+}
+
+/* Estado "ativo" de um botao-icone (ex.: "Ver detalhes" expandido) - mesmo
+   destaque sutil (fundo + borda na cor primaria) usado em outros toggles
+   do painel, pra deixar claro que clicar de novo desfaz a acao. */
+body.admin-page button.btn-icone.ativo {
+    background: var(--cor-fundo-alt);
+    border-color: var(--cor-primaria-fim);
+    color: var(--cor-primaria-fim);
+}
+
 /* Painel (dashboard inicial) */
 .admin-dashboard-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1rem;
-    margin: 0 auto 1.5rem;
-    max-width: 1000px;
-    padding: 0 1.5rem;
-    box-sizing: border-box;
+    margin: 0 0 1.5rem;
 }
 
 .admin-stat-card {

@@ -4,8 +4,6 @@
 } ?>
 <h1><?php echo $concurso === null ? 'Novo concurso' : 'Editar concurso'; ?></h1>
 
-<p><a href="<?php echo url('concursos/index'); ?>">Voltar</a></p>
-
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
@@ -37,7 +35,10 @@
         </select>
     </label><br>
 
-    <?php if (!$somenteLeitura): ?>
-    <button type="submit">Salvar</button>
-    <?php endif; ?>
+    <div class="form-acoes">
+        <a href="<?php echo url('concursos/index'); ?>" class="btn-voltar">Voltar</a>
+        <?php if (!$somenteLeitura): ?>
+        <button type="submit">Salvar</button>
+        <?php endif; ?>
+    </div>
 </form>

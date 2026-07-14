@@ -142,7 +142,7 @@ class HomologacaoController extends Controller
                 'equipe_rejeitada',
                 'Inscrição rejeitada',
                 $mensagem,
-                ['url' => url('participante/minhaEquipe')]
+                ['url' => url('participante/index')]
             );
         }
     }

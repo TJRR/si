@@ -30,9 +30,10 @@ class LogAuditoriaRepository
         ]);
     }
 
-    public function listar(array $filtros, $limite, $offset)
+    public function listar(array $filtros, $limite, $offset, $ordenar = 'criado_em', $direcao = 'desc')
     {
         list($sqlWhere, $params) = $this->montarWhere($filtros);
+        $orderBy = $this->montarOrderBy($ordenar, $direcao);
 
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
@@ -40,7 +41,7 @@ class LogAuditoriaRepository
              FROM log_auditoria l
              LEFT JOIN usuarios u ON u.id = l.usuario_id
              $sqlWhere
-             ORDER BY l.criado_em DESC, l.id DESC
+             $orderBy
              LIMIT :limite OFFSET :offset"
         );
         foreach ($params as $chave => $valor) {
@@ -58,7 +59,12 @@ class LogAuditoriaRepository
         list($sqlWhere, $params) = $this->montarWhere($filtros);
 
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM log_auditoria l $sqlWhere");
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*)
+             FROM log_auditoria l
+             LEFT JOIN usuarios u ON u.id = l.usuario_id
+             $sqlWhere"
+        );
         foreach ($params as $chave => $valor) {
             $stmt->bindValue($chave, $valor);
         }
@@ -67,11 +73,57 @@ class LogAuditoriaRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /**
+     * Mesmos filtros de listar(), sem paginacao - usado so' pela exportacao
+     * em CSV, que precisa de todos os registros que baterem com o filtro
+     * atual, nao so' a pagina exibida na tela.
+     */
+    public function listarTodos(array $filtros, $ordenar = 'criado_em', $direcao = 'desc')
+    {
+        list($sqlWhere, $params) = $this->montarWhere($filtros);
+        $orderBy = $this->montarOrderBy($ordenar, $direcao);
+
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            "SELECT l.*, u.nome AS usuario_nome
+             FROM log_auditoria l
+             LEFT JOIN usuarios u ON u.id = l.usuario_id
+             $sqlWhere
+             $orderBy"
+        );
+        foreach ($params as $chave => $valor) {
+            $stmt->bindValue($chave, $valor);
+        }
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
     public function listarAcoesDistintas()
     {
         $pdo = Database::conexao();
 
         return $pdo->query('SELECT DISTINCT acao FROM log_auditoria ORDER BY acao ASC')->fetchAll(\PDO::FETCH_COLUMN);
+    }
+
+    /**
+     * Lista branca de colunas ordenaveis (nunca monta ORDER BY com nome de
+     * coluna vindo direto do GET) - usuario_nome vem do JOIN com usuarios.
+     */
+    private static $colunasOrdenaveis = [
+        'criado_em' => 'l.criado_em',
+        'usuario_nome' => 'u.nome',
+        'acao' => 'l.acao',
+        'entidade' => 'l.entidade',
+        'ip_origem' => 'l.ip_origem',
+    ];
+
+    private function montarOrderBy($ordenar, $direcao)
+    {
+        $coluna = isset(self::$colunasOrdenaveis[$ordenar]) ? self::$colunasOrdenaveis[$ordenar] : 'l.criado_em';
+        $direcaoSql = strtolower($direcao) === 'asc' ? 'ASC' : 'DESC';
+
+        return "ORDER BY $coluna $direcaoSql, l.id $direcaoSql";
     }
 
     private function montarWhere(array $filtros)
@@ -94,6 +146,10 @@ class LogAuditoriaRepository
         if (!empty($filtros['data_fim'])) {
             $condicoes[] = 'l.criado_em <= :data_fim';
             $params[':data_fim'] = $filtros['data_fim'] . ' 23:59:59';
+        }
+        if (!empty($filtros['busca'])) {
+            $condicoes[] = '(u.nome LIKE :busca OR l.acao LIKE :busca OR l.entidade LIKE :busca OR l.ip_origem LIKE :busca OR l.mensagem LIKE :busca)';
+            $params[':busca'] = '%' . $filtros['busca'] . '%';
         }
 
         $sql = count($condicoes) > 0 ? 'WHERE ' . implode(' AND ', $condicoes) : '';

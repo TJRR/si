@@ -42,6 +42,14 @@ class View
 
     private static function renderizarConteudo($view, array $dados)
     {
+        // Views "publico/*" montam o proprio <header> em vez de usar o
+        // topbar do layout.php, entao precisam do logo aqui mesmo - senao
+        // $logoAdminSrc fica indefinido dentro delas (o calculo em
+        // layout.php roda so' depois, num escopo separado).
+        if (strpos($view, 'publico/') === 0 && !isset($dados['logoAdminSrc'])) {
+            $dados['logoAdminSrc'] = logoAtual();
+        }
+
         extract($dados);
 
         $caminhoView = __DIR__ . '/../Views/' . $view . '.php';

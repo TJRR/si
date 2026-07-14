@@ -12,8 +12,6 @@ foreach ($concursos as $concurso) {
 ?>
 <h1>Convidar usuário</h1>
 
-<p><a href="<?php echo url('usuarios/index'); ?>">Voltar</a></p>
-
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
@@ -64,7 +62,10 @@ foreach ($concursos as $concurso) {
 
     <p>Se o e-mail já tiver cadastro, só o perfil escolhido acima é adicionado — nenhum e-mail novo é enviado.</p>
 
-    <button type="submit">Convidar</button>
+    <div class="form-acoes">
+        <a href="<?php echo url('usuarios/index'); ?>" class="btn-voltar">Voltar</a>
+        <button type="submit">Convidar</button>
+    </div>
 </form>
 
 <script>

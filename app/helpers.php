@@ -38,3 +38,58 @@ function requisicaoParcial()
 {
     return isset($_SERVER['HTTP_X_REQUISICAO']) && $_SERVER['HTTP_X_REQUISICAO'] === 'parcial';
 }
+
+/**
+ * Formata uma data vinda do banco (Y-m-d ou null) para o padrao brasileiro
+ * (d/m/Y) usado em toda exibicao de data do sistema - o MySQL sempre devolve
+ * ISO (Y-m-d), que nao deve ir pra tela sem passar por aqui. Retorna string
+ * vazia para null; quem chama decide o texto de fallback (ex.: "Período não
+ * definido").
+ */
+function formatarData($data)
+{
+    return $data !== null ? date('d/m/Y', strtotime($data)) : '';
+}
+
+/**
+ * Caminho do logo configurado em "Páginas" (ConteudoSiteRepository, chave
+ * logo_site) ou o logo padrao, se nenhum foi enviado ainda. Usado tanto no
+ * cabecalho do layout (painel/paginas convidadas) quanto injetado
+ * automaticamente pelo View::renderizarConteudo() nas views "publico/*",
+ * que montam o proprio <header> sem passar pelo layout.
+ */
+function logoAtual()
+{
+    $logoConteudo = (new \App\Repositories\ConteudoSiteRepository())->buscarPorChave('logo_site');
+
+    return $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
+        ? config('base_path') . '/assets/' . $logoConteudo['arquivo_path']
+        : config('base_path') . '/assets/img/logo-padrao.png';
+}
+
+/**
+ * Categoria semantica de uma acao de auditoria, para colorir a badge na
+ * tela Auditoria (reaproveita as cores de .status-pill: verde/laranja/
+ * vermelho) - por palavra-chave em vez de mapa explicito de cada uma das
+ * dezenas de acoes distintas, ja que novas acoes vao continuar aparecendo
+ * conforme o sistema cresce.
+ */
+function categoriaAcaoAuditoria($acao)
+{
+    $vermelho = ['remover', 'rejeitar', 'desvincular', 'excluir', 'deletar'];
+    $laranja = ['logout', 'voltar_para_pendente', 'reabrir', 'falhou'];
+
+    foreach ($vermelho as $termo) {
+        if (strpos($acao, $termo) !== false) {
+            return 'vermelho';
+        }
+    }
+
+    foreach ($laranja as $termo) {
+        if (strpos($acao, $termo) !== false) {
+            return 'laranja';
+        }
+    }
+
+    return 'verde';
+}

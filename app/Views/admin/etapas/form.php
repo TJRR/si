@@ -4,8 +4,6 @@
 } ?>
 <h1><?php echo $etapa === null ? 'Nova etapa' : 'Editar etapa'; ?> — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('etapas/index/' . (int) $trilha['id']); ?>">Voltar</a></p>
-
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
@@ -124,9 +122,12 @@
         </label>
     </fieldset><br>
 
-    <?php if (!$somenteLeitura): ?>
-    <button type="submit">Salvar</button>
-    <?php endif; ?>
+    <div class="form-acoes">
+        <a href="<?php echo url('etapas/index/' . (int) $trilha['id']); ?>" class="btn-voltar">Voltar</a>
+        <?php if (!$somenteLeitura): ?>
+        <button type="submit">Salvar</button>
+        <?php endif; ?>
+    </div>
 </form>
 
 <script>

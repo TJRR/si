@@ -2,12 +2,15 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Concursos</h1>
-
-<p><a href="<?php echo url('home/administrativo'); ?>">Voltar ao painel</a></p>
-<?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
-<p><a href="<?php echo url('concursos/novo'); ?>">+ Novo concurso</a></p>
-<?php endif; ?>
+<div class="pagina-titulo-acoes">
+    <h1>Concursos</h1>
+    <div class="pagina-titulo-botoes">
+        <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
+        <a href="<?php echo url('concursos/novo'); ?>" class="btn-acao">+ Novo concurso</a>
+        <?php endif; ?>
+        <a href="<?php echo url('home/administrativo'); ?>" class="btn-voltar">Voltar</a>
+    </div>
+</div>
 
 <?php if (empty($concursos)): ?>
     <p>Nenhum concurso cadastrado.</p>
@@ -19,9 +22,13 @@
             <td><?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars($concurso['status'], ENT_QUOTES, 'UTF-8'); ?></td>
             <td>
-                <?php echo htmlspecialchars((string) $concurso['data_inicio'], ENT_QUOTES, 'UTF-8'); ?>
-                a
-                <?php echo htmlspecialchars((string) $concurso['data_fim'], ENT_QUOTES, 'UTF-8'); ?>
+                <?php if ($concurso['data_inicio'] === null && $concurso['data_fim'] === null): ?>
+                    Período não definido
+                <?php else: ?>
+                    <?php echo htmlspecialchars(formatarData($concurso['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
+                    a
+                    <?php echo htmlspecialchars(formatarData($concurso['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
+                <?php endif; ?>
             </td>
             <td>
                 <a href="<?php echo url('trilhas/index/' . (int) $concurso['id']); ?>">Trilhas</a>

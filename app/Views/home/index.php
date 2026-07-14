@@ -73,9 +73,9 @@ $premiacaoImagem = !empty($conteudo['premiacao_imagem']) ? config('base_path') .
                             <span class="timeline-trilha"><?php echo htmlspecialchars($etapa['trilha_nome'], ENT_QUOTES, 'UTF-8'); ?></span>
                             <strong class="timeline-nome"><?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></strong>
                             <span class="timeline-datas">
-                                <?php echo htmlspecialchars((string) $etapa['data_inicio'], ENT_QUOTES, 'UTF-8'); ?>
+                                <?php echo htmlspecialchars(formatarData($etapa['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
                                 <?php if ($etapa['data_fim']): ?>
-                                    a <?php echo htmlspecialchars((string) $etapa['data_fim'], ENT_QUOTES, 'UTF-8'); ?>
+                                    a <?php echo htmlspecialchars(formatarData($etapa['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
                                 <?php endif; ?>
                             </span>
                             <?php if (!empty($etapa['descricao'])): ?>

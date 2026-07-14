@@ -4,8 +4,6 @@
 } ?>
 <h1><?php echo $campo === null ? 'Novo campo' : 'Editar campo'; ?> — <?php echo htmlspecialchars($formulario['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('campos/index/' . (int) $formulario['id']); ?>">Voltar</a></p>
-
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
@@ -47,7 +45,10 @@ $tipoAtual = $campo !== null ? $campo['tipo'] : 'texto';
         </label><br>
     </div>
 
-    <button type="submit">Salvar</button>
+    <div class="form-acoes">
+        <a href="<?php echo url('campos/index/' . (int) $formulario['id']); ?>" class="btn-voltar">Voltar</a>
+        <button type="submit">Salvar</button>
+    </div>
 </form>
 
 <script src="<?php echo config('base_path'); ?>/assets/js/construtor-campo.js"></script>

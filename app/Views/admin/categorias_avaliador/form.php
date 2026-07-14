@@ -4,8 +4,6 @@
 } ?>
 <h1><?php echo $categoria === null ? 'Nova categoria' : 'Editar categoria'; ?> — <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('categoriasAvaliador/index/' . (int) $concurso['id']); ?>">Voltar</a></p>
-
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
@@ -15,5 +13,8 @@
         <input type="text" name="nome" required value="<?php echo htmlspecialchars($categoria !== null ? $categoria['nome'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>
 
-    <button type="submit">Salvar</button>
+    <div class="form-acoes">
+        <a href="<?php echo url('categoriasAvaliador/index/' . (int) $concurso['id']); ?>" class="btn-voltar">Voltar</a>
+        <button type="submit">Salvar</button>
+    </div>
 </form>

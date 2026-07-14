@@ -6,15 +6,27 @@
 
 <div class="admin-dashboard-cards">
     <div class="admin-stat-card">
-        <span class="admin-stat-numero"><?php echo (int) $totalEquipes; ?></span>
-        <span class="admin-stat-rotulo">Equipes importadas</span>
+        <span class="admin-stat-numero"><?php echo (int) $totalParticipantes; ?></span>
+        <span class="admin-stat-rotulo">Participantes</span>
     </div>
     <div class="admin-stat-card">
-        <span class="admin-stat-numero"><?php echo (int) $totalCadastrosPendentes; ?></span>
-        <span class="admin-stat-rotulo">Cadastros pendentes</span>
+        <span class="admin-stat-numero"><?php echo (int) $totalEquipes; ?></span>
+        <span class="admin-stat-rotulo">Equipes</span>
+    </div>
+    <div class="admin-stat-card">
+        <span class="admin-stat-numero"><?php echo (int) $totalAvaliadores; ?></span>
+        <span class="admin-stat-rotulo">Avaliadores</span>
     </div>
     <div class="admin-stat-card">
         <span class="admin-stat-numero"><?php echo (int) $totalConcursosAtivos; ?></span>
         <span class="admin-stat-rotulo">Concursos ativos</span>
+    </div>
+    <div class="admin-stat-card">
+        <span class="admin-stat-numero"><?php echo (int) $totalConcursosRealizados; ?></span>
+        <span class="admin-stat-rotulo">Concursos realizados</span>
+    </div>
+    <div class="admin-stat-card">
+        <span class="admin-stat-numero"><?php echo (int) $totalCadastrosPendentes; ?></span>
+        <span class="admin-stat-rotulo">Cadastros pendentes</span>
     </div>
 </div>

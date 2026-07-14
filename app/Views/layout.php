@@ -23,13 +23,13 @@ $faviconSrc = $corVisual !== false && !empty($corVisual['favicon_path'])
     ? config('base_path') . '/assets/' . $corVisual['favicon_path']
     : config('base_path') . '/assets/img/favicon-padrao.png';
 
-$ehPaginaPublicaComLogo = $ehPainelInterno || $ehPaginaConvidado || (isset($view) && strpos($view, 'publico/') === 0);
+// Paginas "publico/*" montam o proprio <header> (nao usam o topbar abaixo) e
+// recebem o logo diretamente via View::renderizarConteudo() - aqui so'
+// precisa pro topbar do painel/paginas convidadas.
+$ehPaginaPublicaComLogo = $ehPainelInterno || $ehPaginaConvidado;
 
 if ($ehPaginaPublicaComLogo) {
-    $logoConteudo = (new \App\Repositories\ConteudoSiteRepository())->buscarPorChave('logo_site');
-    $logoAdminSrc = $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
-        ? config('base_path') . '/assets/' . $logoConteudo['arquivo_path']
-        : config('base_path') . '/assets/img/logo-padrao.png';
+    $logoAdminSrc = logoAtual();
 }
 
 $modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'vagasAvaliador', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao', 'categoriasAvaliador'];
@@ -102,7 +102,11 @@ if ($ehPainelAdmin) {
                         <span>Notificações</span>
                         <?php if (!empty($notificacoesNaoLidas)): ?>
                             <form method="post" action="<?php echo url('notificacoesPainel/marcarTodasLidas'); ?>">
-                                <button type="submit" class="notificacoes-sino-marcar-todas">Marcar todas como lidas</button>
+                                <button type="submit" class="btn-icone" title="Marcar todas como lidas">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </button>
                             </form>
                         <?php endif; ?>
                     </div>
@@ -111,10 +115,21 @@ if ($ehPainelAdmin) {
                             <p class="notificacoes-sino-vazio">Nenhuma notificação ainda.</p>
                         <?php else: ?>
                             <?php foreach ($notificacoesRecentes as $notificacao): ?>
-                                <a class="notificacoes-sino-item<?php echo empty($notificacao['lida']) ? ' nao-lida' : ''; ?>" href="<?php echo url('notificacoesPainel/abrir/' . (int) $notificacao['id']); ?>">
-                                    <span class="notificacoes-sino-titulo"><?php echo htmlspecialchars($notificacao['titulo'], ENT_QUOTES, 'UTF-8'); ?></span>
-                                    <span class="notificacoes-sino-mensagem"><?php echo htmlspecialchars($notificacao['mensagem'], ENT_QUOTES, 'UTF-8'); ?></span>
-                                </a>
+                                <div class="notificacoes-sino-linha<?php echo empty($notificacao['lida']) ? ' nao-lida' : ''; ?>">
+                                    <a class="notificacoes-sino-item" href="<?php echo url('notificacoesPainel/abrir/' . (int) $notificacao['id']); ?>">
+                                        <span class="notificacoes-sino-titulo"><?php echo htmlspecialchars($notificacao['titulo'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <span class="notificacoes-sino-mensagem"><?php echo htmlspecialchars($notificacao['mensagem'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                    </a>
+                                    <?php if (empty($notificacao['lida'])): ?>
+                                        <form method="post" action="<?php echo url('notificacoesPainel/marcarLida/' . (int) $notificacao['id']); ?>">
+                                            <button type="submit" class="btn-icone" title="Marcar como lida">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
@@ -148,10 +163,6 @@ if ($ehPainelAdmin) {
     </nav>
     <?php endif; ?>
 <?php endif; ?>
-<?php if (!empty($_SESSION['flash'])): ?>
-    <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); ?></p>
-    <?php unset($_SESSION['flash']); ?>
-<?php endif; ?>
 <?php if (!empty($ehEscopoArvore)): ?>
     <div class="admin-shell">
         <aside class="admin-sidebar">
@@ -169,13 +180,25 @@ if ($ehPainelAdmin) {
             <?php else: ?>
             <nav id="abas-admin" class="abas-secundarias" style="display:none;"></nav>
             <?php endif; ?>
-            <main id="conteudo-admin"><?php echo $conteudo; ?></main>
+            <main id="conteudo-admin">
+                <?php if (!empty($_SESSION['flash'])): ?>
+                    <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); ?></p>
+                    <?php unset($_SESSION['flash']); ?>
+                <?php endif; ?>
+                <?php echo $conteudo; ?>
+            </main>
         </div>
     </div>
     <script>window.SI_BASE_PATH = <?php echo json_encode(config('base_path')); ?>;</script>
     <script src="<?php echo config('base_path'); ?>/assets/js/navegacao-arvore.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/navegacao-arvore.js'); ?>" defer></script>
 <?php else: ?>
-    <div class="admin-conteudo-flat"><?php echo $conteudo; ?></div>
+    <div class="admin-conteudo-flat">
+        <?php if (!empty($_SESSION['flash'])): ?>
+            <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); ?></p>
+            <?php unset($_SESSION['flash']); ?>
+        <?php endif; ?>
+        <?php echo $conteudo; ?>
+    </div>
 <?php endif; ?>
 <?php if ($ehPainelInterno): ?>
     <script src="<?php echo config('base_path'); ?>/assets/js/notificacoes-sino.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/notificacoes-sino.js'); ?>" defer></script>

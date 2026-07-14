@@ -73,6 +73,8 @@ class SubmissaoController extends Controller
 
     public function sucesso($submissaoId)
     {
+        RoleMiddleware::exigirEmQualquerConcurso(['participante']);
+
         $submissao = (new SubmissaoRepository())->buscarPorId($submissaoId);
 
         if ($submissao === null) {

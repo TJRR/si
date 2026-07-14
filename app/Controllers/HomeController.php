@@ -14,6 +14,8 @@ use App\Repositories\ConteudoSiteRepository;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\FormularioDinamicoRepository;
+use App\Repositories\ParticipanteRepository;
+use App\Repositories\PerfilRepository;
 use App\Repositories\TemaDesafioRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioRepository;
@@ -94,17 +96,21 @@ class HomeController extends Controller
     {
         RoleMiddleware::exigir(['administrador', 'suporte']);
 
-        $concursosAtivos = array_filter(
-            (new ConcursoRepository())->listar(),
-            function ($concurso) {
-                return $concurso['status'] === 'ativo';
-            }
-        );
+        $concursos = (new ConcursoRepository())->listar();
+        $concursosAtivos = array_filter($concursos, function ($concurso) {
+            return $concurso['status'] === 'ativo';
+        });
+        $concursosRealizados = array_filter($concursos, function ($concurso) {
+            return $concurso['status'] === 'encerrado';
+        });
 
         $this->renderizar('home/administrativo', [
+            'totalParticipantes' => (new ParticipanteRepository())->contarTodos(),
             'totalEquipes' => count((new EquipeRepository())->listarComContagemParticipantes()),
-            'totalCadastrosPendentes' => count((new UsuarioRepository())->listarPendentes()),
+            'totalAvaliadores' => (new PerfilRepository())->contarDistintosPorPerfil('avaliador'),
             'totalConcursosAtivos' => count($concursosAtivos),
+            'totalConcursosRealizados' => count($concursosRealizados),
+            'totalCadastrosPendentes' => count((new UsuarioRepository())->listarPendentes()),
         ], 'Painel');
     }
 

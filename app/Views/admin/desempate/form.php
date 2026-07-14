@@ -4,14 +4,13 @@
 } ?>
 <h1>Novo critério de desempate — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('desempate/index/' . (int) $trilha['id']); ?>">Voltar</a></p>
-
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
 <?php if (empty($criteriosDisponiveis)): ?>
     <p>Nenhum critério cadastrado nas etapas desta trilha ainda. Cadastre os critérios antes de definir o desempate.</p>
+    <p><a href="<?php echo url('desempate/index/' . (int) $trilha['id']); ?>" class="btn-voltar">Voltar</a></p>
 <?php else: ?>
     <form method="post" action="<?php echo url('desempate/novo/' . (int) $trilha['id']); ?>">
         <label>Critério (etapa — nome):
@@ -31,6 +30,9 @@
             </select>
         </label><br>
 
-        <button type="submit">Adicionar</button>
+        <div class="form-acoes">
+            <a href="<?php echo url('desempate/index/' . (int) $trilha['id']); ?>" class="btn-voltar">Voltar</a>
+            <button type="submit">Adicionar</button>
+        </div>
     </form>
 <?php endif; ?>

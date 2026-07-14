@@ -4,8 +4,6 @@
 } ?>
 <h1><?php echo $trilha === null ? 'Nova trilha' : 'Editar trilha'; ?> — <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('trilhas/index/' . (int) $concurso['id']); ?>">Voltar</a></p>
-
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
@@ -29,7 +27,10 @@
         Ativa
     </label><br>
 
-    <?php if (!$somenteLeitura): ?>
-    <button type="submit">Salvar</button>
-    <?php endif; ?>
+    <div class="form-acoes">
+        <a href="<?php echo url('trilhas/index/' . (int) $concurso['id']); ?>" class="btn-voltar">Voltar</a>
+        <?php if (!$somenteLeitura): ?>
+        <button type="submit">Salvar</button>
+        <?php endif; ?>
+    </div>
 </form>
