@@ -278,6 +278,18 @@ class UsuarioAdminController extends Controller
         $this->redirecionar('usuarios/index');
     }
 
+    public function reenviarConvite()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $sucesso = (new AcessoParticipanteService())->reenviarConvite($id);
+
+        $_SESSION['flash'] = $sucesso
+            ? 'Convite reenviado.'
+            : 'Não foi possível reenviar: usuário não encontrado ou já possui acesso definido.';
+
+        $this->redirecionar('usuarios/index');
+    }
+
     public function convidar()
     {
         $erro = null;

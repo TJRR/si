@@ -136,12 +136,37 @@
             });
     }
 
-    function renderizarAbas(abas, urlAtual) {
+    function sincronizarFieldsetAvaliacao() {
+        var select = document.getElementById('campo-mecanismo-avaliacao');
+        var fieldset = document.getElementById('fieldset-avaliacao-por-avaliadores');
+
+        if (!select || !fieldset) {
+            return;
+        }
+
+        fieldset.style.display = select.value === 'avaliadores' ? '' : 'none';
+    }
+
+    function sincronizarAbasAvaliacao() {
+        if (!abasNav) {
+            return;
+        }
+
+        var select = document.getElementById('campo-mecanismo-avaliacao');
+        var mecanismoAtual = select ? select.value : abasNav.dataset.mecanismoAvaliacaoEtapa;
+
+        abasNav.querySelectorAll('.aba-secundaria[data-somente-avaliadores="1"]').forEach(function (link) {
+            link.style.display = mecanismoAtual === 'avaliadores' ? '' : 'none';
+        });
+    }
+
+    function renderizarAbas(abas, mecanismoAvaliacaoEtapa, urlAtual) {
         if (!abasNav) {
             return;
         }
 
         abasNav.innerHTML = '';
+        abasNav.dataset.mecanismoAvaliacaoEtapa = mecanismoAvaliacaoEtapa || '';
 
         if (!abas || abas.length === 0) {
             abasNav.style.display = 'none';
@@ -155,6 +180,7 @@
             link.className = 'aba-secundaria' + (aba.ativa ? ' active' : '');
             link.href = url(aba.url);
             link.textContent = aba.rotulo;
+            link.dataset.somenteAvaliadores = aba.somenteAvaliadores ? '1' : '0';
             abasNav.appendChild(link);
         });
     }
@@ -166,7 +192,9 @@
             .then(function (resposta) { return resposta.json(); })
             .then(function (dados) {
                 conteudo.innerHTML = dados.conteudo;
-                renderizarAbas(dados.abas, rota);
+                renderizarAbas(dados.abas, dados.mecanismoAvaliacaoEtapa, rota);
+                sincronizarFieldsetAvaliacao();
+                sincronizarAbasAvaliacao();
 
                 if (dados.titulo) {
                     document.title = dados.titulo;
@@ -240,6 +268,12 @@
     }
 
     document.addEventListener('change', function (evento) {
+        if (evento.target.id === 'campo-mecanismo-avaliacao') {
+            sincronizarFieldsetAvaliacao();
+            sincronizarAbasAvaliacao();
+            return;
+        }
+
         if (evento.target.id !== 'marcar-todos') {
             return;
         }
@@ -248,6 +282,9 @@
             linha.checked = evento.target.checked;
         });
     });
+
+    sincronizarFieldsetAvaliacao();
+    sincronizarAbasAvaliacao();
 
     window.addEventListener('popstate', function (evento) {
         var rota = location.href.replace(url(''), '');

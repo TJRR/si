@@ -170,15 +170,15 @@ if ($ehPainelAdmin) {
         </aside>
         <div class="admin-conteudo-wrapper">
             <?php if (!empty($abasSecundarias)): ?>
-            <nav id="abas-admin" class="abas-secundarias">
+            <nav id="abas-admin" class="abas-secundarias" data-mecanismo-avaliacao-etapa="<?php echo htmlspecialchars((string) $mecanismoAvaliacaoEtapa, ENT_QUOTES, 'UTF-8'); ?>">
                 <?php foreach ($abasSecundarias as $abaSecundaria): ?>
-                    <a class="aba-secundaria<?php echo $abaSecundaria['ativa'] ? ' active' : ''; ?>" href="<?php echo url($abaSecundaria['url']); ?>">
+                    <a class="aba-secundaria<?php echo $abaSecundaria['ativa'] ? ' active' : ''; ?>" href="<?php echo url($abaSecundaria['url']); ?>" data-somente-avaliadores="<?php echo !empty($abaSecundaria['somenteAvaliadores']) ? '1' : '0'; ?>" <?php echo (!empty($abaSecundaria['somenteAvaliadores']) && $mecanismoAvaliacaoEtapa !== 'avaliadores') ? 'style="display:none;"' : ''; ?>>
                         <?php echo htmlspecialchars($abaSecundaria['rotulo'], ENT_QUOTES, 'UTF-8'); ?>
                     </a>
                 <?php endforeach; ?>
             </nav>
             <?php else: ?>
-            <nav id="abas-admin" class="abas-secundarias" style="display:none;"></nav>
+            <nav id="abas-admin" class="abas-secundarias" style="display:none;" data-mecanismo-avaliacao-etapa="<?php echo htmlspecialchars((string) $mecanismoAvaliacaoEtapa, ENT_QUOTES, 'UTF-8'); ?>"></nav>
             <?php endif; ?>
             <main id="conteudo-admin">
                 <?php if (!empty($_SESSION['flash'])): ?>

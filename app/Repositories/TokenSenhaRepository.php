@@ -53,6 +53,32 @@ class TokenSenhaRepository
         return $registro !== false ? $registro : null;
     }
 
+    /**
+     * Usado no reenvio manual de convite (tela de Usuarios): expira qualquer
+     * token do mesmo tipo ainda pendente do usuario, pra nao deixar o link
+     * antigo (que pode ter ido pro spam) valido ao mesmo tempo que o novo.
+     */
+    public function invalidarPendentes($usuarioId, $tipo)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'UPDATE tokens_senha SET expira_em = NOW()
+             WHERE usuario_id = :usuario_id AND tipo = :tipo AND usado_em IS NULL AND expira_em > NOW()'
+        );
+        $stmt->execute(['usuario_id' => $usuarioId, 'tipo' => $tipo]);
+        $linhas = $stmt->rowCount();
+
+        if ($linhas > 0) {
+            Auditoria::registrar('invalidar_pendentes', 'tokens_senha', null, null, [
+                'usuario_id' => $usuarioId,
+                'tipo' => $tipo,
+                'quantidade' => $linhas,
+            ]);
+        }
+
+        return $linhas;
+    }
+
     public function marcarUsado($id)
     {
         $pdo = Database::conexao();

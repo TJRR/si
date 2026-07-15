@@ -135,7 +135,11 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                     if ($usuario['google_id'] !== null) {
                         $tiposAcesso[] = 'Google';
                     }
-                    echo htmlspecialchars(!empty($tiposAcesso) ? implode(' + ', $tiposAcesso) : 'Nenhum ainda', ENT_QUOTES, 'UTF-8');
+                    if (!empty($tiposAcesso)) {
+                        echo htmlspecialchars(implode(' + ', $tiposAcesso), ENT_QUOTES, 'UTF-8');
+                    } else {
+                        echo '<span class="status-pill laranja">Nenhum ainda</span>';
+                    }
                 ?>
             </td>
             <td>
@@ -207,6 +211,17 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                         </svg>
                     </a>
+                    <?php if ($usuario['senha_hash'] === null && $usuario['google_id'] === null): ?>
+                        <form method="post" action="<?php echo url('usuarios/reenviarConvite'); ?>">
+                            <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
+                            <button type="submit" class="btn-icone" title="Reenviar convite" onclick="return confirm('Reenviar o convite de acesso para <?php echo htmlspecialchars(addslashes($usuario['email']), ENT_QUOTES, 'UTF-8'); ?>? O link anterior deixará de funcionar.');">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </form>
+                    <?php endif; ?>
                     <?php if ($usuario['ativo']): ?>
                         <form method="post" action="<?php echo url('usuarios/suspender'); ?>">
                             <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">

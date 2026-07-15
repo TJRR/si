@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Repositories\PerfilRepository;
 use App\Repositories\TokenSenhaRepository;
 use App\Repositories\TrilhaRepository;
@@ -90,6 +91,36 @@ class AcessoParticipanteService
         }
 
         return $resultado;
+    }
+
+    /**
+     * Reenvio manual do convite (tela de Usuarios) - so' se aplica a quem
+     * ainda nao entrou (sem senha e sem Google vinculados). Invalida o token
+     * "definir" pendente antes de gerar um novo, pra nao deixar dois links
+     * validos ao mesmo tempo pro mesmo convite.
+     */
+    public function reenviarConvite($usuarioId)
+    {
+        $usuario = $this->usuarios->buscarPorId($usuarioId);
+
+        if ($usuario === null || $usuario['senha_hash'] !== null || $usuario['google_id'] !== null) {
+            return false;
+        }
+
+        $this->tokens->invalidarPendentes($usuarioId, 'definir');
+
+        $token = $this->tokens->criar($usuarioId, 'definir');
+        $link = urlAbsoluta('auth/definirSenha/' . $token);
+
+        try {
+            (new NotificacaoService())->conviteAdministrativo($usuario['email'], $usuario['nome'], $link);
+        } catch (\Exception $e) {
+            // Falha de notificacao nunca deve quebrar o reenvio ja gravado (token novo ja existe).
+        }
+
+        Auditoria::registrar('reenviar_convite', 'usuarios', $usuarioId, null, ['email' => $usuario['email']]);
+
+        return true;
     }
 
     private function vincularUsuarioEPerfil($nome, $email, $perfilId, $concursoId)

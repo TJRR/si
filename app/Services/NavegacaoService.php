@@ -38,6 +38,15 @@ class NavegacaoService
         ],
     ];
 
+    /**
+     * Abas do grupo "etapa" que só fazem sentido quando mecanismo_avaliacao
+     * está salvo como 'avaliadores' — usado tanto para a filtragem inicial
+     * (servidor) quanto para marcar o data-attribute que o JS usa pra
+     * reagir à troca do select #campo-mecanismo-avaliacao antes de salvar
+     * (ver assets/js/navegacao-arvore.js).
+     */
+    private static $tiposSomenteAvaliadores = ['criterios', 'formula_etapa', 'designacoes', 'vagas_avaliador', 'resultado_etapa'];
+
     private static $grupoPorTipo = [
         'trilha' => 'trilha',
         'temas' => 'trilha',
@@ -65,21 +74,13 @@ class NavegacaoService
         $grupo = self::$grupoPorTipo[$tipo];
         $definicoes = self::$abasPorGrupo[$grupo];
 
-        if ($grupo === 'etapa') {
-            if (!\App\Core\Auth::possuiPerfil('administrador')) {
-                $tiposPermitidos = ['etapa'];
-            } else {
-                $etapa = (new EtapaRepository())->buscarPorId($id);
-                $tiposPermitidos = ($etapa !== null && $etapa['mecanismo_avaliacao'] !== 'avaliadores')
-                    ? ['etapa', 'formulario_vinculado']
-                    : null;
-            }
-
-            if ($tiposPermitidos !== null) {
-                $definicoes = array_values(array_filter($definicoes, function ($definicao) use ($tiposPermitidos) {
-                    return in_array($definicao['tipo'], $tiposPermitidos, true);
-                }));
-            }
+        if ($grupo === 'etapa' && !\App\Core\Auth::possuiPerfil('administrador')) {
+            // Perfil não-admin nunca edita mecanismo_avaliacao (select vem
+            // desabilitado), então aqui a filtragem pode continuar fixa —
+            // sem abas somente-avaliadores para reagir a nada client-side.
+            $definicoes = array_values(array_filter($definicoes, function ($definicao) {
+                return $definicao['tipo'] === 'etapa';
+            }));
         }
 
         $abas = [];
@@ -89,10 +90,29 @@ class NavegacaoService
                 'rotulo' => $definicao['rotulo'],
                 'url' => $definicao['rota'] . '/' . (int) $id,
                 'ativa' => $definicao['tipo'] === $tipo,
+                'somenteAvaliadores' => $grupo === 'etapa' && in_array($definicao['tipo'], self::$tiposSomenteAvaliadores, true),
             ];
         }
 
         return $abas;
+    }
+
+    /**
+     * Valor persistido de mecanismo_avaliacao da etapa do no atual (null se o
+     * tipo não pertence ao grupo "etapa" ou a etapa não existe) — usado pelo
+     * JS para decidir a visibilidade inicial das abas somente-avaliadores nas
+     * páginas do grupo "etapa" que não têm o select #campo-mecanismo-avaliacao
+     * na tela (só a aba "Dados Gerais" tem).
+     */
+    public static function mecanismoAvaliacaoEtapa($tipo, $id)
+    {
+        if (!isset(self::$grupoPorTipo[$tipo]) || self::$grupoPorTipo[$tipo] !== 'etapa') {
+            return null;
+        }
+
+        $etapa = (new EtapaRepository())->buscarPorId($id);
+
+        return $etapa !== null ? $etapa['mecanismo_avaliacao'] : null;
     }
 
     /**

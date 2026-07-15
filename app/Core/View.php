@@ -14,6 +14,7 @@ class View
         $conteudo = self::renderizarConteudo($view, $dados);
 
         $abasSecundarias = $noAtual !== null ? \App\Services\NavegacaoService::abasPara($noAtual['tipo'], $noAtual['id']) : null;
+        $mecanismoAvaliacaoEtapa = $noAtual !== null ? \App\Services\NavegacaoService::mecanismoAvaliacaoEtapa($noAtual['tipo'], $noAtual['id']) : null;
         $caminhoArvore = $noAtual !== null ? \App\Services\NavegacaoService::caminhoAte($noAtual['tipo'], $noAtual['id']) : [];
 
         require __DIR__ . '/../Views/layout.php';
@@ -27,6 +28,7 @@ class View
     {
         $conteudo = self::renderizarConteudo($view, $dados);
         $abasSecundarias = $noAtual !== null ? \App\Services\NavegacaoService::abasPara($noAtual['tipo'], $noAtual['id']) : null;
+        $mecanismoAvaliacaoEtapa = $noAtual !== null ? \App\Services\NavegacaoService::mecanismoAvaliacaoEtapa($noAtual['tipo'], $noAtual['id']) : null;
 
         $flash = !empty($_SESSION['flash']) ? $_SESSION['flash'] : null;
         unset($_SESSION['flash']);
@@ -36,6 +38,7 @@ class View
             'titulo' => $titulo,
             'conteudo' => $conteudo,
             'abas' => $abasSecundarias,
+            'mecanismoAvaliacaoEtapa' => $mecanismoAvaliacaoEtapa,
             'flash' => $flash,
         ]);
     }

@@ -129,17 +129,3 @@
         <?php endif; ?>
     </div>
 </form>
-
-<script>
-(function () {
-    var select = document.getElementById('campo-mecanismo-avaliacao');
-    var fieldset = document.getElementById('fieldset-avaliacao-por-avaliadores');
-
-    function atualizar() {
-        fieldset.style.display = select.value === 'avaliadores' ? '' : 'none';
-    }
-
-    select.addEventListener('change', atualizar);
-    atualizar();
-})();
-</script>
