@@ -894,39 +894,6 @@ body.admin-page .aba-secundaria.active {
     border-bottom-color: var(--cor-primaria-fim);
 }
 
-/* Abas por criterio na tela de lancamento de notas do avaliador (avaliacao/notar.php).
-   Client-side (mesmo form, sem navegacao de rota) — visual espelha .aba-secundaria,
-   mas classes proprias porque o mecanismo e diferente. */
-body.admin-page .abas-criterios {
-    background: var(--cor-branco);
-    border-bottom: 2px solid var(--cor-borda);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    margin-bottom: 1.5rem;
-    padding: 0 0.5rem;
-}
-
-body.admin-page .aba-criterio {
-    display: inline-block;
-    padding: 0.65rem 0.85rem;
-    color: var(--cor-texto-suave);
-    text-decoration: none;
-    font-size: 0.82rem;
-    font-weight: 600;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-}
-
-body.admin-page .aba-criterio:hover {
-    color: var(--cor-primaria-fim);
-}
-
-body.admin-page .aba-criterio.active {
-    color: var(--cor-primaria-fim);
-    border-bottom-color: var(--cor-primaria-fim);
-}
-
 /* Indicador granular "X/N criterios" na lista de submissoes do avaliador. */
 body.admin-page .status-avaliacao {
     display: inline-block;
@@ -1525,4 +1492,164 @@ body.guest-page {
 .guest-copyright {
     color: #999;
     font-size: 0.75rem;
+}
+
+/* Modal generico reutilizavel (Fase 17 - Bug 5/Melhoria 1) - primeiro
+   componente desse tipo no projeto. Overlay + caixa centralizada, fechado
+   por padrao via [hidden]. */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    z-index: 2000;
+}
+
+.modal-overlay[hidden] {
+    display: none;
+}
+
+.modal-caixa {
+    position: relative;
+    background: var(--cor-branco);
+    border-radius: 10px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 1.75rem;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.modal-caixa h2 {
+    margin-top: 0;
+    padding-right: 2rem;
+}
+
+.modal-fechar {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.9rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--cor-texto-suave);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+}
+
+.modal-fechar:hover {
+    color: var(--cor-primaria-fim);
+}
+
+/* Ficha de leitura do conteudo de uma submissao (Fase 17 - Bug 5/Melhoria 1) -
+   substitui a <table> generica (que herdava o th preto pensado pra tabelas de
+   dados, nao pra ficha). height:auto natural, sem o vazio da tabela. */
+.ficha-submissao {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.ficha-item {
+    background: var(--cor-fundo-alt);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+}
+
+.ficha-item-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--cor-texto-suave);
+    margin-bottom: 0.35rem;
+}
+
+.ficha-item-valor {
+    color: var(--cor-texto);
+    line-height: 1.5;
+}
+
+/* Tela de lancamento de notas do avaliador, redesenhada (Fase 17 -
+   Melhoria 1): largura maxima centralizada, mais facil de escanear que
+   esticado na tela toda. */
+.pagina-avaliacao {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.ficha-submissao-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--cor-branco);
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+#progresso-avaliacao {
+    display: inline-block;
+    background: var(--cor-fundo-alt);
+    border-radius: 999px;
+    padding: 0.35rem 1rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.criterio-bloco {
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.criterio-bloco h3 {
+    margin-top: 0;
+}
+
+.campo-nota {
+    width: 110px;
+}
+
+.campo-nota-escala {
+    font-size: 0.8rem;
+    color: var(--cor-texto-suave);
+    margin-left: 0.5rem;
+}
+
+.criterio-bloco textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Fase 17 (Melhoria 2): faixa fixa avisando que o Admin esta visualizando
+   como outro usuario - cor de alerta (nao o laranja da marca, pra nao
+   parecer uma acao normal do sistema). */
+.faixa-visualizacao-como {
+    background: #b45309;
+    color: #fff;
+    text-align: center;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+}
+
+.faixa-visualizacao-como-botao {
+    margin-left: 0.75rem;
+    background: #fff;
+    color: #b45309;
+    border: none;
+    border-radius: 999px;
+    padding: 0.3rem 0.9rem;
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
 }

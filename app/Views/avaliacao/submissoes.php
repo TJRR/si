@@ -23,8 +23,6 @@
             <td>
                 <?php if ($submissao['resultado_publicado']): ?>
                     <span class="status-avaliacao completa">Resultado publicado</span>
-                <?php elseif ($submissao['avaliacao_completa']): ?>
-                    <span class="status-avaliacao completa"><?php echo (int) $submissao['criterios_notados']; ?>/<?php echo (int) $submissao['total_criterios']; ?> critérios</span>
                 <?php elseif ($submissao['criterios_notados'] > 0): ?>
                     <span class="status-avaliacao parcial"><?php echo (int) $submissao['criterios_notados']; ?>/<?php echo (int) $submissao['total_criterios']; ?> critérios</span>
                 <?php else: ?>

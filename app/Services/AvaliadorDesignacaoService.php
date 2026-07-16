@@ -177,8 +177,13 @@ class AvaliadorDesignacaoService
     /**
      * Persiste as atribuicoes ja revisadas/editadas pelo Admin na tela de
      * previa. $atribuicoes e uma lista de ['submissao_id' => int, 'usuario_id' => int].
+     *
+     * $origem (Fase 17, Bug 3): quem chama decide 'sorteio' ou 'manual' -
+     * so' a distribuicao por "Sorteio aleatorio garantindo 1 avaliador de
+     * cada categoria" fica travada contra remocao (nao a "automatica
+     * balanceada", que o usuario nao pediu pra travar).
      */
-    public function confirmarDistribuicao($etapaId, array $atribuicoes, $atribuidoPor = null)
+    public function confirmarDistribuicao($etapaId, array $atribuicoes, $atribuidoPor = null, $origem = 'manual')
     {
         $total = 0;
 
@@ -191,7 +196,7 @@ class AvaliadorDesignacaoService
             }
 
             if (!$this->designacoes->existeDesignacao($submissaoId, $usuarioId)) {
-                $this->designacoes->criar($submissaoId, $usuarioId, $atribuidoPor);
+                $this->designacoes->criar($submissaoId, $usuarioId, $atribuidoPor, $origem);
                 $total++;
             }
         }

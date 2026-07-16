@@ -10,12 +10,17 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auditoria;
 use App\Core\Database;
 
-class TemaDesafioRepository
+/**
+ * Fase 17 (Bug 2): renomeado de TemaDesafioRepository - a tabela "temas_desafios"
+ * virou "temas" (RENAME TABLE, migration 055), agora so' o nivel superior da
+ * hierarquia. O nivel "Desafio" (filho de Tema) vive em DesafioRepository.
+ */
+class TemaRepository
 {
     public function listarPorTrilha($trilhaId)
     {
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare('SELECT * FROM temas_desafios WHERE trilha_id = :trilha_id ORDER BY nome ASC');
+        $stmt = $pdo->prepare('SELECT * FROM temas WHERE trilha_id = :trilha_id ORDER BY nome ASC');
         $stmt->execute(['trilha_id' => $trilhaId]);
 
         return $stmt->fetchAll();
@@ -25,7 +30,7 @@ class TemaDesafioRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT * FROM temas_desafios WHERE trilha_id = :trilha_id AND ativo = 1 ORDER BY nome ASC'
+            'SELECT * FROM temas WHERE trilha_id = :trilha_id AND ativo = 1 ORDER BY nome ASC'
         );
         $stmt->execute(['trilha_id' => $trilhaId]);
 
@@ -35,7 +40,7 @@ class TemaDesafioRepository
     public function buscarPorId($id)
     {
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare('SELECT * FROM temas_desafios WHERE id = :id LIMIT 1');
+        $stmt = $pdo->prepare('SELECT * FROM temas WHERE id = :id LIMIT 1');
         $stmt->execute(['id' => $id]);
 
         $tema = $stmt->fetch();
@@ -47,7 +52,7 @@ class TemaDesafioRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'INSERT INTO temas_desafios (trilha_id, nome, descricao_longa, ativo)
+            'INSERT INTO temas (trilha_id, nome, descricao_longa, ativo)
              VALUES (:trilha_id, :nome, :descricao_longa, :ativo)'
         );
         $dados = [
@@ -59,7 +64,7 @@ class TemaDesafioRepository
         $stmt->execute($dados);
         $id = (int) $pdo->lastInsertId();
 
-        Auditoria::registrar('criar', 'temas_desafios', $id, null, $dados);
+        Auditoria::registrar('criar', 'temas', $id, null, $dados);
 
         return $id;
     }
@@ -69,7 +74,7 @@ class TemaDesafioRepository
         $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'UPDATE temas_desafios SET nome = :nome, descricao_longa = :descricao_longa, ativo = :ativo WHERE id = :id'
+            'UPDATE temas SET nome = :nome, descricao_longa = :descricao_longa, ativo = :ativo WHERE id = :id'
         );
         $depois = [
             'nome' => $nome,
@@ -78,21 +83,20 @@ class TemaDesafioRepository
         ];
         $stmt->execute($depois + ['id' => $id]);
 
-        Auditoria::registrar('atualizar', 'temas_desafios', $id, $antes, $depois);
+        Auditoria::registrar('atualizar', 'temas', $id, $antes, $depois);
     }
 
     /**
-     * Remocao real (sem soft-delete) — ver EtapaRepository::remover() para a
-     * explicacao de por que a FK (sem CASCADE) ja protege contra remover um
-     * tema/desafio com equipes vinculadas.
+     * Remocao real (sem soft-delete) — a FK de "desafios.tema_id" (sem
+     * CASCADE) ja protege contra remover um tema com desafios cadastrados.
      */
     public function remover($id)
     {
         $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare('DELETE FROM temas_desafios WHERE id = :id');
+        $stmt = $pdo->prepare('DELETE FROM temas WHERE id = :id');
         $stmt->execute(['id' => $id]);
 
-        Auditoria::registrar('remover', 'temas_desafios', $id, $antes, null);
+        Auditoria::registrar('remover', 'temas', $id, $antes, null);
     }
 }

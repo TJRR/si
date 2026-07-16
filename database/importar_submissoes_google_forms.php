@@ -13,8 +13,10 @@
  * coluna-do-csv -> campo-do-formulario e feito por uma palavra-chave no
  * rotulo (ver $fontes[...]['colunas']), ajustavel se os rotulos reais divergirem.
  *
- * Idempotente: se a equipe ja tem submissao nesta etapa, a linha e pulada
- * (rodar o script mais de uma vez nao duplica).
+ * Upsert: se a equipe ja tem submissao nesta etapa, os dados sao
+ * sobrescritos (nao pulados) - reimportar depois que o participante editou a
+ * resposta no Google Forms atualiza a submissao existente em vez de ficar
+ * defasado.
  *
  * Por padrao roda em modo consulta (dry-run): so mostra o que seria feito,
  * sem gravar nada. Para gravar de verdade:
@@ -33,33 +35,32 @@ require __DIR__ . '/../vendor/autoload.php';
 use App\Core\Database;
 use App\Core\Texto;
 use App\Repositories\CampoDinamicoRepository;
+use App\Repositories\DesafioRepository;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\ParticipanteRepository;
 use App\Repositories\SubmissaoRepository;
-use App\Repositories\TemaDesafioRepository;
 use App\Repositories\TrilhaRepository;
 
-// Nome real da etapa de submissao conceitual, cadastrado hoje igual nas duas
-// trilhas. ATENCAO: o usuario relatou que os nomes de etapa no admin estao
-// incorretos e serao corrigidos para bater com o edital - conferir/ajustar
-// esta constante contra a tela Admin > Trilha > Etapas antes de rodar.
-const NOME_ETAPA_SUBMISSAO = 'Submissao de Ideia';
+// Fase 17 (Bug 1): a etapa de submissao conceitual e' localizada por ordem
+// (estavel nas duas trilhas), nao por nome - o nome diverge entre trilhas
+// (ex.: "Etapa 1 - Submissao de Ideia" na Interna, "Etapa 1 - Submissao e
+// Triagem Conceitual (Baixa Fidelidade)" na Externa).
+const ORDEM_ETAPA_SUBMISSAO = 2;
 
 // Colunas fixas, iguais nas duas fontes.
 const COL_CARIMBO = 0;
 const COL_EMAIL_RESPONDENTE = 1;
 const COL_NOME_EQUIPE = 2;
 
-// Ordem importa: cada palavra-chave e' procurada, em sequencia, entre os
-// campos do formulario ainda nao usados - resolve a ambiguidade de
-// "Tema do Desafio" tambem conter a palavra "desafio" (ver
-// localizarCampoPorPalavraChave()).
+// Fase 17 (Bug 1): a coluna "Tema do Desafio" (radio) do Google Forms nao e'
+// mais importada - o sistema so' tem o campo "Desafio Escolhido"
+// (selecao_tema_desafio) e infere o Tema automaticamente a partir do Desafio
+// resolvido (ver resolverDesafioId()).
 $fontes = [
     'Trilha Externa' => [
         'csv' => __DIR__ . '/dados_importacao/submissoes_externo.csv',
         'colunas' => [
-            3 => 'tema',
             4 => 'desafio',
             5 => 'solucao proposta',
             6 => 'premissas',
@@ -70,7 +71,6 @@ $fontes = [
     'Trilha Interna' => [
         'csv' => __DIR__ . '/dados_importacao/submissoes_interno.csv',
         'colunas' => [
-            3 => 'tema',
             4 => 'desafio',
             5 => 'solucao proposta',
             6 => 'potencial de impacto',
@@ -109,24 +109,26 @@ function localizarCampoPorPalavraChave(array $campos, array &$usados, $palavraCh
 }
 
 /**
- * Resolve o texto de "Tema do Desafio" do CSV contra os temas_desafios reais
- * da trilha (nome cadastrado, ignorando o sufixo "(Tema N)"). Sem
- * correspondencia exata, NAO adivinha - devolve null e quem chamou registra
- * pendencia.
+ * Resolve o texto livre de "Desafio Escolhido" do CSV contra os desafios reais
+ * da trilha (texto integral da pergunta, cadastrado via DesafioRepository).
+ * Sem correspondencia exata, NAO adivinha - devolve null e quem chamou
+ * registra pendencia. Dentro de uma mesma trilha os textos de desafio nao se
+ * repetem entre temas (confirmado em DesafiosFase17.md), entao nao e'
+ * necessario usar o Tema como desempate.
  */
-function resolverTemaDesafioId($textoCsv, array $temasDaTrilha)
+function resolverDesafioId($textoCsv, array $desafiosDaTrilha)
 {
-    $alvo = Texto::slugify(preg_replace('/\(tema\s*\d+\)/i', '', $textoCsv));
+    $alvo = Texto::slugify($textoCsv);
 
     if ($alvo === '') {
         return null;
     }
 
-    foreach ($temasDaTrilha as $tema) {
-        $nomeTema = Texto::slugify(preg_replace('/\(tema\s*\d+\)/i', '', $tema['nome']));
+    foreach ($desafiosDaTrilha as $desafio) {
+        $pergunta = Texto::slugify($desafio['pergunta']);
 
-        if ($nomeTema !== '' && (strpos($alvo, $nomeTema) !== false || strpos($nomeTema, $alvo) !== false)) {
-            return (int) $tema['id'];
+        if ($pergunta !== '' && (strpos($alvo, $pergunta) !== false || strpos($pergunta, $alvo) !== false)) {
+            return (int) $desafio['id'];
         }
     }
 
@@ -141,10 +143,10 @@ $camposRepo = new CampoDinamicoRepository();
 $equipes = new EquipeRepository();
 $participantes = new ParticipanteRepository();
 $submissoes = new SubmissaoRepository();
-$temasRepo = new TemaDesafioRepository();
+$desafiosRepo = new DesafioRepository();
 $pdo = Database::conexao();
 
-$totais = ['criadas' => 0, 'puladas' => 0, 'pendencias' => 0];
+$totais = ['criadas' => 0, 'atualizadas' => 0, 'pendencias' => 0];
 
 foreach ($fontes as $nomeTrilha => $fonte) {
     echo "\n=== {$nomeTrilha} ===\n";
@@ -156,21 +158,20 @@ foreach ($fontes as $nomeTrilha => $fonte) {
         continue;
     }
 
-    $etapa = $etapas->buscarPorTrilhaENome($trilha['id'], NOME_ETAPA_SUBMISSAO);
+    $etapa = $etapas->buscarPorTrilhaEOrdem($trilha['id'], ORDEM_ETAPA_SUBMISSAO);
 
     if ($etapa === null) {
-        echo "ERRO: etapa '" . NOME_ETAPA_SUBMISSAO . "' nao encontrada na trilha '{$nomeTrilha}'.\n";
-        echo "       Confira o nome real em Admin > Trilha > Etapas e ajuste a constante NOME_ETAPA_SUBMISSAO.\n";
+        echo "ERRO: nenhuma etapa com ordem=" . ORDEM_ETAPA_SUBMISSAO . " encontrada na trilha '{$nomeTrilha}'.\n";
         continue;
     }
 
     if ($etapa['formulario_dinamico_id'] === null) {
-        echo "ERRO: etapa '" . NOME_ETAPA_SUBMISSAO . "' nao tem formulario vinculado.\n";
+        echo "ERRO: etapa '{$etapa['nome']}' nao tem formulario vinculado.\n";
         continue;
     }
 
     $camposDoFormulario = $camposRepo->listarPorFormulario($etapa['formulario_dinamico_id']);
-    $temasDaTrilha = $temasRepo->listarPorTrilha($trilha['id']);
+    $desafiosDaTrilha = $desafiosRepo->listarPorTrilha($trilha['id']);
 
     $usados = [];
     $camposPorColuna = [];
@@ -229,13 +230,8 @@ foreach ($fontes as $nomeTrilha => $fonte) {
 
         $submissaoExistente = $submissoes->buscarPorEquipeEEtapa($equipe['id'], $etapa['id']);
 
-        if ($submissaoExistente !== null) {
-            echo "  [pulada] '{$equipe['nome_equipe']}' ja tem submissao nesta etapa (linha {$numeroLinha}).\n";
-            $totais['puladas']++;
-            continue;
-        }
-
         $valoresPorCampo = [];
+        $desafioEscolhidoId = null;
 
         foreach ($camposPorColuna as $indiceColuna => $campo) {
             $valorCsv = lerLinha($linha, $indiceColuna);
@@ -245,15 +241,15 @@ foreach ($fontes as $nomeTrilha => $fonte) {
             }
 
             if ($campo['tipo'] === 'selecao_tema_desafio') {
-                $temaId = resolverTemaDesafioId($valorCsv, $temasDaTrilha);
+                $desafioEscolhidoId = resolverDesafioId($valorCsv, $desafiosDaTrilha);
 
-                if ($temaId === null) {
-                    echo "  [PENDENCIA] '{$equipe['nome_equipe']}' (linha {$numeroLinha}): tema/desafio '{$valorCsv}' nao resolvido - campo deixado em branco.\n";
+                if ($desafioEscolhidoId === null) {
+                    echo "  [PENDENCIA] '{$equipe['nome_equipe']}' (linha {$numeroLinha}): desafio '{$valorCsv}' nao resolvido - campo deixado em branco.\n";
                     $totais['pendencias']++;
                     continue;
                 }
 
-                $valoresPorCampo[(string) $campo['id']] = $temaId;
+                $valoresPorCampo[(string) $campo['id']] = $desafioEscolhidoId;
                 continue;
             }
 
@@ -268,21 +264,32 @@ foreach ($fontes as $nomeTrilha => $fonte) {
             'linha_planilha' => $numeroLinha,
         ];
 
+        $acao = $submissaoExistente !== null ? 'atualizada' : 'criada';
+
         if (!$confirmar) {
-            echo "  [seria criada] '{$equipe['nome_equipe']}' (linha {$numeroLinha}), " . count($valoresPorCampo) . " campo(s) preenchido(s).\n";
-            $totais['criadas']++;
+            echo "  [seria {$acao}] '{$equipe['nome_equipe']}' (linha {$numeroLinha}), " . count($valoresPorCampo) . " campo(s) preenchido(s).\n";
+            $totais[$acao === 'atualizada' ? 'atualizadas' : 'criadas']++;
             continue;
         }
 
         $pdo->beginTransaction();
 
         try {
-            $submissaoId = $submissoes->criar($etapa['id'], $etapa['formulario_dinamico_id'], $dadosJson);
-            $submissoes->vincularEquipe($submissaoId, $equipe['id']);
+            if ($submissaoExistente !== null) {
+                $submissoes->atualizarDadosJson($submissaoExistente['id'], $dadosJson);
+                $submissaoId = $submissaoExistente['id'];
+            } else {
+                $submissaoId = $submissoes->criar($etapa['id'], $etapa['formulario_dinamico_id'], $dadosJson);
+                $submissoes->vincularEquipe($submissaoId, $equipe['id']);
+            }
+
+            if ($desafioEscolhidoId !== null) {
+                $equipes->definirDesafio($equipe['id'], $desafioEscolhidoId);
+            }
 
             $pdo->commit();
-            echo "  [ok] '{$equipe['nome_equipe']}' importada (submissao #{$submissaoId}, linha {$numeroLinha}).\n";
-            $totais['criadas']++;
+            echo "  [ok] '{$equipe['nome_equipe']}' {$acao} (submissao #{$submissaoId}, linha {$numeroLinha}).\n";
+            $totais[$acao === 'atualizada' ? 'atualizadas' : 'criadas']++;
         } catch (\Exception $e) {
             $pdo->rollBack();
             echo "  [ERRO] linha {$numeroLinha} ('{$nomeEquipe}'): " . $e->getMessage() . "\n";
@@ -295,8 +302,8 @@ foreach ($fontes as $nomeTrilha => $fonte) {
 
 echo "\n=== Resumo ===\n";
 echo "Submissoes criadas" . (!$confirmar ? ' (simulado)' : '') . ": {$totais['criadas']}\n";
-echo "Puladas (ja existia submissao): {$totais['puladas']}\n";
-echo "Pendencias (equipe ou tema/desafio nao resolvido): {$totais['pendencias']}\n";
+echo "Submissoes atualizadas" . (!$confirmar ? ' (simulado)' : '') . ": {$totais['atualizadas']}\n";
+echo "Pendencias (equipe ou desafio nao resolvido): {$totais['pendencias']}\n";
 
 if (!$confirmar) {
     echo "\nModo consulta (dry-run). Nada foi gravado.\n";

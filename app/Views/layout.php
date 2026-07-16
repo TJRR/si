@@ -83,6 +83,14 @@ if ($ehPainelAdmin) {
     </style>
 </head>
 <body class="<?php echo $ehPainelInterno ? 'admin-page' : ($ehPaginaConvidado ? 'guest-page' : ''); ?>">
+<?php if ($ehPainelInterno && \App\Core\Auth::estaVisualizandoComoOutro()): ?>
+    <div class="faixa-visualizacao-como">
+        Visualizando como <strong><?php echo htmlspecialchars(\App\Core\Auth::nome(), ENT_QUOTES, 'UTF-8'); ?></strong> (somente leitura)
+        <form method="post" action="<?php echo url('meuPerfil/pararVisualizacao'); ?>" style="display:inline;">
+            <button type="submit" class="faixa-visualizacao-como-botao">Voltar para minha conta</button>
+        </form>
+    </div>
+<?php endif; ?>
 <?php if ($ehPainelInterno): ?>
     <div class="admin-topbar">
       <div class="admin-largura-max">
@@ -202,6 +210,16 @@ if ($ehPainelAdmin) {
 <?php endif; ?>
 <?php if ($ehPainelInterno): ?>
     <script src="<?php echo config('base_path'); ?>/assets/js/notificacoes-sino.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/notificacoes-sino.js'); ?>" defer></script>
+
+    <!-- Fase 17 (Bug 5/Melhoria 1): shell do modal generico, injetado uma vez -->
+    <div id="modal-generico" class="modal-overlay" hidden>
+        <div class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+            <button type="button" class="modal-fechar" onclick="fecharModal()" aria-label="Fechar">&times;</button>
+            <h2 id="modal-titulo"></h2>
+            <div id="modal-conteudo"></div>
+        </div>
+    </div>
+    <script src="<?php echo config('base_path'); ?>/assets/js/modal.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/modal.js'); ?>" defer></script>
 <?php endif; ?>
 </body>
 </html>

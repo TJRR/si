@@ -60,6 +60,14 @@ class DesignacaoAdminController extends Controller
             $submissao['designacoes'] = $this->designacoes->listarPorSubmissao($submissao['id']);
             $submissao['tem_nota_lancada'] = count($this->notas->listarPorSubmissao($submissao['id'])) > 0;
 
+            // Fase 17 (Bug 3): trava por designacao - sorteio aceito nunca
+            // remove; manual so' trava se o proprio avaliador ja notou.
+            foreach ($submissao['designacoes'] as &$designacao) {
+                $designacao['travada'] = $designacao['origem'] === 'sorteio'
+                    || $this->notas->contarNotasPorUsuario($submissao['id'], $designacao['usuario_id']) > 0;
+            }
+            unset($designacao);
+
             if (!$this->passaNosFiltros($submissao, $filtroAvaliador, $filtroNota)) {
                 continue;
             }
@@ -139,10 +147,36 @@ class DesignacaoAdminController extends Controller
         $this->redirecionar('designacoes/index/' . $etapaId);
     }
 
+    /**
+     * Fase 17 (Bug 3): duas travas antes de remover uma designacao -
+     * (a) designacoes vindas de sorteio aceito nunca podem ser removidas
+     * (preserva a lisura do processo); (b) designacoes cujo avaliador ja
+     * lancou nota tambem nao, mesmo se manuais.
+     */
     public function remover()
     {
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
+
+        $designacao = $this->designacoes->buscarPorId($id);
+
+        if ($designacao === null) {
+            $_SESSION['flash'] = 'Designação não encontrada.';
+            $this->redirecionar('designacoes/index/' . $etapaId);
+            return;
+        }
+
+        if ($designacao['origem'] === 'sorteio') {
+            $_SESSION['flash'] = 'Designações de sorteio não podem ser removidas — a distribuição já foi aceita.';
+            $this->redirecionar('designacoes/index/' . $etapaId);
+            return;
+        }
+
+        if ($this->notas->contarNotasPorUsuario($designacao['submissao_id'], $designacao['usuario_id']) > 0) {
+            $_SESSION['flash'] = 'Este avaliador já lançou nota para esta submissão — não é possível remover a designação.';
+            $this->redirecionar('designacoes/index/' . $etapaId);
+            return;
+        }
 
         $this->designacoes->remover($id);
         $this->redirecionar('designacoes/index/' . $etapaId);
@@ -195,7 +229,13 @@ class DesignacaoAdminController extends Controller
             }
         }
 
-        $total = $this->servico->confirmarDistribuicao($etapaId, $atribuicoes, Auth::usuarioId());
+        // Fase 17 (Bug 3): so' a distribuicao por sorteio de categoria fica
+        // travada contra remocao - a "automatica balanceada" nao foi pedida
+        // pelo usuario pra travar.
+        $etapa = $this->etapas->buscarPorId($etapaId);
+        $origem = ($etapa !== null && $etapa['modo_designacao'] === 'sorteio_categoria') ? 'sorteio' : 'manual';
+
+        $total = $this->servico->confirmarDistribuicao($etapaId, $atribuicoes, Auth::usuarioId(), $origem);
         $_SESSION['flash'] = $total . ' designação(ões) criada(s).';
         $this->redirecionar('designacoes/index/' . $etapaId);
     }

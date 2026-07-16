@@ -119,6 +119,17 @@
                     </option>
                 <?php endforeach; ?>
             </select>
+        </label><br>
+
+        <label>Feedback qualitativo do avaliador:
+            <select name="modo_feedback_avaliador" <?php echo $desabilitado; ?>>
+                <?php foreach (['nenhum' => 'Nenhum', 'submissao' => 'Um texto por submissão inteira', 'criterio' => 'Um texto por critério avaliado'] as $valor => $rotulo): ?>
+                    <?php $selecionado = ($etapa !== null && $etapa['modo_feedback_avaliador'] === $valor); ?>
+                    <option value="<?php echo $valor; ?>" <?php echo $selecionado ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($rotulo, ENT_QUOTES, 'UTF-8'); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
         </label>
     </fieldset><br>
 

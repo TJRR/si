@@ -12,9 +12,9 @@ use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
-use App\Repositories\ResultadoEtapaRepository;
 use App\Repositories\SubmissaoRepository;
 use App\Repositories\UsuarioParticipanteRepository;
+use App\Services\AcessoEtapaService;
 use App\Services\CampoDinamicoService;
 use App\Services\SubmissaoService;
 
@@ -26,7 +26,7 @@ class SubmissaoController extends Controller
 
         $equipeId = $this->equipeAutorizadaOuAbortar($etapaId);
 
-        $preparo = (new SubmissaoService())->preparar($etapaId);
+        $preparo = (new SubmissaoService())->preparar($etapaId, $equipeId);
 
         if (!$preparo['sucesso']) {
             http_response_code(404);
@@ -53,15 +53,22 @@ class SubmissaoController extends Controller
 
         $equipeId = $this->equipeAutorizadaOuAbortar($etapaId);
 
-        $resultado = (new SubmissaoService())->processar($etapaId, $_POST, $_FILES);
+        $resultado = (new SubmissaoService())->processar($etapaId, $_POST, $_FILES, $equipeId);
 
         if ($resultado['sucesso']) {
-            (new SubmissaoRepository())->vincularEquipe($resultado['submissao_id'], $equipeId);
+            if (!empty($resultado['criada'])) {
+                (new SubmissaoRepository())->vincularEquipe($resultado['submissao_id'], $equipeId);
+            }
+
+            if (!empty($resultado['desafio_id'])) {
+                (new EquipeRepository())->definirDesafio($equipeId, $resultado['desafio_id']);
+            }
+
             $this->redirecionar('submissao/sucesso/' . $resultado['submissao_id']);
             return;
         }
 
-        $preparo = (new SubmissaoService())->preparar($etapaId);
+        $preparo = (new SubmissaoService())->preparar($etapaId, $equipeId);
 
         $this->renderizar('publico/formulario', [
             'erroGeral' => $resultado['mensagem'],
@@ -147,42 +154,12 @@ class SubmissaoController extends Controller
             return null;
         }
 
-        if ((int) $etapa['ordem'] > 1) {
-            $this->exigirClassificacaoNaEtapaAnterior($etapa, (int) $equipe['id'], $etapas);
+        $motivoBloqueio = (new AcessoEtapaService())->motivoBloqueio($etapa, (int) $equipe['id']);
+
+        if ($motivoBloqueio !== null) {
+            throw new \RuntimeException($motivoBloqueio);
         }
 
         return (int) $equipe['id'];
-    }
-
-    private function exigirClassificacaoNaEtapaAnterior(array $etapa, $equipeId, EtapaRepository $etapas)
-    {
-        $etapaAnterior = $etapas->buscarAnteriorNaTrilha($etapa['trilha_id'], (int) $etapa['ordem']);
-
-        if ($etapaAnterior === null) {
-            return;
-        }
-
-        if ($etapaAnterior['mecanismo_avaliacao'] !== 'avaliadores') {
-            return;
-        }
-
-        $resultados = new ResultadoEtapaRepository();
-
-        if (!$resultados->jaPublicado($etapaAnterior['id'])) {
-            throw new \RuntimeException(
-                'O resultado da etapa anterior ("' . $etapaAnterior['nome'] . '") ainda não foi publicado.'
-            );
-        }
-
-        $submissaoAnterior = (new SubmissaoRepository())->buscarPorEquipeEEtapa($equipeId, $etapaAnterior['id']);
-        $resultado = $submissaoAnterior !== null
-            ? $resultados->buscarPorSubmissaoEEtapa($submissaoAnterior['id'], $etapaAnterior['id'])
-            : null;
-
-        if ($resultado === null || !$resultado['classificado']) {
-            throw new \RuntimeException(
-                'Sua equipe não foi classificada na etapa anterior ("' . $etapaAnterior['nome'] . '").'
-            );
-        }
     }
 }

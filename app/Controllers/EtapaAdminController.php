@@ -197,6 +197,7 @@ class EtapaAdminController extends Controller
                 'modo_sigilo' => isset($_POST['modo_sigilo']) ? $_POST['modo_sigilo'] : 'aberto',
                 'modo_avanco' => isset($_POST['modo_avanco']) ? $_POST['modo_avanco'] : 'manual',
                 'mecanismo_avaliacao' => isset($_POST['mecanismo_avaliacao']) ? $_POST['mecanismo_avaliacao'] : 'nenhuma',
+                'modo_feedback_avaliador' => isset($_POST['modo_feedback_avaliador']) ? $_POST['modo_feedback_avaliador'] : 'nenhum',
             ],
         ];
     }

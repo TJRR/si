@@ -16,7 +16,7 @@ use App\Repositories\EtapaRepository;
 use App\Repositories\FormularioDinamicoRepository;
 use App\Repositories\ParticipanteRepository;
 use App\Repositories\PerfilRepository;
-use App\Repositories\TemaDesafioRepository;
+use App\Repositories\TemaRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioRepository;
 use App\Services\ResultadoEtapaService;
@@ -28,7 +28,7 @@ class HomeController extends Controller
         $concursos = new ConcursoRepository();
         $trilhas = new TrilhaRepository();
         $etapas = new EtapaRepository();
-        $temas = new TemaDesafioRepository();
+        $temas = new TemaRepository();
         $formularios = new FormularioDinamicoRepository();
         $servicoResultadoEtapa = new ResultadoEtapaService();
 

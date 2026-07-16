@@ -11,15 +11,15 @@ use App\Core\Auth;
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\AvaliadorDesignacaoRepository;
-use App\Repositories\CampoDinamicoRepository;
 use App\Repositories\ConcursoRepository;
 use App\Repositories\CriterioAvaliacaoRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\NotaLancadaRepository;
 use App\Repositories\ResultadoEtapaRepository;
+use App\Repositories\FeedbackSubmissaoRepository;
 use App\Repositories\SubmissaoRepository;
-use App\Repositories\TemaDesafioRepository;
 use App\Repositories\TrilhaRepository;
+use App\Services\ConteudoSubmissaoService;
 use App\Services\ResultadoEtapaService;
 
 class AvaliacaoController extends Controller
@@ -32,8 +32,8 @@ class AvaliacaoController extends Controller
     private $designacoes;
     private $notas;
     private $resultadosEtapa;
-    private $camposDinamicos;
-    private $temas;
+    private $conteudoSubmissao;
+    private $feedbackSubmissao;
     private $servicoResultado;
 
     public function __construct()
@@ -47,8 +47,8 @@ class AvaliacaoController extends Controller
         $this->designacoes = new AvaliadorDesignacaoRepository();
         $this->notas = new NotaLancadaRepository();
         $this->resultadosEtapa = new ResultadoEtapaRepository();
-        $this->camposDinamicos = new CampoDinamicoRepository();
-        $this->temas = new TemaDesafioRepository();
+        $this->conteudoSubmissao = new ConteudoSubmissaoService();
+        $this->feedbackSubmissao = new FeedbackSubmissaoRepository();
         $this->servicoResultado = new ResultadoEtapaService();
     }
 
@@ -126,6 +126,10 @@ class AvaliacaoController extends Controller
         }
         unset($submissao);
 
+        $lista = array_values(array_filter($lista, function ($submissao) {
+            return !$submissao['avaliacao_completa'];
+        }));
+
         $this->renderizar('avaliacao/submissoes', [
             'etapa' => $etapa,
             'trilha' => $trilha,
@@ -144,7 +148,15 @@ class AvaliacaoController extends Controller
         $criteriosDaEtapa = $this->criterios->listarPorEtapa($etapa['id']);
         $erro = null;
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$resultadoPublicado) {
+        // Fase 17 (Bug 7): a avaliacao trava assim que TODOS os criterios ja
+        // foram lancados por este avaliador para esta submissao - trava
+        // independente e anterior a publicacao do resultado da etapa.
+        $totalCriterios = count($criteriosDaEtapa);
+        $criteriosJaNotados = $this->notas->contarNotasPorUsuario($submissaoId, Auth::usuarioId());
+        $avaliacaoCompleta = $totalCriterios > 0 && $criteriosJaNotados >= $totalCriterios;
+        $avaliacaoTravada = $resultadoPublicado || $avaliacaoCompleta;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$avaliacaoTravada) {
             foreach ($criteriosDaEtapa as $criterio) {
                 $bruto = isset($_POST['nota'][$criterio['id']]) ? str_replace(',', '.', $_POST['nota'][$criterio['id']]) : null;
 
@@ -160,10 +172,24 @@ class AvaliacaoController extends Controller
                     break;
                 }
 
-                $this->notas->salvar($submissaoId, $criterio['id'], Auth::usuarioId(), $nota);
+                $feedbackCriterio = null;
+                if ($etapa['modo_feedback_avaliador'] === 'criterio' && isset($_POST['feedback'][$criterio['id']])) {
+                    $feedbackCriterio = trim($_POST['feedback'][$criterio['id']]);
+                    $feedbackCriterio = $feedbackCriterio !== '' ? $feedbackCriterio : null;
+                }
+
+                $this->notas->salvar($submissaoId, $criterio['id'], Auth::usuarioId(), $nota, $feedbackCriterio);
             }
 
             if ($erro === null) {
+                if ($etapa['modo_feedback_avaliador'] === 'submissao' && isset($_POST['feedback_submissao'])) {
+                    $textoFeedback = trim($_POST['feedback_submissao']);
+
+                    if ($textoFeedback !== '') {
+                        $this->feedbackSubmissao->salvar($submissaoId, Auth::usuarioId(), $textoFeedback);
+                    }
+                }
+
                 $this->tentarPublicacaoAutomatica($etapa);
                 $this->redirecionar('avaliacao/submissoes/' . (int) $etapa['id']);
                 return;
@@ -171,16 +197,23 @@ class AvaliacaoController extends Controller
         }
 
         $notasAtuais = $this->notas->listarPorSubmissaoEUsuario($submissaoId, Auth::usuarioId());
+        $feedbackSubmissaoAtual = $etapa['modo_feedback_avaliador'] === 'submissao'
+            ? $this->feedbackSubmissao->buscarPorSubmissaoEUsuario($submissaoId, Auth::usuarioId())
+            : null;
 
         $this->renderizar('avaliacao/notar', [
             'submissao' => $submissao,
             'etapa' => $etapa,
             'criterios' => $criteriosDaEtapa,
             'notasAtuais' => $notasAtuais,
+            'feedbackSubmissaoAtual' => $feedbackSubmissaoAtual,
             'resultadoPublicado' => $resultadoPublicado,
+            'avaliacaoTravada' => $avaliacaoTravada,
+            'totalCriterios' => $totalCriterios,
+            'criteriosJaNotados' => $criteriosJaNotados,
             'sigiloCego' => $etapa['modo_sigilo'] === 'cego',
             'erro' => $erro,
-            'conteudoSubmissao' => $this->montarConteudoSubmissao($submissao),
+            'conteudoSubmissao' => $this->conteudoSubmissao->montar($submissao),
         ], 'Lançar notas — Submissão #' . (int) $submissaoId);
     }
 
@@ -268,29 +301,4 @@ class AvaliacaoController extends Controller
         return ['submissao' => $submissao, 'etapa' => $etapa, 'trilha' => $trilha];
     }
 
-    private function montarConteudoSubmissao(array $submissao)
-    {
-        if ($submissao['formulario_dinamico_id'] === null) {
-            return [];
-        }
-
-        $campos = $this->camposDinamicos->listarPorFormulario($submissao['formulario_dinamico_id']);
-        $dados = json_decode((string) $submissao['dados_json'], true);
-        $valores = isset($dados['campos']) && is_array($dados['campos']) ? $dados['campos'] : [];
-
-        $conteudo = [];
-
-        foreach ($campos as $campo) {
-            $valor = array_key_exists((string) $campo['id'], $valores) ? $valores[(string) $campo['id']] : null;
-
-            if ($campo['tipo'] === 'selecao_tema_desafio' && $valor !== null) {
-                $tema = $this->temas->buscarPorId((int) $valor);
-                $valor = $tema !== null ? $tema['nome'] : $valor;
-            }
-
-            $conteudo[] = ['campo' => $campo, 'valor' => $valor];
-        }
-
-        return $conteudo;
-    }
 }

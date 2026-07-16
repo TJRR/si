@@ -80,17 +80,34 @@ class AvaliadorDesignacaoRepository
         return (int) $stmt->fetchColumn();
     }
 
-    public function criar($submissaoId, $usuarioId, $atribuidoPor = null)
+    public function buscarPorId($id)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM avaliador_designacoes WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+
+        $designacao = $stmt->fetch();
+
+        return $designacao !== false ? $designacao : null;
+    }
+
+    /**
+     * $origem (Fase 17, Bug 3): 'sorteio' quando vem de
+     * AvaliadorDesignacaoService::confirmarDistribuicao() - essas designacoes
+     * nunca podem ser removidas (ver DesignacaoAdminController::remover()).
+     */
+    public function criar($submissaoId, $usuarioId, $atribuidoPor = null, $origem = 'manual')
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'INSERT INTO avaliador_designacoes (submissao_id, usuario_id, atribuido_por)
-             VALUES (:submissao_id, :usuario_id, :atribuido_por)'
+            'INSERT INTO avaliador_designacoes (submissao_id, usuario_id, atribuido_por, origem)
+             VALUES (:submissao_id, :usuario_id, :atribuido_por, :origem)'
         );
         $dados = [
             'submissao_id' => $submissaoId,
             'usuario_id' => $usuarioId,
             'atribuido_por' => $atribuidoPor,
+            'origem' => $origem,
         ];
         $stmt->execute($dados);
         $id = (int) $pdo->lastInsertId();

@@ -9,18 +9,27 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
-use App\Repositories\TemaDesafioRepository;
+use App\Repositories\DesafioRepository;
+use App\Repositories\TemaRepository;
 use App\Repositories\TrilhaRepository;
 
+/**
+ * Fase 17 (Bug 2): mantem o nome/rota historicos ("temas", TemaDesafioAdminController)
+ * para nao colidir com TemaAdminController/rota "tema" (identidade visual, assunto
+ * nao relacionado) - mas agora orquestra os dois niveis reais: Tema (TemaRepository)
+ * e Desafio (DesafioRepository), com uma tela por Tema listando seus Desafios.
+ */
 class TemaDesafioAdminController extends Controller
 {
     private $temas;
+    private $desafios;
     private $trilhas;
 
     public function __construct()
     {
         RoleMiddleware::exigir(['administrador', 'suporte']);
-        $this->temas = new TemaDesafioRepository();
+        $this->temas = new TemaRepository();
+        $this->desafios = new DesafioRepository();
         $this->trilhas = new TrilhaRepository();
     }
 
@@ -37,7 +46,7 @@ class TemaDesafioAdminController extends Controller
         $this->renderizar('admin/temas/index', [
             'trilha' => $trilha,
             'temas' => $lista,
-        ], 'Temas/Desafios de ' . $trilha['nome'], ['tipo' => 'temas', 'id' => (int) $trilhaId]);
+        ], 'Temas de ' . $trilha['nome'], ['tipo' => 'temas', 'id' => (int) $trilhaId]);
     }
 
     public function remover()
@@ -48,11 +57,11 @@ class TemaDesafioAdminController extends Controller
 
         try {
             $this->temas->remover($id);
-            $_SESSION['flash'] = 'Tema/desafio removido.';
+            $_SESSION['flash'] = 'Tema removido.';
         } catch (\PDOException $e) {
             $_SESSION['flash'] = $e->getCode() === '23000'
-                ? 'Não é possível remover: este tema/desafio já tem equipes vinculadas.'
-                : 'Não foi possível remover o tema/desafio.';
+                ? 'Não é possível remover: este tema ainda tem desafios cadastrados.'
+                : 'Não foi possível remover o tema.';
         }
 
         $this->redirecionar('temas/index/' . $trilhaId);
@@ -76,7 +85,7 @@ class TemaDesafioAdminController extends Controller
             $ativo = isset($_POST['ativo']) ? 1 : 0;
 
             if ($nome === '') {
-                $erro = 'Informe o nome do tema/desafio.';
+                $erro = 'Informe o nome do tema.';
             } else {
                 $this->temas->criar($trilhaId, $nome, $descricaoLonga, $ativo);
                 $this->redirecionar('temas/index/' . $trilhaId);
@@ -88,7 +97,7 @@ class TemaDesafioAdminController extends Controller
             'erro' => $erro,
             'trilha' => $trilha,
             'tema' => null,
-        ], 'Novo tema/desafio', ['tipo' => 'temas', 'id' => (int) $trilhaId]);
+        ], 'Novo tema', ['tipo' => 'temas', 'id' => (int) $trilhaId]);
     }
 
     public function editar($id)
@@ -97,7 +106,7 @@ class TemaDesafioAdminController extends Controller
 
         if ($tema === null) {
             http_response_code(404);
-            exit('Tema/desafio não encontrado.');
+            exit('Tema não encontrado.');
         }
 
         $trilha = $this->trilhas->buscarPorId($tema['trilha_id']);
@@ -110,7 +119,7 @@ class TemaDesafioAdminController extends Controller
             $ativo = isset($_POST['ativo']) ? 1 : 0;
 
             if ($nome === '') {
-                $erro = 'Informe o nome do tema/desafio.';
+                $erro = 'Informe o nome do tema.';
             } else {
                 $this->temas->atualizar($id, $nome, $descricaoLonga, $ativo);
                 $tema = $this->temas->buscarPorId($id);
@@ -121,6 +130,116 @@ class TemaDesafioAdminController extends Controller
             'erro' => $erro,
             'trilha' => $trilha,
             'tema' => $tema,
-        ], 'Editar tema/desafio', ['tipo' => 'temas', 'id' => (int) $trilha['id']]);
+        ], 'Editar tema', ['tipo' => 'temas', 'id' => (int) $trilha['id']]);
+    }
+
+    /**
+     * Tela do Tema com a lista de Desafios vinculados a ele - a "usabilidade"
+     * pedida explicitamente na Fase 17 (Bug 2): uma tela por Tema, nao um
+     * formulario generico solto.
+     */
+    public function desafios($temaId)
+    {
+        $tema = $this->temas->buscarPorId($temaId);
+
+        if ($tema === null) {
+            http_response_code(404);
+            exit('Tema não encontrado.');
+        }
+
+        $trilha = $this->trilhas->buscarPorId($tema['trilha_id']);
+        $lista = $this->desafios->listarPorTema($temaId);
+
+        $this->renderizar('admin/temas/desafios', [
+            'trilha' => $trilha,
+            'tema' => $tema,
+            'desafios' => $lista,
+        ], 'Desafios de ' . $tema['nome'], ['tipo' => 'temas', 'id' => (int) $trilha['id']]);
+    }
+
+    public function removerDesafio()
+    {
+        RoleMiddleware::exigir(['administrador']);
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $temaId = (int) (isset($_POST['tema_id']) ? $_POST['tema_id'] : 0);
+
+        try {
+            $this->desafios->remover($id);
+            $_SESSION['flash'] = 'Desafio removido.';
+        } catch (\PDOException $e) {
+            $_SESSION['flash'] = $e->getCode() === '23000'
+                ? 'Não é possível remover: este desafio já tem equipes vinculadas.'
+                : 'Não foi possível remover o desafio.';
+        }
+
+        $this->redirecionar('temas/desafios/' . $temaId);
+    }
+
+    public function novoDesafio($temaId)
+    {
+        RoleMiddleware::exigir(['administrador']);
+        $tema = $this->temas->buscarPorId($temaId);
+
+        if ($tema === null) {
+            http_response_code(404);
+            exit('Tema não encontrado.');
+        }
+
+        $trilha = $this->trilhas->buscarPorId($tema['trilha_id']);
+        $erro = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $pergunta = trim(isset($_POST['pergunta']) ? $_POST['pergunta'] : '');
+            $ativo = isset($_POST['ativo']) ? 1 : 0;
+
+            if ($pergunta === '') {
+                $erro = 'Informe o texto da pergunta do desafio.';
+            } else {
+                $this->desafios->criar($temaId, $pergunta, $ativo);
+                $this->redirecionar('temas/desafios/' . $temaId);
+                return;
+            }
+        }
+
+        $this->renderizar('admin/temas/form_desafio', [
+            'erro' => $erro,
+            'trilha' => $trilha,
+            'tema' => $tema,
+            'desafio' => null,
+        ], 'Novo desafio', ['tipo' => 'temas', 'id' => (int) $trilha['id']]);
+    }
+
+    public function editarDesafio($id)
+    {
+        $desafio = $this->desafios->buscarPorId($id);
+
+        if ($desafio === null) {
+            http_response_code(404);
+            exit('Desafio não encontrado.');
+        }
+
+        $tema = $this->temas->buscarPorId($desafio['tema_id']);
+        $trilha = $this->trilhas->buscarPorId($tema['trilha_id']);
+        $erro = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            RoleMiddleware::exigir(['administrador']);
+            $pergunta = trim(isset($_POST['pergunta']) ? $_POST['pergunta'] : '');
+            $ativo = isset($_POST['ativo']) ? 1 : 0;
+
+            if ($pergunta === '') {
+                $erro = 'Informe o texto da pergunta do desafio.';
+            } else {
+                $this->desafios->atualizar($id, $pergunta, $ativo);
+                $desafio = $this->desafios->buscarPorId($id);
+            }
+        }
+
+        $this->renderizar('admin/temas/form_desafio', [
+            'erro' => $erro,
+            'trilha' => $trilha,
+            'tema' => $tema,
+            'desafio' => $desafio,
+        ], 'Editar desafio', ['tipo' => 'temas', 'id' => (int) $trilha['id']]);
     }
 }

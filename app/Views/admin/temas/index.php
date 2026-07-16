@@ -2,24 +2,31 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Temas/Desafios de <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Temas de <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('trilhas/index/' . (int) $trilha['concurso_id']); ?>">Voltar às trilhas</a></p>
 <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
-<p><a href="<?php echo url('temas/novo/' . (int) $trilha['id']); ?>">+ Novo tema/desafio</a></p>
+<p><a href="<?php echo url('temas/novo/' . (int) $trilha['id']); ?>">+ Novo tema</a></p>
 <?php endif; ?>
 
 <?php if (empty($temas)): ?>
-    <p>Nenhum tema/desafio cadastrado.</p>
+    <p>Nenhum tema cadastrado.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
         <tr><th>Nome</th><th>Ativo</th><th>Ações</th></tr>
         <?php foreach ($temas as $tema): ?>
         <tr>
-            <td><?php echo htmlspecialchars($tema['nome'], ENT_QUOTES, 'UTF-8'); ?></td>
+            <td><a href="<?php echo url('temas/desafios/' . (int) $tema['id']); ?>"><?php echo htmlspecialchars($tema['nome'], ENT_QUOTES, 'UTF-8'); ?></a></td>
             <td><?php echo $tema['ativo'] ? 'Sim' : 'Não'; ?></td>
             <td>
                 <div class="acoes-icones">
+                    <a href="<?php echo url('temas/desafios/' . (int) $tema['id']); ?>" class="btn-icone" title="Ver desafios">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M4 6h16"></path>
+                            <path d="M4 12h16"></path>
+                            <path d="M4 18h16"></path>
+                        </svg>
+                    </a>
                     <a href="<?php echo url('temas/editar/' . (int) $tema['id']); ?>" class="btn-icone" title="Editar">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -27,7 +34,7 @@
                         </svg>
                     </a>
                     <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
-                    <form method="post" action="<?php echo url('temas/remover'); ?>" onsubmit="return confirm('Remover este tema/desafio? Só funciona se ele ainda não tiver equipes vinculadas.');">
+                    <form method="post" action="<?php echo url('temas/remover'); ?>" onsubmit="return confirm('Remover este tema? Só funciona se ele não tiver desafios cadastrados.');">
                         <input type="hidden" name="id" value="<?php echo (int) $tema['id']; ?>">
                         <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                         <button type="submit" class="btn-icone" title="Remover">

@@ -51,6 +51,22 @@ class EquipeRepository
         return $equipe !== false ? $equipe : null;
     }
 
+    /**
+     * Busca global por nome (sem escopar por trilha) - usada por scripts CLI
+     * (ex.: migrar_equipe_trilha.php, Fase 17 Bug 9) que precisam achar a
+     * equipe antes de saber em qual trilha ela esta hoje.
+     */
+    public function buscarPorNome($nomeEquipe)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM equipes WHERE nome_equipe = :nome_equipe LIMIT 1');
+        $stmt->execute(['nome_equipe' => $nomeEquipe]);
+
+        $equipe = $stmt->fetch();
+
+        return $equipe !== false ? $equipe : null;
+    }
+
     public function criar($trilhaId, $nomeEquipe, $vinculoInstitucional, $observacoes)
     {
         $pdo = Database::conexao();
@@ -88,6 +104,38 @@ class EquipeRepository
         $stmt->execute($depois + ['id' => $equipeId]);
 
         Auditoria::registrar('atualizar', 'equipes', $equipeId, $antes, $depois);
+    }
+
+    /**
+     * Fase 17 (Bug 2): grava o Desafio escolhido na propria equipe - antes
+     * desta fase, "tema_desafio_id"/"desafio_id" nunca era escrito por nenhum
+     * codigo (o valor ficava so' dentro do JSON da submissao). Chamado por
+     * SubmissaoService::gravar() e pelo script de importacao do Google Forms.
+     */
+    public function definirDesafio($equipeId, $desafioId)
+    {
+        $antes = $this->buscarPorId($equipeId);
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE equipes SET desafio_id = :desafio_id WHERE id = :id');
+        $stmt->execute(['desafio_id' => $desafioId, 'id' => $equipeId]);
+
+        Auditoria::registrar('definir_desafio', 'equipes', $equipeId, $antes, ['desafio_id' => $desafioId]);
+    }
+
+    /**
+     * Fase 17 (Bug 9): migra a equipe para outra trilha (via script CLI, sem
+     * funcionalidade de interface - comprometeria a genericidade do sistema).
+     * Zera desafio_id: o desafio escolhido pertence a um Tema/trilha antigos e
+     * nao existe na trilha nova (Bug 2 escopa desafios por trilha).
+     */
+    public function migrarParaTrilha($equipeId, $novaTrilhaId)
+    {
+        $antes = $this->buscarPorId($equipeId);
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE equipes SET trilha_id = :trilha_id, desafio_id = NULL WHERE id = :id');
+        $stmt->execute(['trilha_id' => $novaTrilhaId, 'id' => $equipeId]);
+
+        Auditoria::registrar('migrar_trilha', 'equipes', $equipeId, $antes, ['trilha_id' => $novaTrilhaId, 'desafio_id' => null]);
     }
 
     public function alterarLider($equipeId, $novoLiderParticipanteId)

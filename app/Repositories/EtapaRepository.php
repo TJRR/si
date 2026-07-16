@@ -45,9 +45,20 @@ class EtapaRepository
 
     public function buscarCadastroDaTrilha($trilhaId)
     {
+        return $this->buscarPorTrilhaEOrdem($trilhaId, 1);
+    }
+
+    /**
+     * Fase 17 (Bug 1): busca por ordem em vez de nome - o nome da etapa diverge
+     * entre trilhas (confirmado: a etapa de submissao e' "ordem = 2" nas duas,
+     * mesmo com nomes diferentes), tornando a busca por nome fragil demais
+     * para scripts como a importacao do Google Forms.
+     */
+    public function buscarPorTrilhaEOrdem($trilhaId, $ordem)
+    {
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare('SELECT * FROM etapas WHERE trilha_id = :trilha_id AND ordem = 1 LIMIT 1');
-        $stmt->execute(['trilha_id' => $trilhaId]);
+        $stmt = $pdo->prepare('SELECT * FROM etapas WHERE trilha_id = :trilha_id AND ordem = :ordem LIMIT 1');
+        $stmt->execute(['trilha_id' => $trilhaId, 'ordem' => $ordem]);
 
         $etapa = $stmt->fetch();
 
@@ -116,11 +127,11 @@ class EtapaRepository
             'INSERT INTO etapas (trilha_id, nome, descricao, ordem, data_inicio, data_fim, formulario_dinamico_id,
                                   regra_transicao_tipo, regra_transicao_valor, modo_designacao,
                                   qtd_avaliadores_por_submissao, modo_consolidacao, modo_sigilo, modo_avanco,
-                                  mecanismo_avaliacao)
+                                  mecanismo_avaliacao, modo_feedback_avaliador)
              VALUES (:trilha_id, :nome, :descricao, :ordem, :data_inicio, :data_fim, :formulario_dinamico_id,
                      :regra_transicao_tipo, :regra_transicao_valor, :modo_designacao,
                      :qtd_avaliadores_por_submissao, :modo_consolidacao, :modo_sigilo, :modo_avanco,
-                     :mecanismo_avaliacao)'
+                     :mecanismo_avaliacao, :modo_feedback_avaliador)'
         );
         $dados = array_merge([
             'trilha_id' => $trilhaId,
@@ -163,7 +174,7 @@ class EtapaRepository
                  regra_transicao_tipo = :regra_transicao_tipo, regra_transicao_valor = :regra_transicao_valor,
                  modo_designacao = :modo_designacao, qtd_avaliadores_por_submissao = :qtd_avaliadores_por_submissao,
                  modo_consolidacao = :modo_consolidacao, modo_sigilo = :modo_sigilo, modo_avanco = :modo_avanco,
-                 mecanismo_avaliacao = :mecanismo_avaliacao
+                 mecanismo_avaliacao = :mecanismo_avaliacao, modo_feedback_avaliador = :modo_feedback_avaliador
              WHERE id = :id'
         );
         $depois = array_merge([
@@ -191,6 +202,7 @@ class EtapaRepository
         $modoSigilo = isset($configAvaliacao['modo_sigilo']) ? $configAvaliacao['modo_sigilo'] : 'aberto';
         $modoAvanco = isset($configAvaliacao['modo_avanco']) ? $configAvaliacao['modo_avanco'] : 'manual';
         $mecanismoAvaliacao = isset($configAvaliacao['mecanismo_avaliacao']) ? $configAvaliacao['mecanismo_avaliacao'] : '';
+        $modoFeedbackAvaliador = isset($configAvaliacao['modo_feedback_avaliador']) ? $configAvaliacao['modo_feedback_avaliador'] : '';
 
         return [
             'modo_designacao' => in_array($modoDesignacao, ['manual', 'aberto', 'automatico', 'sorteio_categoria'], true) ? $modoDesignacao : null,
@@ -199,6 +211,7 @@ class EtapaRepository
             'modo_sigilo' => in_array($modoSigilo, ['cego', 'aberto'], true) ? $modoSigilo : 'aberto',
             'modo_avanco' => in_array($modoAvanco, ['automatico', 'manual'], true) ? $modoAvanco : 'manual',
             'mecanismo_avaliacao' => in_array($mecanismoAvaliacao, ['nenhuma', 'administrador', 'avaliadores'], true) ? $mecanismoAvaliacao : 'nenhuma',
+            'modo_feedback_avaliador' => in_array($modoFeedbackAvaliador, ['nenhum', 'submissao', 'criterio'], true) ? $modoFeedbackAvaliador : 'nenhum',
         ];
     }
 }

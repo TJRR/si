@@ -23,6 +23,29 @@ class UsuarioRepository
         return $usuario !== false ? $usuario : null;
     }
 
+    /**
+     * Fase 17 (Melhoria 2): usuarios elegiveis para "visualizar como" -
+     * ativos, ja aprovados, e sem perfil administrador (decisao do usuario:
+     * um Admin nao pode "virar" outro Admin).
+     */
+    public function listarAtivosNaoAdministradores()
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->query(
+            "SELECT u.* FROM usuarios u
+             WHERE u.status = 'aprovado' AND u.ativo = 1
+               AND u.id NOT IN (
+                   SELECT upc.usuario_id
+                   FROM usuario_perfil_concurso upc
+                   INNER JOIN perfis p ON p.id = upc.perfil_id
+                   WHERE p.chave = 'administrador'
+               )
+             ORDER BY u.nome ASC"
+        );
+
+        return $stmt->fetchAll();
+    }
+
     public function buscarPorEmail($email)
     {
         $pdo = Database::conexao();

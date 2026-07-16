@@ -14,6 +14,7 @@ class CampoDinamicoService
 {
     const TIPOS = [
         'texto' => 'Texto',
+        'texto_longo' => 'Texto longo',
         'numero' => 'Número',
         'cpf' => 'CPF',
         'email' => 'E-mail',

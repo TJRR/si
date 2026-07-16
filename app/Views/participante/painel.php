@@ -12,7 +12,10 @@
         </span>
     </p>
     <p><strong>Trilha:</strong> <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></p>
-    <p><strong>Tema/Desafio:</strong> <?php echo $tema !== null ? htmlspecialchars($tema['nome'], ENT_QUOTES, 'UTF-8') : 'ainda não escolhido (será definido na submissão da ideia)'; ?></p>
+    <p><strong>Tema:</strong> <?php echo $tema !== null ? htmlspecialchars($tema['nome'], ENT_QUOTES, 'UTF-8') : 'ainda não escolhido (será definido na submissão da ideia)'; ?></p>
+    <?php if ($desafio !== null): ?>
+    <p><strong>Desafio:</strong> <?php echo htmlspecialchars($desafio['pergunta'], ENT_QUOTES, 'UTF-8'); ?></p>
+    <?php endif; ?>
 
     <?php if ($ehLider): ?>
         <p><a href="<?php echo url('participante/editarEquipe'); ?>">Editar equipe</a></p>
@@ -44,12 +47,8 @@
             </td>
             <td>
                 <div class="acoes-icones">
-                    <?php if ($ehEuMesmo || $ehLider): ?>
-                        <?php
-                        $urlEditar = $ehEuMesmo ? url('participante/meusDados') : url('participante/editarIntegrante/' . (int) $colega['id']);
-                        $tituloEditar = $ehEuMesmo ? 'Editar meus dados' : 'Editar dados de ' . $colega['nome'];
-                        ?>
-                        <a href="<?php echo $urlEditar; ?>" class="btn-icone" title="<?php echo htmlspecialchars($tituloEditar, ENT_QUOTES, 'UTF-8'); ?>">
+                    <?php if ($ehEuMesmo): ?>
+                        <a href="<?php echo url('participante/meusDados'); ?>" class="btn-icone" title="Editar meus dados">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -64,6 +63,20 @@
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <polyline points="16 12 12 8 8 12"></polyline>
                                     <line x1="12" y1="16" x2="12" y2="8"></line>
+                                </svg>
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                    <?php if ($ehLider && !$ehEuMesmo): ?>
+                        <?php $confirmacaoExcluir = htmlspecialchars(addslashes('Excluir ' . $colega['nome'] . ' da equipe? Esta ação não pode ser desfeita.'), ENT_QUOTES, 'UTF-8'); ?>
+                        <form method="post" action="<?php echo url('participante/excluirIntegrante/' . (int) $colega['id']); ?>" onsubmit="return confirm('<?php echo $confirmacaoExcluir; ?>');">
+                            <button type="submit" class="btn-icone" title="Excluir integrante">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                    <path d="M10 11v6"></path>
+                                    <path d="M14 11v6"></path>
+                                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
                                 </svg>
                             </button>
                         </form>
@@ -94,7 +107,17 @@
                     <?php echo htmlspecialchars(formatarData($etapa['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
                 <?php endif; ?>
             </td>
-            <td><a href="<?php echo url('submissao/preencher/' . (int) $etapa['id']); ?>">Preencher</a></td>
+            <td>
+                <?php if ($etapa['motivo_bloqueio'] !== null): ?>
+                    <span class="acao-indisponivel" title="<?php echo htmlspecialchars($etapa['motivo_bloqueio'], ENT_QUOTES, 'UTF-8'); ?>">Indisponível</span>
+                    <br><small><?php echo htmlspecialchars($etapa['motivo_bloqueio'], ENT_QUOTES, 'UTF-8'); ?></small>
+                <?php else: ?>
+                    <a href="<?php echo url('submissao/preencher/' . (int) $etapa['id']); ?>">Preencher</a>
+                <?php endif; ?>
+                <?php if (!empty($etapa['feedback_disponivel'])): ?>
+                    · <a href="<?php echo url('participante/verFeedback/' . (int) $etapa['submissao_id_feedback']); ?>">Ver feedback</a>
+                <?php endif; ?>
+            </td>
         </tr>
         <?php endforeach; ?>
     </table>

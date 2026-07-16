@@ -9,10 +9,10 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Database;
 use App\Repositories\CampoDinamicoRepository;
+use App\Repositories\DesafioRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\FormularioDinamicoRepository;
 use App\Repositories\SubmissaoRepository;
-use App\Repositories\TemaDesafioRepository;
 use App\Repositories\TrilhaRepository;
 use App\Validation\CpfValidador;
 use App\Validation\UploadPdfValidador;
@@ -26,7 +26,7 @@ class SubmissaoService
     private $trilhas;
     private $formularios;
     private $campos;
-    private $temas;
+    private $desafios;
     private $submissoes;
 
     public function __construct()
@@ -35,11 +35,19 @@ class SubmissaoService
         $this->trilhas = new TrilhaRepository();
         $this->formularios = new FormularioDinamicoRepository();
         $this->campos = new CampoDinamicoRepository();
-        $this->temas = new TemaDesafioRepository();
+        $this->desafios = new DesafioRepository();
         $this->submissoes = new SubmissaoRepository();
     }
 
-    public function preparar($etapaId)
+    /**
+     * $equipeId (Fase 17, Bug 2) e' opcional - quando informado, carrega a
+     * submissao ja existente da equipe nesta etapa (se houver) pra
+     * pre-preencher o formulario e permitir edicao em vez de sempre mostrar
+     * vazio. Sem $equipeId, preparar() so' descreve o formulario (uso
+     * historico, ex.: reconstruir_campos_etapa1.php nao usa este metodo, mas
+     * outros callers que so' querem a estrutura continuam funcionando).
+     */
+    public function preparar($etapaId, $equipeId = null)
     {
         $etapa = $this->etapas->buscarPorId($etapaId);
 
@@ -69,26 +77,36 @@ class SubmissaoService
 
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
 
+        $submissaoExistente = $equipeId !== null ? $this->submissoes->buscarPorEquipeEEtapa($equipeId, $etapa['id']) : null;
+        $valoresExistentes = [];
+
+        if ($submissaoExistente !== null) {
+            $dados = json_decode((string) $submissaoExistente['dados_json'], true);
+            $valoresExistentes = isset($dados['campos']) && is_array($dados['campos']) ? $dados['campos'] : [];
+        }
+
         return [
             'sucesso' => true,
             'etapa' => $etapa,
             'formulario' => $formulario,
             'trilha' => $trilha,
             'campos' => $this->campos->listarPorFormulario($formulario['id']),
-            'temas' => $this->temas->listarAtivosPorTrilha($trilha['id']),
+            'desafios' => $this->desafios->listarAtivosPorTrilha($trilha['id']),
+            'submissaoExistente' => $submissaoExistente,
+            'valoresExistentes' => $valoresExistentes,
         ];
     }
 
-    public function processar($etapaId, array $post, array $files)
+    public function processar($etapaId, array $post, array $files, $equipeId)
     {
-        $preparo = $this->preparar($etapaId);
+        $preparo = $this->preparar($etapaId, $equipeId);
 
         if (!$preparo['sucesso']) {
             return $preparo;
         }
 
         $trilhaId = $preparo['trilha']['id'];
-        $temasValidos = array_map('intval', array_column($preparo['temas'], 'id'));
+        $desafiosValidos = array_map('intval', array_column($preparo['desafios'], 'id'));
         $postCampos = isset($post['campos']) && is_array($post['campos']) ? $post['campos'] : [];
         $filesCampos = $this->normalizarArquivos($files);
 
@@ -101,8 +119,9 @@ class SubmissaoService
             $config = $campo['config_json'] !== null ? json_decode($campo['config_json'], true) : [];
             $valorPost = isset($postCampos[$campoId]) ? $postCampos[$campoId] : null;
             $arquivoPost = isset($filesCampos[$campoId]) ? $filesCampos[$campoId] : null;
+            $valorExistente = isset($preparo['valoresExistentes'][(string) $campoId]) ? $preparo['valoresExistentes'][(string) $campoId] : null;
 
-            $resultado = $this->validarCampo($campo, $config, $valorPost, $arquivoPost, $temasValidos);
+            $resultado = $this->validarCampo($campo, $config, $valorPost, $arquivoPost, $desafiosValidos, $valorExistente);
 
             if (!$resultado['valido']) {
                 $erros[$campoId] = $resultado['mensagem'];
@@ -140,7 +159,7 @@ class SubmissaoService
             return ['sucesso' => false, 'mensagem' => 'Corrija os campos indicados.', 'erros' => $erros];
         }
 
-        $resultado = $this->gravar($preparo, $valoresProcessados, array_unique($cpfsEncontrados));
+        $resultado = $this->gravar($preparo, $valoresProcessados, array_unique($cpfsEncontrados), $preparo['submissaoExistente']);
 
         if ($resultado['sucesso']) {
             $this->notificarConfirmacaoSubmissao($preparo, $valoresProcessados, $resultado['submissao_id']);
@@ -176,19 +195,27 @@ class SubmissaoService
         }
     }
 
-    private function gravar(array $preparo, array $valoresProcessados, array $cpfs)
+    /**
+     * $submissaoExistente (Fase 17, Bug 2): se a equipe ja submeteu nesta
+     * etapa, atualiza a submissao existente (upsert) em vez de criar uma
+     * nova - reenviar o formulario e' edicao, nao uma segunda inscricao.
+     */
+    private function gravar(array $preparo, array $valoresProcessados, array $cpfs, $submissaoExistente = null)
     {
         $pdo = Database::conexao();
         $arquivosMovidos = [];
+        $criada = $submissaoExistente === null;
 
         $pdo->beginTransaction();
 
         try {
-            $submissaoId = $this->submissoes->criar(
-                $preparo['etapa']['id'],
-                $preparo['formulario']['id'],
-                ['campos' => $valoresProcessados]
-            );
+            $submissaoId = $criada
+                ? $this->submissoes->criar(
+                    $preparo['etapa']['id'],
+                    $preparo['formulario']['id'],
+                    ['campos' => $valoresProcessados]
+                )
+                : (int) $submissaoExistente['id'];
 
             foreach ($valoresProcessados as $campoId => $valor) {
                 if (!is_array($valor) || !isset($valor['__upload_tmp'])) {
@@ -226,7 +253,12 @@ class SubmissaoService
 
             $pdo->commit();
 
-            return ['sucesso' => true, 'submissao_id' => $submissaoId];
+            return [
+                'sucesso' => true,
+                'submissao_id' => $submissaoId,
+                'criada' => $criada,
+                'desafio_id' => $this->extrairDesafioEscolhido($preparo['campos'], $valoresProcessados),
+            ];
         } catch (\Exception $e) {
             $pdo->rollBack();
 
@@ -240,13 +272,40 @@ class SubmissaoService
         }
     }
 
-    private function validarCampo(array $campo, array $config, $valorPost, $arquivoPost, array $temasValidos)
+    /**
+     * Fase 17 (Bug 2): acha o valor do campo "selecao_tema_desafio" (se
+     * existir no formulario) entre os valores ja validados, para o Controller
+     * gravar de volta em equipes.desafio_id (EquipeRepository::definirDesafio) -
+     * primeira vez que essa coluna passa a ser escrita de verdade.
+     */
+    private function extrairDesafioEscolhido(array $campos, array $valoresProcessados)
+    {
+        foreach ($campos as $campo) {
+            if ($campo['tipo'] === 'selecao_tema_desafio') {
+                $campoId = (int) $campo['id'];
+
+                return isset($valoresProcessados[$campoId]) ? (int) $valoresProcessados[$campoId] : null;
+            }
+        }
+
+        return null;
+    }
+
+    private function validarCampo(array $campo, array $config, $valorPost, $arquivoPost, array $desafiosValidos, $valorExistente = null)
     {
         $tipo = $campo['tipo'];
         $obrigatorio = (bool) $campo['obrigatorio'];
 
         if ($tipo === 'upload_pdf') {
             if ($arquivoPost === null || $arquivoPost['error'] === UPLOAD_ERR_NO_FILE) {
+                // Fase 17 (Bug 2): reabrir pra editar sem escolher um arquivo
+                // novo mantem o arquivo ja enviado (o <input type="file"> do
+                // navegador nunca vem pre-preenchido, entao "vazio" aqui nao
+                // significa "o participante quis apagar o arquivo").
+                if (is_array($valorExistente) && isset($valorExistente['caminho_relativo'])) {
+                    return ['valido' => true, 'valor' => $valorExistente, 'cpfs' => []];
+                }
+
                 if ($obrigatorio) {
                     return ['valido' => false, 'mensagem' => 'Campo obrigatório.'];
                 }
@@ -287,6 +346,7 @@ class SubmissaoService
 
         switch ($tipo) {
             case 'texto':
+            case 'texto_longo':
                 return ['valido' => true, 'valor' => $valor, 'cpfs' => []];
 
             case 'numero':
@@ -329,8 +389,8 @@ class SubmissaoService
                 return ['valido' => true, 'valor' => $valor, 'cpfs' => []];
 
             case 'selecao_tema_desafio':
-                if (!in_array((int) $valor, $temasValidos, true)) {
-                    return ['valido' => false, 'mensagem' => 'Selecione um tema/desafio válido.'];
+                if (!in_array((int) $valor, $desafiosValidos, true)) {
+                    return ['valido' => false, 'mensagem' => 'Selecione um desafio válido.'];
                 }
 
                 return ['valido' => true, 'valor' => (int) $valor, 'cpfs' => []];

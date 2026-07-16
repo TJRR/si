@@ -4,6 +4,11 @@
 -- 'Eficiência Operacional'), que não eram dado real de edital.
 -- Pré-condição já confirmada: nenhuma equipe aponta para os temas placeholder
 -- (equipes.tema_desafio_id IS NOT NULL retorna 0 linhas em npi_si_dev).
+--
+-- HISTÓRICO (Fase 17): este script já foi executado - a tabela "temas_desafios"
+-- citada abaixo foi renomeada para "temas" na migration 055. Não rodar de novo
+-- num banco onde a migration 055 já foi aplicada (a tabela não existe mais
+-- com este nome); mantido aqui só como registro do que foi feito.
 
 DELETE FROM temas_desafios WHERE id IN (2, 3);
 

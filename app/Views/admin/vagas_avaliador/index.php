@@ -10,9 +10,18 @@
     <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<p>Usada quando "Designação de avaliadores" desta etapa está em "Sorteio aleatório por categoria": defina quantos avaliadores de cada categoria são exigidos por submissão. Categorias com quantidade 0 (ou em branco) não entram no sorteio.</p>
+<p>Usada quando "Designação de avaliadores" desta etapa está em "Sorteio aleatório garantindo 1 avaliador de cada categoria": defina quantos avaliadores de cada categoria são exigidos por submissão. Categorias com quantidade 0 (ou em branco) não entram no sorteio.</p>
 
-<?php if (empty($categorias)): ?>
+<?php if ($etapa['modo_designacao'] !== 'sorteio_categoria'): ?>
+    <p><strong>Esta configuração não se aplica ao modo de designação atual</strong> ("<?php
+        echo htmlspecialchars([
+            '' => 'Não definido',
+            'manual' => 'Admin atribui manualmente',
+            'aberto' => 'Todo avaliador da trilha vê tudo (não precisa designar)',
+            'automatico' => 'Distribuição automática balanceada',
+        ][$etapa['modo_designacao']] ?? 'Não definido', ENT_QUOTES, 'UTF-8');
+    ?>"). Mude "Designação de avaliadores" para "Sorteio aleatório garantindo 1 avaliador de cada categoria" na aba Dados Gerais para configurar vagas por categoria.</p>
+<?php elseif (empty($categorias)): ?>
     <p><strong>Nenhuma categoria cadastrada para este concurso ainda.</strong>
         <a href="<?php echo url('categoriasAvaliador/index/' . (int) $trilha['concurso_id']); ?>">Cadastre categorias de avaliador</a> antes de configurar as vagas.</p>
 <?php else: ?>

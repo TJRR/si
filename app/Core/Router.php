@@ -32,6 +32,7 @@ use App\Controllers\ParticipanteController;
 use App\Controllers\RegraDesempateAdminController;
 use App\Controllers\ResultadoAdminController;
 use App\Controllers\ResultadoPublicoController;
+use App\Controllers\SessaoController;
 use App\Controllers\SubmissaoController;
 use App\Controllers\TemaAdminController;
 use App\Controllers\TemaDesafioAdminController;
@@ -74,10 +75,16 @@ class Router
         'auditoria' => AuditoriaAdminController::class,
         'configuracoes' => ConfiguracaoAdminController::class,
         'meuPerfil' => MeuPerfilController::class,
+        'sessao' => SessaoController::class,
     ];
 
     public function despachar($r)
     {
+        $partes = explode('/', trim($r, '/'));
+        $modulo = $partes[0] !== '' ? $partes[0] : 'home';
+        $acao = isset($partes[1]) && $partes[1] !== '' ? $partes[1] : 'index';
+        $parametros = array_slice($partes, 2);
+
         if (Auth::autenticado()) {
             try {
                 $configuracao = (new ConfiguracaoSistemaRepository())->buscar();
@@ -92,12 +99,17 @@ class Router
                 header('Location: ' . url('auth/login') . '&expirado=1');
                 exit;
             }
-        }
 
-        $partes = explode('/', trim($r, '/'));
-        $modulo = $partes[0] !== '' ? $partes[0] : 'home';
-        $acao = isset($partes[1]) && $partes[1] !== '' ? $partes[1] : 'index';
-        $parametros = array_slice($partes, 2);
+            // Fase 17 (Melhoria 2): durante "visualizar como outro usuario",
+            // so' leitura (GET) e' permitida - qualquer outra requisicao e'
+            // bloqueada, exceto a propria rota de sair da visualizacao.
+            $ehRotaPararVisualizacao = $modulo === 'meuPerfil' && $acao === 'pararVisualizacao';
+
+            if (Auth::estaVisualizandoComoOutro() && $_SERVER['REQUEST_METHOD'] !== 'GET' && !$ehRotaPararVisualizacao) {
+                http_response_code(403);
+                exit('Ação bloqueada: modo de visualização somente leitura. Volte para sua conta de administrador para realizar ações.');
+            }
+        }
 
         if (!isset(self::$rotas[$modulo])) {
             $this->naoEncontrado();

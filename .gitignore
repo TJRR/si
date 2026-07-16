@@ -6,5 +6,15 @@
 !/storage/uploads/.gitkeep
 /storage/sessions/*
 !/storage/sessions/.gitkeep
+/storage/exports/*
+!/storage/exports/.gitkeep
 /assets/uploads/*
 !/assets/uploads/.gitkeep
+
+# Dados reais de submissao/homologacao (CPF, nome, e-mail, telefone de
+# participantes) - nunca versionar, este repo e' publico. A pasta inteira fica
+# invisivel ao git (17/07/2026, correcao de vazamento real desde a Fase 3 -
+# ver memoria do projeto). Os scripts que leem arquivos dela (ex.:
+# importar_submissoes_google_forms.php) continuam versionados normalmente,
+# so' os dados de entrada e' que nunca devem ser commitados.
+/database/dados_importacao/

@@ -42,14 +42,36 @@
     </p>
 
     <table border="1" cellpadding="6">
-        <tr><th>#</th><th>Submissão</th><th>Equipe</th><th>NE</th><th>Classificado</th></tr>
+        <tr><th>#</th><th>Submissão</th><th>Equipe</th><th>NE</th><th>Classificado</th><th>Ações</th></tr>
         <?php foreach ($ranking as $posicao => $linha): ?>
+        <?php
+        $urlSubmissao = url('resultados/popupSubmissao/' . (int) $linha['submissao_id']);
+        $urlNotas = url('resultados/popupNotas/' . (int) $linha['submissao_id']);
+        ?>
         <tr>
             <td><?php echo $posicao + 1; ?></td>
             <td>#<?php echo (int) $linha['submissao_id']; ?></td>
             <td><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : '—', ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], 2, ',', '.') : 'sem notas ainda'; ?></td>
             <td><?php echo !empty($linha['classificado']) ? 'Sim' : 'Não'; ?></td>
+            <td>
+                <div class="acoes-icones">
+                    <a href="<?php echo htmlspecialchars($urlSubmissao, ENT_QUOTES, 'UTF-8'); ?>" class="btn-icone" title="Ver submissão"
+                       onclick="abrirModalUrl('Conteúdo da submissão', this.href); return false;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </a>
+                    <a href="<?php echo htmlspecialchars($urlNotas, ENT_QUOTES, 'UTF-8'); ?>" class="btn-icone" title="Ver avaliações"
+                       onclick="abrirModalUrl('Avaliações', this.href); return false;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 11l3 3L22 4"></path>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                    </a>
+                </div>
+            </td>
         </tr>
         <?php endforeach; ?>
     </table>

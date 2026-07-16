@@ -96,6 +96,49 @@ class Auth
         $_SESSION['perfis'] = $perfis;
     }
 
+    /**
+     * Fase 17 (Melhoria 2): Admin visualiza o sistema como outro usuario,
+     * somente leitura (o bloqueio de escrita fica em Router::despachar()).
+     * Guarda a identidade real do Admin em 'visualizando_de' e sobrescreve a
+     * sessao com a do alvo - nao e' um novo login (mesmo navegador/pessoa),
+     * por isso nao regenera o id de sessao.
+     */
+    public static function iniciarVisualizacaoComo($usuarioAlvoId, $nomeAlvo, array $perfisAlvo)
+    {
+        $_SESSION['visualizando_de'] = [
+            'usuario_id' => self::usuarioId(),
+            'usuario_nome' => self::nome(),
+            'perfis' => self::perfis(),
+        ];
+
+        $_SESSION['usuario_id'] = $usuarioAlvoId;
+        $_SESSION['usuario_nome'] = $nomeAlvo;
+        $_SESSION['perfis'] = $perfisAlvo;
+    }
+
+    public static function estaVisualizandoComoOutro()
+    {
+        return isset($_SESSION['visualizando_de']);
+    }
+
+    public static function usuarioOriginal()
+    {
+        return isset($_SESSION['visualizando_de']) ? $_SESSION['visualizando_de'] : null;
+    }
+
+    public static function pararVisualizacaoComo()
+    {
+        if (!isset($_SESSION['visualizando_de'])) {
+            return;
+        }
+
+        $original = $_SESSION['visualizando_de'];
+        $_SESSION['usuario_id'] = $original['usuario_id'];
+        $_SESSION['usuario_nome'] = $original['usuario_nome'];
+        $_SESSION['perfis'] = $original['perfis'];
+        unset($_SESSION['visualizando_de']);
+    }
+
     public static function logout()
     {
         $_SESSION = [];
