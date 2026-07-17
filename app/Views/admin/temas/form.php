@@ -18,6 +18,15 @@
         <textarea name="descricao_longa" rows="6" cols="60" <?php echo $desabilitado; ?>><?php echo htmlspecialchars($tema !== null ? (string) $tema['descricao_longa'] : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
     </label><br>
 
+    <label>Ícone temático (opcional, exibido na grade de Desafios da home):
+        <select name="icone" <?php echo $desabilitado; ?>>
+            <option value="">— Nenhum —</option>
+            <?php foreach (\App\Repositories\TemaRepository::ICONES_DISPONIVEIS as $valorOpcao => $rotuloOpcao): ?>
+                <option value="<?php echo $valorOpcao; ?>" <?php echo ($tema !== null && $tema['icone'] === $valorOpcao) ? 'selected' : ''; ?>><?php echo $rotuloOpcao; ?></option>
+            <?php endforeach; ?>
+        </select>
+    </label><br>
+
     <label>
         <input type="checkbox" name="ativo" value="1" <?php echo ($tema === null || $tema['ativo']) ? 'checked' : ''; ?> <?php echo $desabilitado; ?>>
         Ativo

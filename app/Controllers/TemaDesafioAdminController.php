@@ -83,11 +83,12 @@ class TemaDesafioAdminController extends Controller
             $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
             $descricaoLonga = trim(isset($_POST['descricao_longa']) ? $_POST['descricao_longa'] : '');
             $ativo = isset($_POST['ativo']) ? 1 : 0;
+            $icone = $this->iconeSelecionado();
 
             if ($nome === '') {
                 $erro = 'Informe o nome do tema.';
             } else {
-                $this->temas->criar($trilhaId, $nome, $descricaoLonga, $ativo);
+                $this->temas->criar($trilhaId, $nome, $descricaoLonga, $ativo, $icone);
                 $this->redirecionar('temas/index/' . $trilhaId);
                 return;
             }
@@ -98,6 +99,13 @@ class TemaDesafioAdminController extends Controller
             'trilha' => $trilha,
             'tema' => null,
         ], 'Novo tema', ['tipo' => 'temas', 'id' => (int) $trilhaId]);
+    }
+
+    private function iconeSelecionado()
+    {
+        $valor = isset($_POST['icone']) ? $_POST['icone'] : '';
+
+        return array_key_exists($valor, \App\Repositories\TemaRepository::ICONES_DISPONIVEIS) ? $valor : null;
     }
 
     public function editar($id)
@@ -117,11 +125,12 @@ class TemaDesafioAdminController extends Controller
             $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
             $descricaoLonga = trim(isset($_POST['descricao_longa']) ? $_POST['descricao_longa'] : '');
             $ativo = isset($_POST['ativo']) ? 1 : 0;
+            $icone = $this->iconeSelecionado();
 
             if ($nome === '') {
                 $erro = 'Informe o nome do tema.';
             } else {
-                $this->temas->atualizar($id, $nome, $descricaoLonga, $ativo);
+                $this->temas->atualizar($id, $nome, $descricaoLonga, $ativo, $icone);
                 $tema = $this->temas->buscarPorId($id);
             }
         }

@@ -126,7 +126,7 @@ class NavegacaoService
         $trilhas = new TrilhaRepository();
         $etapas = new EtapaRepository();
 
-        if (in_array($tipo, ['concurso', 'formularios', 'trilhas', 'categorias_avaliador'], true)) {
+        if (in_array($tipo, ['concurso', 'formularios', 'trilhas', 'categorias_avaliador', 'slides', 'banners', 'blocos', 'contatosConcurso', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma'], true)) {
             $concurso = $concursos->buscarPorId($id);
 
             if ($concurso === null) {
@@ -141,6 +141,22 @@ class NavegacaoService
                 $caminho[] = self::noTrilhas($concurso);
             } elseif ($tipo === 'categorias_avaliador') {
                 $caminho[] = self::noCategoriasAvaliador($concurso);
+            } elseif ($tipo === 'slides') {
+                $caminho[] = self::noSlides($concurso);
+            } elseif ($tipo === 'banners') {
+                $caminho[] = self::noBanners($concurso);
+            } elseif ($tipo === 'blocos') {
+                $caminho[] = self::noBlocos($concurso);
+            } elseif ($tipo === 'contatosConcurso') {
+                $caminho[] = self::noContato($concurso);
+            } elseif ($tipo === 'premios') {
+                $caminho[] = self::noPremios($concurso);
+            } elseif ($tipo === 'faqConcurso') {
+                $caminho[] = self::noFaqConcurso($concurso);
+            } elseif ($tipo === 'documentos') {
+                $caminho[] = self::noDocumentos($concurso);
+            } elseif ($tipo === 'eventosCronograma') {
+                $caminho[] = self::noEventosCronograma($concurso);
             }
 
             return $caminho;
@@ -218,7 +234,19 @@ class NavegacaoService
                     return [self::noTrilhas($concurso)];
                 }
 
-                return [self::noCategoriasAvaliador($concurso), self::noFormularios($concurso), self::noTrilhas($concurso)];
+                return [
+                    self::noCategoriasAvaliador($concurso),
+                    self::noFormularios($concurso),
+                    self::noTrilhas($concurso),
+                    self::noSlides($concurso),
+                    self::noBanners($concurso),
+                    self::noBlocos($concurso),
+                    self::noContato($concurso),
+                    self::noPremios($concurso),
+                    self::noFaqConcurso($concurso),
+                    self::noDocumentos($concurso),
+                    self::noEventosCronograma($concurso),
+                ];
 
             case 'trilhas':
                 $lista = [];
@@ -280,6 +308,94 @@ class NavegacaoService
             'rotulo' => 'Categorias de avaliador',
             'folha' => true,
             'url' => 'categoriasAvaliador/index/' . (int) $concurso['id'],
+        ];
+    }
+
+    private static function noSlides(array $concurso)
+    {
+        return [
+            'tipo' => 'slides',
+            'id' => (int) $concurso['id'],
+            'rotulo' => 'Slideshow',
+            'folha' => true,
+            'url' => 'slides/index/' . (int) $concurso['id'],
+        ];
+    }
+
+    private static function noBanners(array $concurso)
+    {
+        return [
+            'tipo' => 'banners',
+            'id' => (int) $concurso['id'],
+            'rotulo' => 'Banners',
+            'folha' => true,
+            'url' => 'banners/index/' . (int) $concurso['id'],
+        ];
+    }
+
+    private static function noBlocos(array $concurso)
+    {
+        return [
+            'tipo' => 'blocos',
+            'id' => (int) $concurso['id'],
+            'rotulo' => 'Blocos de conteúdo',
+            'folha' => true,
+            'url' => 'blocos/index/' . (int) $concurso['id'],
+        ];
+    }
+
+    private static function noContato(array $concurso)
+    {
+        return [
+            'tipo' => 'contatosConcurso',
+            'id' => (int) $concurso['id'],
+            'rotulo' => 'Contato',
+            'folha' => true,
+            'url' => 'contatosConcurso/index/' . (int) $concurso['id'],
+        ];
+    }
+
+    private static function noPremios(array $concurso)
+    {
+        return [
+            'tipo' => 'premios',
+            'id' => (int) $concurso['id'],
+            'rotulo' => 'Premiação',
+            'folha' => true,
+            'url' => 'premios/index/' . (int) $concurso['id'],
+        ];
+    }
+
+    private static function noFaqConcurso(array $concurso)
+    {
+        return [
+            'tipo' => 'faqConcurso',
+            'id' => (int) $concurso['id'],
+            'rotulo' => 'FAQ desta edição',
+            'folha' => true,
+            'url' => 'faqConcurso/index/' . (int) $concurso['id'],
+        ];
+    }
+
+    private static function noDocumentos(array $concurso)
+    {
+        return [
+            'tipo' => 'documentos',
+            'id' => (int) $concurso['id'],
+            'rotulo' => 'Documentos',
+            'folha' => true,
+            'url' => 'documentos/index/' . (int) $concurso['id'],
+        ];
+    }
+
+    private static function noEventosCronograma(array $concurso)
+    {
+        return [
+            'tipo' => 'eventosCronograma',
+            'id' => (int) $concurso['id'],
+            'rotulo' => 'Cronograma (eventos)',
+            'folha' => true,
+            'url' => 'eventosCronograma/index/' . (int) $concurso['id'],
         ];
     }
 

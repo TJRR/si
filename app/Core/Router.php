@@ -11,28 +11,40 @@ use App\Controllers\ApuracaoAdminController;
 use App\Controllers\AuditoriaAdminController;
 use App\Controllers\AuthController;
 use App\Controllers\AvaliacaoController;
+use App\Controllers\BannerAdminController;
+use App\Controllers\BlocoConteudoAdminController;
 use App\Controllers\CadastroController;
 use App\Controllers\CampoAdminController;
 use App\Controllers\CategoriaAvaliadorAdminController;
 use App\Controllers\ConcursoAdminController;
 use App\Controllers\ConfiguracaoAdminController;
+use App\Controllers\ContatoConcursoAdminController;
 use App\Controllers\ConteudoAdminController;
 use App\Controllers\CriterioAvaliacaoAdminController;
 use App\Controllers\DesignacaoAdminController;
+use App\Controllers\DocumentoAdminController;
+use App\Controllers\EdicaoPublicaController;
+use App\Controllers\EditorMidiaAdminController;
 use App\Controllers\EtapaAdminController;
+use App\Controllers\EventoCronogramaAdminController;
+use App\Controllers\FaqAdminController;
+use App\Controllers\FaqConcursoAdminController;
 use App\Controllers\FormulaPontuacaoAdminController;
 use App\Controllers\FormularioAdminController;
 use App\Controllers\HomeController;
 use App\Controllers\HomologacaoController;
 use App\Controllers\InscricaoController;
 use App\Controllers\MeuPerfilController;
+use App\Controllers\MidiaAdminController;
 use App\Controllers\NavegacaoController;
 use App\Controllers\NotificacaoPainelController;
 use App\Controllers\ParticipanteController;
+use App\Controllers\PremioAdminController;
 use App\Controllers\RegraDesempateAdminController;
 use App\Controllers\ResultadoAdminController;
 use App\Controllers\ResultadoPublicoController;
 use App\Controllers\SessaoController;
+use App\Controllers\SlideAdminController;
 use App\Controllers\SubmissaoController;
 use App\Controllers\TemaAdminController;
 use App\Controllers\TemaDesafioAdminController;
@@ -76,6 +88,18 @@ class Router
         'configuracoes' => ConfiguracaoAdminController::class,
         'meuPerfil' => MeuPerfilController::class,
         'sessao' => SessaoController::class,
+        'editorMidia' => EditorMidiaAdminController::class,
+        'slides' => SlideAdminController::class,
+        'banners' => BannerAdminController::class,
+        'blocos' => BlocoConteudoAdminController::class,
+        'contatosConcurso' => ContatoConcursoAdminController::class,
+        'premios' => PremioAdminController::class,
+        'faq' => FaqAdminController::class,
+        'faqConcurso' => FaqConcursoAdminController::class,
+        'documentos' => DocumentoAdminController::class,
+        'midia' => MidiaAdminController::class,
+        'eventosCronograma' => EventoCronogramaAdminController::class,
+        'edicoes' => EdicaoPublicaController::class,
     ];
 
     public function despachar($r)

@@ -32,7 +32,7 @@ if ($ehPaginaPublicaComLogo) {
     $logoAdminSrc = logoAtual();
 }
 
-$modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'vagasAvaliador', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao', 'categoriasAvaliador'];
+$modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'vagasAvaliador', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao', 'categoriasAvaliador', 'slides', 'banners', 'blocos', 'contatosConcurso', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma'];
 
 if ($ehPainelInterno && \App\Core\Auth::autenticado()) {
     $repoNotificacoes = new \App\Repositories\NotificacaoPainelRepository();
@@ -51,8 +51,13 @@ if ($ehPainelAdmin) {
     ];
 
     if (\App\Core\Auth::possuiPerfil('administrador')) {
-        $abasAdmin[] = ['rotulo' => 'Páginas', 'url' => 'conteudo/index', 'ativo' => $moduloAtual === 'conteudo'];
+        // Fase 18: "Páginas" (ConteudoAdminController, conteudos_site) sai do
+        // menu - substituida pelas telas novas por concurso (Slides,
+        // Banners, Blocos de conteudo, Contato). Rota/tabela preservadas
+        // (sem DROP), so' o link de navegacao foi retirado.
         $abasAdmin[] = ['rotulo' => 'Tema', 'url' => 'tema/index', 'ativo' => $moduloAtual === 'tema'];
+        $abasAdmin[] = ['rotulo' => 'FAQ', 'url' => 'faq/index', 'ativo' => $moduloAtual === 'faq'];
+        $abasAdmin[] = ['rotulo' => 'Mídia', 'url' => 'midia/index', 'ativo' => $moduloAtual === 'midia'];
         $abasAdmin[] = ['rotulo' => 'Auditoria', 'url' => 'auditoria/index', 'ativo' => $moduloAtual === 'auditoria'];
         $abasAdmin[] = ['rotulo' => 'Configurações', 'url' => 'configuracoes/index', 'ativo' => $moduloAtual === 'configuracoes'];
     }
@@ -220,6 +225,16 @@ if ($ehPainelAdmin) {
         </div>
     </div>
     <script src="<?php echo config('base_path'); ?>/assets/js/modal.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/modal.js'); ?>" defer></script>
+    <?php if ($ehPainelAdmin): ?>
+    <script src="<?php echo config('base_path'); ?>/assets/js/editor-rico.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/editor-rico.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/reordenar-arrastar.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/reordenar-arrastar.js'); ?>" defer></script>
+    <?php endif; ?>
+<?php endif; ?>
+<?php if (isset($view) && ($view === 'home/index' || strpos($view, 'publico/') === 0)): ?>
+    <script src="<?php echo config('base_path'); ?>/assets/js/scrollspy.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/scrollspy.js'); ?>" defer></script>
+    <?php if ($view === 'home/index'): ?>
+    <script src="<?php echo config('base_path'); ?>/assets/js/slideshow.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/slideshow.js'); ?>" defer></script>
+    <?php endif; ?>
 <?php endif; ?>
 </body>
 </html>

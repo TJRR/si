@@ -17,6 +17,7 @@ use App\Repositories\ResultadoTrilhaRepository;
 use App\Repositories\SubmissaoRepository;
 use App\Repositories\TrilhaRepository;
 use App\Services\ConteudoSubmissaoService;
+use App\Services\ImagemService;
 use App\Services\ResultadoEtapaService;
 use App\Services\ResultadoTrilhaService;
 
@@ -31,6 +32,7 @@ class ResultadoAdminController extends Controller
     private $conteudoSubmissao;
     private $servicoEtapa;
     private $servicoTrilha;
+    private $imagens;
 
     public function __construct()
     {
@@ -44,6 +46,64 @@ class ResultadoAdminController extends Controller
         $this->conteudoSubmissao = new ConteudoSubmissaoService();
         $this->servicoEtapa = new ResultadoEtapaService();
         $this->servicoTrilha = new ResultadoTrilhaService();
+        $this->imagens = new ImagemService();
+    }
+
+    /**
+     * Fase 18 (4.7) - resumo de destaque + imagem do case vencedor, editado
+     * separadamente do calculo/publicacao (que continua 100% automatico).
+     */
+    public function editarDestaque($resultadoTrilhaId)
+    {
+        $resultado = $this->resultadosTrilha->buscarPorId($resultadoTrilhaId);
+
+        if ($resultado === null) {
+            http_response_code(404);
+            exit('Resultado não encontrado.');
+        }
+
+        $erro = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $imagemPath = $resultado['imagem_destaque_path'];
+            $imagemAlt = $resultado['imagem_destaque_alt'];
+
+            try {
+                if (!empty($_FILES['imagem_destaque']) && $_FILES['imagem_destaque']['error'] === UPLOAD_ERR_OK) {
+                    $alt = trim(isset($_POST['imagem_destaque_alt']) ? $_POST['imagem_destaque_alt'] : '');
+
+                    if ($alt === '') {
+                        $erro = 'Informe o texto alternativo (alt) da imagem.';
+                    } else {
+                        $imagemPath = $this->imagens->salvar($_FILES['imagem_destaque'], 'resultados', 900, 900);
+                        $imagemAlt = $alt;
+                        $this->imagens->remover($resultado['imagem_destaque_path']);
+                    }
+                } elseif (isset($_POST['imagem_destaque_alt'])) {
+                    $imagemAlt = trim($_POST['imagem_destaque_alt']);
+                }
+            } catch (\RuntimeException $e) {
+                $erro = $e->getMessage();
+            }
+
+            if ($erro === null) {
+                $this->resultadosTrilha->atualizarDestaque(
+                    $resultadoTrilhaId,
+                    trim(isset($_POST['resumo_destaque']) ? $_POST['resumo_destaque'] : '') ?: null,
+                    $imagemPath,
+                    $imagemAlt
+                );
+                $resultado = $this->resultadosTrilha->buscarPorId($resultadoTrilhaId);
+            }
+        }
+
+        $trilha = $this->trilhas->buscarPorId($resultado['trilha_id']);
+
+        $this->renderizar('admin/resultados/destaque', [
+            'erro' => $erro,
+            'trilha' => $trilha,
+            'resultado' => $resultado,
+        ], 'Destaque do case — ' . $resultado['nome_equipe'], ['tipo' => 'apuracao', 'id' => (int) $resultado['trilha_id']]);
     }
 
     /**

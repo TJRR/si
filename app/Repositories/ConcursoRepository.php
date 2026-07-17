@@ -30,6 +30,31 @@ class ConcursoRepository
         return $concurso !== false ? $concurso : null;
     }
 
+    public function buscarPorSlug($slug)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM concursos WHERE slug = :slug LIMIT 1');
+        $stmt->execute(['slug' => $slug]);
+
+        $concurso = $stmt->fetch();
+
+        return $concurso !== false ? $concurso : null;
+    }
+
+    /**
+     * Fase 18 (3.11 Edicoes Anteriores) - concursos encerrados = repositorio
+     * historico publico. Mais recente primeiro (data_fim, com fallback pra
+     * criado_em quando data_fim nao foi preenchida).
+     */
+    public function listarEncerrados()
+    {
+        $pdo = Database::conexao();
+
+        return $pdo->query(
+            "SELECT * FROM concursos WHERE status = 'encerrado' ORDER BY COALESCE(data_fim, criado_em) DESC"
+        )->fetchAll();
+    }
+
     public function buscarPorId($id)
     {
         $pdo = Database::conexao();

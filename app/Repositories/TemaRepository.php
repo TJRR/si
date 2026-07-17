@@ -17,6 +17,22 @@ use App\Core\Database;
  */
 class TemaRepository
 {
+    /**
+     * Fase 18 (3.8) - set pre-definido de icones tematicos (nao upload
+     * livre de arquivo). Chave = valor gravado em temas.icone; usado tanto
+     * pelo <select> do admin quanto pela home publica pra escolher o SVG.
+     */
+    public const ICONES_DISPONIVEIS = [
+        'sustentabilidade' => 'Sustentabilidade',
+        'acessibilidade' => 'Acessibilidade',
+        'inovacao' => 'Inovação',
+        'tecnologia' => 'Tecnologia',
+        'saude' => 'Saúde',
+        'educacao' => 'Educação',
+        'seguranca' => 'Segurança',
+        'comunidade' => 'Comunidade',
+    ];
+
     public function listarPorTrilha($trilhaId)
     {
         $pdo = Database::conexao();
@@ -48,18 +64,19 @@ class TemaRepository
         return $tema !== false ? $tema : null;
     }
 
-    public function criar($trilhaId, $nome, $descricaoLonga, $ativo)
+    public function criar($trilhaId, $nome, $descricaoLonga, $ativo, $icone = null)
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'INSERT INTO temas (trilha_id, nome, descricao_longa, ativo)
-             VALUES (:trilha_id, :nome, :descricao_longa, :ativo)'
+            'INSERT INTO temas (trilha_id, nome, descricao_longa, ativo, icone)
+             VALUES (:trilha_id, :nome, :descricao_longa, :ativo, :icone)'
         );
         $dados = [
             'trilha_id' => $trilhaId,
             'nome' => $nome,
             'descricao_longa' => $descricaoLonga !== '' ? $descricaoLonga : null,
             'ativo' => $ativo,
+            'icone' => $icone,
         ];
         $stmt->execute($dados);
         $id = (int) $pdo->lastInsertId();
@@ -69,17 +86,18 @@ class TemaRepository
         return $id;
     }
 
-    public function atualizar($id, $nome, $descricaoLonga, $ativo)
+    public function atualizar($id, $nome, $descricaoLonga, $ativo, $icone = null)
     {
         $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'UPDATE temas SET nome = :nome, descricao_longa = :descricao_longa, ativo = :ativo WHERE id = :id'
+            'UPDATE temas SET nome = :nome, descricao_longa = :descricao_longa, ativo = :ativo, icone = :icone WHERE id = :id'
         );
         $depois = [
             'nome' => $nome,
             'descricao_longa' => $descricaoLonga !== '' ? $descricaoLonga : null,
             'ativo' => $ativo,
+            'icone' => $icone,
         ];
         $stmt->execute($depois + ['id' => $id]);
 

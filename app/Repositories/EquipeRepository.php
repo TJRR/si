@@ -67,6 +67,22 @@ class EquipeRepository
         return $equipe !== false ? $equipe : null;
     }
 
+    /**
+     * Busca aproximada (LIKE, sem distincao de maiusculas/acentos exatos) -
+     * usada pelos scripts CLI de database/ para sugerir candidatos quando
+     * buscarPorNome() nao acha nada por nome exato (erro de digitacao,
+     * espaco a mais, etc.), em vez de so' informar "nao encontrado" sem
+     * nenhuma pista.
+     */
+    public function listarSemelhantesPorNome($nomeParcial)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM equipes WHERE nome_equipe LIKE :nome ORDER BY nome_equipe ASC LIMIT 15');
+        $stmt->execute(['nome' => '%' . $nomeParcial . '%']);
+
+        return $stmt->fetchAll();
+    }
+
     public function criar($trilhaId, $nomeEquipe, $vinculoInstitucional, $observacoes)
     {
         $pdo = Database::conexao();

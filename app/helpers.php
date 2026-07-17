@@ -52,14 +52,22 @@ function formatarData($data)
 }
 
 /**
- * Caminho do logo configurado em "Páginas" (ConteudoSiteRepository, chave
- * logo_site) ou o logo padrao, se nenhum foi enviado ainda. Usado tanto no
- * cabecalho do layout (painel/paginas convidadas) quanto injetado
- * automaticamente pelo View::renderizarConteudo() nas views "publico/*",
- * que montam o proprio <header> sem passar pelo layout.
+ * Logo GLOBAL/default do sistema (usado no topbar do painel, paginas
+ * convidadas, e como fallback da home publica quando a edicao ativa nao tem
+ * logo proprio). Fase 18: fonte de verdade passou de conteudos_site
+ * (chave 'logo_site', tela "Páginas") para configuracoes_visuais.logo_path
+ * (tela "Tema") - mantem o fallback antigo por compatibilidade com o logo
+ * ja enviado em producao antes desta fase, ate o admin reenviar pela tela
+ * nova.
  */
 function logoAtual()
 {
+    $configVisual = (new \App\Repositories\ConfiguracaoVisualRepository())->buscar();
+
+    if ($configVisual !== false && !empty($configVisual['logo_path'])) {
+        return config('base_path') . '/assets/' . $configVisual['logo_path'];
+    }
+
     $logoConteudo = (new \App\Repositories\ConteudoSiteRepository())->buscarPorChave('logo_site');
 
     return $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])

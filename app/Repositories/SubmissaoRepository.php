@@ -9,9 +9,46 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Auditoria;
 use App\Core\Database;
+use App\Validation\YoutubeValidador;
 
 class SubmissaoRepository
 {
+    /**
+     * Fase 18: extraido de ResultadoPublicoController (unico lugar que
+     * fazia isso ate entao) para ser reaproveitado tambem pela pagina
+     * publica de Edicoes Anteriores (3.11), que precisa do mesmo video de
+     * apresentacao do projeto vencedor. Acha o primeiro campo do tipo
+     * 'link_youtube' no formulario da submissao e extrai o id do video do
+     * dados_json - null se a submissao/formulario/campo/link nao existirem.
+     */
+    public function buscarYoutubeId($submissaoId)
+    {
+        $submissao = $this->buscarPorId($submissaoId);
+
+        if ($submissao === null || $submissao['formulario_dinamico_id'] === null) {
+            return null;
+        }
+
+        $campoVideo = null;
+
+        foreach ((new CampoDinamicoRepository())->listarPorFormulario($submissao['formulario_dinamico_id']) as $campo) {
+            if ($campo['tipo'] === 'link_youtube') {
+                $campoVideo = $campo;
+                break;
+            }
+        }
+
+        if ($campoVideo === null) {
+            return null;
+        }
+
+        $dados = json_decode((string) $submissao['dados_json'], true);
+        $valores = isset($dados['campos']) && is_array($dados['campos']) ? $dados['campos'] : [];
+        $link = isset($valores[(string) $campoVideo['id']]) ? $valores[(string) $campoVideo['id']] : null;
+
+        return $link !== null ? YoutubeValidador::extrairId($link) : null;
+    }
+
     public function criar($etapaId, $formularioDinamicoId, array $dadosJson)
     {
         $pdo = Database::conexao();
