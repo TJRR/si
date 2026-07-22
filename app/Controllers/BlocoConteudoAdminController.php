@@ -11,65 +11,47 @@ use App\Core\Controller;
 use App\Core\Texto;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\BlocoConteudoRepository;
-use App\Repositories\ConcursoRepository;
+use App\Repositories\HomeSecaoOrdemRepository;
 use App\Services\ImagemService;
 
 class BlocoConteudoAdminController extends Controller
 {
     private $blocos;
-    private $concursos;
     private $imagens;
 
     public function __construct()
     {
         RoleMiddleware::exigir(['administrador']);
         $this->blocos = new BlocoConteudoRepository();
-        $this->concursos = new ConcursoRepository();
         $this->imagens = new ImagemService();
     }
 
-    public function index($concursoId)
+    public function index()
     {
-        $concurso = $this->concursos->buscarPorId($concursoId);
-
-        if ($concurso === null) {
-            http_response_code(404);
-            exit('Concurso não encontrado.');
-        }
-
-        $this->blocos->garantirBlocosPadrao($concursoId);
+        $this->blocos->garantirBlocosPadrao();
 
         $this->renderizar('admin/blocos/index', [
-            'concurso' => $concurso,
-            'blocos' => $this->blocos->listarPorConcurso($concursoId),
-        ], 'Blocos de conteúdo de ' . $concurso['nome'], ['tipo' => 'blocos', 'id' => (int) $concursoId]);
+            'blocos' => $this->blocos->listar(),
+        ], 'Blocos de conteúdo', ['tipo' => 'configuracaoBlocos', 'id' => null]);
     }
 
-    public function novo($concursoId)
+    public function novo()
     {
-        $concurso = $this->concursos->buscarPorId($concursoId);
-
-        if ($concurso === null) {
-            http_response_code(404);
-            exit('Concurso não encontrado.');
-        }
-
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $erro = $this->salvarNovo($concursoId);
+            $erro = $this->salvarNovo();
 
             if ($erro === null) {
-                $this->redirecionar('blocos/index/' . $concursoId);
+                $this->redirecionar('blocos/index');
                 return;
             }
         }
 
         $this->renderizar('admin/blocos/form', [
             'erro' => $erro,
-            'concurso' => $concurso,
             'bloco' => null,
-        ], 'Novo bloco', ['tipo' => 'blocos', 'id' => (int) $concursoId]);
+        ], 'Novo bloco', ['tipo' => 'configuracaoBlocos', 'id' => null]);
     }
 
     public function editar($id)
@@ -81,7 +63,6 @@ class BlocoConteudoAdminController extends Controller
             exit('Bloco não encontrado.');
         }
 
-        $concurso = $this->concursos->buscarPorId($bloco['concurso_id']);
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -91,20 +72,18 @@ class BlocoConteudoAdminController extends Controller
 
         $this->renderizar('admin/blocos/form', [
             'erro' => $erro,
-            'concurso' => $concurso,
             'bloco' => $bloco,
-        ], 'Editar bloco', ['tipo' => 'blocos', 'id' => (int) $bloco['concurso_id']]);
+        ], 'Editar bloco', ['tipo' => 'configuracaoBlocos', 'id' => null]);
     }
 
     public function remover()
     {
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
-        $concursoId = (int) (isset($_POST['concurso_id']) ? $_POST['concurso_id'] : 0);
         $bloco = $this->blocos->buscarPorId($id);
 
         if ($bloco !== null && $bloco['chave'] !== null) {
             $_SESSION['flash'] = 'Este é um bloco padrão do sistema (Sobre/Premiação) e não pode ser removido — apenas editado ou desativado.';
-            $this->redirecionar('blocos/index/' . $concursoId);
+            $this->redirecionar('blocos/index');
             return;
         }
 
@@ -120,16 +99,16 @@ class BlocoConteudoAdminController extends Controller
             $_SESSION['flash'] = 'Não foi possível remover o bloco.';
         }
 
-        $this->redirecionar('blocos/index/' . $concursoId);
+        $this->redirecionar('blocos/index');
     }
 
-    public function reordenar($concursoId)
+    public function reordenar()
     {
         header('Content-Type: application/json; charset=utf-8');
         $corpo = json_decode((string) file_get_contents('php://input'), true);
         $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
 
-        $this->blocos->reordenar((int) $concursoId, $ids);
+        $this->blocos->reordenar($ids);
 
         echo json_encode(['ok' => true]);
     }
@@ -141,10 +120,14 @@ class BlocoConteudoAdminController extends Controller
         return [
             'titulo' => trim(isset($_POST['titulo']) ? $_POST['titulo'] : ''),
             'conteudo_html' => isset($_POST['conteudo_html']) ? $_POST['conteudo_html'] : '',
+            'imagem_posicao' => $this->valorPermitido('imagem_posicao', BlocoConteudoRepository::IMAGEM_POSICOES, 'esquerda'),
             'cta_titulo' => $this->campoOuNulo('cta_titulo'),
             'cta_link' => $this->campoOuNulo('cta_link'),
+            'cta_alinhamento' => $this->valorPermitido('cta_alinhamento', BlocoConteudoRepository::CTA_ALINHAMENTOS, 'esquerda'),
             'secao_ancora' => $ancora !== '' ? $ancora : 'bloco',
             'ativo' => isset($_POST['ativo']) ? 1 : 0,
+            'mostrar_no_menu' => isset($_POST['mostrar_no_menu']) ? 1 : 0,
+            'mostrar_no_rodape' => isset($_POST['mostrar_no_rodape']) ? 1 : 0,
         ];
     }
 
@@ -155,7 +138,14 @@ class BlocoConteudoAdminController extends Controller
         return $valor !== '' ? $valor : null;
     }
 
-    private function salvarNovo($concursoId)
+    private function valorPermitido($chave, array $permitidos, $padrao)
+    {
+        $valor = isset($_POST[$chave]) ? $_POST[$chave] : $padrao;
+
+        return in_array($valor, $permitidos, true) ? $valor : $padrao;
+    }
+
+    private function salvarNovo()
     {
         $dados = $this->dadosComuns();
 
@@ -185,7 +175,8 @@ class BlocoConteudoAdminController extends Controller
             return $e->getMessage();
         }
 
-        $this->blocos->criar($concursoId, $dados);
+        $novoId = $this->blocos->criar($dados);
+        (new HomeSecaoOrdemRepository())->registrarBloco($novoId);
 
         return null;
     }

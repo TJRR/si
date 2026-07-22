@@ -23,67 +23,77 @@
         <p id="progresso-avaliacao"><?php echo (int) $criteriosJaNotados; ?> de <?php echo (int) $totalCriterios; ?> critérios avaliados</p>
     <?php endif; ?>
 
-    <h2>Conteúdo da submissão</h2>
-    <?php if (empty($conteudoSubmissao)): ?>
-        <p><em>Esta submissão não tem um formulário associado.</em></p>
-    <?php else: ?>
-        <div class="ficha-submissao ficha-submissao-sticky">
-            <?php foreach ($conteudoSubmissao as $item): ?>
-                <?php $campo = $item['campo']; $valor = $item['valor']; ?>
-                <div class="ficha-item">
-                    <div class="ficha-item-label"><?php echo htmlspecialchars($campo['rotulo'], ENT_QUOTES, 'UTF-8'); ?></div>
-                    <div class="ficha-item-valor">
-                        <?php if ($valor === null || $valor === ''): ?>
-                            <em>Não preenchido</em>
-
-                        <?php elseif ($campo['tipo'] === 'link_youtube'): ?>
-                            <?php $videoId = \App\Validation\YoutubeValidador::extrairId($valor); ?>
-                            <?php if ($videoId !== null): ?>
-                                <div style="position:relative; max-width:480px; padding-top:270px;">
-                                    <iframe src="https://www.youtube.com/embed/<?php echo htmlspecialchars($videoId, ENT_QUOTES, 'UTF-8'); ?>"
-                                            style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"
-                                            allowfullscreen></iframe>
-                                </div>
-                            <?php else: ?>
-                                <a href="<?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?></a>
-                            <?php endif; ?>
-
-                        <?php elseif ($campo['tipo'] === 'upload_pdf'): ?>
-                            <a href="<?php echo url('avaliacao/baixarArquivo/' . (int) $submissao['id'] . '/' . (int) $campo['id']); ?>" target="_blank">
-                                <?php echo htmlspecialchars($valor['nome_original'], ENT_QUOTES, 'UTF-8'); ?>
-                            </a>
-
-                        <?php elseif ($campo['tipo'] === 'grupo_participantes'): ?>
-                            <table border="1" cellpadding="4">
-                                <tr><th>Nome</th><th>CPF</th><th>E-mail</th><th>Telefone</th><th>Vínculo/Profissão</th></tr>
-                                <?php foreach ($valor as $participante): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($participante['nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td><?php echo htmlspecialchars($participante['cpf'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td><?php echo htmlspecialchars($participante['email'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td><?php echo htmlspecialchars($participante['telefone'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td><?php echo htmlspecialchars($participante['vinculo_profissao'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </table>
-
-                        <?php else: ?>
-                            <?php echo nl2br(htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8')); ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
+    <?php if (count($criterios) > 1): ?>
+        <div class="criterio-abas" role="tablist">
+            <?php foreach ($criterios as $indice => $criterio): ?>
+                <button type="button" class="criterio-aba<?php echo $indice === 0 ? ' ativo' : ''; ?>" data-criterio-aba="<?php echo $indice; ?>" role="tab">
+                    <?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                </button>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
 
-    <h2>Notas por critério</h2>
     <form method="post" action="<?php echo url('avaliacao/notar/' . (int) $submissao['id']); ?>" id="form-notas">
-        <?php foreach ($criterios as $criterio): ?>
-            <section class="criterio-bloco" data-criterio-nome="<?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>">
+        <?php foreach ($criterios as $indice => $criterio): ?>
+            <section class="criterio-bloco criterio-painel<?php echo $indice === 0 ? ' ativo' : ''; ?>" data-criterio-nome="<?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>" data-criterio-painel="<?php echo $indice; ?>">
                 <h3><?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?></h3>
                 <?php if (!empty($criterio['descricao'])): ?>
                     <p><?php echo nl2br(htmlspecialchars($criterio['descricao'], ENT_QUOTES, 'UTF-8')); ?></p>
                 <?php endif; ?>
+
+                <?php $conteudoDoCriterio = isset($conteudoPorCriterio[$criterio['id']]) ? $conteudoPorCriterio[$criterio['id']] : []; ?>
+                <?php if (empty($conteudoDoCriterio)): ?>
+                    <p><em>Esta submissão não tem conteúdo associado a este critério.</em></p>
+                <?php else: ?>
+                    <div class="ficha-submissao ficha-submissao-sticky">
+                        <?php foreach ($conteudoDoCriterio as $item): ?>
+                            <?php $campo = $item['campo']; $valor = $item['valor']; ?>
+                            <div class="ficha-item">
+                                <div class="ficha-item-label"><?php echo htmlspecialchars($campo['rotulo'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="ficha-item-valor">
+                                    <?php if ($valor === null || $valor === ''): ?>
+                                        <em>Não preenchido</em>
+
+                                    <?php elseif ($campo['tipo'] === 'link_youtube'): ?>
+                                        <?php $videoId = \App\Validation\YoutubeValidador::extrairId($valor); ?>
+                                        <?php if ($videoId !== null): ?>
+                                            <div style="position:relative; max-width:480px; padding-top:270px;">
+                                                <iframe src="https://www.youtube.com/embed/<?php echo htmlspecialchars($videoId, ENT_QUOTES, 'UTF-8'); ?>"
+                                                        style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"
+                                                        allowfullscreen></iframe>
+                                            </div>
+                                        <?php else: ?>
+                                            <a href="<?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?></a>
+                                        <?php endif; ?>
+
+                                    <?php elseif ($campo['tipo'] === 'upload_pdf'): ?>
+                                        <a href="<?php echo url('avaliacao/baixarArquivo/' . (int) $submissao['id'] . '/' . (int) $campo['id']); ?>" target="_blank">
+                                            <?php echo htmlspecialchars($valor['nome_original'], ENT_QUOTES, 'UTF-8'); ?>
+                                        </a>
+
+                                    <?php elseif ($campo['tipo'] === 'grupo_participantes'): ?>
+                                        <table border="1" cellpadding="4">
+                                            <tr><th>Nome</th><th>CPF</th><th>E-mail</th><th>Telefone</th><th>Vínculo/Profissão</th></tr>
+                                            <?php foreach ($valor as $participante): ?>
+                                                <tr>
+                                                    <td><?php echo htmlspecialchars($participante['nome'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                                    <td><?php echo htmlspecialchars($participante['cpf'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                                    <td><?php echo htmlspecialchars($participante['email'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                                    <td><?php echo htmlspecialchars($participante['telefone'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                                    <td><?php echo htmlspecialchars($participante['vinculo_profissao'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </table>
+
+                                    <?php else: ?>
+                                        <?php echo nl2br(htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8')); ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+
                 <label>
                     Nota
                     <input type="number"
@@ -94,7 +104,7 @@
                            step="0.1"
                            placeholder="<?php echo number_format((float) $criterio['escala_min'], 1, ',', '.'); ?> – <?php echo number_format((float) $criterio['escala_max'], 1, ',', '.'); ?>"
                            value="<?php echo isset($notasAtuais[$criterio['id']]) ? htmlspecialchars((string) $notasAtuais[$criterio['id']]['nota'], ENT_QUOTES, 'UTF-8') : ''; ?>"
-                           <?php echo $avaliacaoTravada ? 'readonly' : ''; ?>>
+                           <?php echo $avaliacaoTravada ? 'readonly' : 'required'; ?>>
                     <span class="campo-nota-escala">(escala: <?php echo number_format((float) $criterio['escala_min'], 1, ',', '.'); ?> a <?php echo number_format((float) $criterio['escala_max'], 1, ',', '.'); ?>)</span>
                 </label>
 

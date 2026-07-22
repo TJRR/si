@@ -10,63 +10,44 @@ if (!defined('SI_BOOT')) {
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\BannerRepository;
-use App\Repositories\ConcursoRepository;
 use App\Services\ImagemService;
 
 class BannerAdminController extends Controller
 {
     private $banners;
-    private $concursos;
     private $imagens;
 
     public function __construct()
     {
         RoleMiddleware::exigir(['administrador']);
         $this->banners = new BannerRepository();
-        $this->concursos = new ConcursoRepository();
         $this->imagens = new ImagemService();
     }
 
-    public function index($concursoId)
+    public function index()
     {
-        $concurso = $this->concursos->buscarPorId($concursoId);
-
-        if ($concurso === null) {
-            http_response_code(404);
-            exit('Concurso não encontrado.');
-        }
-
         $this->renderizar('admin/banners/index', [
-            'concurso' => $concurso,
-            'banners' => $this->banners->listarPorConcurso($concursoId),
-        ], 'Banners de ' . $concurso['nome'], ['tipo' => 'banners', 'id' => (int) $concursoId]);
+            'banners' => $this->banners->listar(),
+        ], 'Banners', ['tipo' => 'configuracaoBanners', 'id' => null]);
     }
 
-    public function novo($concursoId)
+    public function novo()
     {
-        $concurso = $this->concursos->buscarPorId($concursoId);
-
-        if ($concurso === null) {
-            http_response_code(404);
-            exit('Concurso não encontrado.');
-        }
-
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $erro = $this->salvarNovo($concursoId);
+            $erro = $this->salvarNovo();
 
             if ($erro === null) {
-                $this->redirecionar('banners/index/' . $concursoId);
+                $this->redirecionar('banners/index');
                 return;
             }
         }
 
         $this->renderizar('admin/banners/form', [
             'erro' => $erro,
-            'concurso' => $concurso,
             'banner' => null,
-        ], 'Novo banner', ['tipo' => 'banners', 'id' => (int) $concursoId]);
+        ], 'Novo banner', ['tipo' => 'configuracaoBanners', 'id' => null]);
     }
 
     public function editar($id)
@@ -78,7 +59,6 @@ class BannerAdminController extends Controller
             exit('Banner não encontrado.');
         }
 
-        $concurso = $this->concursos->buscarPorId($banner['concurso_id']);
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -88,15 +68,13 @@ class BannerAdminController extends Controller
 
         $this->renderizar('admin/banners/form', [
             'erro' => $erro,
-            'concurso' => $concurso,
             'banner' => $banner,
-        ], 'Editar banner', ['tipo' => 'banners', 'id' => (int) $banner['concurso_id']]);
+        ], 'Editar banner', ['tipo' => 'configuracaoBanners', 'id' => null]);
     }
 
     public function remover()
     {
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
-        $concursoId = (int) (isset($_POST['concurso_id']) ? $_POST['concurso_id'] : 0);
         $banner = $this->banners->buscarPorId($id);
 
         try {
@@ -112,16 +90,16 @@ class BannerAdminController extends Controller
             $_SESSION['flash'] = 'Não foi possível remover o banner.';
         }
 
-        $this->redirecionar('banners/index/' . $concursoId);
+        $this->redirecionar('banners/index');
     }
 
-    public function reordenar($concursoId)
+    public function reordenar()
     {
         header('Content-Type: application/json; charset=utf-8');
         $corpo = json_decode((string) file_get_contents('php://input'), true);
         $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
 
-        $this->banners->reordenar((int) $concursoId, $ids);
+        $this->banners->reordenar($ids);
 
         echo json_encode(['ok' => true]);
     }
@@ -130,6 +108,7 @@ class BannerAdminController extends Controller
     {
         return [
             'conteudo_html' => isset($_POST['conteudo_html']) ? $_POST['conteudo_html'] : '',
+            'conteudo_alinhamento' => $this->valorPermitido('conteudo_alinhamento', BannerRepository::CONTEUDO_ALINHAMENTOS, 'centro'),
             'cor_fundo' => $this->campoOuNulo('cor_fundo'),
             'cta_titulo' => $this->campoOuNulo('cta_titulo'),
             'cta_destino_tipo' => $this->valorPermitidoOuNulo('cta_destino_tipo', BannerRepository::CTA_DESTINO_TIPOS),
@@ -161,25 +140,22 @@ class BannerAdminController extends Controller
         return in_array($valor, $permitidos, true) ? $valor : null;
     }
 
-    private function salvarNovo($concursoId)
+    private function salvarNovo()
     {
         try {
             $caminhoDesktop = null;
             $caminhoMobile = null;
             $alt = null;
 
-            if (!empty($_FILES['imagem_desktop']) && $_FILES['imagem_desktop']['error'] === UPLOAD_ERR_OK) {
+            if (!empty($_FILES['imagem']) && $_FILES['imagem']['error'] === UPLOAD_ERR_OK) {
                 $alt = trim(isset($_POST['imagem_alt']) ? $_POST['imagem_alt'] : '');
 
                 if ($alt === '') {
                     return 'Informe o texto alternativo (alt) da imagem.';
                 }
 
-                $caminhoDesktop = $this->imagens->salvar($_FILES['imagem_desktop'], 'banners', 1440, 400);
-
-                if (!empty($_FILES['imagem_mobile']) && $_FILES['imagem_mobile']['error'] === UPLOAD_ERR_OK) {
-                    $caminhoMobile = $this->imagens->salvar($_FILES['imagem_mobile'], 'banners', 768, 400);
-                }
+                $caminhoDesktop = $this->imagens->salvar($_FILES['imagem'], 'banners', 1440, 400);
+                $caminhoMobile = $this->imagens->salvar($_FILES['imagem'], 'banners', 768, 400);
             }
         } catch (\RuntimeException $e) {
             return $e->getMessage();
@@ -195,7 +171,7 @@ class BannerAdminController extends Controller
         $dados['imagem_mobile_path'] = $caminhoMobile;
         $dados['imagem_alt'] = $alt;
 
-        $this->banners->criar($concursoId, $dados);
+        $this->banners->criar($dados);
 
         return null;
     }
@@ -207,20 +183,17 @@ class BannerAdminController extends Controller
         $alt = $bannerAtual['imagem_alt'];
 
         try {
-            if (!empty($_FILES['imagem_desktop']) && $_FILES['imagem_desktop']['error'] === UPLOAD_ERR_OK) {
+            if (!empty($_FILES['imagem']) && $_FILES['imagem']['error'] === UPLOAD_ERR_OK) {
                 $alt = trim(isset($_POST['imagem_alt']) ? $_POST['imagem_alt'] : '');
 
                 if ($alt === '') {
                     return 'Informe o texto alternativo (alt) da imagem.';
                 }
 
-                $caminhoDesktop = $this->imagens->salvar($_FILES['imagem_desktop'], 'banners', 1440, 400);
+                $caminhoDesktop = $this->imagens->salvar($_FILES['imagem'], 'banners', 1440, 400);
+                $caminhoMobile = $this->imagens->salvar($_FILES['imagem'], 'banners', 768, 400);
                 $this->imagens->remover($bannerAtual['imagem_desktop_path']);
-
-                if (!empty($_FILES['imagem_mobile']) && $_FILES['imagem_mobile']['error'] === UPLOAD_ERR_OK) {
-                    $caminhoMobile = $this->imagens->salvar($_FILES['imagem_mobile'], 'banners', 768, 400);
-                    $this->imagens->remover($bannerAtual['imagem_mobile_path']);
-                }
+                $this->imagens->remover($bannerAtual['imagem_mobile_path']);
             } elseif (isset($_POST['imagem_alt'])) {
                 $alt = trim($_POST['imagem_alt']);
             }

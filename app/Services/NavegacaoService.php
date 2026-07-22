@@ -36,6 +36,23 @@ class NavegacaoService
             ['tipo' => 'resultado_etapa', 'rotulo' => 'Resultado', 'rota' => 'resultados/etapa'],
             ['tipo' => 'formulario_vinculado', 'rotulo' => 'Formulário vinculado', 'rota' => 'etapas/formularioVinculado'],
         ],
+        /**
+         * Fase 19 (#84 v2): Tema/Slideshow/Banners/Blocos/Contato deixaram
+         * de ser escopados por concurso - viram sub-abas globais da tela
+         * "Configuração", sem id (ver abasPara() abaixo).
+         */
+        'configuracao' => [
+            ['tipo' => 'configuracaoGeral', 'rotulo' => 'Geral', 'rota' => 'configuracoes/index'],
+            ['tipo' => 'configuracaoTema', 'rotulo' => 'Tema', 'rota' => 'tema/index'],
+            ['tipo' => 'configuracaoMidia', 'rotulo' => 'Mídia', 'rota' => 'midia/index'],
+            ['tipo' => 'configuracaoCabecalho', 'rotulo' => 'Cabeçalho', 'rota' => 'tema/cabecalho'],
+            ['tipo' => 'configuracaoRodape', 'rotulo' => 'Rodapé', 'rota' => 'tema/rodape'],
+            ['tipo' => 'configuracaoSlides', 'rotulo' => 'Slideshow', 'rota' => 'slides/index'],
+            ['tipo' => 'configuracaoBanners', 'rotulo' => 'Banners', 'rota' => 'banners/index'],
+            ['tipo' => 'configuracaoBlocos', 'rotulo' => 'Blocos de conteúdo', 'rota' => 'blocos/index'],
+            ['tipo' => 'configuracaoContato', 'rotulo' => 'Contato', 'rota' => 'contatosConcurso/index'],
+            ['tipo' => 'configuracaoOrdenacao', 'rotulo' => 'Ordenação', 'rota' => 'ordenacaoHome/index'],
+        ],
     ];
 
     /**
@@ -59,6 +76,16 @@ class NavegacaoService
         'vagas_avaliador' => 'etapa',
         'resultado_etapa' => 'etapa',
         'formulario_vinculado' => 'etapa',
+        'configuracaoGeral' => 'configuracao',
+        'configuracaoTema' => 'configuracao',
+        'configuracaoMidia' => 'configuracao',
+        'configuracaoCabecalho' => 'configuracao',
+        'configuracaoRodape' => 'configuracao',
+        'configuracaoSlides' => 'configuracao',
+        'configuracaoBanners' => 'configuracao',
+        'configuracaoBlocos' => 'configuracao',
+        'configuracaoContato' => 'configuracao',
+        'configuracaoOrdenacao' => 'configuracao',
     ];
 
     /**
@@ -88,7 +115,7 @@ class NavegacaoService
         foreach ($definicoes as $definicao) {
             $abas[] = [
                 'rotulo' => $definicao['rotulo'],
-                'url' => $definicao['rota'] . '/' . (int) $id,
+                'url' => $id !== null ? $definicao['rota'] . '/' . (int) $id : $definicao['rota'],
                 'ativa' => $definicao['tipo'] === $tipo,
                 'somenteAvaliadores' => $grupo === 'etapa' && in_array($definicao['tipo'], self::$tiposSomenteAvaliadores, true),
             ];
@@ -126,7 +153,7 @@ class NavegacaoService
         $trilhas = new TrilhaRepository();
         $etapas = new EtapaRepository();
 
-        if (in_array($tipo, ['concurso', 'formularios', 'trilhas', 'categorias_avaliador', 'slides', 'banners', 'blocos', 'contatosConcurso', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma'], true)) {
+        if (in_array($tipo, ['concurso', 'formularios', 'trilhas', 'categorias_avaliador', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma', 'mentorias'], true)) {
             $concurso = $concursos->buscarPorId($id);
 
             if ($concurso === null) {
@@ -141,14 +168,6 @@ class NavegacaoService
                 $caminho[] = self::noTrilhas($concurso);
             } elseif ($tipo === 'categorias_avaliador') {
                 $caminho[] = self::noCategoriasAvaliador($concurso);
-            } elseif ($tipo === 'slides') {
-                $caminho[] = self::noSlides($concurso);
-            } elseif ($tipo === 'banners') {
-                $caminho[] = self::noBanners($concurso);
-            } elseif ($tipo === 'blocos') {
-                $caminho[] = self::noBlocos($concurso);
-            } elseif ($tipo === 'contatosConcurso') {
-                $caminho[] = self::noContato($concurso);
             } elseif ($tipo === 'premios') {
                 $caminho[] = self::noPremios($concurso);
             } elseif ($tipo === 'faqConcurso') {
@@ -157,6 +176,8 @@ class NavegacaoService
                 $caminho[] = self::noDocumentos($concurso);
             } elseif ($tipo === 'eventosCronograma') {
                 $caminho[] = self::noEventosCronograma($concurso);
+            } elseif ($tipo === 'mentorias') {
+                $caminho[] = self::noMentorias($concurso);
             }
 
             return $caminho;
@@ -231,21 +252,18 @@ class NavegacaoService
                 }
 
                 if (!\App\Core\Auth::possuiPerfil('administrador')) {
-                    return [self::noTrilhas($concurso)];
+                    return [self::noTrilhas($concurso), self::noMentorias($concurso)];
                 }
 
                 return [
                     self::noCategoriasAvaliador($concurso),
                     self::noFormularios($concurso),
-                    self::noTrilhas($concurso),
-                    self::noSlides($concurso),
-                    self::noBanners($concurso),
-                    self::noBlocos($concurso),
-                    self::noContato($concurso),
                     self::noPremios($concurso),
                     self::noFaqConcurso($concurso),
                     self::noDocumentos($concurso),
                     self::noEventosCronograma($concurso),
+                    self::noMentorias($concurso),
+                    self::noTrilhas($concurso),
                 ];
 
             case 'trilhas':
@@ -311,47 +329,18 @@ class NavegacaoService
         ];
     }
 
-    private static function noSlides(array $concurso)
+    /**
+     * Fase 19 (#106): visivel pra Administrador e Suporte, os dois podem
+     * ser mentores (auto-servico, sem perfil novo).
+     */
+    private static function noMentorias(array $concurso)
     {
         return [
-            'tipo' => 'slides',
+            'tipo' => 'mentorias',
             'id' => (int) $concurso['id'],
-            'rotulo' => 'Slideshow',
+            'rotulo' => 'Mentorias',
             'folha' => true,
-            'url' => 'slides/index/' . (int) $concurso['id'],
-        ];
-    }
-
-    private static function noBanners(array $concurso)
-    {
-        return [
-            'tipo' => 'banners',
-            'id' => (int) $concurso['id'],
-            'rotulo' => 'Banners',
-            'folha' => true,
-            'url' => 'banners/index/' . (int) $concurso['id'],
-        ];
-    }
-
-    private static function noBlocos(array $concurso)
-    {
-        return [
-            'tipo' => 'blocos',
-            'id' => (int) $concurso['id'],
-            'rotulo' => 'Blocos de conteúdo',
-            'folha' => true,
-            'url' => 'blocos/index/' . (int) $concurso['id'],
-        ];
-    }
-
-    private static function noContato(array $concurso)
-    {
-        return [
-            'tipo' => 'contatosConcurso',
-            'id' => (int) $concurso['id'],
-            'rotulo' => 'Contato',
-            'folha' => true,
-            'url' => 'contatosConcurso/index/' . (int) $concurso['id'],
+            'url' => 'mentoriaAdmin/index/' . (int) $concurso['id'],
         ];
     }
 

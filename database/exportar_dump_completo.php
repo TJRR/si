@@ -10,10 +10,15 @@
  * memoria de deploy da Fase 13) - so' PHP com extensao de banco, mesmo padrao
  * ja usado pra restaurar o dump inicial em producao.
  *
+ * Fase 18: arquivo passa a ser gravado na raiz do projeto (nao mais em
+ * storage/exports/) e o nome usa so' a data (nao mais data+hora) - um
+ * backup por dia e' suficiente pra rotina de deploy, e roda por cima do de
+ * hoje se rodado de novo no mesmo dia (sobrescreve, nao acumula).
+ *
  * ATENCAO - dado sensivel: o arquivo gerado contem TODOS os dados pessoais
  * do sistema (CPF, nome, e-mail, telefone de participantes/avaliadores/
- * usuarios). Trate a saida como confidencial: transfira por canal seguro,
- * apague a copia local assim que entregue a quem de direito.
+ * usuarios). Trate a saida como confidencial: transfira por canal seguro
+ * (scp, nunca HTTP publico) e apague a copia do servidor assim que baixada.
  *
  * Por padrao roda em modo consulta (dry-run): so lista as tabelas e a
  * contagem de linhas, sem gravar nada. Para gerar o arquivo de verdade:
@@ -58,13 +63,8 @@ if (!$confirmar) {
     exit(0);
 }
 
-$pastaDestino = __DIR__ . '/../storage/exports';
-
-if (!is_dir($pastaDestino)) {
-    mkdir($pastaDestino, 0770, true);
-}
-
-$nomeArquivo = 'dump_completo_' . date('Ymd_His') . '.sql';
+$pastaDestino = __DIR__ . '/..';
+$nomeArquivo = 'dump_completo_' . date('Ymd') . '.sql';
 $caminhoArquivo = $pastaDestino . '/' . $nomeArquivo;
 $handle = fopen($caminhoArquivo, 'w');
 

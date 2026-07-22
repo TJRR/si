@@ -14,6 +14,19 @@
         <textarea name="pergunta" rows="6" cols="80" required <?php echo $desabilitado; ?>><?php echo htmlspecialchars($desafio !== null ? $desafio['pergunta'] : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
     </label><br>
 
+    <label>Ícone do desafio (opcional, independente do ícone do Tema):
+        <select name="icone" <?php echo $desabilitado; ?>>
+            <option value="">— Nenhum —</option>
+            <?php foreach (\App\Repositories\TemaRepository::ICONES_DISPONIVEIS as $valorOpcao => $rotuloOpcao): ?>
+                <option value="<?php echo $valorOpcao; ?>" <?php echo ($desafio !== null && $desafio['icone'] === $valorOpcao) ? 'selected' : ''; ?>><?php echo $rotuloOpcao; ?></option>
+            <?php endforeach; ?>
+        </select>
+    </label><br>
+
+    <label>Ordem de exibição na home (menor aparece primeiro):
+        <input type="number" name="ordem" value="<?php echo $desafio !== null ? (int) $desafio['ordem'] : 0; ?>" <?php echo $desabilitado; ?>>
+    </label><br>
+
     <label>
         <input type="checkbox" name="ativo" value="1" <?php echo ($desafio === null || $desafio['ativo']) ? 'checked' : ''; ?> <?php echo $desabilitado; ?>>
         Ativo

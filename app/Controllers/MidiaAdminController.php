@@ -42,7 +42,7 @@ class MidiaAdminController extends Controller
         $this->renderizar('admin/midia/index', [
             'midias' => $this->midias->listar($tipo),
             'tipoFiltro' => $tipo,
-        ], 'Biblioteca de mídia');
+        ], 'Biblioteca de mídia', ['tipo' => 'configuracaoMidia', 'id' => null]);
     }
 
     public function novo()

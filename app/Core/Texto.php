@@ -33,4 +33,24 @@ class Texto
 
         return trim($valor, '-');
     }
+
+    private static $mesesAbreviados = [
+        1 => 'jan.', 2 => 'fev.', 3 => 'mar.', 4 => 'abr.', 5 => 'mai.', 6 => 'jun.',
+        7 => 'jul.', 8 => 'ago.', 9 => 'set.', 10 => 'out.', 11 => 'nov.', 12 => 'dez.',
+    ];
+
+    /**
+     * Fase 19 (#17): "8 de jul." - sem depender da extensao intl (o projeto
+     * e' PHP puro, sem Composer alem do autoload/PHPMailer).
+     */
+    public static function dataAbreviada($datetimeString)
+    {
+        $timestamp = strtotime((string) $datetimeString);
+
+        if ($timestamp === false) {
+            return '';
+        }
+
+        return (int) date('j', $timestamp) . ' de ' . self::$mesesAbreviados[(int) date('n', $timestamp)];
+    }
 }

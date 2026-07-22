@@ -45,8 +45,10 @@ $valorAtual = isset($valor) ? (string) $valor : '';
             <button type="button" class="editor-rico-btn" data-comando="link" title="Inserir link" aria-label="Inserir link">🔗</button>
             <button type="button" class="editor-rico-btn" data-comando="imagem" title="Inserir imagem" aria-label="Inserir imagem">🖼</button>
             <button type="button" class="editor-rico-btn" data-comando="barra" title="Inserir barra separadora (usa a cor de texto selecionada)" aria-label="Inserir barra separadora">▬</button>
+            <button type="button" class="editor-rico-btn" data-editor-alternar-modo title="Alternar entre visual e código" aria-label="Alternar entre visual e código">&lt;/&gt;</button>
         </div>
         <div class="editor-rico-area" contenteditable="true" data-editor-area><?php echo $valorAtual; ?></div>
+        <textarea class="editor-rico-codigo" data-editor-codigo hidden spellcheck="false"><?php echo htmlspecialchars($valorAtual, ENT_QUOTES, 'UTF-8'); ?></textarea>
     </div>
     <input type="hidden" name="<?php echo htmlspecialchars($nome, ENT_QUOTES, 'UTF-8'); ?>" data-editor-hidden value="<?php echo htmlspecialchars($valorAtual, ENT_QUOTES, 'UTF-8'); ?>">
     <input type="file" class="editor-rico-arquivo-oculto" data-editor-arquivo accept="image/*" hidden>

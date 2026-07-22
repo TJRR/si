@@ -8,6 +8,32 @@
     <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
+<?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
+    <p>
+        <?php if ($homologacaoPublicada): ?>
+            <strong>Página pública de equipes homologadas: publicada.</strong>
+            <form method="post" action="<?php echo url('homologacao/despublicar/' . (int) $trilha['id']); ?>" style="display:inline;">
+                <button type="submit" class="btn-icone" title="Despublicar" onclick="return confirm('A página pública de equipes homologadas desta trilha vai sair do ar. Confirmar?');">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="1 4 1 10 7 10"></polyline>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                    </svg>
+                </button>
+            </form>
+        <?php else: ?>
+            <strong>Página pública de equipes homologadas: não publicada.</strong>
+            <form method="post" action="<?php echo url('homologacao/publicar/' . (int) $trilha['id']); ?>" style="display:inline;">
+                <button type="submit" class="btn-icone" title="Publicar" onclick="return confirm('Publica a lista de equipes homologadas desta trilha numa página pública. Confirmar?');">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </button>
+            </form>
+        <?php endif; ?>
+    </p>
+<?php endif; ?>
+
 <form method="get" action="<?php echo config('base_path'); ?>/index.php">
     <input type="hidden" name="r" value="homologacao/index/<?php echo (int) $trilha['id']; ?>">
     <label>Status:

@@ -3,9 +3,9 @@
     exit('Acesso negado');
 } ?>
 <div class="pagina-titulo-acoes">
-    <h1>Blocos de conteúdo de <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+    <h1>Blocos de conteúdo</h1>
     <div class="pagina-titulo-botoes">
-        <a href="<?php echo url('blocos/novo/' . (int) $concurso['id']); ?>" class="btn-acao">+ Novo bloco livre</a>
+        <a href="<?php echo url('blocos/novo'); ?>" class="btn-acao">+ Novo bloco livre</a>
     </div>
 </div>
 <p>Os blocos <strong>Sobre o Prêmio</strong> e <strong>Premiação</strong> são padrão do sistema — sempre existem, só podem ser editados ou desativados, nunca removidos. Blocos livres (ex.: "Mentorias", "Parceiros") podem ser criados, editados e removidos livremente.</p>
@@ -13,7 +13,7 @@
 <?php if (empty($blocos)): ?>
     <p>Nenhum bloco cadastrado ainda.</p>
 <?php else: ?>
-    <ul class="reordenar-lista" data-reordenar-rota="blocos/reordenar/<?php echo (int) $concurso['id']; ?>">
+    <ul class="reordenar-lista" data-reordenar-rota="blocos/reordenar">
         <?php foreach ($blocos as $indice => $bloco): ?>
         <li class="reordenar-item" draggable="true" data-id="<?php echo (int) $bloco['id']; ?>">
             <span class="reordenar-alca" aria-hidden="true" title="Arraste para reordenar">⠿</span>
@@ -36,7 +36,6 @@
                 <?php if ($bloco['chave'] === null): ?>
                 <form method="post" action="<?php echo url('blocos/remover'); ?>" onsubmit="return confirm('Remover este bloco?');">
                     <input type="hidden" name="id" value="<?php echo (int) $bloco['id']; ?>">
-                    <input type="hidden" name="concurso_id" value="<?php echo (int) $concurso['id']; ?>">
                     <button type="submit" class="btn-icone" title="Remover">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <polyline points="3 6 5 6 21 6"></polyline>

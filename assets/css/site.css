@@ -31,6 +31,7 @@
    espaco - a barra em si continua some/aparece conforme o conteudo precisa. */
 html {
     scrollbar-gutter: stable;
+    scroll-behavior: smooth;
 }
 
 /* ===================== Site publico ===================== */
@@ -88,6 +89,279 @@ html {
 
 .site-nav a:not(.btn):hover {
     color: var(--cor-primaria-fim);
+}
+
+/* Fase 19 (#84): cabecalho com imagem de fundo propria (opcional, por
+   concurso) - sem imagem cadastrada, .site-header-nav se comporta
+   identico ao antigo .site-header-inner (sticky, solido, sempre). */
+.site-header-nav {
+    background: var(--cor-branco);
+}
+
+.site-header-com-imagem {
+    padding: 0;
+    border-bottom: none;
+    position: relative;
+    min-height: clamp(480px, 85vh, 760px);
+    background-size: cover;
+    /* Fase 19 (#84 v4): "center top" em vez de "center" - fotos de
+       fachada/predio costumam ter a placa/letreiro na parte de cima;
+       "center" (meio da imagem) cortava justamente essa parte quando a
+       proporcao da foto nao bate com a altura do cabecalho. */
+    background-position: center top;
+    display: flex;
+}
+
+/* Fase 19 (#84 v4): tint translucido com a propria cor primaria do site
+   (ja configuravel em Tema -> Cores) por cima da foto de fundo - mesmo
+   efeito do site modelo. Confirmado direto no CSS real do site modelo
+   (.bg-overlay::after): e' um radial-gradient (circle closest-side),
+   nao um linear-gradient - e' o formato radial (mais claro/"brilho" no
+   centro, mais escuro/solido nas bordas) que da a sensacao de "vida"
+   que um degrade linear plano nao reproduz. */
+.site-header-com-imagem::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle closest-side, var(--cor-primaria-fim) 0%, var(--cor-primaria-inicio) 100%);
+    opacity: var(--cabecalho-overlay-opacidade, 0.5);
+}
+
+.site-header-com-imagem .site-header-nav {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    background: transparent;
+    padding: 0.75rem 1rem;
+}
+
+.site-header-com-imagem .site-header-nav .site-nav a:not(.btn),
+.site-header-com-imagem .site-header-nav .site-edicao-indicador,
+.site-header-com-imagem .site-header-nav .site-menu-toggle,
+.site-header-com-imagem .site-header-nav .site-header-icone {
+    color: var(--cor-branco);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.site-header-com-imagem .site-header-nav.site-header-nav-fixa {
+    position: fixed;
+    background: var(--cor-branco);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.site-header-com-imagem .site-header-nav.site-header-nav-fixa .site-nav a:not(.btn),
+.site-header-com-imagem .site-header-nav.site-header-nav-fixa .site-edicao-indicador,
+.site-header-com-imagem .site-header-nav.site-header-nav-fixa .site-menu-toggle,
+.site-header-com-imagem .site-header-nav.site-header-nav-fixa .site-header-icone {
+    color: var(--cor-texto);
+    border-color: var(--cor-borda);
+}
+
+.site-header-sentinela {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+}
+
+/* Fase 19 (#84 v4): onda de transicao na base do cabecalho, igual ao
+   site modelo (.shape.shape-bottom) - fecha visualmente a foto de fundo
+   com uma curva branca em vez de um corte reto. Valores conferidos
+   direto no CSS real do site modelo (nao presumidos): o wrapper gira
+   180deg (a mesma curva do path serve tanto pro topo quanto pra base,
+   so' invertida) e o svg e' bem maior que 100% da largura (228%,
+   recentralizado) - sem isso a mesma curva fica "espremida" e parece
+   ter mais ondulacoes do que realmente tem. */
+.site-header-shape-bottom {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    line-height: 0;
+    overflow: hidden;
+    z-index: 2;
+    transform: rotate(180deg);
+}
+
+.site-header-shape-bottom svg {
+    display: block;
+    height: 275px;
+    width: calc(228% + 1.3px);
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.site-header-shape-bottom path {
+    fill: var(--cor-branco);
+}
+
+/* Fase 19 (#84 v4): alternativas de transicao "diagonal" (a onda acima
+   continua sendo a opcao "onda") - cunha branca sobreposta na base do
+   cabecalho, sem recortar o header em si (clip-path no proprio header
+   arriscaria cortar tambem a nav quando ela fica position:fixed). */
+.site-header-shape-diagonal {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 90px;
+    background: var(--cor-branco);
+    z-index: 2;
+}
+
+.site-header-shape-diagonal-esquerda {
+    clip-path: polygon(0 100%, 100% 40%, 100% 100%);
+}
+
+.site-header-shape-diagonal-direita {
+    clip-path: polygon(0 40%, 100% 100%, 0 100%);
+}
+
+/* Fase 19 (#84 v3): conteudo livre do hero (titulo/slogan/imagens),
+   inteiramente controlado pelo admin via editor rico - sem estrutura
+   fixa de colunas/uploads dedicados. */
+.site-header-hero-conteudo {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 6rem 1rem 3rem;
+    align-self: center;
+}
+
+.site-header-hero-texto {
+    color: var(--cor-branco);
+    max-width: 700px;
+}
+
+/* Bonus sem campo novo: qualquer imagem inserida pelo admin dentro do
+   editor rico do titulo ganha o mesmo efeito de "boiar" do site modelo.
+   Isto e' so' o fallback estatico (todas na mesma duracao) - quem
+   corrige o nome da animacao (pra imagens coladas do site modelo, que
+   trazem inline um `animation: ...bounceHero`, keyframe que so' existe
+   la') e dessincroniza a duracao de cada imagem e'
+   assets/js/cabecalho-flutuar.js (nth-of-type nao funciona aqui porque
+   cada imagem colada vem dentro do seu proprio <span> - e' sempre a
+   unica do tipo dentro do seu proprio pai, entao nunca bate com
+   nth-of-type(2), (3) etc). */
+.site-header-hero-texto img {
+    animation: site-header-bounce 6s ease-in-out infinite;
+}
+
+@keyframes site-header-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(20px); }
+}
+
+.site-logo-claro {
+    display: none;
+}
+
+.site-header-com-imagem .site-header-nav .site-logo-solido {
+    display: none;
+}
+
+.site-header-com-imagem .site-header-nav .site-logo-claro {
+    display: block;
+}
+
+.site-header-com-imagem .site-header-nav.site-header-nav-fixa .site-logo-claro {
+    display: none;
+}
+
+.site-header-com-imagem .site-header-nav.site-header-nav-fixa .site-logo-solido {
+    display: block;
+}
+
+.site-header-icone {
+    background: none;
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    padding: 0.35rem 0.5rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cor-texto);
+}
+
+/* Fase 19 (#86): painel lateral deslizante - hoje usado so' pelo cronograma
+   (ver assets/js/painel-lateral.js), mas generico o bastante pra outros
+   paineis reaproveitarem as mesmas classes. */
+.site-painel-lateral {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: min(420px, 90vw);
+    background: var(--cor-branco);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 40;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.site-painel-lateral.aberto {
+    transform: translateX(0);
+}
+
+.site-painel-cabecalho {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.site-painel-cabecalho h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.site-painel-fechar {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--cor-texto);
+}
+
+.site-painel-corpo {
+    padding: 1rem 1.25rem;
+}
+
+.site-painel-item {
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.site-painel-item:last-child {
+    border-bottom: none;
+}
+
+.site-painel-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+    z-index: 39;
+}
+
+.site-painel-backdrop.aberto {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* Botoes
@@ -382,55 +656,314 @@ body.admin-page a.btn-icone:focus {
     color: var(--cor-texto-suave);
 }
 
-/* Temas */
-.temas-trilha-titulo {
-    margin-top: 1.5rem;
+/* Temas/Desafios (redesenho Fase 19 #103): abas por trilha + cards de
+   Tema recolhiveis + busca, em vez do mural unico anterior. */
+.temas-abas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0;
 }
 
-.temas-grid {
-    display: grid;
-    grid-template-columns: 1fr;
+.temas-aba {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 999px;
+    background: var(--cor-branco);
+    color: var(--cor-texto);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.temas-aba.ativo {
+    border-color: var(--cor-primaria-fim);
+    background: var(--cor-fundo-alt);
+    color: var(--cor-primaria-fim);
+}
+
+.temas-aba-contador {
+    background: var(--cor-fundo-alt);
+    color: var(--cor-texto-suave);
+    border-radius: 999px;
+    padding: 0.05rem 0.5rem;
+    font-size: 0.78rem;
+}
+
+.temas-aba.ativo .temas-aba-contador {
+    background: var(--cor-branco);
+}
+
+.temas-busca-rotulo {
+    display: block;
+    margin-bottom: 1.25rem;
+}
+
+.temas-busca {
+    width: 100%;
+    max-width: 480px;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+.temas-eixo-conteudo {
+    display: none;
+    flex-direction: column;
     gap: 1rem;
+}
+
+.temas-eixo-conteudo.ativo {
+    display: flex;
 }
 
 .tema-card {
     background: var(--cor-branco);
     border: 1px solid var(--cor-borda);
     border-radius: 8px;
-    padding: 1.1rem;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.tema-card-cabecalho {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 1.1rem;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    color: inherit;
+}
+
+.tema-card-titulos {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.tema-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.tema-numero-pill {
+    background: var(--cor-fundo-alt);
+    color: var(--cor-primaria-fim);
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+}
+
+.tema-contador {
+    font-size: 0.8rem;
+    color: var(--cor-texto-suave);
 }
 
 .tema-nome {
-    margin: 0 0 0.5rem;
-    color: var(--cor-primaria-fim);
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--cor-texto);
 }
 
 .tema-descricao {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: var(--cor-texto-suave);
 }
 
-/* Rodape */
-.site-footer {
-    background: var(--cor-escura);
-    color: var(--cor-branco);
-    padding: 2.5rem 1.25rem;
-    text-align: center;
+.tema-chevron {
+    flex: 0 0 auto;
+    margin-top: 0.2rem;
+    color: var(--cor-texto-suave);
+    transition: transform 0.2s ease;
 }
 
-.site-footer .section-title {
-    color: var(--cor-branco);
+.tema-card.expandido .tema-chevron {
+    transform: rotate(180deg);
+}
+
+.tema-card-corpo {
+    display: none;
+    padding: 0 1.1rem 1.1rem 1.1rem;
+    border-top: 1px solid var(--cor-borda);
+}
+
+.tema-card.expandido .tema-card-corpo {
+    display: block;
+    padding-top: 1rem;
+}
+
+.tema-desafios-lista {
+    list-style: decimal;
+    padding-left: 1.4rem;
+    margin: 0;
+}
+
+.tema-desafio-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--cor-borda);
+    font-size: 0.9rem;
+}
+
+.tema-desafio-item:last-child {
+    border-bottom: none;
+}
+
+.tema-desafio-texto {
+    padding-top: 0.3rem;
+}
+
+/* Rodape (redesenho Fase 19 #107, padrao do site modelo indicado pelo
+   usuario: logo / texto institucional / navegacao / contato em colunas,
+   com barra inferior separada). */
+.site-footer {
+    background: var(--cor-escura);
+    color: rgba(255, 255, 255, 0.85);
+    padding: 3rem 1.25rem 0;
 }
 
 .site-footer a {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+}
+
+.site-footer a:hover {
     color: var(--cor-primaria-fim);
 }
 
-.site-footer-links {
-    margin-top: 1.5rem;
+.site-footer-colunas {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding-bottom: 2.5rem;
+}
+
+/* Fase 19 (#107): sem enviar uma segunda imagem so' pro rodape - inverte
+   preto->branco e usa hue-rotate pra devolver a cor laranja original
+   (truque padrao de CSS pra reaproveitar uma logo escura sobre fundo
+   escuro; nao e' pixel-perfect pra qualquer cor, mas funciona bem pra
+   preto+laranja). */
+.site-footer-logo {
+    height: 48px;
+    width: auto;
+    object-fit: contain;
+    filter: invert(1) hue-rotate(180deg);
+}
+
+.site-footer-coluna h2 {
+    color: var(--cor-branco);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.9rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.site-footer-coluna ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.site-footer-texto {
     font-size: 0.85rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.site-footer-contato li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.site-footer-contato svg {
+    flex: 0 0 auto;
+    margin-top: 0.15rem;
+    color: var(--cor-primaria-fim);
+}
+
+.site-footer-redes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.site-footer-barra {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.25rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.site-footer-links {
+    font-size: 0.8rem;
+}
+
+.site-footer-topo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.site-footer-topo:hover {
+    background: var(--cor-primaria-fim);
+    color: var(--cor-branco);
+}
+
+/* Fase 19 (#107): botao flutuante do WhatsApp, acesso direto ao suporte. */
+.site-whatsapp-flutuante {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 500;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 999px;
+    background: #25D366;
+    color: var(--cor-branco);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s ease;
+}
+
+.site-whatsapp-flutuante:hover {
+    transform: scale(1.08);
+    color: var(--cor-branco);
 }
 
 /* Formulario publico de submissao */
@@ -477,10 +1010,6 @@ body.admin-page a.btn-icone:focus {
         font-size: 1.25rem;
     }
 
-    .temas-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
     .site-section-com-imagem {
         flex-direction: row;
         text-align: left;
@@ -489,11 +1018,17 @@ body.admin-page a.btn-icone:focus {
     .site-section-com-imagem > div {
         flex: 1;
     }
-}
 
-@media (min-width: 1024px) {
-    .temas-grid {
-        grid-template-columns: repeat(3, 1fr);
+    /* Fase 19 (#98): posicao da imagem em relacao ao texto, configuravel
+       por bloco - so' importa em telas maiores (mobile sempre empilha,
+       imagem primeiro). */
+    .site-section-com-imagem-direita {
+        flex-direction: row-reverse;
+    }
+
+    /* Fase 19 (#107): rodape em colunas lado a lado a partir daqui. */
+    .site-footer-colunas {
+        grid-template-columns: 0.9fr 1.1fr 1fr 1.2fr;
     }
 }
 
@@ -942,6 +1477,12 @@ body.admin-page .status-avaliacao.pendente {
 .status-pill.vermelho {
     background: #fbe4e4;
     color: #a3242c;
+}
+
+/* Fase 19 (#101): azul piscina para o status "Futuro" do cronograma. */
+.status-pill.azul {
+    background: #d4f4f9;
+    color: #0f7a8c;
 }
 
 /* Recuo do conteudo dentro da arvore (#conteudo-admin) fica no proprio
@@ -1529,12 +2070,19 @@ body.guest-page {
     padding-right: 2rem;
 }
 
-.modal-fechar {
+/* Fase 19 (#109): precisa da mesma especificidade "body.admin-page button"
+   que .btn-icone ja usa (ver comentario acima de .btn-icone) - senao o
+   padding/border-radius/anel em degrade do botao padrao do painel vaza por
+   cima do X (aparecia como pilula laranja sobre o titulo do modal). */
+body.admin-page button.modal-fechar {
     position: absolute;
     top: 0.75rem;
     right: 0.9rem;
+    width: auto;
+    height: auto;
     background: none;
     border: none;
+    border-radius: 0;
     font-size: 1.5rem;
     line-height: 1;
     color: var(--cor-texto-suave);
@@ -1542,8 +2090,15 @@ body.guest-page {
     padding: 0.25rem 0.5rem;
 }
 
-.modal-fechar:hover {
+body.admin-page button.modal-fechar::before,
+body.admin-page button.modal-fechar::after {
+    content: none;
+}
+
+body.admin-page button.modal-fechar:hover,
+body.admin-page button.modal-fechar:focus {
     color: var(--cor-primaria-fim);
+    background: none;
 }
 
 /* Ficha de leitura do conteudo de uma submissao (Fase 17 - Bug 5/Melhoria 1) -
@@ -1610,6 +2165,47 @@ body.guest-page {
     border-radius: 8px;
     padding: 1.25rem 1.5rem;
     margin-bottom: 1.25rem;
+}
+
+/* Fase 19 (#10): abas por criterio - precisa da mesma especificidade
+   "body.admin-page button" que .btn-icone/.modal-fechar ja usam (ver
+   comentario acima de .btn-icone), senao o padding/pill/anel em degrade
+   do botao padrao do painel bagunça o visual da aba. */
+.criterio-abas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+body.admin-page button.criterio-aba {
+    padding: 0.5rem 1.1rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 999px;
+    background: var(--cor-branco);
+    color: var(--cor-texto);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+body.admin-page button.criterio-aba::before,
+body.admin-page button.criterio-aba::after {
+    content: none;
+}
+
+body.admin-page button.criterio-aba.ativo {
+    border-color: var(--cor-primaria-fim);
+    background: var(--cor-fundo-alt);
+    color: var(--cor-primaria-fim);
+}
+
+.criterio-painel {
+    display: none;
+}
+
+.criterio-painel.ativo {
+    display: block;
 }
 
 .criterio-bloco h3 {
@@ -1757,6 +2353,11 @@ body.guest-page {
     filter: brightness(0.93);
 }
 
+/* Fase 19 (#99): alinhamento do CTA de bloco de conteudo, configuravel. */
+.btn-cta-esquerda { display: table; margin-right: auto; }
+.btn-cta-centro { display: table; margin: 0 auto; }
+.btn-cta-direita { display: table; margin-left: auto; }
+
 /* 7 efeitos de hover do CTA (slideshow/banners), aplicados via classe
    efeito-<nome> vinda do campo cta_efeito_hover. */
 .efeito-escurecer:hover { filter: brightness(0.8); }
@@ -1786,7 +2387,7 @@ body.guest-page {
     background-position: center;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.6s ease;
+    transition: opacity 0.6s ease, transform 0.6s ease;
     display: flex;
     align-items: flex-end;
 }
@@ -1796,11 +2397,49 @@ body.guest-page {
     visibility: visible;
 }
 
+/* Fase 19 (#91): efeito de transicao configuravel por slide - fade e' o
+   padrao (so' opacity, sem transform). */
+.site-slide-efeito-slide { transform: translateX(30px); }
+.site-slide-efeito-slide.ativo { transform: translateX(0); }
+.site-slide-efeito-zoom { transform: scale(1.08); }
+.site-slide-efeito-zoom.ativo { transform: scale(1); }
+
 .site-slide-imagem-mobile {
     display: none;
 }
 
+/* Fase 19 (#91): efeitos de camada sobre a imagem de fundo do slide -
+   portados literalmente do projeto LG Conecta
+   (resources/views/components/slideshow.blade.php), so trocando o prefixo
+   de classe lgss-ov- por site-slide-overlay-. A cor vem via "color" (os
+   background-image/mask usam a keyword currentColor pra herdar essa cor),
+   exceto "trama", que usa background-color com rgba() calculado no PHP. */
+.site-slide-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.site-slide-overlay-escurecer { background: linear-gradient(to right, currentColor, transparent 70%); }
+.site-slide-overlay-vinheta { background: radial-gradient(ellipse at center, transparent 40%, currentColor); }
+.site-slide-overlay-pontos { background-image: radial-gradient(currentColor 1px, transparent 1.6px); background-size: 6px 6px; }
+.site-slide-overlay-linhas { background-image: repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 9px); }
+.site-slide-overlay-halftone {
+    background-color: currentColor;
+    -webkit-mask-image: radial-gradient(circle, transparent 0 1.3px, #000 1.7px);
+    mask-image: radial-gradient(circle, transparent 0 1.3px, #000 1.7px);
+    -webkit-mask-size: 6px 6px;
+    mask-size: 6px 6px;
+}
+.site-slide-overlay-trama {
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAGUlEQVR4AWJiZGD8z8jIwMD0H0gzMDAyAAAAAP//ssJwrwAAAAZJREFUAwAccwMJqOu+JwAAAABJRU5ErkJggg==");
+    background-repeat: repeat;
+}
+
 .site-slide-conteudo {
+    position: relative;
+    z-index: 1;
     background: linear-gradient(0deg, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0) 60%);
     color: var(--cor-branco);
     width: 100%;
@@ -1901,6 +2540,13 @@ body.guest-page {
     max-width: 60%;
 }
 
+/* Fase 19 (#95): bloco de conteudo nao tinha nenhum controle de
+   alinhamento - .site-banner (flex, sem justify-content) sempre grudava
+   o conteudo a esquerda, independente de qualquer configuracao. */
+.site-banner-conteudo-esquerda { margin-right: auto; text-align: left; }
+.site-banner-conteudo-centro { margin: 0 auto; text-align: center; }
+.site-banner-conteudo-direita { margin-left: auto; text-align: right; }
+
 .site-banner-cta {
     position: absolute;
     display: inline-block;
@@ -1912,15 +2558,19 @@ body.guest-page {
     font-weight: 600;
 }
 
-.site-banner-cta-superior-esquerda { top: 1rem; left: 1rem; }
-.site-banner-cta-superior-centro { top: 1rem; left: 50%; transform: translateX(-50%); }
-.site-banner-cta-superior-direita { top: 1rem; right: 1rem; }
-.site-banner-cta-centro-esquerda { top: 50%; left: 1rem; transform: translateY(-50%); }
-.site-banner-cta-centro-centro { top: 50%; left: 50%; transform: translate(-50%, -50%); }
-.site-banner-cta-centro-direita { top: 50%; right: 1rem; transform: translateY(-50%); }
-.site-banner-cta-inferior-esquerda { bottom: 1rem; left: 1rem; }
-.site-banner-cta-inferior-centro { bottom: 1rem; left: 50%; transform: translateX(-50%); }
-.site-banner-cta-inferior-direita { bottom: 1rem; right: 1rem; }
+/* Fase 19 (#95): os seletores usavam hifen (superior-esquerda), mas
+   BannerRepository::CTA_POSICOES grava com underscore (superior_esquerda)
+   e _banners.php imprime o valor cru na classe - a classe gerada nunca
+   batia com nenhum destes seletores, entao a posicao nunca era aplicada. */
+.site-banner-cta-superior_esquerda { top: 1rem; left: 1rem; }
+.site-banner-cta-superior_centro { top: 1rem; left: 50%; transform: translateX(-50%); }
+.site-banner-cta-superior_direita { top: 1rem; right: 1rem; }
+.site-banner-cta-centro_esquerda { top: 50%; left: 1rem; transform: translateY(-50%); }
+.site-banner-cta-centro_centro { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.site-banner-cta-centro_direita { top: 50%; right: 1rem; transform: translateY(-50%); }
+.site-banner-cta-inferior_esquerda { bottom: 1rem; left: 1rem; }
+.site-banner-cta-inferior_centro { bottom: 1rem; left: 50%; transform: translateX(-50%); }
+.site-banner-cta-inferior_direita { bottom: 1rem; right: 1rem; }
 
 /* Trilhas/segmentacao (3.5) */
 .site-trilhas-grid {
@@ -1929,8 +2579,58 @@ body.guest-page {
     gap: 1.25rem;
 }
 
+/* Fase 19 (#101): 1 coluna por trilha, generico (nao fixo em 2). */
+.site-cronograma-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.site-cronograma-coluna-titulo {
+    color: var(--cor-primaria-fim);
+    font-size: 1.1rem;
+    margin: 0 0 0.75rem;
+}
+
 .site-trilha-documentos {
-    padding-left: 1.2rem;
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+}
+
+.site-trilha-documento {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.site-trilha-documento:last-child {
+    border-bottom: none;
+}
+
+.site-trilha-documento-icone {
+    flex: 0 0 auto;
+    margin-top: 0.1rem;
+}
+
+.site-trilha-documento-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.site-trilha-documento-texto a {
+    font-weight: 400;
+    word-break: break-word;
+}
+
+.site-trilha-documento-meta {
+    font-size: 0.8rem;
+    color: var(--cor-texto-suave);
 }
 
 /* Cronograma (3.9) */
@@ -1967,11 +2667,28 @@ body.guest-page {
     margin-bottom: 0.35rem;
 }
 
-/* Temas/Desafios (3.8) */
-.tema-icone {
+/* Temas/Desafios (3.8) - badges coloridos redesenhados na Fase 19 (#104),
+   cor fixa por icone (App\Repositories\TemaRepository::ICONES_VISUAL). */
+.tema-icone-badge {
+    flex: 0 0 auto;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1.5rem;
-    display: block;
-    margin-bottom: 0.35rem;
+}
+
+.tema-desafio-badge {
+    flex: 0 0 auto;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
 }
 
 /* FAQ (3.10) */
@@ -1999,14 +2716,6 @@ body.guest-page {
 }
 
 /* Rodape (3.12) */
-.site-rodape-info p {
-    margin: 0.3rem 0;
-}
-
-.site-rodape-redes a {
-    margin-right: 0.75rem;
-}
-
 .site-formulario-contato {
     max-width: 480px;
     margin: 1.5rem 0;
@@ -2023,10 +2732,13 @@ body.guest-page {
     font-family: inherit;
 }
 
+/* Fase 19 (#107): .site-footer define color:branco (fundo escuro), mas
+   este elemento usava --cor-texto-suave (cinza escuro pensado pra fundo
+   claro) - contraste quase ilegivel sobre o rodape escuro. */
 .site-footer-copyright {
-    margin-top: 1rem;
+    margin: 0;
     font-size: 0.8rem;
-    color: var(--cor-texto-suave);
+    color: rgba(255, 255, 255, 0.65);
 }
 
 /* Edicoes anteriores (3.11) */
@@ -2079,6 +2791,47 @@ body.guest-page {
     border: 1px solid var(--cor-borda);
     border-radius: 8px;
     padding: 1rem 1.25rem;
+}
+
+.site-trilha-card h3 {
+    font-weight: 600;
+}
+
+/* Fase 19: etapas + "Ver equipes homologadas" + "Ver resultado" viram uma
+   lista so', com linha divisoria igual a lista de documentos (mesmo
+   padrao visual, #90). */
+.site-trilha-links {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0;
+}
+
+.site-trilha-link-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.site-trilha-link-item:last-child {
+    border-bottom: none;
+}
+
+.site-trilha-link-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.site-trilha-link-meta {
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+}
+
+.site-trilha-link-icone {
+    flex: 0 0 auto;
+    color: var(--cor-primaria-fim);
 }
 
 /* Editor de texto rico vanilla (Fase 18) - sem biblioteca de terceiros, ver
@@ -2152,6 +2905,133 @@ body.guest-page {
     background: none;
 }
 
+/* Fase 19 (#84 v5): campo de cor com hex editavel, reutilizavel (ver
+   app/Views/admin/_campo_cor.php + assets/js/campo-cor.js). */
+.campo-cor-rotulo {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.campo-cor-controles {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.campo-cor-picker {
+    width: 2.2rem;
+    height: 2.2rem;
+    padding: 0;
+    border: 1px solid var(--cor-borda);
+    border-radius: 4px;
+    cursor: pointer;
+    background: none;
+}
+
+.campo-cor-texto {
+    width: 6rem;
+    text-transform: uppercase;
+    font-family: monospace;
+    border: 1px solid var(--cor-borda);
+    border-radius: 4px;
+    padding: 0.35rem 0.5rem;
+}
+
+/* Seletor com tag+classe (nao so' classe) pra vencer a regra generica
+   "body.admin-page button" (padding/pill do botao padrao do painel -
+   mesma licao repetida nesta fase pra .modal-fechar/.criterio-aba). */
+body.admin-page button.campo-cor-sem {
+    width: 2.2rem;
+    height: 2.2rem;
+    padding: 0;
+    border: 1px dashed var(--cor-borda);
+    border-radius: 4px;
+    background: none;
+    color: var(--cor-texto-suave);
+    font-size: 0.7rem;
+    cursor: pointer;
+}
+
+body.admin-page button.campo-cor-limpar {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: none;
+    font-size: 1.1rem;
+    line-height: 1;
+    color: var(--cor-texto-suave);
+    cursor: pointer;
+}
+
+body.admin-page button.campo-cor-sem::before,
+body.admin-page button.campo-cor-sem::after,
+body.admin-page button.campo-cor-limpar::before,
+body.admin-page button.campo-cor-limpar::after {
+    content: none;
+}
+
+.campo-cor-limpar:hover {
+    color: #c0392b;
+}
+
+/* Fase 19 (#84 v5): grade 3x3 de posicionamento, reutilizavel (ver
+   app/Views/admin/_campo_posicao.php) - 100% CSS (input:checked + span),
+   sem JS, mesmo mecanismo do LG Conecta. */
+.campo-posicao-rotulo {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.campo-posicao-grade {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    width: 7.5rem;
+    height: 5rem;
+    gap: 0.25rem;
+    border: 2px solid var(--cor-borda);
+    border-radius: 6px;
+    padding: 0.5rem;
+    background: var(--cor-fundo-alt);
+}
+
+.campo-posicao-opcao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.campo-posicao-opcao input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.campo-posicao-opcao span {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    border: 2px solid var(--cor-texto-suave);
+    background: var(--cor-branco);
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.campo-posicao-opcao input:checked + span {
+    background: var(--cor-primaria-fim);
+    border-color: var(--cor-texto);
+    box-shadow: 0 0 0 3px rgba(255, 153, 85, 0.3);
+}
+
+.campo-posicao-opcao input:focus-visible + span {
+    box-shadow: 0 0 0 3px rgba(255, 153, 85, 0.5);
+}
+
 .editor-rico-area {
     min-height: 8rem;
     padding: 0.75rem 1rem;
@@ -2162,6 +3042,28 @@ body.guest-page {
 
 .editor-rico-area:focus {
     outline: none;
+}
+
+/* Fase 19 (#84 v5): modo codigo do editor rico - textarea com o HTML cru,
+   pra correcao manual quando o WYSIWYG sozinho nao resolve. */
+.editor-rico-codigo {
+    display: block;
+    width: 100%;
+    min-height: 8rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    font-family: monospace;
+    line-height: 1.5;
+    white-space: pre;
+    background: var(--cor-fundo-alt);
+    border: none;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.editor-rico-btn[data-editor-alternar-modo].ativo {
+    background: var(--cor-primaria-fim);
+    color: var(--cor-branco);
 }
 
 /* Reordenacao por arrastar-e-soltar, generica (Fase 18) - HTML5 DnD nativo,

@@ -6,10 +6,13 @@
 !/storage/uploads/.gitkeep
 /storage/sessions/*
 !/storage/sessions/.gitkeep
-/storage/exports/*
-!/storage/exports/.gitkeep
 /assets/uploads/*
 !/assets/uploads/.gitkeep
+
+# Fase 18: exportar_dump_completo.php agora grava na raiz do projeto (nao
+# mais em storage/exports/, pasta removida) - nunca versionar, contem CPF/
+# e-mail/telefone de todo mundo.
+/dump_completo_*.sql
 
 # Dados reais de submissao/homologacao (CPF, nome, e-mail, telefone de
 # participantes) - nunca versionar, este repo e' publico. A pasta inteira fica

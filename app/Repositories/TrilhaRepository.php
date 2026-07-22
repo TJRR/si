@@ -44,14 +44,14 @@ class TrilhaRepository
         return $trilha !== false ? $trilha : null;
     }
 
-    public function criar($concursoId, $nome, $descricao, $ordem, $ativo)
+    public function criar($concursoId, $nome, $descricao, $ordem, $ativo, $minimoIntegrantesHomologados = 1)
     {
         $pdo = Database::conexao();
         $slug = $this->gerarSlugUnico($concursoId, $nome);
 
         $stmt = $pdo->prepare(
-            'INSERT INTO trilhas (concurso_id, nome, slug, descricao, ordem, ativo)
-             VALUES (:concurso_id, :nome, :slug, :descricao, :ordem, :ativo)'
+            'INSERT INTO trilhas (concurso_id, nome, slug, descricao, ordem, ativo, minimo_integrantes_homologados)
+             VALUES (:concurso_id, :nome, :slug, :descricao, :ordem, :ativo, :minimo_integrantes_homologados)'
         );
         $dados = [
             'concurso_id' => $concursoId,
@@ -60,6 +60,7 @@ class TrilhaRepository
             'descricao' => $descricao !== '' ? $descricao : null,
             'ordem' => $ordem,
             'ativo' => $ativo,
+            'minimo_integrantes_homologados' => $minimoIntegrantesHomologados,
         ];
         $stmt->execute($dados);
         $id = (int) $pdo->lastInsertId();
@@ -69,19 +70,22 @@ class TrilhaRepository
         return $id;
     }
 
-    public function atualizar($id, $nome, $descricao, $ordem, $ativo)
+    public function atualizar($id, $nome, $descricao, $ordem, $ativo, $minimoIntegrantesHomologados = 1)
     {
         $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
 
         $stmt = $pdo->prepare(
-            'UPDATE trilhas SET nome = :nome, descricao = :descricao, ordem = :ordem, ativo = :ativo WHERE id = :id'
+            'UPDATE trilhas SET nome = :nome, descricao = :descricao, ordem = :ordem, ativo = :ativo,
+                minimo_integrantes_homologados = :minimo_integrantes_homologados
+             WHERE id = :id'
         );
         $depois = [
             'nome' => $nome,
             'descricao' => $descricao !== '' ? $descricao : null,
             'ordem' => $ordem,
             'ativo' => $ativo,
+            'minimo_integrantes_homologados' => $minimoIntegrantesHomologados,
         ];
         $stmt->execute($depois + ['id' => $id]);
 

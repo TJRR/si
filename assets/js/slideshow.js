@@ -37,12 +37,13 @@
             return;
         }
 
-        temporizador = window.setInterval(proximo, 7000);
+        var duracao = parseInt(slides[indiceAtual].dataset.duracao, 10) || 7000;
+        temporizador = window.setTimeout(function () { proximo(); iniciarAutoAvanco(); }, duracao);
     }
 
     function pausarAutoAvanco() {
         if (temporizador) {
-            window.clearInterval(temporizador);
+            window.clearTimeout(temporizador);
             temporizador = null;
         }
     }

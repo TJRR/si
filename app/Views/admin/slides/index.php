@@ -3,16 +3,16 @@
     exit('Acesso negado');
 } ?>
 <div class="pagina-titulo-acoes">
-    <h1>Slideshow de <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+    <h1>Slideshow</h1>
     <div class="pagina-titulo-botoes">
-        <a href="<?php echo url('slides/novo/' . (int) $concurso['id']); ?>" class="btn-acao">+ Novo slide</a>
+        <a href="<?php echo url('slides/novo'); ?>" class="btn-acao">+ Novo slide</a>
     </div>
 </div>
 
 <?php if (empty($slides)): ?>
     <p>Nenhum slide cadastrado ainda.</p>
 <?php else: ?>
-    <ul class="reordenar-lista" data-reordenar-rota="slides/reordenar/<?php echo (int) $concurso['id']; ?>">
+    <ul class="reordenar-lista" data-reordenar-rota="slides/reordenar">
         <?php foreach ($slides as $indice => $slide): ?>
         <li class="reordenar-item" draggable="true" data-id="<?php echo (int) $slide['id']; ?>">
             <span class="reordenar-alca" aria-hidden="true" title="Arraste para reordenar">⠿</span>
@@ -31,7 +31,6 @@
                 </a>
                 <form method="post" action="<?php echo url('slides/remover'); ?>" onsubmit="return confirm('Remover este slide?');">
                     <input type="hidden" name="id" value="<?php echo (int) $slide['id']; ?>">
-                    <input type="hidden" name="concurso_id" value="<?php echo (int) $concurso['id']; ?>">
                     <button type="submit" class="btn-icone" title="Remover">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <polyline points="3 6 5 6 21 6"></polyline>

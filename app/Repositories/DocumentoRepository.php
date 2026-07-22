@@ -27,7 +27,11 @@ class DocumentoRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT * FROM documentos WHERE concurso_id = :concurso_id AND ativo = 1 ORDER BY tipo ASC, titulo ASC'
+            'SELECT d.*, u.nome AS criado_por_nome
+             FROM documentos d
+             LEFT JOIN usuarios u ON u.id = d.criado_por
+             WHERE d.concurso_id = :concurso_id AND d.ativo = 1
+             ORDER BY d.tipo ASC, d.titulo ASC'
         );
         $stmt->execute(['concurso_id' => $concursoId]);
 
@@ -114,6 +118,38 @@ class DocumentoRepository
             $pdo->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Fase 19: edicao pontual de metadados (tipo/trilha/titulo) de UMA
+     * versao especifica, sem tocar em arquivo_path/versao nem nas outras
+     * linhas do grupo - ao contrario de criar(), nao gera versao nova. So'
+     * recalcula o grupo_documento desta linha, para continuar coerente se
+     * um upload novo for feito depois com os dados corrigidos.
+     */
+    public function atualizarMetadados($id, $trilhaId, $tipo, $titulo)
+    {
+        $antes = $this->buscarPorId($id);
+
+        if ($antes === null) {
+            return;
+        }
+
+        $novoGrupo = Texto::slugify($tipo . '-' . $titulo);
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'UPDATE documentos SET trilha_id = :trilha_id, tipo = :tipo, titulo = :titulo, grupo_documento = :grupo
+             WHERE id = :id'
+        );
+        $depois = [
+            'trilha_id' => $trilhaId,
+            'tipo' => $tipo,
+            'titulo' => $titulo,
+            'grupo' => $novoGrupo,
+        ];
+        $stmt->execute($depois + ['id' => $id]);
+
+        Auditoria::registrar('atualizar_metadados', 'documentos', $id, $antes, $depois);
     }
 
     /**

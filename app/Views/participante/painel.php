@@ -2,9 +2,14 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Minha inscrição</h1>
+<div class="pagina-titulo-acoes">
+    <h1>Minha inscrição</h1>
+    <div class="pagina-titulo-botoes">
+        <a href="<?php echo url('mentoria/index'); ?>" class="btn-acao">Agendar Mentoria</a>
+    </div>
+</div>
 
-<div class="tema-card">
+<div class="admin-card">
     <p>
         <strong><?php echo htmlspecialchars($equipe['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></strong>
         <span class="status-pill <?php echo $homologado ? 'verde' : 'laranja'; ?>">
@@ -111,11 +116,26 @@
                 <?php if ($etapa['motivo_bloqueio'] !== null): ?>
                     <span class="acao-indisponivel" title="<?php echo htmlspecialchars($etapa['motivo_bloqueio'], ENT_QUOTES, 'UTF-8'); ?>">Indisponível</span>
                     <br><small><?php echo htmlspecialchars($etapa['motivo_bloqueio'], ENT_QUOTES, 'UTF-8'); ?></small>
-                <?php else: ?>
-                    <a href="<?php echo url('submissao/preencher/' . (int) $etapa['id']); ?>">Preencher</a>
                 <?php endif; ?>
-                <?php if (!empty($etapa['feedback_disponivel'])): ?>
-                    · <a href="<?php echo url('participante/verFeedback/' . (int) $etapa['submissao_id_feedback']); ?>">Ver feedback</a>
+                <?php if ($etapa['motivo_bloqueio'] === null || !empty($etapa['feedback_disponivel'])): ?>
+                    <div class="acoes-icones">
+                        <?php if ($etapa['motivo_bloqueio'] === null): ?>
+                            <a href="<?php echo url('submissao/preencher/' . (int) $etapa['id']); ?>" class="btn-icone" title="Preencher">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </a>
+                        <?php endif; ?>
+                        <?php if (!empty($etapa['feedback_disponivel'])): ?>
+                            <a href="<?php echo url('participante/verFeedback/' . (int) $etapa['submissao_id_feedback']); ?>" class="btn-icone" title="Ver feedback">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </a>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
             </td>
         </tr>

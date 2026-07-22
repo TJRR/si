@@ -32,7 +32,7 @@ if ($ehPaginaPublicaComLogo) {
     $logoAdminSrc = logoAtual();
 }
 
-$modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'vagasAvaliador', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao', 'categoriasAvaliador', 'slides', 'banners', 'blocos', 'contatosConcurso', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma'];
+$modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'vagasAvaliador', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao', 'categoriasAvaliador', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma'];
 
 if ($ehPainelInterno && \App\Core\Auth::autenticado()) {
     $repoNotificacoes = new \App\Repositories\NotificacaoPainelRepository();
@@ -52,14 +52,16 @@ if ($ehPainelAdmin) {
 
     if (\App\Core\Auth::possuiPerfil('administrador')) {
         // Fase 18: "Páginas" (ConteudoAdminController, conteudos_site) sai do
-        // menu - substituida pelas telas novas por concurso (Slides,
-        // Banners, Blocos de conteudo, Contato). Rota/tabela preservadas
-        // (sem DROP), so' o link de navegacao foi retirado.
-        $abasAdmin[] = ['rotulo' => 'Tema', 'url' => 'tema/index', 'ativo' => $moduloAtual === 'tema'];
+        // menu - substituida pelas telas novas (Slides, Banners, Blocos de
+        // conteudo, Contato). Rota/tabela preservadas (sem DROP), so' o
+        // link de navegacao foi retirado.
         $abasAdmin[] = ['rotulo' => 'FAQ', 'url' => 'faq/index', 'ativo' => $moduloAtual === 'faq'];
-        $abasAdmin[] = ['rotulo' => 'Mídia', 'url' => 'midia/index', 'ativo' => $moduloAtual === 'midia'];
         $abasAdmin[] = ['rotulo' => 'Auditoria', 'url' => 'auditoria/index', 'ativo' => $moduloAtual === 'auditoria'];
-        $abasAdmin[] = ['rotulo' => 'Configurações', 'url' => 'configuracoes/index', 'ativo' => $moduloAtual === 'configuracoes'];
+        // Fase 19 (#84 v2): Tema/Mídia/Slideshow/Banners/Blocos/Contato
+        // deixaram de ser abas de nivel 1 - viraram sub-abas de
+        // "Configurações" (ver NavegacaoService::$abasPorGrupo['configuracao']).
+        $modulosConfiguracao = ['configuracoes', 'tema', 'midia', 'slides', 'banners', 'blocos', 'contatosConcurso', 'ordenacaoHome'];
+        $abasAdmin[] = ['rotulo' => 'Configurações', 'url' => 'configuracoes/index', 'ativo' => in_array($moduloAtual, $modulosConfiguracao, true)];
     }
 
     $abasAdmin[] = ['rotulo' => 'Concursos', 'url' => 'concursos/index', 'ativo' => $ehEscopoArvore];
@@ -202,10 +204,18 @@ if ($ehPainelAdmin) {
             </main>
         </div>
     </div>
-    <script>window.SI_BASE_PATH = <?php echo json_encode(config('base_path')); ?>;</script>
     <script src="<?php echo config('base_path'); ?>/assets/js/navegacao-arvore.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/navegacao-arvore.js'); ?>" defer></script>
 <?php else: ?>
     <div class="admin-conteudo-flat">
+        <?php if (!empty($abasSecundarias)): ?>
+        <nav id="abas-admin" class="abas-secundarias">
+            <?php foreach ($abasSecundarias as $abaSecundaria): ?>
+                <a class="aba-secundaria<?php echo $abaSecundaria['ativa'] ? ' active' : ''; ?>" href="<?php echo url($abaSecundaria['url']); ?>">
+                    <?php echo htmlspecialchars($abaSecundaria['rotulo'], ENT_QUOTES, 'UTF-8'); ?>
+                </a>
+            <?php endforeach; ?>
+        </nav>
+        <?php endif; ?>
         <?php if (!empty($_SESSION['flash'])): ?>
             <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); ?></p>
             <?php unset($_SESSION['flash']); ?>
@@ -226,15 +236,25 @@ if ($ehPainelAdmin) {
     </div>
     <script src="<?php echo config('base_path'); ?>/assets/js/modal.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/modal.js'); ?>" defer></script>
     <?php if ($ehPainelAdmin): ?>
+    <script>window.SI_BASE_PATH = <?php echo json_encode(config('base_path')); ?>;</script>
     <script src="<?php echo config('base_path'); ?>/assets/js/editor-rico.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/editor-rico.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/reordenar-arrastar.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/reordenar-arrastar.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/campo-cor.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/campo-cor.js'); ?>" defer></script>
     <?php endif; ?>
 <?php endif; ?>
 <?php if (isset($view) && ($view === 'home/index' || strpos($view, 'publico/') === 0)): ?>
     <script src="<?php echo config('base_path'); ?>/assets/js/scrollspy.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/scrollspy.js'); ?>" defer></script>
     <?php if ($view === 'home/index'): ?>
     <script src="<?php echo config('base_path'); ?>/assets/js/slideshow.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/slideshow.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/temas-desafios.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/temas-desafios.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/cabecalho-rolagem.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/cabecalho-rolagem.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/cabecalho-flutuar.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/cabecalho-flutuar.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/painel-lateral.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/painel-lateral.js'); ?>" defer></script>
     <?php endif; ?>
+    <!-- Fase 19 (#107): acesso direto ao suporte do NPI, numero fixo -->
+    <a href="https://wa.me/559531984194" target="_blank" rel="noopener" class="site-whatsapp-flutuante" aria-label="Falar com o suporte do NPI pelo WhatsApp">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38a9.9 9.9 0 0 0 4.76 1.21h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.12-2.9-6.99A9.82 9.82 0 0 0 12.04 2Zm0 1.67c2.19 0 4.25.85 5.79 2.4a8.2 8.2 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.13.82.84-3.05-.2-.31a8.18 8.18 0 0 1-1.26-4.37c0-4.55 3.7-8.23 8.24-8.23h.04Z"></path></svg>
+    </a>
 <?php endif; ?>
 </body>
 </html>

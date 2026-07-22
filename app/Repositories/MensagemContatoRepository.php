@@ -11,18 +11,19 @@ use App\Core\Database;
 
 /**
  * Fase 18 (3.12) - mensagens recebidas pelo formulario de contato nativo,
- * quando ativado em contatos_concurso.formulario_contato_ativo.
+ * quando ativado em contatos_concurso.formulario_contato_ativo. Fase 19
+ * (#84 v2): contato deixou de ser escopado por concurso - mensagens
+ * tambem, viram uma lista global cronologica.
  */
 class MensagemContatoRepository
 {
-    public function criar($concursoId, $nome, $email, $mensagem)
+    public function criar($nome, $email, $mensagem)
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'INSERT INTO mensagens_contato (concurso_id, nome, email, mensagem) VALUES (:concurso_id, :nome, :email, :mensagem)'
+            'INSERT INTO mensagens_contato (nome, email, mensagem) VALUES (:nome, :email, :mensagem)'
         );
         $stmt->execute([
-            'concurso_id' => $concursoId,
             'nome' => $nome,
             'email' => $email,
             'mensagem' => $mensagem,
@@ -31,12 +32,10 @@ class MensagemContatoRepository
         return (int) $pdo->lastInsertId();
     }
 
-    public function listarPorConcurso($concursoId)
+    public function listar()
     {
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare('SELECT * FROM mensagens_contato WHERE concurso_id = :concurso_id ORDER BY criado_em DESC');
-        $stmt->execute(['concurso_id' => $concursoId]);
 
-        return $stmt->fetchAll();
+        return $pdo->query('SELECT * FROM mensagens_contato ORDER BY criado_em DESC')->fetchAll();
     }
 }

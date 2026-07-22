@@ -32,8 +32,13 @@ use App\Controllers\FaqConcursoAdminController;
 use App\Controllers\FormulaPontuacaoAdminController;
 use App\Controllers\FormularioAdminController;
 use App\Controllers\HomeController;
+use App\Controllers\HomeSecaoOrdemAdminController;
 use App\Controllers\HomologacaoController;
+use App\Controllers\HomologacaoPublicaController;
 use App\Controllers\InscricaoController;
+use App\Controllers\MentoriaAdminController;
+use App\Controllers\MentoriaController;
+use App\Controllers\MentoriaPublicaController;
 use App\Controllers\MeuPerfilController;
 use App\Controllers\MidiaAdminController;
 use App\Controllers\NavegacaoController;
@@ -69,7 +74,11 @@ class Router
         'submissao' => SubmissaoController::class,
         'inscricao' => InscricaoController::class,
         'homologacao' => HomologacaoController::class,
+        'homologacaoPublica' => HomologacaoPublicaController::class,
         'participante' => ParticipanteController::class,
+        'mentoriaAdmin' => MentoriaAdminController::class,
+        'mentoria' => MentoriaController::class,
+        'mentoriaPublica' => MentoriaPublicaController::class,
         'conteudo' => ConteudoAdminController::class,
         'tema' => TemaAdminController::class,
         'criterios' => CriterioAvaliacaoAdminController::class,
@@ -93,6 +102,7 @@ class Router
         'banners' => BannerAdminController::class,
         'blocos' => BlocoConteudoAdminController::class,
         'contatosConcurso' => ContatoConcursoAdminController::class,
+        'ordenacaoHome' => HomeSecaoOrdemAdminController::class,
         'premios' => PremioAdminController::class,
         'faq' => FaqAdminController::class,
         'faqConcurso' => FaqConcursoAdminController::class,

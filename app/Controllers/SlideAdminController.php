@@ -9,64 +9,45 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
-use App\Repositories\ConcursoRepository;
 use App\Repositories\SlideRepository;
 use App\Services\ImagemService;
 
 class SlideAdminController extends Controller
 {
     private $slides;
-    private $concursos;
     private $imagens;
 
     public function __construct()
     {
         RoleMiddleware::exigir(['administrador']);
         $this->slides = new SlideRepository();
-        $this->concursos = new ConcursoRepository();
         $this->imagens = new ImagemService();
     }
 
-    public function index($concursoId)
+    public function index()
     {
-        $concurso = $this->concursos->buscarPorId($concursoId);
-
-        if ($concurso === null) {
-            http_response_code(404);
-            exit('Concurso não encontrado.');
-        }
-
         $this->renderizar('admin/slides/index', [
-            'concurso' => $concurso,
-            'slides' => $this->slides->listarPorConcurso($concursoId),
-        ], 'Slideshow de ' . $concurso['nome'], ['tipo' => 'slides', 'id' => (int) $concursoId]);
+            'slides' => $this->slides->listar(),
+        ], 'Slideshow', ['tipo' => 'configuracaoSlides', 'id' => null]);
     }
 
-    public function novo($concursoId)
+    public function novo()
     {
-        $concurso = $this->concursos->buscarPorId($concursoId);
-
-        if ($concurso === null) {
-            http_response_code(404);
-            exit('Concurso não encontrado.');
-        }
-
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $erro = $this->salvarNovo($concursoId);
+            $erro = $this->salvarNovo();
 
             if ($erro === null) {
-                $this->redirecionar('slides/index/' . $concursoId);
+                $this->redirecionar('slides/index');
                 return;
             }
         }
 
         $this->renderizar('admin/slides/form', [
             'erro' => $erro,
-            'concurso' => $concurso,
             'slide' => null,
-        ], 'Novo slide', ['tipo' => 'slides', 'id' => (int) $concursoId]);
+        ], 'Novo slide', ['tipo' => 'configuracaoSlides', 'id' => null]);
     }
 
     public function editar($id)
@@ -78,7 +59,6 @@ class SlideAdminController extends Controller
             exit('Slide não encontrado.');
         }
 
-        $concurso = $this->concursos->buscarPorId($slide['concurso_id']);
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -88,15 +68,13 @@ class SlideAdminController extends Controller
 
         $this->renderizar('admin/slides/form', [
             'erro' => $erro,
-            'concurso' => $concurso,
             'slide' => $slide,
-        ], 'Editar slide', ['tipo' => 'slides', 'id' => (int) $slide['concurso_id']]);
+        ], 'Editar slide', ['tipo' => 'configuracaoSlides', 'id' => null]);
     }
 
     public function remover()
     {
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
-        $concursoId = (int) (isset($_POST['concurso_id']) ? $_POST['concurso_id'] : 0);
         $slide = $this->slides->buscarPorId($id);
 
         try {
@@ -112,23 +90,32 @@ class SlideAdminController extends Controller
             $_SESSION['flash'] = 'Não foi possível remover o slide.';
         }
 
-        $this->redirecionar('slides/index/' . $concursoId);
+        $this->redirecionar('slides/index');
     }
 
-    public function reordenar($concursoId)
+    public function reordenar()
     {
         header('Content-Type: application/json; charset=utf-8');
         $corpo = json_decode((string) file_get_contents('php://input'), true);
         $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
 
-        $this->slides->reordenar((int) $concursoId, $ids);
+        $this->slides->reordenar($ids);
 
         echo json_encode(['ok' => true]);
     }
 
     private function dadosComuns()
     {
+        $duracaoSegundos = (int) (isset($_POST['duracao_segundos']) ? $_POST['duracao_segundos'] : 7);
+        $duracaoSegundos = $duracaoSegundos >= 1 && $duracaoSegundos <= 30 ? $duracaoSegundos : 7;
+
         return [
+            'cor_fundo' => $this->campoOuNulo('cor_fundo'),
+            'duracao_ms' => $duracaoSegundos * 1000,
+            'efeito_transicao' => $this->valorPermitido('efeito_transicao', SlideRepository::EFEITOS_TRANSICAO, 'fade'),
+            'overlay_efeito' => $this->valorPermitido('overlay_efeito', SlideRepository::OVERLAY_EFEITOS, 'nenhum'),
+            'overlay_cor' => $this->campoOuNulo('overlay_cor'),
+            'overlay_opacidade' => $this->overlayOpacidade(),
             'titulo_html' => isset($_POST['titulo_html']) ? $_POST['titulo_html'] : '',
             'separador_cor' => $this->campoOuNulo('separador_cor'),
             'cta_titulo' => $this->campoOuNulo('cta_titulo'),
@@ -141,6 +128,13 @@ class SlideAdminController extends Controller
             'cta_animacao_entrada' => $this->campoOuNulo('cta_animacao_entrada'),
             'ativo' => isset($_POST['ativo']) ? 1 : 0,
         ];
+    }
+
+    private function overlayOpacidade()
+    {
+        $opacidade = (int) (isset($_POST['overlay_opacidade']) ? $_POST['overlay_opacidade'] : 40);
+
+        return $opacidade >= 0 && $opacidade <= 100 ? $opacidade : 40;
     }
 
     private function campoOuNulo($chave)
@@ -157,24 +151,22 @@ class SlideAdminController extends Controller
         return in_array($valor, $permitidos, true) ? $valor : $padrao;
     }
 
-    private function salvarNovo($concursoId)
+    private function salvarNovo()
     {
-        $alt = trim(isset($_POST['imagem_alt']) ? $_POST['imagem_alt'] : '');
-
-        if ($alt === '') {
-            return 'Informe o texto alternativo (alt) da imagem.';
-        }
-
-        if (empty($_FILES['imagem_desktop']) || $_FILES['imagem_desktop']['error'] !== UPLOAD_ERR_OK) {
-            return 'Envie a imagem desktop do slide (1440×800).';
-        }
-
         try {
-            $caminhoDesktop = $this->imagens->salvar($_FILES['imagem_desktop'], 'slides', 1440, 800);
+            $caminhoDesktop = null;
             $caminhoMobile = null;
+            $alt = null;
 
-            if (!empty($_FILES['imagem_mobile']) && $_FILES['imagem_mobile']['error'] === UPLOAD_ERR_OK) {
-                $caminhoMobile = $this->imagens->salvar($_FILES['imagem_mobile'], 'slides', 768, 800);
+            if (!empty($_FILES['imagem']) && $_FILES['imagem']['error'] === UPLOAD_ERR_OK) {
+                $alt = trim(isset($_POST['imagem_alt']) ? $_POST['imagem_alt'] : '');
+
+                if ($alt === '') {
+                    return 'Informe o texto alternativo (alt) da imagem.';
+                }
+
+                $caminhoDesktop = $this->imagens->salvar($_FILES['imagem'], 'slides', 1440, 800);
+                $caminhoMobile = $this->imagens->salvar($_FILES['imagem'], 'slides', 768, 800);
             }
         } catch (\RuntimeException $e) {
             return $e->getMessage();
@@ -190,31 +182,31 @@ class SlideAdminController extends Controller
         $dados['imagem_mobile_path'] = $caminhoMobile;
         $dados['imagem_alt'] = $alt;
 
-        $this->slides->criar($concursoId, $dados);
+        $this->slides->criar($dados);
 
         return null;
     }
 
     private function salvarEdicao(array $slideAtual)
     {
-        $alt = trim(isset($_POST['imagem_alt']) ? $_POST['imagem_alt'] : '');
-
-        if ($alt === '') {
-            return 'Informe o texto alternativo (alt) da imagem.';
-        }
-
         $caminhoDesktop = $slideAtual['imagem_desktop_path'];
         $caminhoMobile = $slideAtual['imagem_mobile_path'];
+        $alt = $slideAtual['imagem_alt'];
 
         try {
-            if (!empty($_FILES['imagem_desktop']) && $_FILES['imagem_desktop']['error'] === UPLOAD_ERR_OK) {
-                $caminhoDesktop = $this->imagens->salvar($_FILES['imagem_desktop'], 'slides', 1440, 800);
-                $this->imagens->remover($slideAtual['imagem_desktop_path']);
-            }
+            if (!empty($_FILES['imagem']) && $_FILES['imagem']['error'] === UPLOAD_ERR_OK) {
+                $alt = trim(isset($_POST['imagem_alt']) ? $_POST['imagem_alt'] : '');
 
-            if (!empty($_FILES['imagem_mobile']) && $_FILES['imagem_mobile']['error'] === UPLOAD_ERR_OK) {
-                $caminhoMobile = $this->imagens->salvar($_FILES['imagem_mobile'], 'slides', 768, 800);
+                if ($alt === '') {
+                    return 'Informe o texto alternativo (alt) da imagem.';
+                }
+
+                $caminhoDesktop = $this->imagens->salvar($_FILES['imagem'], 'slides', 1440, 800);
+                $caminhoMobile = $this->imagens->salvar($_FILES['imagem'], 'slides', 768, 800);
+                $this->imagens->remover($slideAtual['imagem_desktop_path']);
                 $this->imagens->remover($slideAtual['imagem_mobile_path']);
+            } elseif (isset($_POST['imagem_alt'])) {
+                $alt = trim($_POST['imagem_alt']);
             }
         } catch (\RuntimeException $e) {
             return $e->getMessage();

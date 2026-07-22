@@ -59,6 +59,33 @@
         hidden.value = area.innerHTML;
     }
 
+    /**
+     * Fase 19 (#88): o campo "Tamanho da fonte" nunca refletia o tamanho
+     * atual da selecao - clicar nas setas sempre partia de vazio (o campo
+     * number sem "value" incrementa a partir do min="8"), entao qualquer
+     * ajuste "voltava pro 8". Le o font-size computado no elemento onde
+     * esta o cursor/selecao e preenche o campo, pra que as setas incrementem
+     * a partir do tamanho real, nao de vazio.
+     */
+    function atualizarCampoTamanho(area) {
+        var caixa = area.closest('.editor-rico');
+        var campoTamanho = caixa ? caixa.querySelector('[data-comando="tamanho"]') : null;
+
+        if (!campoTamanho) { return; }
+
+        var selecao = window.getSelection();
+        var no = selecao.rangeCount > 0 ? selecao.anchorNode : null;
+
+        if (!no || !area.contains(no)) { return; }
+
+        var elemento = no.nodeType === 1 ? no : no.parentElement;
+
+        if (!elemento) { return; }
+
+        var tamanhoAtual = parseInt(window.getComputedStyle(elemento).fontSize, 10);
+        campoTamanho.value = isNaN(tamanhoAtual) ? '' : tamanhoAtual;
+    }
+
     function aplicarEstiloNaSelecao(area, propriedade, valor) {
         restaurarSelecao(area);
         var selecao = window.getSelection();
@@ -177,28 +204,105 @@
             });
     }
 
-    document.addEventListener('mouseup', function (evento) {
-        var area = evento.target.closest && evento.target.closest('[data-editor-area]');
-        if (area) { salvarSelecao(area); }
+    /**
+     * Fase 19 (#88): "selectionchange" substitui os antigos listeners de
+     * mouseup/keyup na area - aqueles so' capturavam a selecao quando o
+     * evento acontecia dentro do proprio contenteditable, e deixavam
+     * buracos reais (duplo/triplo clique pra selecionar palavra/paragrafo,
+     * Ctrl+A, selecao que termina fora da area) que faziam a selecao salva
+     * ficar desatualizada bem antes do clique na barra de ferramentas -
+     * exatamente o padrao relatado ("clico em negrito/cor/tamanho com texto
+     * selecionado e nada acontece"). selectionchange dispara pra qualquer
+     * mudanca de selecao, de qualquer origem, incluindo a que o proprio
+     * execCommand() provoca ao aplicar um comando - o que tambem mantem
+     * rangesSalvos sempre atualizado entre comandos encadeados (negrito,
+     * depois cor, depois tamanho, sem re-selecionar o texto entre um e
+     * outro).
+     */
+    document.addEventListener('selectionchange', function () {
+        var selecao = window.getSelection();
+
+        if (selecao.rangeCount === 0) { return; }
+
+        var no = selecao.anchorNode;
+        var elemento = no ? (no.nodeType === 1 ? no : no.parentElement) : null;
+        var area = elemento ? elemento.closest('[data-editor-area]') : null;
+
+        if (area) {
+            salvarSelecao(area);
+            atualizarCampoTamanho(area);
+        }
     });
 
-    document.addEventListener('keyup', function (evento) {
-        var area = evento.target.closest && evento.target.closest('[data-editor-area]');
-        if (area) { salvarSelecao(area); }
+    /**
+     * Fase 19 (#91): o campo de tamanho da fonte fica dentro do <form> do
+     * bloco (slide/banner/etc.) - Enter nele disparava o submit implicito
+     * do formulario inteiro (comportamento padrao do HTML pra <input>
+     * dentro de <form> com botao de enviar), o que salvava o formulario
+     * antes da hora. Enter agora so' aplica o tamanho digitado.
+     */
+    document.addEventListener('keydown', function (evento) {
+        if (evento.key !== 'Enter') { return; }
+
+        var campo = evento.target.closest && evento.target.closest('.editor-rico-tamanho');
+        if (!campo) { return; }
+
+        evento.preventDefault();
+        campo.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
     document.addEventListener('input', function (evento) {
         var area = evento.target.closest && evento.target.closest('[data-editor-area]');
         if (area) { sincronizarHidden(area); }
+
+        var codigo = evento.target.closest && evento.target.closest('[data-editor-codigo]');
+        if (codigo) {
+            var hiddenCodigo = codigo.closest('.editor-rico').querySelector('[data-editor-hidden]');
+            hiddenCodigo.value = codigo.value;
+        }
     });
 
     document.addEventListener('mousedown', function (evento) {
         var botao = evento.target.closest('.editor-rico-btn');
-        if (!botao) { return; }
+        // O botao de alternar modo nao aplica nenhum comando de
+        // formatacao (nao depende de selecao) - tem o proprio handler no
+        // 'click' abaixo, sem precisar do preventDefault de foco que os
+        // outros botoes da barra usam.
+        if (!botao || botao.hasAttribute('data-editor-alternar-modo')) { return; }
 
         evento.preventDefault();
         var area = areaDoControle(botao);
         if (area) { executarComando(area, botao.dataset.comando, botao.dataset.valor); }
+    });
+
+    /**
+     * Fase 19 (#84 v5): alterna entre o contenteditable (modo visual) e um
+     * <textarea> com o HTML cru (modo codigo) - permite corrigir na mao
+     * problemas que o WYSIWYG sozinho nao resolve (ex.: uma referencia de
+     * imagem quebrada colada de outro site, ou um elemento com
+     * overflow/altura fixa que atrapalha o layout aqui).
+     */
+    document.addEventListener('click', function (evento) {
+        var botaoAlternar = evento.target.closest('[data-editor-alternar-modo]');
+        if (!botaoAlternar) { return; }
+
+        var container = botaoAlternar.closest('.editor-rico');
+        var area = container.querySelector('[data-editor-area]');
+        var codigo = container.querySelector('[data-editor-codigo]');
+        var indoParaCodigo = codigo.hidden;
+
+        if (indoParaCodigo) {
+            codigo.value = area.innerHTML;
+            area.hidden = true;
+            codigo.hidden = false;
+        } else {
+            area.innerHTML = codigo.value;
+            codigo.hidden = true;
+            area.hidden = false;
+        }
+
+        sincronizarHidden(area);
+        botaoAlternar.classList.toggle('ativo', indoParaCodigo);
     });
 
     document.addEventListener('change', function (evento) {

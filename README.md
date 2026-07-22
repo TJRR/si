@@ -314,9 +314,11 @@ Em produção (sem Docker, deploy via tarball+rsync, sem git no servidor):
 ### Auditoria/backup
 
 - **`exportar_dump_completo.php`** — exporta um dump SQL completo (estrutura
-  + dados) via PDO puro (produção não tem `mysqldump` instalado). **Contém
-  dado pessoal sensível** (CPF, e-mail, telefone) — trate a saída como
-  confidencial, apague a cópia local assim que entregue.
+  + dados) via PDO puro (produção não tem `mysqldump` instalado), gravado na
+  raiz do projeto como `dump_completo_AAAAMMDD.sql` (um por dia, sobrescreve
+  se rodado de novo no mesmo dia). **Contém dado pessoal sensível** (CPF,
+  e-mail, telefone) — baixe por `scp` (nunca por URL pública) e apague a
+  cópia do servidor assim que confirmar que chegou íntegra na outra máquina.
   `php database/exportar_dump_completo.php --confirmar`
 
 ## Deploy em produção

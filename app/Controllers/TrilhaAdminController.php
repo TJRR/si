@@ -107,11 +107,12 @@ class TrilhaAdminController extends Controller
             $descricao = trim(isset($_POST['descricao']) ? $_POST['descricao'] : '');
             $ordem = (int) (isset($_POST['ordem']) ? $_POST['ordem'] : 0);
             $ativo = isset($_POST['ativo']) ? 1 : 0;
+            $minimoIntegrantesHomologados = max(1, (int) (isset($_POST['minimo_integrantes_homologados']) ? $_POST['minimo_integrantes_homologados'] : 1));
 
             if ($nome === '') {
                 $erro = 'Informe o nome da trilha.';
             } else {
-                $this->trilhas->criar($concursoId, $nome, $descricao, $ordem, $ativo);
+                $this->trilhas->criar($concursoId, $nome, $descricao, $ordem, $ativo, $minimoIntegrantesHomologados);
                 $this->redirecionar('trilhas/index/' . $concursoId);
                 return;
             }
@@ -142,11 +143,12 @@ class TrilhaAdminController extends Controller
             $descricao = trim(isset($_POST['descricao']) ? $_POST['descricao'] : '');
             $ordem = (int) (isset($_POST['ordem']) ? $_POST['ordem'] : 0);
             $ativo = isset($_POST['ativo']) ? 1 : 0;
+            $minimoIntegrantesHomologados = max(1, (int) (isset($_POST['minimo_integrantes_homologados']) ? $_POST['minimo_integrantes_homologados'] : 1));
 
             if ($nome === '') {
                 $erro = 'Informe o nome da trilha.';
             } else {
-                $this->trilhas->atualizar($id, $nome, $descricao, $ordem, $ativo);
+                $this->trilhas->atualizar($id, $nome, $descricao, $ordem, $ativo, $minimoIntegrantesHomologados);
                 $trilha = $this->trilhas->buscarPorId($id);
             }
         }

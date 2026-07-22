@@ -8,7 +8,7 @@
         <a href="<?php echo url('premios/novo/' . (int) $concurso['id']); ?>" class="btn-acao">+ Novo prêmio</a>
     </div>
 </div>
-<p>Regras gerais de premiação em texto rico ficam na tela de <a href="<?php echo url('blocos/index/' . (int) $concurso['id']); ?>">Blocos de conteúdo</a> (bloco padrão "Premiação").</p>
+<p>Regras gerais de premiação em texto rico ficam na tela de <a href="<?php echo url('blocos/index'); ?>">Blocos de conteúdo</a> (bloco padrão "Premiação").</p>
 
 <?php if (empty($premios)): ?>
     <p>Nenhum prêmio cadastrado ainda.</p>

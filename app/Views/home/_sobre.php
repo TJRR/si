@@ -11,24 +11,9 @@
         <h2 class="section-title"><?php echo htmlspecialchars($blocoSobre['titulo'], ENT_QUOTES, 'UTF-8'); ?></h2>
         <div class="section-text"><?php echo $blocoSobre['conteudo_html']; ?></div>
 
-        <?php
-        $fasesDoProcesso = array_values(array_filter($cronograma, function ($item) {
-            return $item['tipo'] === 'etapa';
-        }));
-        ?>
-        <?php if (!empty($fasesDoProcesso)): ?>
-        <ol class="site-fases-lista">
-            <?php foreach ($fasesDoProcesso as $fase): ?>
-                <li><strong><?php echo htmlspecialchars($fase['trilha_nome'], ENT_QUOTES, 'UTF-8'); ?></strong> — <?php echo htmlspecialchars($fase['nome'], ENT_QUOTES, 'UTF-8'); ?></li>
-            <?php endforeach; ?>
-        </ol>
-        <?php endif; ?>
-
         <?php if (!empty($blocoSobre['cta_titulo']) && !empty($blocoSobre['cta_link'])): ?>
             <a href="<?php echo htmlspecialchars($blocoSobre['cta_link'], ENT_QUOTES, 'UTF-8'); ?>" class="btn btn-cta"><?php echo htmlspecialchars($blocoSobre['cta_titulo'], ENT_QUOTES, 'UTF-8'); ?></a>
         <?php endif; ?>
-
-        <p><a href="<?php echo url('edicoes/index'); ?>">Ver edições anteriores →</a></p>
     </div>
 </section>
 <?php endif; ?>

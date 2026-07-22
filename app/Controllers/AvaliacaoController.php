@@ -13,6 +13,7 @@ use App\Middleware\RoleMiddleware;
 use App\Repositories\AvaliadorDesignacaoRepository;
 use App\Repositories\ConcursoRepository;
 use App\Repositories\CriterioAvaliacaoRepository;
+use App\Repositories\CriterioCampoRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\NotaLancadaRepository;
 use App\Repositories\ResultadoEtapaRepository;
@@ -35,6 +36,7 @@ class AvaliacaoController extends Controller
     private $conteudoSubmissao;
     private $feedbackSubmissao;
     private $servicoResultado;
+    private $criterioCampo;
 
     public function __construct()
     {
@@ -50,6 +52,7 @@ class AvaliacaoController extends Controller
         $this->conteudoSubmissao = new ConteudoSubmissaoService();
         $this->feedbackSubmissao = new FeedbackSubmissaoRepository();
         $this->servicoResultado = new ResultadoEtapaService();
+        $this->criterioCampo = new CriterioCampoRepository();
     }
 
     public function index()
@@ -105,6 +108,14 @@ class AvaliacaoController extends Controller
         }
 
         $todasDaEtapa = $this->submissoes->listarPorEtapa($etapaId);
+
+        // Sigilo cego (Fase 19, #11): numera pela ordem de toda a etapa,
+        // nao so' da lista filtrada, para o mesmo "Equipe N" se manter
+        // estavel entre a listagem e a tela de notar.
+        foreach ($todasDaEtapa as $indice => &$submissaoNumerada) {
+            $submissaoNumerada['numero_equipe'] = $indice + 1;
+        }
+        unset($submissaoNumerada);
 
         if ($etapa['modo_designacao'] === 'aberto') {
             $lista = $todasDaEtapa;
@@ -201,6 +212,9 @@ class AvaliacaoController extends Controller
             ? $this->feedbackSubmissao->buscarPorSubmissaoEUsuario($submissaoId, Auth::usuarioId())
             : null;
 
+        $conteudoSubmissao = $this->conteudoSubmissao->montar($submissao);
+        $conteudoPorCriterio = $this->montarConteudoPorCriterio($criteriosDaEtapa, $conteudoSubmissao);
+
         $this->renderizar('avaliacao/notar', [
             'submissao' => $submissao,
             'etapa' => $etapa,
@@ -213,8 +227,35 @@ class AvaliacaoController extends Controller
             'criteriosJaNotados' => $criteriosJaNotados,
             'sigiloCego' => $etapa['modo_sigilo'] === 'cego',
             'erro' => $erro,
-            'conteudoSubmissao' => $this->conteudoSubmissao->montar($submissao),
+            'conteudoPorCriterio' => $conteudoPorCriterio,
         ], 'Lançar notas — Submissão #' . (int) $submissaoId);
+    }
+
+    /**
+     * Fase 19 (#10): cada aba de criterio mostra so' os campos vinculados
+     * a ele (CriterioCampoRepository); se o Admin nao vinculou nenhum
+     * campo aquele criterio, cai no fallback de mostrar a ficha inteira -
+     * comportamento identico ao de antes das abas, pras etapas que ainda
+     * nao foram configuradas com esse vinculo.
+     */
+    private function montarConteudoPorCriterio(array $criteriosDaEtapa, array $conteudoSubmissao)
+    {
+        $porCriterio = [];
+
+        foreach ($criteriosDaEtapa as $criterio) {
+            $campoIds = $this->criterioCampo->listarCampoIdsPorCriterio($criterio['id']);
+
+            if (empty($campoIds)) {
+                $porCriterio[$criterio['id']] = $conteudoSubmissao;
+                continue;
+            }
+
+            $porCriterio[$criterio['id']] = array_values(array_filter($conteudoSubmissao, function ($item) use ($campoIds) {
+                return in_array((int) $item['campo']['id'], $campoIds, true);
+            }));
+        }
+
+        return $porCriterio;
     }
 
     /**

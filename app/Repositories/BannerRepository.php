@@ -11,9 +11,10 @@ use App\Core\Auditoria;
 use App\Core\Database;
 
 /**
- * Fase 18 (3.3 Banner/Hero) - banners empilhaveis abaixo do slideshow,
- * escopados por concurso. Mesmo padrao de SlideRepository (enums expostos
- * como constantes, reordenar() em lote).
+ * Fase 18 (3.3 Banner/Hero) - banners empilhaveis abaixo do slideshow.
+ * Fase 19 (#84 v2): deixou de ser escopado por concurso - e' configuracao
+ * do site. Mesmo padrao de SlideRepository (enums expostos como
+ * constantes, reordenar() em lote).
  */
 class BannerRepository
 {
@@ -24,25 +25,20 @@ class BannerRepository
         'inferior_esquerda', 'inferior_centro', 'inferior_direita',
     ];
     public const CTA_EFEITOS_HOVER = ['nenhum', 'escurecer', 'clarear', 'escala', 'borda', 'iluminar', 'inverter'];
+    public const CONTEUDO_ALINHAMENTOS = ['esquerda', 'centro', 'direita'];
 
-    public function listarPorConcurso($concursoId)
+    public function listar()
     {
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare('SELECT * FROM banners WHERE concurso_id = :concurso_id ORDER BY ordem ASC, id ASC');
-        $stmt->execute(['concurso_id' => $concursoId]);
 
-        return $stmt->fetchAll();
+        return $pdo->query('SELECT * FROM banners ORDER BY ordem ASC, id ASC')->fetchAll();
     }
 
-    public function listarAtivosPorConcurso($concursoId)
+    public function listarAtivos()
     {
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare(
-            'SELECT * FROM banners WHERE concurso_id = :concurso_id AND ativo = 1 ORDER BY ordem ASC, id ASC'
-        );
-        $stmt->execute(['concurso_id' => $concursoId]);
 
-        return $stmt->fetchAll();
+        return $pdo->query('SELECT * FROM banners WHERE ativo = 1 ORDER BY ordem ASC, id ASC')->fetchAll();
     }
 
     public function buscarPorId($id)
@@ -56,23 +52,21 @@ class BannerRepository
         return $banner !== false ? $banner : null;
     }
 
-    public function criar($concursoId, array $dados)
+    public function criar(array $dados)
     {
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare('SELECT COALESCE(MAX(ordem), -1) + 1 FROM banners WHERE concurso_id = :concurso_id');
-        $stmt->execute(['concurso_id' => $concursoId]);
-        $proximaOrdem = (int) $stmt->fetchColumn();
+        $proximaOrdem = (int) $pdo->query('SELECT COALESCE(MAX(ordem), -1) + 1 FROM banners')->fetchColumn();
 
-        $campos = $dados + ['concurso_id' => $concursoId, 'ordem' => $proximaOrdem];
+        $campos = $dados + ['ordem' => $proximaOrdem];
 
         $stmt = $pdo->prepare(
             'INSERT INTO banners (
-                concurso_id, imagem_desktop_path, imagem_mobile_path, imagem_alt, cor_fundo,
-                conteudo_html, cta_titulo, cta_destino_tipo, cta_destino_valor, cta_posicao,
+                imagem_desktop_path, imagem_mobile_path, imagem_alt, cor_fundo,
+                conteudo_html, conteudo_alinhamento, cta_titulo, cta_destino_tipo, cta_destino_valor, cta_posicao,
                 cta_efeito_hover, ordem, ativo
             ) VALUES (
-                :concurso_id, :imagem_desktop_path, :imagem_mobile_path, :imagem_alt, :cor_fundo,
-                :conteudo_html, :cta_titulo, :cta_destino_tipo, :cta_destino_valor, :cta_posicao,
+                :imagem_desktop_path, :imagem_mobile_path, :imagem_alt, :cor_fundo,
+                :conteudo_html, :conteudo_alinhamento, :cta_titulo, :cta_destino_tipo, :cta_destino_valor, :cta_posicao,
                 :cta_efeito_hover, :ordem, :ativo
             )'
         );
@@ -96,6 +90,7 @@ class BannerRepository
                 imagem_alt = :imagem_alt,
                 cor_fundo = :cor_fundo,
                 conteudo_html = :conteudo_html,
+                conteudo_alinhamento = :conteudo_alinhamento,
                 cta_titulo = :cta_titulo,
                 cta_destino_tipo = :cta_destino_tipo,
                 cta_destino_valor = :cta_destino_valor,
@@ -119,20 +114,20 @@ class BannerRepository
         Auditoria::registrar('remover', 'banners', $id, $antes, null);
     }
 
-    public function reordenar($concursoId, array $ids)
+    public function reordenar(array $ids)
     {
         $pdo = Database::conexao();
         $pdo->beginTransaction();
 
         try {
-            $stmt = $pdo->prepare('UPDATE banners SET ordem = :ordem WHERE id = :id AND concurso_id = :concurso_id');
+            $stmt = $pdo->prepare('UPDATE banners SET ordem = :ordem WHERE id = :id');
 
             foreach ($ids as $indice => $id) {
-                $stmt->execute(['ordem' => $indice, 'id' => (int) $id, 'concurso_id' => $concursoId]);
+                $stmt->execute(['ordem' => $indice, 'id' => (int) $id]);
             }
 
             $pdo->commit();
-            Auditoria::registrar('reordenar', 'banners', null, null, ['concurso_id' => $concursoId, 'ids' => $ids]);
+            Auditoria::registrar('reordenar', 'banners', null, null, ['ids' => $ids]);
         } catch (\Exception $e) {
             $pdo->rollBack();
             throw $e;

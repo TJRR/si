@@ -10,12 +10,12 @@
     <p>Nenhuma submissão designada a você nesta etapa ainda.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th><?php echo $sigiloCego ? 'Submissão' : 'Equipe'; ?></th><th>Status</th><th>Ações</th></tr>
+        <tr><th>Equipe</th><th>Status</th><th>Ações</th></tr>
         <?php foreach ($submissoes as $submissao): ?>
         <tr>
             <td>
                 <?php if ($sigiloCego): ?>
-                    #<?php echo (int) $submissao['id']; ?>
+                    Equipe <?php echo (int) $submissao['numero_equipe']; ?>
                 <?php else: ?>
                     <?php echo htmlspecialchars($submissao['nome_equipe'] !== null ? $submissao['nome_equipe'] : '—', ENT_QUOTES, 'UTF-8'); ?>
                 <?php endif; ?>

@@ -14,7 +14,7 @@
         <?php if (!empty($banner['imagem_alt'])): ?>
             <span class="sr-only"><?php echo htmlspecialchars($banner['imagem_alt'], ENT_QUOTES, 'UTF-8'); ?></span>
         <?php endif; ?>
-        <div class="site-banner-conteudo"><?php echo $banner['conteudo_html']; ?></div>
+        <div class="site-banner-conteudo site-banner-conteudo-<?php echo htmlspecialchars($banner['conteudo_alinhamento'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo $banner['conteudo_html']; ?></div>
         <?php
         $destino = null;
         if (!empty($banner['cta_destino_valor'])) {

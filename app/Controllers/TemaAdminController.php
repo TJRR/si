@@ -9,116 +9,96 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
-use App\Repositories\ConcursoRepository;
+use App\Repositories\BannerRepository;
 use App\Repositories\ConfiguracaoVisualRepository;
 use App\Services\ImagemService;
 
+/**
+ * Fase 18 (4.9): identidade visual do site. Fase 19 (#84 v2): deixou de
+ * ter override por concurso - "Tema" (Favicon+Cores), "Cabeçalho" (Logo +
+ * imagem de fundo + logo clara) e "Rodapé" (logo do rodapé + atalhos de
+ * navegação) são 3 abas da tela "Configuração", todas 100% globais.
+ */
 class TemaAdminController extends Controller
 {
     private $configuracaoVisual;
     private $imagens;
-    private $concursos;
 
     public function __construct()
     {
         RoleMiddleware::exigir(['administrador']);
         $this->configuracaoVisual = new ConfiguracaoVisualRepository();
         $this->imagens = new ImagemService();
-        $this->concursos = new ConcursoRepository();
     }
 
-    /**
-     * Sem $concursoId: edita a identidade visual GLOBAL/default (aba
-     * "Tema" de nivel 1, usada quando nao ha concurso no contexto - login,
-     * paineis). Com $concursoId (Fase 18, acessado via arvore de um
-     * concurso especifico): edita o override daquela edicao.
-     */
-    public function index($concursoId = null)
+    public function index()
     {
-        $concurso = $concursoId !== null ? $this->concursos->buscarPorId($concursoId) : null;
-
-        if ($concursoId !== null && $concurso === null) {
-            http_response_code(404);
-            exit('Concurso não encontrado.');
-        }
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->salvar($concursoId);
+            if (!empty($_POST['cor_primaria_inicio']) && !empty($_POST['cor_primaria_fim']) && !empty($_POST['cor_secundaria'])) {
+                $this->configuracaoVisual->atualizar(
+                    trim($_POST['cor_primaria_inicio']),
+                    trim($_POST['cor_primaria_fim']),
+                    trim($_POST['cor_secundaria'])
+                );
+            }
+
+            $this->salvarFavicon();
 
             if (empty($_SESSION['flash'])) {
                 $_SESSION['flash'] = 'Tema atualizado.';
             }
 
-            $this->redirecionar($concursoId !== null ? 'tema/index/' . $concursoId : 'tema/index');
+            $this->redirecionar('tema/index');
             return;
         }
 
-        $atual = $concursoId !== null
-            ? $this->configuracaoVisual->buscarPorConcurso($concursoId)
-            : $this->configuracaoVisual->buscar();
-
-        // Nao participa da arvore (nao entra em $modulosArvore): a rota
-        // 'tema' ja e' usada pela tela GLOBAL (fora da arvore, layout flat);
-        // colocar 'tema' em $modulosArvore quebraria essa tela global,
-        // envolvendo-a com a sidebar sem contexto. Por isso este screen
-        // concurso-scoped e' so' um link direto a partir de Concursos, nao
-        // um no na arvore.
         $this->renderizar('admin/tema/form', [
-            'configuracaoVisual' => $atual,
-            'concurso' => $concurso,
-        ], 'Tema');
+            'configuracaoVisual' => $this->configuracaoVisual->buscar(),
+        ], 'Tema', ['tipo' => 'configuracaoTema', 'id' => null]);
     }
 
-    private function salvar($concursoId)
+    public function cabecalho()
     {
-        if ($concursoId !== null) {
-            $this->salvarParaConcurso($concursoId);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->salvarCabecalho();
+
+            if (empty($_SESSION['flash'])) {
+                $_SESSION['flash'] = 'Cabeçalho atualizado.';
+            }
+
+            $this->redirecionar('tema/cabecalho');
             return;
         }
 
-        if (!empty($_POST['cor_primaria_inicio']) && !empty($_POST['cor_primaria_fim']) && !empty($_POST['cor_secundaria'])) {
-            $this->configuracaoVisual->atualizar(
-                trim($_POST['cor_primaria_inicio']),
-                trim($_POST['cor_primaria_fim']),
-                trim($_POST['cor_secundaria'])
-            );
-        }
-
-        $this->salvarFavicon();
-        $this->salvarLogoGlobal();
+        $this->renderizar('admin/tema/cabecalho', [
+            'configuracaoVisual' => $this->configuracaoVisual->buscar(),
+        ], 'Cabeçalho', ['tipo' => 'configuracaoCabecalho', 'id' => null]);
     }
 
-    private function salvarLogoGlobal()
+    public function rodape()
     {
-        if (empty($_FILES['logo']) || $_FILES['logo']['error'] === UPLOAD_ERR_NO_FILE) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->salvarRodape();
+
+            if (empty($_SESSION['flash'])) {
+                $_SESSION['flash'] = 'Rodapé atualizado.';
+            }
+
+            $this->redirecionar('tema/rodape');
             return;
         }
 
-        if ($_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
-            $_SESSION['flash'] = 'Falha ao enviar o logo.';
-            return;
-        }
+        $this->renderizar('admin/tema/rodape', [
+            'configuracaoVisual' => $this->configuracaoVisual->buscar(),
+        ], 'Rodapé', ['tipo' => 'configuracaoRodape', 'id' => null]);
+    }
 
-        try {
-            $novoCaminho = $this->imagens->salvar($_FILES['logo'], 'logo', 600, 200);
-        } catch (\RuntimeException $e) {
-            $_SESSION['flash'] = $e->getMessage();
-            return;
-        }
-
+    private function salvarCabecalho()
+    {
         $atual = $this->configuracaoVisual->buscar();
-
-        if ($atual !== false && !empty($atual['logo_path'])) {
-            $this->imagens->remover($atual['logo_path']);
-        }
-
-        $this->configuracaoVisual->atualizarLogo($novoCaminho);
-    }
-
-    private function salvarParaConcurso($concursoId)
-    {
-        $atual = $this->configuracaoVisual->buscarPorConcurso($concursoId);
-        $logoPath = $atual !== null ? $atual['logo_path'] : null;
+        $logoPath = $atual !== false ? $atual['logo_path'] : null;
+        $cabecalhoImagemPath = $atual !== false ? $atual['cabecalho_imagem_path'] : null;
+        $cabecalhoLogoClaroPath = $atual !== false ? $atual['cabecalho_logo_claro_path'] : null;
 
         if (!empty($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
             try {
@@ -129,17 +109,79 @@ class TemaAdminController extends Controller
                 }
 
                 $logoPath = $novoCaminho;
+                $this->configuracaoVisual->atualizarLogo($logoPath);
             } catch (\RuntimeException $e) {
                 $_SESSION['flash'] = $e->getMessage();
             }
         }
 
-        $this->configuracaoVisual->salvarParaConcurso(
-            $concursoId,
-            trim(isset($_POST['cor_primaria_inicio']) ? $_POST['cor_primaria_inicio'] : ($atual['cor_primaria_inicio'] ?? '#FF6600')),
-            trim(isset($_POST['cor_primaria_fim']) ? $_POST['cor_primaria_fim'] : ($atual['cor_primaria_fim'] ?? '#FF9955')),
-            trim(isset($_POST['cor_secundaria']) ? $_POST['cor_secundaria'] : ($atual['cor_secundaria'] ?? '#191919')),
-            $logoPath
+        if (!empty($_FILES['cabecalho_imagem']) && $_FILES['cabecalho_imagem']['error'] === UPLOAD_ERR_OK) {
+            try {
+                $novoCaminho = $this->imagens->salvar($_FILES['cabecalho_imagem'], 'cabecalho', 1920, 800);
+
+                if ($cabecalhoImagemPath !== null) {
+                    $this->imagens->remover($cabecalhoImagemPath);
+                }
+
+                $cabecalhoImagemPath = $novoCaminho;
+            } catch (\RuntimeException $e) {
+                $_SESSION['flash'] = $e->getMessage();
+            }
+        }
+
+        if (!empty($_FILES['logo_claro']) && $_FILES['logo_claro']['error'] === UPLOAD_ERR_OK) {
+            try {
+                $novoCaminho = $this->imagens->salvar($_FILES['logo_claro'], 'logo', 320, 120);
+
+                if ($cabecalhoLogoClaroPath !== null) {
+                    $this->imagens->remover($cabecalhoLogoClaroPath);
+                }
+
+                $cabecalhoLogoClaroPath = $novoCaminho;
+            } catch (\RuntimeException $e) {
+                $_SESSION['flash'] = $e->getMessage();
+            }
+        }
+
+        $cabecalhoTituloHtml = isset($_POST['cabecalho_titulo_html']) ? $_POST['cabecalho_titulo_html'] : '';
+
+        $efeitoTransicao = isset($_POST['cabecalho_efeito_transicao']) ? $_POST['cabecalho_efeito_transicao'] : 'onda';
+        $efeitoTransicao = in_array($efeitoTransicao, ConfiguracaoVisualRepository::CABECALHO_EFEITOS_TRANSICAO, true) ? $efeitoTransicao : 'onda';
+
+        $overlayOpacidade = (int) (isset($_POST['cabecalho_overlay_opacidade']) ? $_POST['cabecalho_overlay_opacidade'] : 50);
+        $overlayOpacidade = $overlayOpacidade >= 0 && $overlayOpacidade <= 100 ? $overlayOpacidade : 50;
+
+        $imagemPosicao = isset($_POST['cabecalho_imagem_posicao']) ? $_POST['cabecalho_imagem_posicao'] : 'superior_centro';
+        $imagemPosicao = in_array($imagemPosicao, BannerRepository::CTA_POSICOES, true) ? $imagemPosicao : 'superior_centro';
+
+        $this->configuracaoVisual->atualizarCabecalho($cabecalhoImagemPath, $cabecalhoLogoClaroPath, $cabecalhoTituloHtml, $efeitoTransicao, $overlayOpacidade, $imagemPosicao);
+    }
+
+    private function salvarRodape()
+    {
+        $atual = $this->configuracaoVisual->buscar();
+        $rodapeLogoPath = $atual !== false ? $atual['rodape_logo_path'] : null;
+
+        if (!empty($_FILES['rodape_logo']) && $_FILES['rodape_logo']['error'] === UPLOAD_ERR_OK) {
+            try {
+                $novoCaminho = $this->imagens->salvar($_FILES['rodape_logo'], 'logo', 600, 200);
+
+                if ($rodapeLogoPath !== null) {
+                    $this->imagens->remover($rodapeLogoPath);
+                }
+
+                $rodapeLogoPath = $novoCaminho;
+            } catch (\RuntimeException $e) {
+                $_SESSION['flash'] = $e->getMessage();
+            }
+        }
+
+        $this->configuracaoVisual->atualizarRodape(
+            $rodapeLogoPath,
+            isset($_POST['rodape_mostrar_trilhas']) ? 1 : 0,
+            isset($_POST['rodape_mostrar_cronograma']) ? 1 : 0,
+            isset($_POST['rodape_mostrar_desafios']) ? 1 : 0,
+            isset($_POST['rodape_mostrar_contato']) ? 1 : 0
         );
     }
 

@@ -73,6 +73,42 @@ class DocumentoAdminController extends Controller
         ], 'Novo documento', ['tipo' => 'documentos', 'id' => (int) $concursoId]);
     }
 
+    public function editar($id)
+    {
+        $documento = $this->documentos->buscarPorId($id);
+
+        if ($documento === null) {
+            http_response_code(404);
+            exit('Documento não encontrado.');
+        }
+
+        $concurso = $this->concursos->buscarPorId($documento['concurso_id']);
+        $erro = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $tipo = isset($_POST['tipo']) ? $_POST['tipo'] : '';
+            $titulo = trim(isset($_POST['titulo']) ? $_POST['titulo'] : '');
+            $trilhaId = !empty($_POST['trilha_id']) ? (int) $_POST['trilha_id'] : null;
+
+            if (!in_array($tipo, DocumentoRepository::TIPOS, true)) {
+                $erro = 'Selecione um tipo de documento válido.';
+            } elseif ($titulo === '') {
+                $erro = 'Informe o título do documento.';
+            } else {
+                $this->documentos->atualizarMetadados($id, $trilhaId, $tipo, $titulo);
+                $this->redirecionar('documentos/index/' . $documento['concurso_id']);
+                return;
+            }
+        }
+
+        $this->renderizar('admin/documentos/editar', [
+            'erro' => $erro,
+            'concurso' => $concurso,
+            'documento' => $documento,
+            'trilhas' => $this->trilhas->listarPorConcurso($documento['concurso_id']),
+        ], 'Editar documento', ['tipo' => 'documentos', 'id' => (int) $documento['concurso_id']]);
+    }
+
     public function historico($concursoId, $grupoDocumento)
     {
         $concurso = $this->concursos->buscarPorId($concursoId);

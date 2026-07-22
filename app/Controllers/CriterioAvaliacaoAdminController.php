@@ -9,19 +9,25 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
+use App\Repositories\CampoDinamicoRepository;
 use App\Repositories\CriterioAvaliacaoRepository;
+use App\Repositories\CriterioCampoRepository;
 use App\Repositories\EtapaRepository;
 
 class CriterioAvaliacaoAdminController extends Controller
 {
     private $criterios;
     private $etapas;
+    private $campos;
+    private $criterioCampo;
 
     public function __construct()
     {
         RoleMiddleware::exigir(['administrador']);
         $this->criterios = new CriterioAvaliacaoRepository();
         $this->etapas = new EtapaRepository();
+        $this->campos = new CampoDinamicoRepository();
+        $this->criterioCampo = new CriterioCampoRepository();
     }
 
     public function index($etapaId)
@@ -50,10 +56,14 @@ class CriterioAvaliacaoAdminController extends Controller
             exit('Etapa não encontrada.');
         }
 
+        $camposDoFormulario = $etapa['formulario_dinamico_id'] !== null
+            ? $this->campos->listarPorFormulario($etapa['formulario_dinamico_id'])
+            : [];
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dados = $this->lerDadosFormulario();
+            $camposSelecionados = isset($_POST['campos']) && is_array($_POST['campos']) ? array_map('intval', $_POST['campos']) : [];
 
             if ($dados['nome'] === '') {
                 $erro = 'Informe o nome do critério.';
@@ -62,7 +72,7 @@ class CriterioAvaliacaoAdminController extends Controller
             } elseif ($this->criterios->codigoJaExisteNaEtapa($etapaId, $dados['codigo'])) {
                 $erro = 'Já existe um critério com este código nesta etapa.';
             } else {
-                $this->criterios->criar(
+                $novoId = $this->criterios->criar(
                     $etapaId,
                     $dados['codigo'],
                     $dados['nome'],
@@ -71,6 +81,7 @@ class CriterioAvaliacaoAdminController extends Controller
                     $dados['escala_min'],
                     $dados['escala_max']
                 );
+                $this->criterioCampo->salvarVinculos($novoId, $camposSelecionados);
                 $this->redirecionar('criterios/index/' . $etapaId);
                 return;
             }
@@ -83,6 +94,8 @@ class CriterioAvaliacaoAdminController extends Controller
             'etapa' => $etapa,
             'criterio' => null,
             'codigoSugerido' => $codigoSugerido,
+            'camposDoFormulario' => $camposDoFormulario,
+            'campoIdsVinculados' => [],
         ], 'Novo critério', ['tipo' => 'criterios', 'id' => (int) $etapaId]);
     }
 
@@ -96,10 +109,14 @@ class CriterioAvaliacaoAdminController extends Controller
         }
 
         $etapa = $this->etapas->buscarPorId($criterio['etapa_id']);
+        $camposDoFormulario = $etapa['formulario_dinamico_id'] !== null
+            ? $this->campos->listarPorFormulario($etapa['formulario_dinamico_id'])
+            : [];
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dados = $this->lerDadosFormulario();
+            $camposSelecionados = isset($_POST['campos']) && is_array($_POST['campos']) ? array_map('intval', $_POST['campos']) : [];
 
             if ($dados['nome'] === '') {
                 $erro = 'Informe o nome do critério.';
@@ -117,6 +134,7 @@ class CriterioAvaliacaoAdminController extends Controller
                     $dados['escala_min'],
                     $dados['escala_max']
                 );
+                $this->criterioCampo->salvarVinculos($id, $camposSelecionados);
                 $criterio = $this->criterios->buscarPorId($id);
             }
         }
@@ -125,6 +143,8 @@ class CriterioAvaliacaoAdminController extends Controller
             'erro' => $erro,
             'etapa' => $etapa,
             'criterio' => $criterio,
+            'camposDoFormulario' => $camposDoFormulario,
+            'campoIdsVinculados' => $this->criterioCampo->listarCampoIdsPorCriterio($id),
         ], 'Editar critério', ['tipo' => 'criterios', 'id' => (int) $etapa['id']]);
     }
 

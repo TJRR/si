@@ -22,6 +22,11 @@
         <input type="number" name="ordem" value="<?php echo $trilha !== null ? (int) $trilha['ordem'] : 0; ?>" <?php echo $somenteLeitura ? 'disabled' : ''; ?>>
     </label><br>
 
+    <label>Mínimo de integrantes homologados para a equipe contar como homologada:
+        <input type="number" name="minimo_integrantes_homologados" min="1" value="<?php echo $trilha !== null ? (int) $trilha['minimo_integrantes_homologados'] : 1; ?>" <?php echo $somenteLeitura ? 'disabled' : ''; ?>>
+    </label>
+    <p><small>Usado na página pública de equipes homologadas — defina aqui o critério de cada edital, sem depender de alteração de código.</small></p><br>
+
     <label>
         <input type="checkbox" name="ativo" value="1" <?php echo ($trilha === null || $trilha['ativo']) ? 'checked' : ''; ?> <?php echo $somenteLeitura ? 'disabled' : ''; ?>>
         Ativa

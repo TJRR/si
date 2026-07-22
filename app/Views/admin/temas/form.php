@@ -27,6 +27,10 @@
         </select>
     </label><br>
 
+    <label>Ordem de exibição na home (menor aparece primeiro):
+        <input type="number" name="ordem" value="<?php echo $tema !== null ? (int) $tema['ordem'] : 0; ?>" <?php echo $desabilitado; ?>>
+    </label><br>
+
     <label>
         <input type="checkbox" name="ativo" value="1" <?php echo ($tema === null || $tema['ativo']) ? 'checked' : ''; ?> <?php echo $desabilitado; ?>>
         Ativo

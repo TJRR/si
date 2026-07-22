@@ -102,10 +102,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var confirmado = false;
 
+    /**
+     * Um input "required" dentro de uma aba escondida (.criterio-painel
+     * sem .ativo, display:none) pode fazer o navegador barrar o submit
+     * sem mostrar nenhum balao de validacao visivel (elemento nao
+     * renderizado) - avaliador clica "Salvar" e nada parece acontecer.
+     * Antes de validar, ativa a aba do primeiro campo invalido.
+     */
+    function ativarAbaDoPrimeiroInvalido() {
+        var primeiroInvalido = form.querySelector('.campo-nota:invalid');
+
+        if (!primeiroInvalido) {
+            return;
+        }
+
+        var painel = primeiroInvalido.closest('.criterio-painel');
+
+        if (!painel) {
+            return;
+        }
+
+        var indice = painel.dataset.criterioPainel;
+        var aba = document.querySelector('[data-criterio-aba="' + indice + '"]');
+
+        if (aba) {
+            aba.click();
+        }
+    }
+
     form.addEventListener('submit', function (evento) {
         if (confirmado) {
             return;
         }
+
+        ativarAbaDoPrimeiroInvalido();
 
         if (!form.reportValidity()) {
             return;
@@ -147,4 +177,26 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     atualizarProgresso();
+
+    /**
+     * Fase 19 (#10): abas por criterio - clique troca qual .criterio-painel
+     * fica visivel. Nao muda nada do resto do arquivo (progresso, modal de
+     * revisao, reportValidity()) - continuam operando sobre #form-notas
+     * inteiro, abas visiveis ou nao (o navegador so' barra o submit se
+     * algum .campo-nota "required" estiver vazio, mesmo que a aba dele
+     * nao esteja ativa no momento do clique em "Salvar notas").
+     */
+    document.querySelectorAll('[data-criterio-aba]').forEach(function (aba) {
+        aba.addEventListener('click', function () {
+            var indice = aba.dataset.criterioAba;
+
+            document.querySelectorAll('[data-criterio-aba]').forEach(function (botao) {
+                botao.classList.toggle('ativo', botao === aba);
+            });
+
+            document.querySelectorAll('.criterio-painel').forEach(function (painel) {
+                painel.classList.toggle('ativo', painel.dataset.criterioPainel === indice);
+            });
+        });
+    });
 });

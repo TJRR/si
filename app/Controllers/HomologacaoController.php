@@ -11,6 +11,7 @@ use App\Core\Auth;
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\EquipeRepository;
+use App\Repositories\HomologacaoPublicaRepository;
 use App\Repositories\NotificacaoPainelRepository;
 use App\Repositories\ParticipanteRepository;
 use App\Repositories\TrilhaRepository;
@@ -24,6 +25,7 @@ class HomologacaoController extends Controller
     private $trilhas;
     private $usuarioParticipante;
     private $notificacoes;
+    private $homologacaoPublica;
 
     public function __construct()
     {
@@ -33,6 +35,7 @@ class HomologacaoController extends Controller
         $this->trilhas = new TrilhaRepository();
         $this->usuarioParticipante = new UsuarioParticipanteRepository();
         $this->notificacoes = new NotificacaoPainelRepository();
+        $this->homologacaoPublica = new HomologacaoPublicaRepository();
     }
 
     public function index($trilhaId)
@@ -51,9 +54,32 @@ class HomologacaoController extends Controller
             'inscricoes' => $this->equipes->listarTodosPorTrilha($trilhaId, $status),
             'statusFiltro' => $status,
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
+            'homologacaoPublicada' => $this->homologacaoPublica->jaPublicado($trilhaId),
         ], 'Inscritos — ' . $trilha['nome'], ['tipo' => 'inscritos', 'id' => (int) $trilhaId]);
 
         unset($_SESSION['flash']);
+    }
+
+    /**
+     * Fase 19 (#17): publica/despublica a pagina publica de equipes
+     * homologadas desta trilha (fora do fluxo de homologar/rejeitar
+     * integrante, que qualquer Suporte ja pode fazer - publicar dado pra
+     * fora e' decisao de Admin).
+     */
+    public function publicar($trilhaId)
+    {
+        RoleMiddleware::exigir(['administrador']);
+        $this->homologacaoPublica->publicar($trilhaId, Auth::usuarioId());
+        $_SESSION['flash'] = 'Lista de equipes homologadas publicada.';
+        $this->redirecionar('homologacao/index/' . $trilhaId);
+    }
+
+    public function despublicar($trilhaId)
+    {
+        RoleMiddleware::exigir(['administrador']);
+        $this->homologacaoPublica->reabrir($trilhaId);
+        $_SESSION['flash'] = 'Lista de equipes homologadas despublicada.';
+        $this->redirecionar('homologacao/index/' . $trilhaId);
     }
 
     public function homologar()

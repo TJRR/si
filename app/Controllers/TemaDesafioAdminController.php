@@ -49,6 +49,36 @@ class TemaDesafioAdminController extends Controller
         ], 'Temas de ' . $trilha['nome'], ['tipo' => 'temas', 'id' => (int) $trilhaId]);
     }
 
+    /**
+     * Fase 19 (#102): reordenacao dos Temas de uma trilha, mesmo padrao de
+     * BlocoConteudoAdminController::reordenar().
+     */
+    public function reordenar($trilhaId)
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        $corpo = json_decode((string) file_get_contents('php://input'), true);
+        $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
+
+        $this->temas->reordenar((int) $trilhaId, $ids);
+
+        echo json_encode(['ok' => true]);
+    }
+
+    /**
+     * Reordenacao dos Desafios de UM Tema (rota separada de reordenar()
+     * porque o escopo e' outro nivel da hierarquia).
+     */
+    public function reordenarDesafios($temaId)
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        $corpo = json_decode((string) file_get_contents('php://input'), true);
+        $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
+
+        $this->desafios->reordenar((int) $temaId, $ids);
+
+        echo json_encode(['ok' => true]);
+    }
+
     public function remover()
     {
         RoleMiddleware::exigir(['administrador']);
@@ -84,11 +114,12 @@ class TemaDesafioAdminController extends Controller
             $descricaoLonga = trim(isset($_POST['descricao_longa']) ? $_POST['descricao_longa'] : '');
             $ativo = isset($_POST['ativo']) ? 1 : 0;
             $icone = $this->iconeSelecionado();
+            $ordem = (int) (isset($_POST['ordem']) ? $_POST['ordem'] : 0);
 
             if ($nome === '') {
                 $erro = 'Informe o nome do tema.';
             } else {
-                $this->temas->criar($trilhaId, $nome, $descricaoLonga, $ativo, $icone);
+                $this->temas->criar($trilhaId, $nome, $descricaoLonga, $ativo, $icone, $ordem);
                 $this->redirecionar('temas/index/' . $trilhaId);
                 return;
             }
@@ -126,11 +157,12 @@ class TemaDesafioAdminController extends Controller
             $descricaoLonga = trim(isset($_POST['descricao_longa']) ? $_POST['descricao_longa'] : '');
             $ativo = isset($_POST['ativo']) ? 1 : 0;
             $icone = $this->iconeSelecionado();
+            $ordem = (int) (isset($_POST['ordem']) ? $_POST['ordem'] : 0);
 
             if ($nome === '') {
                 $erro = 'Informe o nome do tema.';
             } else {
-                $this->temas->atualizar($id, $nome, $descricaoLonga, $ativo, $icone);
+                $this->temas->atualizar($id, $nome, $descricaoLonga, $ativo, $icone, $ordem);
                 $tema = $this->temas->buscarPorId($id);
             }
         }
@@ -200,11 +232,13 @@ class TemaDesafioAdminController extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pergunta = trim(isset($_POST['pergunta']) ? $_POST['pergunta'] : '');
             $ativo = isset($_POST['ativo']) ? 1 : 0;
+            $icone = $this->iconeSelecionado();
+            $ordem = (int) (isset($_POST['ordem']) ? $_POST['ordem'] : 0);
 
             if ($pergunta === '') {
                 $erro = 'Informe o texto da pergunta do desafio.';
             } else {
-                $this->desafios->criar($temaId, $pergunta, $ativo);
+                $this->desafios->criar($temaId, $pergunta, $ativo, $icone, $ordem);
                 $this->redirecionar('temas/desafios/' . $temaId);
                 return;
             }
@@ -235,11 +269,13 @@ class TemaDesafioAdminController extends Controller
             RoleMiddleware::exigir(['administrador']);
             $pergunta = trim(isset($_POST['pergunta']) ? $_POST['pergunta'] : '');
             $ativo = isset($_POST['ativo']) ? 1 : 0;
+            $icone = $this->iconeSelecionado();
+            $ordem = (int) (isset($_POST['ordem']) ? $_POST['ordem'] : 0);
 
             if ($pergunta === '') {
                 $erro = 'Informe o texto da pergunta do desafio.';
             } else {
-                $this->desafios->atualizar($id, $pergunta, $ativo);
+                $this->desafios->atualizar($id, $pergunta, $ativo, $icone, $ordem);
                 $desafio = $this->desafios->buscarPorId($id);
             }
         }

@@ -15,12 +15,15 @@ use App\Repositories\BlocoConteudoRepository;
 use App\Repositories\ConcursoRepository;
 use App\Repositories\ConfiguracaoVisualRepository;
 use App\Repositories\ContatoConcursoRepository;
+use App\Repositories\DesafioRepository;
 use App\Repositories\DocumentoRepository;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\EventoCronogramaRepository;
 use App\Repositories\FaqConcursoRepository;
 use App\Repositories\FormularioDinamicoRepository;
+use App\Repositories\HomeSecaoOrdemRepository;
+use App\Repositories\HomologacaoPublicaRepository;
 use App\Repositories\MensagemContatoRepository;
 use App\Repositories\ParticipanteRepository;
 use App\Repositories\PerfilRepository;
@@ -50,17 +53,30 @@ class HomeController extends Controller
         $trilhas = new TrilhaRepository();
         $etapas = new EtapaRepository();
         $temas = new TemaRepository();
+        $desafios = new DesafioRepository();
         $formularios = new FormularioDinamicoRepository();
         $servicoResultadoEtapa = new ResultadoEtapaService();
 
         $trilhasAtivas = $trilhas->listarPorConcurso($concursoId);
+        $homologacaoPublica = new HomologacaoPublicaRepository();
 
         $cronograma = [];
         $temasPorTrilha = [];
         $trilhasComInscricaoAberta = [];
         $etapasComResultadoPublicado = [];
+        $trilhasComHomologacaoPublicada = [];
 
         foreach ($trilhasAtivas as $trilha) {
+            // Fase 19 (#17): "Equipes Homologadas" e' um conceito diferente
+            // de "Resultados" (ranking avaliado) - a Etapa de Cadastro nao
+            // tem avaliacao, entao nao entra em $etapasComResultadoPublicado.
+            if ($homologacaoPublica->jaPublicado($trilha['id'])) {
+                $trilhasComHomologacaoPublicada[] = [
+                    'trilha_id' => $trilha['id'],
+                    'trilha_nome' => $trilha['nome'],
+                ];
+            }
+
             foreach ($etapas->listarPorTrilha($trilha['id']) as $etapa) {
                 $cronograma[] = [
                     'tipo' => 'etapa',
@@ -93,9 +109,22 @@ class HomeController extends Controller
                 }
             }
 
+            // Fase 19 (#103): cada Tema ja carrega os proprios Desafios
+            // ativos, pra aparecerem dentro do card do Tema na home.
+            $temasDaTrilha = $temas->listarAtivosPorTrilha($trilha['id']);
+            foreach ($temasDaTrilha as &$temaComDesafios) {
+                $temaComDesafios['desafios'] = array_values(array_filter(
+                    $desafios->listarPorTema($temaComDesafios['id']),
+                    function ($desafio) {
+                        return (int) $desafio['ativo'] === 1;
+                    }
+                ));
+            }
+            unset($temaComDesafios);
+
             $temasPorTrilha[] = [
                 'trilha' => $trilha,
-                'temas' => $temas->listarAtivosPorTrilha($trilha['id']),
+                'temas' => $temasDaTrilha,
             ];
         }
 
@@ -118,7 +147,7 @@ class HomeController extends Controller
             return strcmp((string) $a['data_inicio'], (string) $b['data_inicio']);
         });
 
-        $blocosAtivos = (new BlocoConteudoRepository())->listarAtivosPorConcurso($concursoId);
+        $blocosAtivos = (new BlocoConteudoRepository())->listarAtivos();
         $blocoSobre = null;
         $blocoPremiacao = null;
         $blocosLivres = [];
@@ -133,25 +162,29 @@ class HomeController extends Controller
             }
         }
 
+        // Fase 19 (#97): ordem das secoes do meio da home, definida pelo
+        // Admin (aba "Ordenação") - $blocosPorId so' tem os blocos ATIVOS
+        // (mesmo array de $blocosAtivos), entao um bloco inativo some da
+        // home mesmo tendo uma linha em home_secoes_ordem.
+        $secoesOrdenadas = (new HomeSecaoOrdemRepository())->listarOrdenado();
+        $blocosPorId = array_column($blocosAtivos, null, 'id');
+
         $premios = (new PremioRepository())->listarPorConcurso($concursoId);
         $faqAtivas = (new FaqConcursoRepository())->listarAtivasPorConcurso($concursoId);
         $documentos = (new DocumentoRepository())->listarAtivosPorConcurso($concursoId);
-        $contato = (new ContatoConcursoRepository())->buscarPorConcurso($concursoId);
-        $configVisual = (new ConfiguracaoVisualRepository())->buscarEfetivaPorConcurso($concursoId);
+        $contato = (new ContatoConcursoRepository())->buscar();
+        $configVisual = (new ConfiguracaoVisualRepository())->buscar();
 
         // Menu dinamico do cabecalho (3.1/5): so' entram secoes que
         // realmente tem conteudo/estao ativas - nenhuma ancora hardcoded.
+        // Fase 19 (#86): "Trilhas" e "Cronograma" sairam do menu - o
+        // cronograma agora tem acesso rapido pelo icone de calendario no
+        // cabecalho (ver _painel_cronograma.php), e "Trilhas" nao tinha
+        // uso real como atalho de menu.
         $menu = [];
-        $menu[] = ['ancora' => 'trilhas', 'rotulo' => 'Trilhas'];
 
         if ($blocoSobre !== null) {
             $menu[] = ['ancora' => 'sobre', 'rotulo' => $blocoSobre['titulo']];
-        }
-
-        $menu[] = ['ancora' => 'cronograma', 'rotulo' => 'Cronograma'];
-
-        if (!empty($etapasComResultadoPublicado)) {
-            $menu[] = ['ancora' => 'resultados', 'rotulo' => 'Resultados'];
         }
 
         if (!empty($temasPorTrilha)) {
@@ -163,15 +196,54 @@ class HomeController extends Controller
         }
 
         foreach ($blocosLivres as $bloco) {
-            $menu[] = ['ancora' => $bloco['secao_ancora'], 'rotulo' => $bloco['titulo']];
+            if ($bloco['mostrar_no_menu']) {
+                $menu[] = ['ancora' => $bloco['secao_ancora'], 'rotulo' => $bloco['titulo']];
+            }
         }
 
         if (!empty($faqAtivas)) {
             $menu[] = ['ancora' => 'faq', 'rotulo' => 'Dúvidas'];
         }
 
-        $menu[] = ['ancora' => 'edicoes-anteriores', 'rotulo' => 'Edições Anteriores', 'externa' => true, 'url' => 'edicoes/index'];
         $menu[] = ['ancora' => 'contato', 'rotulo' => 'Contato'];
+
+        // Fase 19 (#84 v2): coluna "Navegação" do rodapé tem visibilidade
+        // independente do menu superior - o admin escolhe pela aba
+        // "Rodapé" quais dessas secoes aparecem la, mesmo que nao
+        // apareçam mais no menu de cima (caso de Trilhas/Cronograma,
+        // removidos do menu no #86).
+        $menuRodape = [];
+
+        if (!empty($configVisual['rodape_mostrar_trilhas'])) {
+            $menuRodape[] = ['ancora' => 'trilhas', 'rotulo' => 'Trilhas'];
+        }
+
+        if ($blocoSobre !== null && $blocoSobre['mostrar_no_rodape']) {
+            $menuRodape[] = ['ancora' => 'sobre', 'rotulo' => $blocoSobre['titulo']];
+        }
+
+        if (!empty($configVisual['rodape_mostrar_cronograma'])) {
+            $menuRodape[] = ['ancora' => 'cronograma', 'rotulo' => 'Cronograma'];
+        }
+
+        if (!empty($configVisual['rodape_mostrar_desafios']) && !empty($temasPorTrilha)) {
+            $menuRodape[] = ['ancora' => 'temas', 'rotulo' => 'Desafios'];
+        }
+
+        $mostrarPremiacaoRodape = $blocoPremiacao !== null ? $blocoPremiacao['mostrar_no_rodape'] : !empty($premios);
+        if ($mostrarPremiacaoRodape) {
+            $menuRodape[] = ['ancora' => 'premiacao', 'rotulo' => $blocoPremiacao !== null ? $blocoPremiacao['titulo'] : 'Premiação'];
+        }
+
+        foreach ($blocosLivres as $bloco) {
+            if ($bloco['mostrar_no_rodape']) {
+                $menuRodape[] = ['ancora' => $bloco['secao_ancora'], 'rotulo' => $bloco['titulo']];
+            }
+        }
+
+        if (!empty($configVisual['rodape_mostrar_contato'])) {
+            $menuRodape[] = ['ancora' => 'contato', 'rotulo' => 'Contato'];
+        }
 
         $this->renderizar(
             'home/index',
@@ -179,11 +251,14 @@ class HomeController extends Controller
                 'concursoAtivo' => $concursoAtivo,
                 'configVisual' => $configVisual,
                 'menu' => $menu,
-                'slides' => (new SlideRepository())->listarAtivosPorConcurso($concursoId),
-                'banners' => (new BannerRepository())->listarAtivosPorConcurso($concursoId),
+                'menuRodape' => $menuRodape,
+                'slides' => (new SlideRepository())->listarAtivos(),
+                'banners' => (new BannerRepository())->listarAtivos(),
                 'blocoSobre' => $blocoSobre,
                 'blocoPremiacao' => $blocoPremiacao,
                 'blocosLivres' => $blocosLivres,
+                'secoesOrdenadas' => $secoesOrdenadas,
+                'blocosPorId' => $blocosPorId,
                 'premios' => $premios,
                 'trilhasAtivas' => $trilhasAtivas,
                 'documentos' => $documentos,
@@ -191,6 +266,7 @@ class HomeController extends Controller
                 'temasPorTrilha' => $temasPorTrilha,
                 'trilhasComInscricaoAberta' => $trilhasComInscricaoAberta,
                 'etapasComResultadoPublicado' => $etapasComResultadoPublicado,
+                'trilhasComHomologacaoPublicada' => $trilhasComHomologacaoPublicada,
                 'faqAtivas' => $faqAtivas,
                 'contato' => $contato,
             ],
@@ -204,7 +280,7 @@ class HomeController extends Controller
      * grava a mensagem primeiro - se o e-mail falhar (SMTP fora do ar), a
      * mensagem nao se perde, so' o aviso imediato ao admin que nao chega.
      */
-    public function enviarContato($concursoId)
+    public function enviarContato()
     {
         $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
         $email = trim(isset($_POST['email']) ? $_POST['email'] : '');
@@ -216,9 +292,9 @@ class HomeController extends Controller
             return;
         }
 
-        (new MensagemContatoRepository())->criar($concursoId, $nome, $email, $mensagem);
+        (new MensagemContatoRepository())->criar($nome, $email, $mensagem);
 
-        $contato = (new ContatoConcursoRepository())->buscarPorConcurso($concursoId);
+        $contato = (new ContatoConcursoRepository())->buscar();
 
         if ($contato !== null && !empty($contato['email'])) {
             $corpo = '<p><strong>Nome:</strong> ' . htmlspecialchars($nome, ENT_QUOTES, 'UTF-8') . '</p>'
@@ -233,7 +309,14 @@ class HomeController extends Controller
 
     public function administrativo()
     {
-        RoleMiddleware::exigir(['administrador', 'suporte']);
+        // Fase 19 (#108): exigir() checa o perfil sem concurso_id (null) -
+        // falha pra quem e' administrador/suporte de UM concurso especifico
+        // (nao globalmente), porque Auth::temPerfil() so' aceita concurso_id
+        // null (global) ou igual ao concurso informado. Este painel lista
+        // TODOS os concursos, entao so' precisamos saber que o usuario tem
+        // o perfil em algum lugar - mesmo padrao ja usado em
+        // AvaliacaoController::index() pro mesmo motivo (perfil escopado).
+        RoleMiddleware::exigirEmQualquerConcurso(['administrador', 'suporte']);
 
         $concursos = (new ConcursoRepository())->listar();
         $concursosAtivos = array_filter($concursos, function ($concurso) {

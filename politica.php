@@ -7,8 +7,19 @@ http_response_code(200);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Política de Privacidade — Sistema de Gestão da Semana de Inovação e do Prêmio de Inovação do TJRR</title>
+    <link rel="stylesheet" href="assets/css/site.css">
 </head>
 <body>
+<div class="site-page">
+    <header class="site-header">
+        <div class="site-header-inner">
+            <img src="assets/img/logo-padrao.png" alt="Prêmio de Inovação TJRR" class="site-logo">
+            <nav class="site-nav">
+                <a href="index.php" class="btn">Voltar ao início</a>
+            </nav>
+        </div>
+    </header>
+    <div class="site-form-page">
 <h1>Política de Privacidade</h1>
 <p><strong>Sistema de Gestão da Semana de Inovação e do Prêmio de Inovação do TJRR</strong></p>
 <p>Última atualização: 07/07/2026</p>
@@ -69,6 +80,7 @@ http_response_code(200);
     <a href="mailto:npi@tjrr.jus.br">npi@tjrr.jus.br</a>.
 </p>
 
-<p><a href="index.php">Voltar ao início</a></p>
+    </div>
+</div>
 </body>
 </html>

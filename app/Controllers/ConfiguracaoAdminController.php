@@ -41,6 +41,6 @@ class ConfiguracaoAdminController extends Controller
         $this->renderizar('admin/configuracoes/index', [
             'configuracao' => $this->configuracoes->buscar(),
             'erro' => $erro,
-        ], 'Configurações');
+        ], 'Configurações', ['tipo' => 'configuracaoGeral', 'id' => null]);
     }
 }

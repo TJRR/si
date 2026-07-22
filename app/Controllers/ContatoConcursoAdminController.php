@@ -9,33 +9,23 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
-use App\Repositories\ConcursoRepository;
 use App\Repositories\ContatoConcursoRepository;
 use App\Repositories\MensagemContatoRepository;
 
 class ContatoConcursoAdminController extends Controller
 {
     private $contatos;
-    private $concursos;
     private $mensagens;
 
     public function __construct()
     {
         RoleMiddleware::exigir(['administrador']);
         $this->contatos = new ContatoConcursoRepository();
-        $this->concursos = new ConcursoRepository();
         $this->mensagens = new MensagemContatoRepository();
     }
 
-    public function index($concursoId)
+    public function index()
     {
-        $concurso = $this->concursos->buscarPorId($concursoId);
-
-        if ($concurso === null) {
-            http_response_code(404);
-            exit('Concurso não encontrado.');
-        }
-
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $redesSociais = [];
 
@@ -47,39 +37,31 @@ class ContatoConcursoAdminController extends Controller
                 }
             }
 
-            $this->contatos->salvar($concursoId, [
+            $this->contatos->salvar([
                 'email' => $this->campoOuNulo('email'),
                 'telefone' => $this->campoOuNulo('telefone'),
                 'whatsapp' => $this->campoOuNulo('whatsapp'),
                 'endereco' => $this->campoOuNulo('endereco'),
+                'texto_institucional' => isset($_POST['texto_institucional']) ? $_POST['texto_institucional'] : null,
                 'redes_sociais' => $redesSociais,
                 'formulario_contato_ativo' => isset($_POST['formulario_contato_ativo']) ? 1 : 0,
             ]);
 
             $_SESSION['flash'] = 'Contato atualizado.';
-            $this->redirecionar('contatosConcurso/index/' . $concursoId);
+            $this->redirecionar('contatosConcurso/index');
             return;
         }
 
         $this->renderizar('admin/contatos_concurso/form', [
-            'concurso' => $concurso,
-            'contato' => $this->contatos->buscarPorConcurso($concursoId),
-        ], 'Contato de ' . $concurso['nome'], ['tipo' => 'contatosConcurso', 'id' => (int) $concursoId]);
+            'contato' => $this->contatos->buscar(),
+        ], 'Contato', ['tipo' => 'configuracaoContato', 'id' => null]);
     }
 
-    public function mensagens($concursoId)
+    public function mensagens()
     {
-        $concurso = $this->concursos->buscarPorId($concursoId);
-
-        if ($concurso === null) {
-            http_response_code(404);
-            exit('Concurso não encontrado.');
-        }
-
         $this->renderizar('admin/contatos_concurso/mensagens', [
-            'concurso' => $concurso,
-            'mensagens' => $this->mensagens->listarPorConcurso($concursoId),
-        ], 'Mensagens recebidas — ' . $concurso['nome'], ['tipo' => 'contatosConcurso', 'id' => (int) $concursoId]);
+            'mensagens' => $this->mensagens->listar(),
+        ], 'Mensagens recebidas', ['tipo' => 'configuracaoContato', 'id' => null]);
     }
 
     private function campoOuNulo($chave)

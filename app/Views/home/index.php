@@ -23,6 +23,9 @@
 $logoSrc = !empty($configVisual['logo_path'])
     ? config('base_path') . '/assets/' . $configVisual['logo_path']
     : logoAtual();
+$temImagemCabecalho = !empty($configVisual['cabecalho_imagem_path']);
+$urlImagemCabecalho = $temImagemCabecalho ? config('base_path') . '/assets/' . $configVisual['cabecalho_imagem_path'] : null;
+$logoClaroSrc = !empty($configVisual['cabecalho_logo_claro_path']) ? config('base_path') . '/assets/' . $configVisual['cabecalho_logo_claro_path'] : null;
 $estiloCores = '';
 
 if ($configVisual !== false && $configVisual !== null) {
@@ -35,6 +38,7 @@ if ($configVisual !== false && $configVisual !== null) {
     <a href="#conteudo-principal" class="skip-link">Pular para o conteúdo principal</a>
 
     <?php include __DIR__ . '/_cabecalho.php'; ?>
+    <?php include __DIR__ . '/_painel_cronograma.php'; ?>
 
     <main id="conteudo-principal">
         <?php if (!empty($_SESSION['flash'])): ?>
@@ -43,16 +47,26 @@ if ($configVisual !== false && $configVisual !== null) {
 
         <?php include __DIR__ . '/_slideshow.php'; ?>
         <?php include __DIR__ . '/_banners.php'; ?>
-        <?php include __DIR__ . '/_trilhas.php'; ?>
-        <?php include __DIR__ . '/_sobre.php'; ?>
-        <?php include __DIR__ . '/_cronograma.php'; ?>
-        <?php include __DIR__ . '/_resultados.php'; ?>
-        <?php include __DIR__ . '/_temas.php'; ?>
-        <?php include __DIR__ . '/_premiacao.php'; ?>
-        <?php foreach ($blocosLivres as $blocoLivre): ?>
-            <?php include __DIR__ . '/_bloco_livre.php'; ?>
+        <?php
+        // Fase 19 (#97): ordem definida pelo Admin (aba "Ordenação") -
+        // cada partial ja se auto-esconde quando nao tem dado
+        // (if (empty(...))/if ($bloco !== null) ja existentes em cada
+        // um), entao so' precisamos incluir na ordem certa.
+        $indiceAlternado = 0;
+        ?>
+        <?php foreach ($secoesOrdenadas as $secao): ?>
+            <?php if ($secao['tipo'] === 'fixa'): ?>
+                <?php include __DIR__ . '/_' . $secao['chave_fixa'] . '.php'; ?>
+            <?php elseif ($secao['bloco_chave'] === 'sobre'): ?>
+                <?php include __DIR__ . '/_sobre.php'; ?>
+            <?php elseif ($secao['bloco_chave'] === 'premiacao'): ?>
+                <?php include __DIR__ . '/_premiacao.php'; ?>
+            <?php elseif (isset($blocosPorId[$secao['bloco_id']])): ?>
+                <?php $blocoLivre = $blocosPorId[$secao['bloco_id']]; ?>
+                <?php $alternado = $indiceAlternado % 2 === 1; $indiceAlternado++; ?>
+                <?php include __DIR__ . '/_bloco_livre.php'; ?>
+            <?php endif; ?>
         <?php endforeach; ?>
-        <?php include __DIR__ . '/_faq.php'; ?>
     </main>
 
     <?php include __DIR__ . '/_rodape.php'; ?>

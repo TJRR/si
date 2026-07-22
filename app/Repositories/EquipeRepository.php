@@ -261,6 +261,50 @@ class EquipeRepository
         return $stmt->fetchAll();
     }
 
+    /**
+     * Fase 19 (#17): equipes da trilha com integrantes homologados no
+     * minimo configurado em trilhas.minimo_integrantes_homologados (o
+     * limiar e' do Admin, nao hardcoded aqui) - usada pela pagina publica.
+     * So' devolve nome de equipe e nome dos integrantes HOMOLOGADOS (nunca
+     * cpf/email/telefone, e nunca quem esta pendente/rejeitado).
+     */
+    public function listarHomologadasPorTrilha($trilhaId, $minimoIntegrantesHomologados)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            "SELECT e.id AS equipe_id, e.nome_equipe
+             FROM equipes e
+             WHERE e.trilha_id = :trilha_id
+               AND (
+                   SELECT COUNT(*) FROM equipe_participante ep
+                   WHERE ep.equipe_id = e.id AND ep.status_homologacao = 'homologado'
+               ) >= :minimo
+             ORDER BY e.nome_equipe ASC"
+        );
+        $stmt->execute(['trilha_id' => $trilhaId, 'minimo' => $minimoIntegrantesHomologados]);
+        $equipes = $stmt->fetchAll();
+
+        if (empty($equipes)) {
+            return [];
+        }
+
+        $stmtIntegrantes = $pdo->prepare(
+            "SELECT p.nome, ep.papel
+             FROM participantes p
+             JOIN equipe_participante ep ON ep.participante_id = p.id
+             WHERE ep.equipe_id = :equipe_id AND ep.status_homologacao = 'homologado'
+             ORDER BY ep.papel ASC, p.nome ASC"
+        );
+
+        foreach ($equipes as &$equipe) {
+            $stmtIntegrantes->execute(['equipe_id' => $equipe['equipe_id']]);
+            $equipe['integrantes'] = $stmtIntegrantes->fetchAll();
+        }
+        unset($equipe);
+
+        return $equipes;
+    }
+
     public function listarPendentesHomologacaoPorTrilha($trilhaId)
     {
         $pdo = Database::conexao();
