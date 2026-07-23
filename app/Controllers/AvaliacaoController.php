@@ -67,7 +67,9 @@ class AvaliacaoController extends Controller
 
             foreach ($this->trilhas->listarPorConcurso($concurso['id']) as $trilha) {
                 foreach ($this->etapas->listarPorTrilha($trilha['id']) as $etapa) {
-                    if ($this->criterios->contarPorEtapa($etapa['id']) === 0) {
+                    $totalCriterios = $this->criterios->contarPorEtapa($etapa['id']);
+
+                    if ($totalCriterios === 0) {
                         continue;
                     }
 
@@ -79,6 +81,29 @@ class AvaliacaoController extends Controller
                         continue;
                     }
 
+                    // Fase 20 (#111): em modo "aberto" nao existe designacao
+                    // individual (qualquer avaliador do perfil ve tudo) - so'
+                    // exige designacao pendente nos demais modos. "Pendente"
+                    // e' ter ao menos 1 submissao designada que ainda nao foi
+                    // totalmente avaliada por este avaliador - senao a etapa
+                    // fica visivel apontando pra uma lista de submissoes
+                    // vazia (tudo ja avaliado).
+                    if ($etapa['modo_designacao'] !== 'aberto') {
+                        $designadasIds = $this->designacoes->listarSubmissoesDesignadasNaEtapa(Auth::usuarioId(), $etapa['id']);
+                        $temPendente = false;
+
+                        foreach ($designadasIds as $submissaoId) {
+                            if ($this->notas->contarNotasPorUsuario($submissaoId, Auth::usuarioId()) < $totalCriterios) {
+                                $temPendente = true;
+                                break;
+                            }
+                        }
+
+                        if (!$temPendente) {
+                            continue;
+                        }
+                    }
+
                     $etapa['trilha_nome'] = $trilha['nome'];
                     $etapa['concurso_nome'] = $concurso['nome'];
                     $etapasDisponiveis[] = $etapa;
@@ -88,7 +113,7 @@ class AvaliacaoController extends Controller
 
         $this->renderizar('avaliacao/index', [
             'etapas' => $etapasDisponiveis,
-        ], 'Avaliação — minhas etapas');
+        ], 'Etapas pendentes de avaliação');
     }
 
     public function submissoes($etapaId)

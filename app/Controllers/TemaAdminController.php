@@ -154,7 +154,10 @@ class TemaAdminController extends Controller
         $imagemPosicao = isset($_POST['cabecalho_imagem_posicao']) ? $_POST['cabecalho_imagem_posicao'] : 'superior_centro';
         $imagemPosicao = in_array($imagemPosicao, BannerRepository::CTA_POSICOES, true) ? $imagemPosicao : 'superior_centro';
 
-        $this->configuracaoVisual->atualizarCabecalho($cabecalhoImagemPath, $cabecalhoLogoClaroPath, $cabecalhoTituloHtml, $efeitoTransicao, $overlayOpacidade, $imagemPosicao);
+        $efeitoEntrada = isset($_POST['cabecalho_efeito_entrada']) ? $_POST['cabecalho_efeito_entrada'] : 'nenhum';
+        $efeitoEntrada = in_array($efeitoEntrada, ConfiguracaoVisualRepository::CABECALHO_EFEITOS_ENTRADA, true) ? $efeitoEntrada : 'nenhum';
+
+        $this->configuracaoVisual->atualizarCabecalho($cabecalhoImagemPath, $cabecalhoLogoClaroPath, $cabecalhoTituloHtml, $efeitoTransicao, $overlayOpacidade, $imagemPosicao, $efeitoEntrada);
     }
 
     private function salvarRodape()

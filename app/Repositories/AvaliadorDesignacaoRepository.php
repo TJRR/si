@@ -66,6 +66,41 @@ class AvaliadorDesignacaoRepository
         return (int) $stmt->fetchColumn();
     }
 
+    /**
+     * Fase 20 (#118): total de designacoes (par submissao+avaliador) da
+     * etapa e quantas ja estao completas (avaliador lancou nota em todos
+     * os criterios) - usado no quadro de progresso do painel do Admin.
+     */
+    public function progressoPorEtapa($etapaId, $totalCriterios)
+    {
+        $pdo = Database::conexao();
+
+        $stmtTotal = $pdo->prepare(
+            'SELECT COUNT(*)
+             FROM avaliador_designacoes ad
+             INNER JOIN submissoes s ON s.id = ad.submissao_id
+             WHERE s.etapa_id = :etapa_id'
+        );
+        $stmtTotal->execute(['etapa_id' => $etapaId]);
+        $total = (int) $stmtTotal->fetchColumn();
+
+        $stmtCompletas = $pdo->prepare(
+            'SELECT COUNT(*) FROM (
+                SELECT ad.id
+                FROM avaliador_designacoes ad
+                INNER JOIN submissoes s ON s.id = ad.submissao_id
+                LEFT JOIN notas_lancadas nl ON nl.submissao_id = ad.submissao_id AND nl.usuario_id = ad.usuario_id
+                WHERE s.etapa_id = :etapa_id
+                GROUP BY ad.id
+                HAVING COUNT(DISTINCT nl.criterio_avaliacao_id) >= :total_criterios
+             ) completas'
+        );
+        $stmtCompletas->execute(['etapa_id' => $etapaId, 'total_criterios' => $totalCriterios]);
+        $completas = (int) $stmtCompletas->fetchColumn();
+
+        return ['total' => $total, 'completas' => $completas];
+    }
+
     public function contarPorUsuarioNaEtapa($usuarioId, $etapaId)
     {
         $pdo = Database::conexao();

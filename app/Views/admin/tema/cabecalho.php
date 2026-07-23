@@ -58,6 +58,15 @@
         <label>
             Opacidade do tom de cor sobre a imagem (%):<br>
             <input type="number" name="cabecalho_overlay_opacidade" min="0" max="100" value="<?php echo $configuracaoVisual !== false ? (int) $configuracaoVisual['cabecalho_overlay_opacidade'] : 50; ?>">
+        </label><br>
+        <label>
+            Efeito de entrada do título ao carregar a página:<br>
+            <select name="cabecalho_efeito_entrada">
+                <?php $efeitosEntrada = ['nenhum' => 'Nenhum', 'fade' => 'Aparecer suavemente (fade)', 'subir' => 'Subir suavemente', 'zoom' => 'Aproximar (zoom)']; ?>
+                <?php foreach ($efeitosEntrada as $valorOpcao => $rotuloOpcao): ?>
+                    <option value="<?php echo $valorOpcao; ?>" <?php echo (($configuracaoVisual !== false && $configuracaoVisual['cabecalho_efeito_entrada'] ? $configuracaoVisual['cabecalho_efeito_entrada'] : 'nenhum') === $valorOpcao) ? 'selected' : ''; ?>><?php echo $rotuloOpcao; ?></option>
+                <?php endforeach; ?>
+            </select>
         </label>
     </fieldset>
 

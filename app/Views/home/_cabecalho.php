@@ -12,6 +12,8 @@ $mapaPosicoesCabecalho = [
 ];
 $posicaoChaveCabecalho = !empty($configVisual['cabecalho_imagem_posicao']) ? $configVisual['cabecalho_imagem_posicao'] : 'superior_centro';
 $posicaoImagemCabecalho = $mapaPosicoesCabecalho[$posicaoChaveCabecalho] ?? 'center top';
+$efeitoEntradaCabecalho = !empty($configVisual['cabecalho_efeito_entrada']) ? $configVisual['cabecalho_efeito_entrada'] : 'nenhum';
+$classeEntradaCabecalho = $efeitoEntradaCabecalho !== 'nenhum' ? ' site-header-hero-entrada-' . $efeitoEntradaCabecalho : '';
 ?>
 <header class="site-header<?php echo $temImagemCabecalho ? ' site-header-com-imagem' : ''; ?>" id="cabecalho-site"
         <?php if ($temImagemCabecalho): ?>style="background-image:url('<?php echo htmlspecialchars($urlImagemCabecalho, ENT_QUOTES, 'UTF-8'); ?>');background-position:<?php echo $posicaoImagemCabecalho; ?>;--cabecalho-overlay-opacidade:<?php echo $overlayOpacidadeCabecalho; ?>;"<?php endif; ?>>
@@ -46,7 +48,7 @@ $posicaoImagemCabecalho = $mapaPosicoesCabecalho[$posicaoChaveCabecalho] ?? 'cen
         </div>
     </div>
     <?php if ($temImagemCabecalho && !empty($configVisual['cabecalho_titulo_html'])): ?>
-        <div class="site-header-hero-conteudo">
+        <div class="site-header-hero-conteudo<?php echo $classeEntradaCabecalho; ?>">
             <div class="site-header-hero-texto"><?php echo $configVisual['cabecalho_titulo_html']; ?></div>
         </div>
     <?php endif; ?>

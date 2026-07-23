@@ -107,19 +107,13 @@ class ResultadoEtapaService
                 'submissao_id' => (int) $submissao['id'],
                 'equipe_id' => $submissao['equipe_id'] !== null ? (int) $submissao['equipe_id'] : null,
                 'nome_equipe' => $submissao['nome_equipe'],
+                'criado_em' => $submissao['criado_em'],
                 'ne' => $ne,
                 'classificado' => false,
             ];
         }
 
-        $regrasDaEtapa = array_values(array_filter(
-            $this->regrasDesempate->listarPorTrilha($etapa['trilha_id']),
-            function ($regra) use ($etapaId) {
-                $criterio = $this->criterios->buscarPorId($regra['criterio_avaliacao_id']);
-
-                return $criterio !== null && (int) $criterio['etapa_id'] === (int) $etapaId;
-            }
-        ));
+        $regrasDaEtapa = $this->regrasDesempate->listarPorEtapa($etapaId);
 
         usort($linhas, function ($a, $b) use ($regrasDaEtapa) {
             return $this->compararLinhas($a, $b, $regrasDaEtapa);
@@ -258,8 +252,13 @@ class ResultadoEtapaService
         }
 
         foreach ($regrasDaEtapa as $regra) {
-            $valorA = $this->valorDesempatePorSubmissao($a['submissao_id'], $regra['criterio_avaliacao_id']);
-            $valorB = $this->valorDesempatePorSubmissao($b['submissao_id'], $regra['criterio_avaliacao_id']);
+            if ($regra['tipo'] === 'data_submissao') {
+                $valorA = $a['criado_em'];
+                $valorB = $b['criado_em'];
+            } else {
+                $valorA = $this->valorDesempatePorSubmissao($a['submissao_id'], $regra['criterio_avaliacao_id']);
+                $valorB = $this->valorDesempatePorSubmissao($b['submissao_id'], $regra['criterio_avaliacao_id']);
+            }
 
             if ($valorA === $valorB) {
                 continue;

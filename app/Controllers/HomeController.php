@@ -10,11 +10,13 @@ if (!defined('SI_BOOT')) {
 use App\Core\Controller;
 use App\Core\Mailer;
 use App\Middleware\RoleMiddleware;
+use App\Repositories\AvaliadorDesignacaoRepository;
 use App\Repositories\BannerRepository;
 use App\Repositories\BlocoConteudoRepository;
 use App\Repositories\ConcursoRepository;
 use App\Repositories\ConfiguracaoVisualRepository;
 use App\Repositories\ContatoConcursoRepository;
+use App\Repositories\CriterioAvaliacaoRepository;
 use App\Repositories\DesafioRepository;
 use App\Repositories\DocumentoRepository;
 use App\Repositories\EquipeRepository;
@@ -333,7 +335,61 @@ class HomeController extends Controller
             'totalConcursosAtivos' => count($concursosAtivos),
             'totalConcursosRealizados' => count($concursosRealizados),
             'totalCadastrosPendentes' => count((new UsuarioRepository())->listarPendentes()),
+            'etapasAvaliacaoVigentes' => $this->etapasAvaliacaoVigentes(),
         ], 'Painel');
+    }
+
+    /**
+     * Fase 20 (#118): progresso de avaliacao (designacoes completas / total)
+     * de cada etapa vigente do concurso ativo, pro quadro do painel do
+     * Admin. "Vigente" e' a mesma definicao de AvaliacaoController::index()
+     * (tem criterios cadastrados e hoje esta' dentro de data_inicio/fim) -
+     * pode haver mais de uma (uma por trilha em paralelo).
+     */
+    private function etapasAvaliacaoVigentes()
+    {
+        $concursoAtivo = (new ConcursoRepository())->buscarAtivo();
+
+        if ($concursoAtivo === null) {
+            return [];
+        }
+
+        $trilhas = new TrilhaRepository();
+        $etapas = new EtapaRepository();
+        $criterios = new CriterioAvaliacaoRepository();
+        $designacoes = new AvaliadorDesignacaoRepository();
+        $hoje = date('Y-m-d');
+        $resultado = [];
+
+        foreach ($trilhas->listarPorConcurso($concursoAtivo['id']) as $trilha) {
+            foreach ($etapas->listarPorTrilha($trilha['id']) as $etapa) {
+                $totalCriterios = $criterios->contarPorEtapa($etapa['id']);
+
+                if ($totalCriterios === 0) {
+                    continue;
+                }
+
+                if ($etapa['data_inicio'] !== null && $hoje < $etapa['data_inicio']) {
+                    continue;
+                }
+
+                if ($etapa['data_fim'] !== null && $hoje > $etapa['data_fim']) {
+                    continue;
+                }
+
+                $progresso = $designacoes->progressoPorEtapa($etapa['id'], $totalCriterios);
+
+                $resultado[] = [
+                    'trilha_nome' => $trilha['nome'],
+                    'etapa_nome' => $etapa['nome'],
+                    'total' => $progresso['total'],
+                    'completas' => $progresso['completas'],
+                    'percentual' => $progresso['total'] > 0 ? (int) round($progresso['completas'] / $progresso['total'] * 100) : 0,
+                ];
+            }
+        }
+
+        return $resultado;
     }
 
     /**

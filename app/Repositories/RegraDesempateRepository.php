@@ -18,12 +18,27 @@ class RegraDesempateRepository
         $stmt = $pdo->prepare(
             'SELECT rd.*, ca.nome AS criterio_nome, e.nome AS etapa_nome
              FROM regras_desempate rd
-             INNER JOIN criterios_avaliacao ca ON ca.id = rd.criterio_avaliacao_id
-             INNER JOIN etapas e ON e.id = ca.etapa_id
+             INNER JOIN etapas e ON e.id = rd.etapa_id
+             LEFT JOIN criterios_avaliacao ca ON ca.id = rd.criterio_avaliacao_id
              WHERE rd.trilha_id = :trilha_id
-             ORDER BY rd.ordem ASC, rd.id ASC'
+             ORDER BY e.ordem ASC, rd.ordem ASC, rd.id ASC'
         );
         $stmt->execute(['trilha_id' => $trilhaId]);
+
+        return $stmt->fetchAll();
+    }
+
+    public function listarPorEtapa($etapaId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT rd.*, ca.nome AS criterio_nome
+             FROM regras_desempate rd
+             LEFT JOIN criterios_avaliacao ca ON ca.id = rd.criterio_avaliacao_id
+             WHERE rd.etapa_id = :etapa_id
+             ORDER BY rd.ordem ASC, rd.id ASC'
+        );
+        $stmt->execute(['etapa_id' => $etapaId]);
 
         return $stmt->fetchAll();
     }
@@ -43,6 +58,17 @@ class RegraDesempateRepository
         return $stmt->fetchAll();
     }
 
+    public function listarCriteriosDisponiveisPorEtapa($etapaId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT id, nome AS criterio_nome FROM criterios_avaliacao WHERE etapa_id = :etapa_id ORDER BY ordem ASC'
+        );
+        $stmt->execute(['etapa_id' => $etapaId]);
+
+        return $stmt->fetchAll();
+    }
+
     public function buscarPorId($id)
     {
         $pdo = Database::conexao();
@@ -54,22 +80,24 @@ class RegraDesempateRepository
         return $regra !== false ? $regra : null;
     }
 
-    public function criar($trilhaId, $criterioAvaliacaoId, $direcao)
+    public function criar($trilhaId, $etapaId, $tipo, $criterioAvaliacaoId, $direcao)
     {
         $pdo = Database::conexao();
 
         $stmtOrdem = $pdo->prepare(
-            'SELECT COALESCE(MAX(ordem), 0) + 1 FROM regras_desempate WHERE trilha_id = :trilha_id'
+            'SELECT COALESCE(MAX(ordem), 0) + 1 FROM regras_desempate WHERE trilha_id = :trilha_id AND etapa_id = :etapa_id'
         );
-        $stmtOrdem->execute(['trilha_id' => $trilhaId]);
+        $stmtOrdem->execute(['trilha_id' => $trilhaId, 'etapa_id' => $etapaId]);
         $ordem = (int) $stmtOrdem->fetchColumn();
 
         $stmt = $pdo->prepare(
-            'INSERT INTO regras_desempate (trilha_id, ordem, criterio_avaliacao_id, direcao)
-             VALUES (:trilha_id, :ordem, :criterio_avaliacao_id, :direcao)'
+            'INSERT INTO regras_desempate (trilha_id, etapa_id, tipo, ordem, criterio_avaliacao_id, direcao)
+             VALUES (:trilha_id, :etapa_id, :tipo, :ordem, :criterio_avaliacao_id, :direcao)'
         );
         $dados = [
             'trilha_id' => $trilhaId,
+            'etapa_id' => $etapaId,
+            'tipo' => $tipo,
             'ordem' => $ordem,
             'criterio_avaliacao_id' => $criterioAvaliacaoId,
             'direcao' => $direcao,
@@ -106,10 +134,10 @@ class RegraDesempateRepository
 
         $stmtVizinho = $pdo->prepare(
             "SELECT * FROM regras_desempate
-             WHERE trilha_id = :trilha_id AND ordem {$operador} :ordem
+             WHERE trilha_id = :trilha_id AND etapa_id = :etapa_id AND ordem {$operador} :ordem
              ORDER BY ordem {$ordenacao} LIMIT 1"
         );
-        $stmtVizinho->execute(['trilha_id' => $regra['trilha_id'], 'ordem' => $regra['ordem']]);
+        $stmtVizinho->execute(['trilha_id' => $regra['trilha_id'], 'etapa_id' => $regra['etapa_id'], 'ordem' => $regra['ordem']]);
         $vizinho = $stmtVizinho->fetch();
 
         if ($vizinho === false) {

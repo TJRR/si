@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Avaliação — minhas etapas</h1>
+<h1>Etapas pendentes de avaliação</h1>
 
 <?php if (empty($etapas)): ?>
     <p>Nenhuma etapa com avaliação em aberto no momento para os concursos em que você é avaliador.</p>

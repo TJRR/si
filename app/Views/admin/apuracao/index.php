@@ -33,9 +33,9 @@
 
 <h2>Desempate</h2>
 <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
-<p><a href="<?php echo url('desempate/novo/' . (int) $trilha['id']); ?>">+ Novo critério de desempate</a></p>
+<p><a href="<?php echo url('desempate/index/' . (int) $trilha['id']); ?>">Gerenciar regras de desempate (por etapa)</a></p>
 <?php endif; ?>
-<p>Ordem de aplicação em caso de empate na Nota Final (1ª linha tem prioridade):</p>
+<p>Ordem de aplicação em caso de empate na Nota Final (1ª linha tem prioridade). Esta lista junta as regras de todas as etapas da trilha, na ordem em que se aplicam à Nota Final:</p>
 
 <?php if (empty($regras)): ?>
     <p>Nenhuma regra de desempate cadastrada.</p>
@@ -46,8 +46,8 @@
         <tr>
             <td><?php echo (int) $regra['ordem']; ?></td>
             <td><?php echo htmlspecialchars($regra['etapa_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo htmlspecialchars($regra['criterio_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo $regra['direcao'] === 'asc' ? 'Crescente' : 'Decrescente (maior nota vence)'; ?></td>
+            <td><?php echo $regra['tipo'] === 'data_submissao' ? 'Data de inscrição (quem enviou primeiro)' : htmlspecialchars($regra['criterio_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
+            <td><?php echo $regra['direcao'] === 'asc' ? 'Crescente (menor valor vence)' : 'Decrescente (maior valor vence)'; ?></td>
             <td>
                 <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
                 <div class="acoes-icones">

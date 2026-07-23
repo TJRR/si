@@ -13,6 +13,7 @@ use App\Core\Database;
 class ConfiguracaoVisualRepository
 {
     public const CABECALHO_EFEITOS_TRANSICAO = ['onda', 'diagonal_esquerda', 'diagonal_direita'];
+    public const CABECALHO_EFEITOS_ENTRADA = ['nenhum', 'fade', 'subir', 'zoom'];
 
     public function buscar()
     {
@@ -67,7 +68,7 @@ class ConfiguracaoVisualRepository
      * atualizarLogo(), so' mudou de tela - agora e' editada junto com
      * estes 2 campos na aba "Cabecalho").
      */
-    public function atualizarCabecalho($cabecalhoImagemPath, $cabecalhoLogoClaroPath, $cabecalhoTituloHtml, $cabecalhoEfeitoTransicao, $cabecalhoOverlayOpacidade, $cabecalhoImagemPosicao)
+    public function atualizarCabecalho($cabecalhoImagemPath, $cabecalhoLogoClaroPath, $cabecalhoTituloHtml, $cabecalhoEfeitoTransicao, $cabecalhoOverlayOpacidade, $cabecalhoImagemPosicao, $cabecalhoEfeitoEntrada)
     {
         $antes = $this->buscar();
         $pdo = Database::conexao();
@@ -78,7 +79,8 @@ class ConfiguracaoVisualRepository
                  cabecalho_titulo_html = :cabecalho_titulo_html,
                  cabecalho_efeito_transicao = :cabecalho_efeito_transicao,
                  cabecalho_overlay_opacidade = :cabecalho_overlay_opacidade,
-                 cabecalho_imagem_posicao = :cabecalho_imagem_posicao
+                 cabecalho_imagem_posicao = :cabecalho_imagem_posicao,
+                 cabecalho_efeito_entrada = :cabecalho_efeito_entrada
              WHERE id = 1'
         );
         $dados = [
@@ -88,6 +90,7 @@ class ConfiguracaoVisualRepository
             'cabecalho_efeito_transicao' => $cabecalhoEfeitoTransicao,
             'cabecalho_overlay_opacidade' => $cabecalhoOverlayOpacidade,
             'cabecalho_imagem_posicao' => $cabecalhoImagemPosicao,
+            'cabecalho_efeito_entrada' => $cabecalhoEfeitoEntrada,
         ];
         $stmt->execute($dados);
 

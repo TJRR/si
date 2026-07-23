@@ -137,8 +137,12 @@ html {
     padding: 0.75rem 1rem;
 }
 
+/* Fase 20 (#116): .site-edicao-indicador NAO entra nessa lista - ele tem
+   fundo proprio opaco (--cor-fundo-alt, claro) em qualquer estado do
+   cabecalho, entao forcar o texto pra branco (pensado pros itens sem
+   fundo, sobre a foto) deixava o badge com texto branco sobre fundo
+   claro - ilegivel/"invertido". */
 .site-header-com-imagem .site-header-nav .site-nav a:not(.btn),
-.site-header-com-imagem .site-header-nav .site-edicao-indicador,
 .site-header-com-imagem .site-header-nav .site-menu-toggle,
 .site-header-com-imagem .site-header-nav .site-header-icone {
     color: var(--cor-branco);
@@ -152,7 +156,6 @@ html {
 }
 
 .site-header-com-imagem .site-header-nav.site-header-nav-fixa .site-nav a:not(.btn),
-.site-header-com-imagem .site-header-nav.site-header-nav-fixa .site-edicao-indicador,
 .site-header-com-imagem .site-header-nav.site-header-nav-fixa .site-menu-toggle,
 .site-header-com-imagem .site-header-nav.site-header-nav-fixa .site-header-icone {
     color: var(--cor-texto);
@@ -236,26 +239,61 @@ html {
 
 .site-header-hero-texto {
     color: var(--cor-branco);
-    max-width: 700px;
 }
 
-/* Bonus sem campo novo: qualquer imagem inserida pelo admin dentro do
-   editor rico do titulo ganha o mesmo efeito de "boiar" do site modelo.
-   Isto e' so' o fallback estatico (todas na mesma duracao) - quem
-   corrige o nome da animacao (pra imagens coladas do site modelo, que
-   trazem inline um `animation: ...bounceHero`, keyframe que so' existe
-   la') e dessincroniza a duracao de cada imagem e'
-   assets/js/cabecalho-flutuar.js (nth-of-type nao funciona aqui porque
-   cada imagem colada vem dentro do seu proprio <span> - e' sempre a
-   unica do tipo dentro do seu proprio pai, entao nunca bate com
+/* Fase 20 (#115/#113): imagem inserida pelo admin no editor rico do
+   titulo nao pode exceder a largura do container - sem max-width:100%,
+   uma imagem colada no tamanho natural estoura a largura do
+   .site-header-hero-conteudo (causa direta de overflow horizontal no
+   mobile). Bonus sem campo novo: a mesma imagem ganha o efeito de
+   "boiar" do site modelo. Isto e' so' o fallback estatico (todas na
+   mesma duracao) - quem corrige o nome da animacao (pra imagens coladas
+   do site modelo, que trazem inline um `animation: ...bounceHero`,
+   keyframe que so' existe la') e dessincroniza a duracao de cada imagem
+   e' assets/js/cabecalho-flutuar.js (nth-of-type nao funciona aqui
+   porque cada imagem colada vem dentro do seu proprio <span> - e' sempre
+   a unica do tipo dentro do seu proprio pai, entao nunca bate com
    nth-of-type(2), (3) etc). */
 .site-header-hero-texto img {
+    max-width: 100%;
+    height: auto;
     animation: site-header-bounce 6s ease-in-out infinite;
 }
 
 @keyframes site-header-bounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(20px); }
+}
+
+/* Fase 20 (#114): efeito de entrada configuravel do titulo/conteudo do
+   cabecalho (Configuracoes -> Cabecalho), aplicado uma vez ao carregar
+   a pagina - "both" mantem o estado final da animacao (nao volta pro
+   "from" depois de terminar). */
+.site-header-hero-entrada-fade {
+    animation: site-header-entrada-fade 0.9s ease-out both;
+}
+
+.site-header-hero-entrada-subir {
+    animation: site-header-entrada-subir 0.9s ease-out both;
+}
+
+.site-header-hero-entrada-zoom {
+    animation: site-header-entrada-zoom 0.9s ease-out both;
+}
+
+@keyframes site-header-entrada-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes site-header-entrada-subir {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes site-header-entrada-zoom {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 .site-logo-claro {
@@ -1900,6 +1938,38 @@ body.admin-page button.btn-icone.ativo {
     margin-top: 0.25rem;
 }
 
+/* Fase 20 (#118): quadro de progresso de avaliacao (etapa vigente do
+   concurso ativo), no mesmo painel. */
+.admin-progresso-item {
+    background: var(--cor-branco);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.admin-progresso-cabecalho {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.admin-progresso-barra-fundo {
+    background: var(--cor-fundo-alt);
+    border-radius: 999px;
+    height: 10px;
+    overflow: hidden;
+}
+
+.admin-progresso-barra-preenchimento {
+    background: var(--cor-primaria-fim);
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
 /* ===================== Tela de login (convidado) ===================== */
 
 body.guest-page {
@@ -2333,6 +2403,33 @@ body.admin-page button.criterio-aba.ativo {
 
     .site-nav.aberto {
         display: flex;
+    }
+
+    /* Fase 20 (#113): nenhuma regra mobile existia pra essa secao - o
+       hero inteiro ficava fixo (padding, altura minima, largura do
+       texto), quebrando o layout em telas estreitas. Valores de altura
+       (min-height:0, shape menor) conferidos contra o CSS real do site
+       modelo (responsive.css, breakpoint max-width:767px: la' o header
+       vira height:100% auto). O padding-top do conteudo, porem, e'
+       estimado (nao copiado do modelo): o .site-header-nav aqui vira
+       linha unica (row + wrap) com o logo de 44px como maior item, o que
+       da ~68px de altura real (12px padding + 44px logo + 12px padding);
+       8rem cobre essa altura com folga e ainda absorve o caso do badge
+       do concurso quebrar pra uma segunda linha em telas bem estreitas.
+       Ajustar depois de conferir ao vivo num celular real. */
+    .site-header-com-imagem {
+        min-height: 0;
+        padding-bottom: 2rem;
+    }
+
+    .site-header-hero-conteudo {
+        padding: 8rem 1rem 2rem;
+    }
+
+    /* 112px = valor real do site modelo (style.css, .shape-bottom svg em
+       @media max-width:991px), reduzido dos 275px do desktop. */
+    .site-header-shape-bottom svg {
+        height: 112px;
     }
 }
 
@@ -2997,20 +3094,45 @@ body.admin-page button.campo-cor-limpar::after {
     background: var(--cor-fundo-alt);
 }
 
-.campo-posicao-opcao {
+/* Fase 20 (#110 v3): a causa real nao era o input, era o label nunca
+   virar flex - "body.admin-page label" (site.css ~1588) tem
+   especificidade maior (2 elementos + 1 classe) que ".campo-posicao-opcao"
+   sozinho (1 classe), entao sempre ganhava e travava o label em
+   display:block. Com o label em block, o <span> (sem display proprio,
+   logo inline por padrao) ignora width/height - so' a borda aparecia,
+   dando a "lasca" vertical. Qualificar com ".campo-posicao-grade" na
+   frente sobe pra 2 classes, o suficiente pra vencer a regra do admin. */
+.campo-posicao-grade .campo-posicao-opcao {
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
 }
 
+/* Fase 20 (#110 v2): a v1 (clip-path no lugar de clip:rect()) nao
+   resolveu - o "traco" continuou. Causa real: sem appearance:none, o
+   navegador insiste em pintar o widget nativo do radio no tamanho
+   minimo dele proprio (maior que 1x1px), ignorando width/height do CSS -
+   isso cria uma lasca vertical visivel mesmo com clip-path/clip:rect()
+   aplicados, porque o clip corta a CAIXA do elemento, nao o desenho
+   nativo que o navegador insiste em pintar por cima. appearance:none
+   remove esse desenho nativo por completo, aí sim a caixa 1x1px +
+   clip realmente escondem tudo. */
 .campo-posicao-opcao input {
     position: absolute;
     width: 1px;
     height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
     opacity: 0;
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }
 
 .campo-posicao-opcao span {
