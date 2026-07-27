@@ -58,7 +58,7 @@ const COL_NOME_EQUIPE = 2;
 // (selecao_tema_desafio) e infere o Tema automaticamente a partir do Desafio
 // resolvido (ver resolverDesafioId()).
 $fontes = [
-    'Trilha Externa' => [
+    'Eixo Solução Tecnológica' => [
         'csv' => __DIR__ . '/dados_importacao/submissoes_externo.csv',
         'colunas' => [
             4 => 'desafio',
@@ -68,7 +68,7 @@ $fontes = [
             8 => 'viabilidade',
         ],
     ],
-    'Trilha Interna' => [
+    'Eixo Protótipo e Teste de Solução Inovadora' => [
         'csv' => __DIR__ . '/dados_importacao/submissoes_interno.csv',
         'colunas' => [
             4 => 'desafio',
