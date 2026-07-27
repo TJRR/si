@@ -243,6 +243,11 @@ class UsuarioAdminController extends Controller
             if ($perfil['chave'] === 'avaliador' && $categoriaAvaliadorId !== null && $concursoId !== null
                 && $this->categoriaPertenceAoConcurso($categoriaAvaliadorId, $concursoId)) {
                 $this->avaliadorCategorias->atribuir($id, $concursoId, $categoriaAvaliadorId);
+            } elseif ($perfil['chave'] !== 'avaliador') {
+                // Usuario deixou de ser avaliador - remove o vinculo de
+                // categoria pra nao virar "avaliador fantasma" em
+                // AvaliadorCategoriaRepository::listarUsuariosPorCategoria().
+                $this->avaliadorCategorias->removerTodosVinculos($id);
             }
         }
 

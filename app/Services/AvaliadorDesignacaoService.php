@@ -117,12 +117,14 @@ class AvaliadorDesignacaoService
             throw new \RuntimeException('Configure as vagas por categoria desta etapa antes de sortear.');
         }
 
+        $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
+
         $carga = [];
         $candidatosPorCategoria = [];
 
         foreach ($vagas as $vaga) {
             $categoriaId = (int) $vaga['categoria_avaliador_id'];
-            $avaliadores = $this->avaliadorCategorias->listarUsuariosPorCategoria($categoriaId);
+            $avaliadores = $this->avaliadorCategorias->listarUsuariosPorCategoria($categoriaId, $trilha['concurso_id']);
 
             if ($avaliadoresPermitidos !== null) {
                 $avaliadores = array_values(array_filter($avaliadores, function ($avaliador) use ($avaliadoresPermitidos) {

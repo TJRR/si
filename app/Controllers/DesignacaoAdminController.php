@@ -213,7 +213,7 @@ class DesignacaoAdminController extends Controller
                 $categoriaId = (int) $vaga['categoria_avaliador_id'];
                 $categorias[] = [
                     'categoria_nome' => $vaga['categoria_nome'],
-                    'avaliadores' => $this->avaliadorCategorias->listarUsuariosPorCategoria($categoriaId),
+                    'avaliadores' => $this->avaliadorCategorias->listarUsuariosPorCategoria($categoriaId, $trilha['concurso_id']),
                 ];
             }
 
