@@ -103,7 +103,7 @@ class AvaliadorDesignacaoService
      * avaliadores da categoria empatados na menor carga -- mesma garantia de
      * equilibrio do round-robin acima, mas sem repetir sempre o mesmo trio.
      */
-    public function calcularDistribuicaoPorCategoria($etapaId)
+    public function calcularDistribuicaoPorCategoria($etapaId, array $avaliadoresPermitidos = null)
     {
         $etapa = $this->etapas->buscarPorId($etapaId);
 
@@ -123,6 +123,12 @@ class AvaliadorDesignacaoService
         foreach ($vagas as $vaga) {
             $categoriaId = (int) $vaga['categoria_avaliador_id'];
             $avaliadores = $this->avaliadorCategorias->listarUsuariosPorCategoria($categoriaId);
+
+            if ($avaliadoresPermitidos !== null) {
+                $avaliadores = array_values(array_filter($avaliadores, function ($avaliador) use ($avaliadoresPermitidos) {
+                    return in_array((int) $avaliador['id'], $avaliadoresPermitidos, true);
+                }));
+            }
 
             if (empty($avaliadores)) {
                 throw new \RuntimeException('A categoria "' . $vaga['categoria_nome'] . '" não tem nenhum avaliador vinculado ainda.');

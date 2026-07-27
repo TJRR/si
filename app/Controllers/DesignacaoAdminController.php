@@ -10,7 +10,9 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
+use App\Repositories\AvaliadorCategoriaRepository;
 use App\Repositories\AvaliadorDesignacaoRepository;
+use App\Repositories\EtapaCategoriaAvaliadorRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\NotaLancadaRepository;
 use App\Repositories\PerfilRepository;
@@ -27,6 +29,8 @@ class DesignacaoAdminController extends Controller
     private $submissoes;
     private $notas;
     private $servico;
+    private $etapaCategorias;
+    private $avaliadorCategorias;
 
     public function __construct()
     {
@@ -38,6 +42,8 @@ class DesignacaoAdminController extends Controller
         $this->submissoes = new SubmissaoRepository();
         $this->notas = new NotaLancadaRepository();
         $this->servico = new AvaliadorDesignacaoService();
+        $this->etapaCategorias = new EtapaCategoriaAvaliadorRepository();
+        $this->avaliadorCategorias = new AvaliadorCategoriaRepository();
     }
 
     public function index($etapaId)
@@ -193,10 +199,71 @@ class DesignacaoAdminController extends Controller
 
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
 
+        if ($etapa['modo_designacao'] === 'sorteio_categoria') {
+            $vagas = $this->etapaCategorias->listarPorEtapa($etapaId);
+
+            if (empty($vagas)) {
+                $_SESSION['flash'] = 'Configure as vagas por categoria desta etapa antes de sortear.';
+                $this->redirecionar('designacoes/index/' . $etapaId);
+                return;
+            }
+
+            $categorias = [];
+            foreach ($vagas as $vaga) {
+                $categoriaId = (int) $vaga['categoria_avaliador_id'];
+                $categorias[] = [
+                    'categoria_nome' => $vaga['categoria_nome'],
+                    'avaliadores' => $this->avaliadorCategorias->listarUsuariosPorCategoria($categoriaId),
+                ];
+            }
+
+            $this->renderizar('admin/designacoes/selecionar_avaliadores', [
+                'etapa' => $etapa,
+                'trilha' => $trilha,
+                'categorias' => $categorias,
+            ], 'Selecionar avaliadores do sorteio — ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
+            return;
+        }
+
         try {
-            $linhas = $etapa['modo_designacao'] === 'sorteio_categoria'
-                ? $this->servico->calcularDistribuicaoPorCategoria($etapaId)
-                : $this->servico->calcularDistribuicao($etapaId);
+            $linhas = $this->servico->calcularDistribuicao($etapaId);
+        } catch (\RuntimeException $e) {
+            $_SESSION['flash'] = $e->getMessage();
+            $this->redirecionar('designacoes/index/' . $etapaId);
+            return;
+        }
+
+        if (empty($linhas)) {
+            $_SESSION['flash'] = 'Todas as submissões já têm a quantidade de avaliadores configurada.';
+            $this->redirecionar('designacoes/index/' . $etapaId);
+            return;
+        }
+
+        $this->renderizar('admin/designacoes/distribuir_previa', [
+            'etapa' => $etapa,
+            'trilha' => $trilha,
+            'linhas' => $linhas,
+        ], 'Prévia da distribuição — ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
+    }
+
+    public function distribuirComSelecao()
+    {
+        $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
+        $avaliadorIds = isset($_POST['avaliador_id']) && is_array($_POST['avaliador_id'])
+            ? array_map('intval', $_POST['avaliador_id'])
+            : [];
+
+        $etapa = $this->etapas->buscarPorId($etapaId);
+
+        if ($etapa === null) {
+            http_response_code(404);
+            exit('Etapa não encontrada.');
+        }
+
+        $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
+
+        try {
+            $linhas = $this->servico->calcularDistribuicaoPorCategoria($etapaId, $avaliadorIds);
         } catch (\RuntimeException $e) {
             $_SESSION['flash'] = $e->getMessage();
             $this->redirecionar('designacoes/index/' . $etapaId);
