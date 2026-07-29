@@ -115,6 +115,51 @@ class NotificacaoService
         }
     }
 
+    public function recuperacaoSenha($destinatarioEmail, $nomeUsuario, $linkDefinirSenha)
+    {
+        $assunto = 'Redefinição de senha — Sistema do Prêmio de Inovação TJRR';
+        $corpo = $this->montarCorpoRecuperacao($nomeUsuario, $linkDefinirSenha);
+
+        $id = $this->notificacoes->criar(
+            'recuperacao_senha',
+            'solicitacao_recuperacao',
+            $destinatarioEmail,
+            $assunto,
+            $corpo
+        );
+
+        try {
+            $resultado = Mailer::enviar($destinatarioEmail, $assunto, $corpo);
+        } catch (\Exception $e) {
+            $resultado = ['sucesso' => false, 'erro' => $e->getMessage()];
+        }
+
+        if ($resultado['sucesso']) {
+            $this->notificacoes->marcarEnviada($id);
+        } else {
+            $this->notificacoes->marcarFalhou($id);
+        }
+    }
+
+    private function montarCorpoRecuperacao($nomeDestinatario, $linkDefinirSenha)
+    {
+        return sprintf(
+            '<p>Olá, %s,</p>'
+            . '<p>Recebemos uma solicitação para redefinir a senha da sua conta no Sistema do Prêmio de Inovação TJRR.</p>'
+            . '<p>Para definir uma nova senha, clique no link abaixo:</p>'
+            . '<p><a href="%s">Redefinir minha senha</a></p>'
+            . '<p style="color:#555;font-size:0.9em;">Se você não solicitou essa redefinição, ignore este e-mail — sua senha atual '
+            . 'continua válida. Não compartilhe sua senha com terceiros. Em caso de dúvida sobre a autenticidade deste e-mail, '
+            . 'entre em contato pelos canais abaixo.</p>'
+            . '<p>Atenciosamente,</p>'
+            . '<p><strong>Organização do Prêmio de Inovação - TJRR</strong><br>'
+            . '✉️ E-mail: npi@tjrr.jus.br<br>'
+            . '💬 Fone: <a href="https://wa.me/5595931984194">(95) 3198-4194</a></p>',
+            htmlspecialchars($nomeDestinatario, ENT_QUOTES, 'UTF-8'),
+            htmlspecialchars($linkDefinirSenha, ENT_QUOTES, 'UTF-8')
+        );
+    }
+
     /**
      * Corpo compartilhado dos e-mails de "acesso liberado" (homologacao e
      * convite administrativo) — so muda a frase de abertura ($abertura), o

@@ -8,15 +8,18 @@ if (!defined('SI_BOOT')) {
 }
 
 use App\Core\GoogleOAuth;
+use App\Repositories\TokenSenhaRepository;
 use App\Repositories\UsuarioRepository;
 
 class AuthService
 {
     private $usuarios;
+    private $tokens;
 
     public function __construct()
     {
         $this->usuarios = new UsuarioRepository();
+        $this->tokens = new TokenSenhaRepository();
     }
 
     public function autenticar($email, $senha)
@@ -58,6 +61,36 @@ class AuthService
         $id = $this->usuarios->criar($nome, $email, $hash);
 
         return ['sucesso' => true, 'usuario_id' => $id];
+    }
+
+    /**
+     * "Esqueci minha senha" - sempre silenciosa pra quem chama: nunca revela
+     * se o e-mail existe, esta ativo ou aprovado (evita enumeracao de
+     * contas). So' gera token/envia e-mail quando a conta realmente existe e
+     * pode logar (mesma condicao de AuthService::autenticar: aprovado e
+     * ativo); caso contrario, nao faz nada e retorna do mesmo jeito.
+     *
+     * Reaproveita o token tipo "definir" (mesmo do convite/homologacao) e a
+     * pagina auth/definirSenha ja existente - funciona tanto pra definir a
+     * primeira senha quanto pra redefinir uma esquecida.
+     */
+    public function solicitarRecuperacaoSenha($email)
+    {
+        $usuario = $this->usuarios->buscarPorEmail($email);
+
+        if ($usuario === null || $usuario['status'] !== 'aprovado' || (int) $usuario['ativo'] !== 1) {
+            return;
+        }
+
+        $this->tokens->invalidarPendentes($usuario['id'], 'definir');
+        $token = $this->tokens->criar($usuario['id'], 'definir');
+        $link = urlAbsoluta('auth/definirSenha/' . $token);
+
+        try {
+            (new NotificacaoService())->recuperacaoSenha($usuario['email'], $usuario['nome'], $link);
+        } catch (\Exception $e) {
+            // Falha de notificacao nunca deve alterar a resposta generica ao usuario.
+        }
     }
 
     public function autenticarComGoogle($code)

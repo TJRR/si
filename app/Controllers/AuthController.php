@@ -94,6 +94,29 @@ class AuthController extends Controller
         $this->renderizar('auth/login', ['erro' => $resultado['mensagem']], 'Entrar');
     }
 
+    /**
+     * "Esqueci minha senha": formulario publico de e-mail. A resposta e'
+     * sempre a mesma mensagem generica, exista ou nao o e-mail no sistema -
+     * ver AuthService::solicitarRecuperacaoSenha() pro motivo (evitar que a
+     * tela vire um jeito de descobrir quais e-mails tem cadastro ativo).
+     */
+    public function esqueciSenha()
+    {
+        $enviado = false;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = trim(isset($_POST['email']) ? $_POST['email'] : '');
+
+            if ($email !== '') {
+                (new AuthService())->solicitarRecuperacaoSenha($email);
+            }
+
+            $enviado = true;
+        }
+
+        $this->renderizar('auth/esqueci_senha', ['enviado' => $enviado], 'Esqueci minha senha');
+    }
+
     public function definirSenha($token)
     {
         $registro = (new TokenSenhaRepository())->buscarValidoPorToken($token);

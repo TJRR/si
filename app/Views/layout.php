@@ -14,7 +14,7 @@ if (isset($view) && !$ehPainelInterno) {
         }
     }
 }
-$ehPaginaConvidado = isset($view) && in_array($view, ['auth/login', 'auth/cadastro', 'auth/definir_senha'], true);
+$ehPaginaConvidado = isset($view) && in_array($view, ['auth/login', 'auth/cadastro', 'auth/definir_senha', 'auth/esqueci_senha'], true);
 $corVisual = (new \App\Repositories\ConfiguracaoVisualRepository())->buscar();
 $corPrimariaInicio = $corVisual !== false ? $corVisual['cor_primaria_inicio'] : '#FF6600';
 $corPrimariaFim = $corVisual !== false ? $corVisual['cor_primaria_fim'] : '#FF9955';

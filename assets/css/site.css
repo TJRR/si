@@ -1808,6 +1808,16 @@ body.admin-page .filtros-barra .filtro-busca input {
     overflow-x: auto;
 }
 
+/* Linha de detalhes da Auditoria (JSON antes/depois): sem isso, um valor
+   longo numa unica linha do JSON (ex.: o corpo HTML de um e-mail dentro de
+   dados_depois) fica numa linha so' sem quebra, forcando a tabela inteira a
+   ficar largura absurda e "sumindo" com as outras colunas na tela. */
+.auditoria-detalhes-linha pre {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+
 .auditoria-paginacao {
     display: flex;
     align-items: center;

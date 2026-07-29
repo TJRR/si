@@ -46,6 +46,7 @@ $logoSrc = $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
         <button type="submit" class="btn btn-bordered">Entrar</button>
     </form>
 
+    <p class="guest-cadastro"><a href="<?php echo url('auth/esqueciSenha'); ?>">Esqueci minha senha</a></p>
     <p class="guest-cadastro">Ainda não tem cadastro? <a href="<?php echo url('cadastro/index'); ?>">Cadastre-se</a></p>
 </div>
 
