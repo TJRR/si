@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var botaoVoltar = document.createElement('button');
         botaoVoltar.type = 'button';
-        botaoVoltar.className = 'btn-icone';
+        botaoVoltar.className = 'btn btn-secundario';
         botaoVoltar.style.marginLeft = '0.75rem';
         botaoVoltar.textContent = 'Voltar e revisar';
         botaoVoltar.addEventListener('click', fecharModal);
@@ -103,11 +103,13 @@ document.addEventListener('DOMContentLoaded', function () {
     var confirmado = false;
 
     /**
-     * Um input "required" dentro de uma aba escondida (.criterio-painel
-     * sem .ativo, display:none) pode fazer o navegador barrar o submit
-     * sem mostrar nenhum balao de validacao visivel (elemento nao
-     * renderizado) - avaliador clica "Salvar" e nada parece acontecer.
-     * Antes de validar, ativa a aba do primeiro campo invalido.
+     * Um campo fora da escala (min/max) dentro de uma aba escondida
+     * (.criterio-painel sem .ativo, display:none) pode fazer o navegador
+     * barrar o submit sem mostrar nenhum balao de validacao visivel
+     * (elemento nao renderizado) - avaliador clica "Salvar" e nada parece
+     * acontecer. Antes de validar, ativa a aba do primeiro campo invalido.
+     * Notas em branco nao entram aqui: o campo nao e' "required" (backend
+     * salva parcial, por criterio).
      */
     function ativarAbaDoPrimeiroInvalido() {
         var primeiroInvalido = form.querySelector('.campo-nota:invalid');
@@ -161,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // DOM original acima - religamos direto nos botoes ja renderizados.
         var modalConteudo = document.getElementById('modal-conteudo');
         var botaoConfirmarModal = modalConteudo.querySelector('.btn.btn-bordered');
-        var botaoVoltarModal = modalConteudo.querySelector('.btn-icone');
+        var botaoVoltarModal = modalConteudo.querySelector('.btn-secundario');
 
         if (botaoConfirmarModal) {
             botaoConfirmarModal.addEventListener('click', function () {
@@ -183,8 +185,9 @@ document.addEventListener('DOMContentLoaded', function () {
      * fica visivel. Nao muda nada do resto do arquivo (progresso, modal de
      * revisao, reportValidity()) - continuam operando sobre #form-notas
      * inteiro, abas visiveis ou nao (o navegador so' barra o submit se
-     * algum .campo-nota "required" estiver vazio, mesmo que a aba dele
-     * nao esteja ativa no momento do clique em "Salvar notas").
+     * algum .campo-nota estiver preenchido fora da escala min/max, mesmo
+     * que a aba dele nao esteja ativa no momento do clique em "Salvar
+     * notas"; campo vazio nao bloqueia - Fase 23).
      */
     document.querySelectorAll('[data-criterio-aba]').forEach(function (aba) {
         aba.addEventListener('click', function () {

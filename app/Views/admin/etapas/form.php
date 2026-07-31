@@ -70,6 +70,22 @@
         </select>
     </label><br>
 
+    <label>Divulgação pública do resultado (o que aparece em "Ver resultado", sem login, depois de publicado — vale para qualquer mecanismo de avaliação, não só "Por Avaliadores"):
+        <select name="visibilidade_publica" <?php echo $desabilitado; ?>>
+            <?php foreach ([
+                'oculto' => 'Nada é publicado (uso interno)',
+                'apenas_classificados' => 'Só a lista de equipes classificadas, sem nota',
+                'ranking_completo' => 'Ranking completo (todas as equipes, nota e posição, com destaque no corte)',
+                'ranking_e_material' => 'Ranking completo + material enviado por cada equipe',
+            ] as $valor => $rotulo): ?>
+                <?php $selecionado = ($etapa !== null && $etapa['visibilidade_publica'] === $valor); ?>
+                <option value="<?php echo $valor; ?>" <?php echo $selecionado ? 'selected' : ''; ?>>
+                    <?php echo htmlspecialchars($rotulo, ENT_QUOTES, 'UTF-8'); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </label><br>
+
     <fieldset id="fieldset-avaliacao-por-avaliadores" <?php echo $desabilitado; ?>>
         <legend>Configuração de avaliação desta etapa</legend>
 

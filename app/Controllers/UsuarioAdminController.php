@@ -269,6 +269,18 @@ class UsuarioAdminController extends Controller
         $this->redirecionar('usuarios/index');
     }
 
+    public function reverterRejeicao()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $usuario = $this->usuarios->buscarPorId($id);
+
+        if ($usuario !== null && $usuario['status'] === 'rejeitado') {
+            $this->usuarios->atualizarStatus($id, 'pendente');
+        }
+
+        $this->redirecionar('usuarios/index');
+    }
+
     public function suspender()
     {
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);

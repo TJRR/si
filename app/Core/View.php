@@ -43,6 +43,15 @@ class View
         ]);
     }
 
+    /**
+     * Fase 23: fragmento de view sem layout.php nem topbar - usado pelo
+     * relatorio em PDF (o HTML vai direto pro Dompdf, nunca pro navegador).
+     */
+    public static function renderizarString($view, array $dados = [])
+    {
+        return self::renderizarConteudo($view, $dados);
+    }
+
     private static function renderizarConteudo($view, array $dados)
     {
         // Views "publico/*" montam o proprio <header> em vez de usar o

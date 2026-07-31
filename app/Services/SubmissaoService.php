@@ -12,6 +12,7 @@ use App\Repositories\CampoDinamicoRepository;
 use App\Repositories\DesafioRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\FormularioDinamicoRepository;
+use App\Repositories\ResultadoEtapaRepository;
 use App\Repositories\SubmissaoRepository;
 use App\Repositories\TrilhaRepository;
 use App\Validation\CpfValidador;
@@ -28,6 +29,7 @@ class SubmissaoService
     private $campos;
     private $desafios;
     private $submissoes;
+    private $resultados;
 
     public function __construct()
     {
@@ -37,6 +39,7 @@ class SubmissaoService
         $this->campos = new CampoDinamicoRepository();
         $this->desafios = new DesafioRepository();
         $this->submissoes = new SubmissaoRepository();
+        $this->resultados = new ResultadoEtapaRepository();
     }
 
     /**
@@ -73,6 +76,15 @@ class SubmissaoService
 
         if ($etapa['data_fim'] !== null && $hoje > $etapa['data_fim']) {
             return ['sucesso' => false, 'mensagem' => 'O prazo de submissão já foi encerrado.'];
+        }
+
+        // Fase 23 (Erro grave): resultado ja publicado significa que a
+        // avaliacao desta etapa foi encerrada com base no conteudo enviado -
+        // sem esta trava, a equipe podia editar a submissao depois de
+        // avaliada (dentro da janela de datas), invalidando as notas ja
+        // lancadas pelos avaliadores.
+        if ($this->resultados->jaPublicado($etapa['id'])) {
+            return ['sucesso' => false, 'mensagem' => 'O resultado desta etapa já foi publicado. Não é mais possível enviar ou alterar submissões.'];
         }
 
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);

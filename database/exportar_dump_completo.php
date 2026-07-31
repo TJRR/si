@@ -23,6 +23,11 @@
  * Por padrao roda em modo consulta (dry-run): so lista as tabelas e a
  * contagem de linhas, sem gravar nada. Para gerar o arquivo de verdade:
  *   php exportar_dump_completo.php --confirmar
+ *   php exportar_dump_completo.php --confirmar --nome=dump_completo_pre_faseXX.sql
+ *
+ * --nome= e opcional (sem ele, mantem o padrao dump_completo_AAAAMMDD.sql) -
+ * serve pra rotina de deploy poder pedir um nome fixo/previsivel (ex.: "pre
+ * fase XX"), sem precisar renomear o arquivo depois de gerado.
  */
 
 if (php_sapi_name() !== 'cli') {
@@ -38,6 +43,13 @@ use App\Core\Auditoria;
 use App\Core\Database;
 
 $confirmar = in_array('--confirmar', $argv, true);
+$nomeParam = null;
+
+foreach ($argv as $arg) {
+    if (strpos($arg, '--nome=') === 0) {
+        $nomeParam = basename(substr($arg, strlen('--nome=')));
+    }
+}
 
 $pdo = Database::conexao();
 $dbConfig = require __DIR__ . '/../config/database.php';
@@ -64,7 +76,7 @@ if (!$confirmar) {
 }
 
 $pastaDestino = __DIR__ . '/..';
-$nomeArquivo = 'dump_completo_' . date('Ymd') . '.sql';
+$nomeArquivo = ($nomeParam !== null && $nomeParam !== '') ? $nomeParam : 'dump_completo_' . date('Ymd') . '.sql';
 $caminhoArquivo = $pastaDestino . '/' . $nomeArquivo;
 $handle = fopen($caminhoArquivo, 'w');
 

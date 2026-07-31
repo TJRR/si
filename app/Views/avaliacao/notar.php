@@ -62,8 +62,10 @@
                                                         style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"
                                                         allowfullscreen></iframe>
                                             </div>
-                                        <?php else: ?>
+                                        <?php elseif (\App\Validation\YoutubeValidador::valido($valor)): ?>
                                             <a href="<?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?></a>
+                                        <?php else: ?>
+                                            <?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?>
                                         <?php endif; ?>
 
                                     <?php elseif ($campo['tipo'] === 'upload_pdf'): ?>
@@ -104,7 +106,7 @@
                            step="0.1"
                            placeholder="<?php echo number_format((float) $criterio['escala_min'], 1, ',', '.'); ?> – <?php echo number_format((float) $criterio['escala_max'], 1, ',', '.'); ?>"
                            value="<?php echo isset($notasAtuais[$criterio['id']]) ? htmlspecialchars((string) $notasAtuais[$criterio['id']]['nota'], ENT_QUOTES, 'UTF-8') : ''; ?>"
-                           <?php echo $avaliacaoTravada ? 'readonly' : 'required'; ?>>
+                           <?php echo $avaliacaoTravada ? 'readonly' : ''; ?>>
                     <span class="campo-nota-escala">(escala: <?php echo number_format((float) $criterio['escala_min'], 1, ',', '.'); ?> a <?php echo number_format((float) $criterio['escala_max'], 1, ',', '.'); ?>)</span>
                 </label>
 

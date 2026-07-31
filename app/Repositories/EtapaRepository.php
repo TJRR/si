@@ -127,11 +127,11 @@ class EtapaRepository
             'INSERT INTO etapas (trilha_id, nome, descricao, ordem, data_inicio, data_fim, formulario_dinamico_id,
                                   regra_transicao_tipo, regra_transicao_valor, modo_designacao,
                                   qtd_avaliadores_por_submissao, modo_consolidacao, modo_sigilo, modo_avanco,
-                                  mecanismo_avaliacao, modo_feedback_avaliador)
+                                  mecanismo_avaliacao, modo_feedback_avaliador, visibilidade_publica)
              VALUES (:trilha_id, :nome, :descricao, :ordem, :data_inicio, :data_fim, :formulario_dinamico_id,
                      :regra_transicao_tipo, :regra_transicao_valor, :modo_designacao,
                      :qtd_avaliadores_por_submissao, :modo_consolidacao, :modo_sigilo, :modo_avanco,
-                     :mecanismo_avaliacao, :modo_feedback_avaliador)'
+                     :mecanismo_avaliacao, :modo_feedback_avaliador, :visibilidade_publica)'
         );
         $dados = array_merge([
             'trilha_id' => $trilhaId,
@@ -174,7 +174,8 @@ class EtapaRepository
                  regra_transicao_tipo = :regra_transicao_tipo, regra_transicao_valor = :regra_transicao_valor,
                  modo_designacao = :modo_designacao, qtd_avaliadores_por_submissao = :qtd_avaliadores_por_submissao,
                  modo_consolidacao = :modo_consolidacao, modo_sigilo = :modo_sigilo, modo_avanco = :modo_avanco,
-                 mecanismo_avaliacao = :mecanismo_avaliacao, modo_feedback_avaliador = :modo_feedback_avaliador
+                 mecanismo_avaliacao = :mecanismo_avaliacao, modo_feedback_avaliador = :modo_feedback_avaliador,
+                 visibilidade_publica = :visibilidade_publica
              WHERE id = :id'
         );
         $depois = array_merge([
@@ -203,6 +204,7 @@ class EtapaRepository
         $modoAvanco = isset($configAvaliacao['modo_avanco']) ? $configAvaliacao['modo_avanco'] : 'manual';
         $mecanismoAvaliacao = isset($configAvaliacao['mecanismo_avaliacao']) ? $configAvaliacao['mecanismo_avaliacao'] : '';
         $modoFeedbackAvaliador = isset($configAvaliacao['modo_feedback_avaliador']) ? $configAvaliacao['modo_feedback_avaliador'] : '';
+        $visibilidadePublica = isset($configAvaliacao['visibilidade_publica']) ? $configAvaliacao['visibilidade_publica'] : 'apenas_classificados';
 
         return [
             'modo_designacao' => in_array($modoDesignacao, ['manual', 'aberto', 'automatico', 'sorteio_categoria'], true) ? $modoDesignacao : null,
@@ -212,6 +214,7 @@ class EtapaRepository
             'modo_avanco' => in_array($modoAvanco, ['automatico', 'manual'], true) ? $modoAvanco : 'manual',
             'mecanismo_avaliacao' => in_array($mecanismoAvaliacao, ['nenhuma', 'administrador', 'avaliadores'], true) ? $mecanismoAvaliacao : 'nenhuma',
             'modo_feedback_avaliador' => in_array($modoFeedbackAvaliador, ['nenhum', 'submissao', 'criterio'], true) ? $modoFeedbackAvaliador : 'nenhum',
+            'visibilidade_publica' => in_array($visibilidadePublica, ['oculto', 'apenas_classificados', 'ranking_completo', 'ranking_e_material'], true) ? $visibilidadePublica : 'apenas_classificados',
         ];
     }
 }

@@ -89,7 +89,7 @@ class HomeController extends Controller
                     'data_fim' => $etapa['data_fim'],
                 ];
 
-                if ($servicoResultadoEtapa->jaPublicado($etapa['id'])) {
+                if ($etapa['visibilidade_publica'] !== 'oculto' && $servicoResultadoEtapa->jaPublicado($etapa['id'])) {
                     $etapasComResultadoPublicado[] = [
                         'etapa_id' => $etapa['id'],
                         'etapa_nome' => $etapa['nome'],

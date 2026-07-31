@@ -2,6 +2,12 @@ FROM php:7.3-apache
 
 RUN docker-php-ext-install pdo_mysql mbstring
 
+# unzip: sem isso "composer require" falha ao baixar pacotes (dist e' sempre
+# zip) - so' passou despercebido ate agora porque o unico pacote do projeto
+# (phpmailer) ja estava resolvido no composer.lock antes de existir esse Dockerfile.
+RUN apt-get update && apt-get install -y --no-install-recommends unzip \
+    && rm -rf /var/lib/apt/lists/*
+
 # GD com suporte a WebP - usado pelo ImagemService para redimensionar/converter
 # imagens enviadas pelo admin no CMS do site publico (upload de logo/imagens de secao).
 RUN apt-get update && apt-get install -y --no-install-recommends \
