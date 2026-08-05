@@ -43,6 +43,9 @@ use App\Controllers\MeuPerfilController;
 use App\Controllers\MidiaAdminController;
 use App\Controllers\NavegacaoController;
 use App\Controllers\NotificacaoPainelController;
+use App\Controllers\OficinaAdminController;
+use App\Controllers\OficinaController;
+use App\Controllers\OficinaPublicaController;
 use App\Controllers\ParticipanteController;
 use App\Controllers\PremioAdminController;
 use App\Controllers\RegraDesempateAdminController;
@@ -79,6 +82,9 @@ class Router
         'mentoriaAdmin' => MentoriaAdminController::class,
         'mentoria' => MentoriaController::class,
         'mentoriaPublica' => MentoriaPublicaController::class,
+        'oficinaAdmin' => OficinaAdminController::class,
+        'oficina' => OficinaController::class,
+        'oficinaPublica' => OficinaPublicaController::class,
         'conteudo' => ConteudoAdminController::class,
         'tema' => TemaAdminController::class,
         'criterios' => CriterioAvaliacaoAdminController::class,

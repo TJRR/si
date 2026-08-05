@@ -25,6 +25,10 @@
         <input type="datetime-local" name="data_fim" required>
     </label><br>
 
+    <label>Link do Google Meet (opcional — sala criada previamente):
+        <input type="url" name="link_meet" maxlength="255" placeholder="https://meet.google.com/xxx-xxxx-xxx">
+    </label><br>
+
     <label>Observação (opcional — foco/tema deste horário):
         <input type="text" name="observacao" maxlength="255" placeholder="Ex.: Mentoria técnica — arquitetura de software">
     </label>

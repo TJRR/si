@@ -79,6 +79,26 @@ class TokenSenhaRepository
         return $linhas;
     }
 
+    /**
+     * Fase 24: usado na tela Usuarios pra distinguir "convite nunca
+     * enviado" de "convite enviado mas o link ja venceu" (badge de
+     * identificacao rapida pra reenvio manual) - pega so' o token mais
+     * recente do tipo, ja que reenviar invalida qualquer um anterior
+     * ainda pendente (ver invalidarPendentes()).
+     */
+    public function maisRecentePorUsuarioETipo($usuarioId, $tipo)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT * FROM tokens_senha WHERE usuario_id = :usuario_id AND tipo = :tipo ORDER BY criado_em DESC LIMIT 1'
+        );
+        $stmt->execute(['usuario_id' => $usuarioId, 'tipo' => $tipo]);
+
+        $registro = $stmt->fetch();
+
+        return $registro !== false ? $registro : null;
+    }
+
     public function marcarUsado($id)
     {
         $pdo = Database::conexao();

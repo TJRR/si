@@ -51,18 +51,26 @@
         var cards = conteudo.querySelectorAll(':scope > .tema-card');
 
         cards.forEach(function (card) {
+            // Fase 24 (bug reportado): a busca so' considerava o texto de
+            // cada desafio - um termo presente so' no nome/descricao do
+            // tema (e nao em nenhum desafio) nao encontrava nada, mesmo o
+            // tema batendo. Agora um match no tema torna TODOS os desafios
+            // dele visiveis (o motivo de mostrar o card e' o tema, nao teria
+            // sentido esconder desafios "nao relacionados" dentro dele).
+            var temaBate = normalizar(card.dataset.temaTexto).indexOf(termo) !== -1;
             var itens = card.querySelectorAll('.tema-desafio-item');
             var algumVisivel = false;
 
             itens.forEach(function (item) {
                 var texto = normalizar(item.dataset.temaDesafioTexto);
-                var bate = texto.indexOf(termo) !== -1;
+                var bate = temaBate || texto.indexOf(termo) !== -1;
                 item.style.display = bate ? '' : 'none';
                 if (bate) { algumVisivel = true; }
             });
 
-            card.style.display = algumVisivel ? '' : 'none';
-            if (algumVisivel) {
+            var cardVisivel = temaBate || algumVisivel;
+            card.style.display = cardVisivel ? '' : 'none';
+            if (cardVisivel) {
                 expandirCard(card, true);
             }
         });

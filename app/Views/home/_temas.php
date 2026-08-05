@@ -30,14 +30,14 @@ $gruposComTemas = array_values(array_filter($temasPorTrilha, function ($grupo) {
     <?php endif; ?>
 
     <label class="temas-busca-rotulo">
-        <input type="search" class="temas-busca" placeholder="Buscar por palavra-chave nos desafios" data-temas-busca aria-label="Buscar por palavra-chave nos desafios">
+        <input type="search" class="temas-busca" placeholder="Buscar por palavra-chave nos temas e desafios" data-temas-busca aria-label="Buscar por palavra-chave nos temas e desafios">
     </label>
 
     <?php foreach ($gruposComTemas as $indiceTrilha => $grupo): ?>
         <div class="temas-eixo-conteudo<?php echo $indiceTrilha === 0 ? ' ativo' : ''; ?>" data-temas-conteudo="<?php echo $indiceTrilha; ?>">
             <?php foreach ($grupo['temas'] as $indiceTema => $tema): ?>
                 <?php $iconeTema = !empty($tema['icone']) && isset($iconesVisual[$tema['icone']]) ? $iconesVisual[$tema['icone']] : null; ?>
-                <div class="tema-card" data-tema-card>
+                <div class="tema-card" data-tema-card data-tema-texto="<?php echo htmlspecialchars(mb_strtolower($tema['nome'] . ' ' . (string) $tema['descricao_longa'], 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?>">
                     <button type="button" class="tema-card-cabecalho" data-tema-toggle aria-expanded="false">
                         <?php if ($iconeTema !== null): ?>
                             <span class="tema-icone-badge" style="background-color:<?php echo htmlspecialchars($iconeTema['cor'], ENT_QUOTES, 'UTF-8'); ?>" aria-hidden="true"><?php echo $iconeTema['glifo']; ?></span>

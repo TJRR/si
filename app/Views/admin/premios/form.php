@@ -4,11 +4,15 @@
 } ?>
 <h1><?php echo $premio === null ? 'Novo prêmio' : 'Editar prêmio'; ?> — <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
+<?php if ($trilha !== null): ?>
+    <p>Trilha: <strong><?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></strong></p>
+<?php endif; ?>
+
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo $premio === null ? url('premios/novo/' . (int) $concurso['id']) : url('premios/editar/' . (int) $premio['id']); ?>" enctype="multipart/form-data">
+<form method="post" action="<?php echo $premio === null ? url('premios/novo/' . (int) $concurso['id'] . ($trilha !== null ? '/' . (int) $trilha['id'] : '')) : url('premios/editar/' . (int) $premio['id']); ?>" enctype="multipart/form-data">
     <label>Posição (1, 2, 3...):
         <input type="number" name="posicao" min="1" required value="<?php echo $premio !== null ? (int) $premio['posicao'] : ''; ?>">
     </label><br>

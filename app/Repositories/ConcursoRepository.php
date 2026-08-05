@@ -115,6 +115,21 @@ class ConcursoRepository
     }
 
     /**
+     * Fase 24: modo de exibicao da Premiacao (ver PremioRepository) - vive
+     * fora de atualizar() de proposito, e' editado so' pela tela
+     * Admin > Premiacao, nao pelo formulario geral do concurso.
+     */
+    public function atualizarModoPremiacao($id, $modoPremiacao)
+    {
+        $antes = $this->buscarPorId($id);
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE concursos SET modo_premiacao = :modo_premiacao WHERE id = :id');
+        $stmt->execute(['modo_premiacao' => $modoPremiacao, 'id' => $id]);
+
+        Auditoria::registrar('atualizar_modo_premiacao', 'concursos', $id, $antes, ['modo_premiacao' => $modoPremiacao]);
+    }
+
+    /**
      * Remocao real (sem soft-delete) — ver TrilhaRepository::remover() para a
      * explicacao de por que a FK (sem CASCADE) ja protege contra remover um
      * concurso com trilhas/formularios/categorias de avaliador vinculados.

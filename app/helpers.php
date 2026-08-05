@@ -52,6 +52,18 @@ function formatarData($data)
 }
 
 /**
+ * Fase 24: link_meet (mentoria/oficina) e' texto livre digitado por
+ * administrador/suporte e renderizado como href em telas de outros perfis
+ * (participante) - sem essa checagem, um "link" tipo "javascript:..."
+ * viraria XSS armazenado ao ser clicado. Valida tanto na gravacao
+ * (Controllers) quanto de novo aqui na exibicao, como defesa em profundidade.
+ */
+function linkHttpValido($link)
+{
+    return is_string($link) && $link !== '' && preg_match('#^https?://#i', $link) === 1;
+}
+
+/**
  * Logo GLOBAL/default do sistema (usado no topbar do painel, paginas
  * convidadas, e como fallback da home publica quando a edicao ativa nao tem
  * logo proprio). Fase 18: fonte de verdade passou de conteudos_site

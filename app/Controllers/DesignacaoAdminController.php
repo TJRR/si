@@ -188,6 +188,29 @@ class DesignacaoAdminController extends Controller
         $this->redirecionar('designacoes/index/' . $etapaId);
     }
 
+    /**
+     * Fase 24: quebra por avaliador do quadro "Progresso da avaliação" do
+     * painel do Admin - quem já terminou tudo e quem ainda tem submissões
+     * pendentes, com o nome da equipe de cada pendência.
+     */
+    public function progresso($etapaId)
+    {
+        $etapa = $this->etapas->buscarPorId($etapaId);
+
+        if ($etapa === null) {
+            http_response_code(404);
+            exit('Etapa não encontrada.');
+        }
+
+        $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
+
+        $this->renderizar('admin/designacoes/progresso', [
+            'etapa' => $etapa,
+            'trilha' => $trilha,
+            'progresso' => $this->servico->progressoPorAvaliador($etapaId),
+        ], 'Progresso da avaliação — ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
+    }
+
     public function distribuir($etapaId)
     {
         $etapa = $this->etapas->buscarPorId($etapaId);

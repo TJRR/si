@@ -3,12 +3,12 @@
     exit('Acesso negado');
 } ?>
 <div class="pagina-titulo-acoes">
-    <h1>Mentorias de <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+    <h1>Oficinas de <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
     <div class="pagina-titulo-botoes">
-        <a href="<?php echo url('mentoriaAdmin/novo/' . (int) $concurso['id']); ?>" class="btn-acao">+ Novo horário</a>
+        <a href="<?php echo url('oficinaAdmin/novo/' . (int) $concurso['id']); ?>" class="btn-acao">+ Novo horário</a>
     </div>
 </div>
-<p>Qualquer administrador ou suporte pode criar horários de mentoria pra si mesmo — a equipe reserva o horário pelo próprio painel. Você só pode editar/remover os horários que você mesmo criou (Administrador pode remover qualquer um, para moderação).</p>
+<p>Encontro coletivo com tema pré-definido — qualquer equipe interessada pode se inscrever, sem limite de vagas. Você só pode remover os horários que você mesmo criou (Administrador pode remover qualquer um, para moderação).</p>
 
 <?php if (!empty($flash)): ?>
     <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -19,10 +19,10 @@
 <?php else: ?>
     <div class="tabela-scroll">
         <table>
-            <tr><th>Mentor</th><th>Início</th><th>Fim</th><th>Meet</th><th>Observação</th><th>Status</th><th>Ações</th></tr>
+            <tr><th>Tema</th><th>Início</th><th>Fim</th><th>Meet</th><th>Observação</th><th>Inscritas</th><th>Criado por</th><th>Ações</th></tr>
             <?php foreach ($horarios as $horario): ?>
             <tr>
-                <td><?php echo htmlspecialchars($horario['mentor_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?php echo htmlspecialchars($horario['tema'], ENT_QUOTES, 'UTF-8'); ?></td>
                 <td><?php echo date('d/m/Y H:i', strtotime($horario['data_inicio'])); ?></td>
                 <td><?php echo date('d/m/Y H:i', strtotime($horario['data_fim'])); ?></td>
                 <td>
@@ -33,16 +33,11 @@
                     <?php endif; ?>
                 </td>
                 <td><?php echo htmlspecialchars((string) $horario['observacao'], ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><span class="status-pill verde"><?php echo (int) $horario['total_inscritos']; ?></span></td>
+                <td><?php echo htmlspecialchars($horario['criado_por_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
                 <td>
-                    <?php if ($horario['equipe_id'] !== null): ?>
-                        <span class="status-pill laranja">Reservado — <?php echo htmlspecialchars($horario['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></span>
-                    <?php else: ?>
-                        <span class="status-pill verde">Vago</span>
-                    <?php endif; ?>
-                </td>
-                <td>
-                    <?php if ((int) $horario['mentor_usuario_id'] === (int) \App\Core\Auth::usuarioId() || \App\Core\Auth::possuiPerfil('administrador')): ?>
-                        <form method="post" action="<?php echo url('mentoriaAdmin/remover'); ?>" onsubmit="return confirm('Remover este horário?<?php echo $horario['equipe_id'] !== null ? ' A equipe que reservou sera notificada.' : ''; ?>');">
+                    <?php if ((int) $horario['criado_por'] === (int) \App\Core\Auth::usuarioId() || \App\Core\Auth::possuiPerfil('administrador')): ?>
+                        <form method="post" action="<?php echo url('oficinaAdmin/remover'); ?>" onsubmit="return confirm('Remover este horário?<?php echo (int) $horario['total_inscritos'] > 0 ? ' As equipes inscritas serão notificadas.' : ''; ?>');">
                             <input type="hidden" name="id" value="<?php echo (int) $horario['id']; ?>">
                             <input type="hidden" name="concurso_id" value="<?php echo (int) $concurso['id']; ?>">
                             <button type="submit" class="btn-icone" title="Remover">

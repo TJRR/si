@@ -9,8 +9,10 @@ if (!defined('SI_BOOT')) {
 
 use App\Repositories\AvaliadorCategoriaRepository;
 use App\Repositories\AvaliadorDesignacaoRepository;
+use App\Repositories\CriterioAvaliacaoRepository;
 use App\Repositories\EtapaCategoriaAvaliadorRepository;
 use App\Repositories\EtapaRepository;
+use App\Repositories\NotaLancadaRepository;
 use App\Repositories\PerfilRepository;
 use App\Repositories\SubmissaoRepository;
 use App\Repositories\TrilhaRepository;
@@ -24,6 +26,8 @@ class AvaliadorDesignacaoService
     private $submissoes;
     private $avaliadorCategorias;
     private $etapaCategorias;
+    private $criterios;
+    private $notas;
 
     public function __construct()
     {
@@ -34,6 +38,86 @@ class AvaliadorDesignacaoService
         $this->submissoes = new SubmissaoRepository();
         $this->avaliadorCategorias = new AvaliadorCategoriaRepository();
         $this->etapaCategorias = new EtapaCategoriaAvaliadorRepository();
+        $this->criterios = new CriterioAvaliacaoRepository();
+        $this->notas = new NotaLancadaRepository();
+    }
+
+    /**
+     * Fase 24: quebra o progresso agregado de
+     * AvaliadorDesignacaoRepository::progressoPorEtapa() por avaliador,
+     * pra' o Admin identificar quem ja' avaliou tudo e quem ainda tem
+     * submissoes pendentes. Cobre tambem o modo 'aberto' (sem linha em
+     * avaliador_designacoes - todo avaliador do perfil ve todas as
+     * submissoes da etapa).
+     */
+    public function progressoPorAvaliador($etapaId)
+    {
+        $etapa = $this->etapas->buscarPorId($etapaId);
+
+        if ($etapa === null) {
+            throw new \RuntimeException('Etapa não encontrada.');
+        }
+
+        $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
+        $totalCriterios = $this->criterios->contarPorEtapa($etapaId);
+        $submissoesDaEtapa = $this->submissoes->listarPorEtapa($etapaId);
+
+        $submissoesPorAvaliador = [];
+
+        if ($etapa['modo_designacao'] === 'aberto') {
+            foreach ($this->perfis->listarUsuariosPorPerfilConcurso('avaliador', $trilha['concurso_id']) as $avaliador) {
+                $submissoesPorAvaliador[(int) $avaliador['id']] = [
+                    'nome' => $avaliador['nome'],
+                    'submissoes' => $submissoesDaEtapa,
+                ];
+            }
+        } else {
+            foreach ($submissoesDaEtapa as $submissao) {
+                foreach ($this->designacoes->listarPorSubmissao($submissao['id']) as $designacao) {
+                    $usuarioId = (int) $designacao['usuario_id'];
+
+                    if (!isset($submissoesPorAvaliador[$usuarioId])) {
+                        $submissoesPorAvaliador[$usuarioId] = ['nome' => $designacao['usuario_nome'], 'submissoes' => []];
+                    }
+
+                    $submissoesPorAvaliador[$usuarioId]['submissoes'][] = $submissao;
+                }
+            }
+        }
+
+        $resultado = [];
+
+        foreach ($submissoesPorAvaliador as $usuarioId => $dados) {
+            $completas = 0;
+            $pendentes = [];
+
+            foreach ($dados['submissoes'] as $submissao) {
+                $notasLancadas = $this->notas->contarNotasPorUsuario($submissao['id'], $usuarioId);
+
+                if ($totalCriterios > 0 && $notasLancadas >= $totalCriterios) {
+                    $completas++;
+                } else {
+                    $pendentes[] = [
+                        'submissao_id' => (int) $submissao['id'],
+                        'nome_equipe' => $submissao['nome_equipe'],
+                    ];
+                }
+            }
+
+            $resultado[] = [
+                'usuario_id' => $usuarioId,
+                'usuario_nome' => $dados['nome'],
+                'total' => count($dados['submissoes']),
+                'completas' => $completas,
+                'pendentes' => $pendentes,
+            ];
+        }
+
+        usort($resultado, function ($a, $b) {
+            return strcmp($a['usuario_nome'], $b['usuario_nome']);
+        });
+
+        return $resultado;
     }
 
     /**

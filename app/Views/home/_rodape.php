@@ -99,6 +99,8 @@
             <a href="<?php echo url('edicoes/index'); ?>">Edições Anteriores</a>
             &nbsp;|&nbsp;
             <a href="<?php echo url('mentoriaPublica/index'); ?>">Mentorias</a>
+            &nbsp;|&nbsp;
+            <a href="<?php echo url('oficinaPublica/index'); ?>">Oficinas</a>
         </p>
         <a href="#topo" class="site-footer-topo" aria-label="Voltar ao topo">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15l7-7 7 7"></path></svg>

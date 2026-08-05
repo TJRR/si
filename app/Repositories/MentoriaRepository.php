@@ -49,6 +49,20 @@ class MentoriaRepository
         return $stmt->fetchAll();
     }
 
+    /**
+     * Fase 24: mentoria e' opcional - o botão "Agendar Mentoria" só aparece
+     * no painel do participante se algum mentor já tiver criado ao menos
+     * um horário para o concurso (mesmo que todos já reservados).
+     */
+    public function existeParaConcurso($concursoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM mentoria_horarios WHERE concurso_id = :concurso_id');
+        $stmt->execute(['concurso_id' => $concursoId]);
+
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
     public function listarReservasDaEquipe($equipeId)
     {
         $pdo = Database::conexao();
@@ -75,18 +89,19 @@ class MentoriaRepository
         return $horario !== false ? $horario : null;
     }
 
-    public function criar($concursoId, $mentorUsuarioId, $dataInicio, $dataFim, $observacao)
+    public function criar($concursoId, $mentorUsuarioId, $dataInicio, $dataFim, $linkMeet, $observacao)
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'INSERT INTO mentoria_horarios (concurso_id, mentor_usuario_id, data_inicio, data_fim, observacao)
-             VALUES (:concurso_id, :mentor_usuario_id, :data_inicio, :data_fim, :observacao)'
+            'INSERT INTO mentoria_horarios (concurso_id, mentor_usuario_id, data_inicio, data_fim, link_meet, observacao)
+             VALUES (:concurso_id, :mentor_usuario_id, :data_inicio, :data_fim, :link_meet, :observacao)'
         );
         $dados = [
             'concurso_id' => $concursoId,
             'mentor_usuario_id' => $mentorUsuarioId,
             'data_inicio' => $dataInicio,
             'data_fim' => $dataFim,
+            'link_meet' => $linkMeet,
             'observacao' => $observacao,
         ];
         $stmt->execute($dados);

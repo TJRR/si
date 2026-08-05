@@ -4,16 +4,39 @@
 } ?>
 <div class="pagina-titulo-acoes">
     <h1>Premiação de <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
-    <div class="pagina-titulo-botoes">
-        <a href="<?php echo url('premios/novo/' . (int) $concurso['id']); ?>" class="btn-acao">+ Novo prêmio</a>
-    </div>
+    <?php if ($concurso['modo_premiacao'] === 'geral'): ?>
+        <div class="pagina-titulo-botoes">
+            <a href="<?php echo url('premios/novo/' . (int) $concurso['id']); ?>" class="btn-acao">+ Novo prêmio</a>
+        </div>
+    <?php endif; ?>
 </div>
 <p>Regras gerais de premiação em texto rico ficam na tela de <a href="<?php echo url('blocos/index'); ?>">Blocos de conteúdo</a> (bloco padrão "Premiação").</p>
 
-<?php if (empty($premios)): ?>
-    <p>Nenhum prêmio cadastrado ainda.</p>
-<?php else: ?>
-    <ul class="reordenar-lista" data-reordenar-rota="premios/reordenar/<?php echo (int) $concurso['id']; ?>">
+<?php if (!empty($flash)): ?>
+    <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php endif; ?>
+
+<form method="post" action="<?php echo url('premios/definirModo/' . (int) $concurso['id']); ?>" class="admin-card" style="margin-bottom:1.5rem;">
+    <p><strong>Modo de premiação:</strong></p>
+    <label>
+        <input type="radio" name="modo_premiacao" value="geral" <?php echo $concurso['modo_premiacao'] === 'geral' ? 'checked' : ''; ?> onchange="this.form.submit()">
+        Prêmio geral do concurso (1 lista única)
+    </label><br>
+    <label>
+        <input type="radio" name="modo_premiacao" value="por_trilha" <?php echo $concurso['modo_premiacao'] === 'por_trilha' ? 'checked' : ''; ?> onchange="this.form.submit()">
+        Prêmio por trilha (1 lista de 1º/2º/3º lugar para cada trilha)
+    </label>
+    <p><small>Trocar o modo não apaga prêmios já cadastrados, só muda a lista exibida aqui e na página pública.</small></p>
+</form>
+
+<?php
+$renderizarLista = function (array $premios, $concursoId) {
+    if (empty($premios)) {
+        echo '<p>Nenhum prêmio cadastrado ainda.</p>';
+        return;
+    }
+    ?>
+    <ul class="reordenar-lista" data-reordenar-rota="premios/reordenar/<?php echo (int) $concursoId; ?>">
         <?php foreach ($premios as $indice => $premio): ?>
         <li class="reordenar-item" draggable="true" data-id="<?php echo (int) $premio['id']; ?>">
             <span class="reordenar-alca" aria-hidden="true" title="Arraste para reordenar">⠿</span>
@@ -32,7 +55,7 @@
                 </a>
                 <form method="post" action="<?php echo url('premios/remover'); ?>" onsubmit="return confirm('Remover este prêmio?');">
                     <input type="hidden" name="id" value="<?php echo (int) $premio['id']; ?>">
-                    <input type="hidden" name="concurso_id" value="<?php echo (int) $concurso['id']; ?>">
+                    <input type="hidden" name="concurso_id" value="<?php echo (int) $concursoId; ?>">
                     <button type="submit" class="btn-icone" title="Remover">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <polyline points="3 6 5 6 21 6"></polyline>
@@ -51,4 +74,22 @@
         </li>
         <?php endforeach; ?>
     </ul>
+    <?php
+};
+?>
+
+<?php if ($concurso['modo_premiacao'] === 'por_trilha'): ?>
+    <?php foreach ($grupos as $grupo): ?>
+        <div class="admin-card" style="margin-bottom:1.5rem;">
+            <div class="pagina-titulo-acoes">
+                <h2><?php echo htmlspecialchars($grupo['trilha']['nome'], ENT_QUOTES, 'UTF-8'); ?></h2>
+                <div class="pagina-titulo-botoes">
+                    <a href="<?php echo url('premios/novo/' . (int) $concurso['id'] . '/' . (int) $grupo['trilha']['id']); ?>" class="btn-acao">+ Novo prêmio</a>
+                </div>
+            </div>
+            <?php $renderizarLista($grupo['premios'], $concurso['id']); ?>
+        </div>
+    <?php endforeach; ?>
+<?php else: ?>
+    <?php $renderizarLista($premios, $concurso['id']); ?>
 <?php endif; ?>

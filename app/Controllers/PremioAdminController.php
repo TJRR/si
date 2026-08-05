@@ -11,12 +11,14 @@ use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\ConcursoRepository;
 use App\Repositories\PremioRepository;
+use App\Repositories\TrilhaRepository;
 use App\Services\ImagemService;
 
 class PremioAdminController extends Controller
 {
     private $premios;
     private $concursos;
+    private $trilhas;
     private $imagens;
 
     public function __construct()
@@ -24,6 +26,7 @@ class PremioAdminController extends Controller
         RoleMiddleware::exigir(['administrador']);
         $this->premios = new PremioRepository();
         $this->concursos = new ConcursoRepository();
+        $this->trilhas = new TrilhaRepository();
         $this->imagens = new ImagemService();
     }
 
@@ -36,13 +39,35 @@ class PremioAdminController extends Controller
             exit('Concurso não encontrado.');
         }
 
-        $this->renderizar('admin/premios/index', [
+        $dados = [
             'concurso' => $concurso,
-            'premios' => $this->premios->listarPorConcurso($concursoId),
-        ], 'Premiação de ' . $concurso['nome'], ['tipo' => 'premios', 'id' => (int) $concursoId]);
+            'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
+        ];
+
+        if ($concurso['modo_premiacao'] === 'por_trilha') {
+            $grupos = [];
+
+            foreach ($this->trilhas->listarPorConcurso($concursoId) as $trilha) {
+                $grupos[] = ['trilha' => $trilha, 'premios' => $this->premios->listarPorTrilha($trilha['id'])];
+            }
+
+            $dados['grupos'] = $grupos;
+        } else {
+            $dados['premios'] = $this->premios->listarPorConcurso($concursoId);
+        }
+
+        $this->renderizar('admin/premios/index', $dados, 'Premiação de ' . $concurso['nome'], ['tipo' => 'premios', 'id' => (int) $concursoId]);
+
+        unset($_SESSION['flash']);
     }
 
-    public function novo($concursoId)
+    /**
+     * Fase 24: alterna entre premiacao 'geral' (1 lista pro concurso) e
+     * 'por_trilha' (1 lista por trilha) - trocar o modo NAO apaga premios
+     * ja cadastrados, so' muda qual lista a tela/pagina publica exibem
+     * (ver PremioRepository::listarPorConcurso/listarPorTrilha).
+     */
+    public function definirModo($concursoId)
     {
         $concurso = $this->concursos->buscarPorId($concursoId);
 
@@ -51,10 +76,40 @@ class PremioAdminController extends Controller
             exit('Concurso não encontrado.');
         }
 
+        $modo = isset($_POST['modo_premiacao']) ? $_POST['modo_premiacao'] : '';
+
+        if (in_array($modo, ['geral', 'por_trilha'], true)) {
+            $this->concursos->atualizarModoPremiacao($concursoId, $modo);
+            $_SESSION['flash'] = 'Modo de premiação atualizado.';
+        }
+
+        $this->redirecionar('premios/index/' . $concursoId);
+    }
+
+    public function novo($concursoId, $trilhaId = null)
+    {
+        $concurso = $this->concursos->buscarPorId($concursoId);
+
+        if ($concurso === null) {
+            http_response_code(404);
+            exit('Concurso não encontrado.');
+        }
+
+        $trilha = null;
+
+        if ($concurso['modo_premiacao'] === 'por_trilha') {
+            $trilha = $trilhaId !== null ? $this->trilhas->buscarPorId($trilhaId) : null;
+
+            if ($trilha === null || (int) $trilha['concurso_id'] !== (int) $concursoId) {
+                http_response_code(404);
+                exit('Trilha não encontrada.');
+            }
+        }
+
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $erro = $this->salvarNovo($concursoId);
+            $erro = $this->salvarNovo($concursoId, $trilha !== null ? (int) $trilha['id'] : null);
 
             if ($erro === null) {
                 $this->redirecionar('premios/index/' . $concursoId);
@@ -65,6 +120,7 @@ class PremioAdminController extends Controller
         $this->renderizar('admin/premios/form', [
             'erro' => $erro,
             'concurso' => $concurso,
+            'trilha' => $trilha,
             'premio' => null,
         ], 'Novo prêmio', ['tipo' => 'premios', 'id' => (int) $concursoId]);
     }
@@ -89,6 +145,7 @@ class PremioAdminController extends Controller
         $this->renderizar('admin/premios/form', [
             'erro' => $erro,
             'concurso' => $concurso,
+            'trilha' => $premio['trilha_id'] !== null ? $this->trilhas->buscarPorId($premio['trilha_id']) : null,
             'premio' => $premio,
         ], 'Editar prêmio', ['tipo' => 'premios', 'id' => (int) $premio['concurso_id']]);
     }
@@ -120,7 +177,7 @@ class PremioAdminController extends Controller
         echo json_encode(['ok' => true]);
     }
 
-    private function salvarNovo($concursoId)
+    private function salvarNovo($concursoId, $trilhaId)
     {
         $posicao = (int) (isset($_POST['posicao']) ? $_POST['posicao'] : 0);
         $descricao = trim(isset($_POST['descricao']) ? $_POST['descricao'] : '');
@@ -133,7 +190,7 @@ class PremioAdminController extends Controller
             return 'Informe a descrição do prêmio.';
         }
 
-        $dados = ['posicao' => $posicao, 'descricao' => $descricao, 'imagem_path' => null, 'imagem_alt' => null];
+        $dados = ['posicao' => $posicao, 'descricao' => $descricao, 'imagem_path' => null, 'imagem_alt' => null, 'trilha_id' => $trilhaId];
 
         try {
             if (!empty($_FILES['imagem']) && $_FILES['imagem']['error'] === UPLOAD_ERR_OK) {

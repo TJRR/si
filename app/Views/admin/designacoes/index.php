@@ -4,7 +4,7 @@
 } ?>
 <h1>Designação de avaliadores — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('etapas/index/' . (int) $trilha['id']); ?>">Voltar às etapas</a></p>
+<p><a href="<?php echo url('etapas/index/' . (int) $trilha['id']); ?>">Voltar às etapas</a> — <a href="<?php echo url('designacoes/progresso/' . (int) $etapa['id']); ?>">Ver progresso por avaliador</a></p>
 
 <?php if (!empty($flash)): ?>
     <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>

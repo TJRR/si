@@ -15,8 +15,10 @@ use App\Repositories\DesafioRepository;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\FeedbackSubmissaoRepository;
+use App\Repositories\MentoriaRepository;
 use App\Repositories\NotaLancadaRepository;
 use App\Repositories\NotificacaoPainelRepository;
+use App\Repositories\OficinaRepository;
 use App\Repositories\ParticipanteRepository;
 use App\Repositories\ResultadoEtapaRepository;
 use App\Repositories\SubmissaoRepository;
@@ -42,6 +44,8 @@ class ParticipanteController extends Controller
     private $criterios;
     private $acessoEtapa;
     private $notificacoes;
+    private $mentorias;
+    private $oficinas;
 
     public function __construct()
     {
@@ -60,6 +64,8 @@ class ParticipanteController extends Controller
         $this->criterios = new CriterioAvaliacaoRepository();
         $this->acessoEtapa = new AcessoEtapaService();
         $this->notificacoes = new NotificacaoPainelRepository();
+        $this->mentorias = new MentoriaRepository();
+        $this->oficinas = new OficinaRepository();
     }
 
     public function index()
@@ -129,6 +135,8 @@ class ParticipanteController extends Controller
             'ehLider' => $vinculoAtual !== null && $vinculoAtual['papel'] === 'lider',
             'homologado' => $homologado,
             'etapas' => $etapas,
+            'mentoriaDisponivel' => $this->mentorias->existeParaConcurso($trilha['concurso_id']),
+            'oficinaDisponivel' => $this->oficinas->existeParaConcurso($trilha['concurso_id']),
         ], 'Minha inscrição');
     }
 

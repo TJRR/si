@@ -171,7 +171,29 @@ class HomeController extends Controller
         $secoesOrdenadas = (new HomeSecaoOrdemRepository())->listarOrdenado();
         $blocosPorId = array_column($blocosAtivos, null, 'id');
 
-        $premios = (new PremioRepository())->listarPorConcurso($concursoId);
+        // Fase 24 (bug reportado): premiacao pode ser 'geral' (1 lista pro
+        // concurso, $premios) ou 'por_trilha' (1 lista por trilha,
+        // $premiosPorTrilha) - so' um dos dois vem preenchido, conforme
+        // concursos.modo_premiacao. $temPremiacao unifica a checagem de
+        // "existe premiacao pra mostrar" pro menu/rodape, que antes so'
+        // olhava $premios.
+        $premiosRepo = new PremioRepository();
+        $premios = [];
+        $premiosPorTrilha = [];
+
+        if ($concursoAtivo['modo_premiacao'] === 'por_trilha') {
+            foreach ($trilhasAtivas as $trilhaPremiacao) {
+                $premiosDaTrilha = $premiosRepo->listarPorTrilha($trilhaPremiacao['id']);
+
+                if (!empty($premiosDaTrilha)) {
+                    $premiosPorTrilha[] = ['trilha' => $trilhaPremiacao, 'premios' => $premiosDaTrilha];
+                }
+            }
+        } else {
+            $premios = $premiosRepo->listarPorConcurso($concursoId);
+        }
+
+        $temPremiacao = !empty($premios) || !empty($premiosPorTrilha);
         $faqAtivas = (new FaqConcursoRepository())->listarAtivasPorConcurso($concursoId);
         $documentos = (new DocumentoRepository())->listarAtivosPorConcurso($concursoId);
         $contato = (new ContatoConcursoRepository())->buscar();
@@ -193,7 +215,7 @@ class HomeController extends Controller
             $menu[] = ['ancora' => 'temas', 'rotulo' => 'Desafios'];
         }
 
-        if ($blocoPremiacao !== null || !empty($premios)) {
+        if ($blocoPremiacao !== null || $temPremiacao) {
             $menu[] = ['ancora' => 'premiacao', 'rotulo' => $blocoPremiacao !== null ? $blocoPremiacao['titulo'] : 'Premiação'];
         }
 
@@ -232,7 +254,7 @@ class HomeController extends Controller
             $menuRodape[] = ['ancora' => 'temas', 'rotulo' => 'Desafios'];
         }
 
-        $mostrarPremiacaoRodape = $blocoPremiacao !== null ? $blocoPremiacao['mostrar_no_rodape'] : !empty($premios);
+        $mostrarPremiacaoRodape = $blocoPremiacao !== null ? $blocoPremiacao['mostrar_no_rodape'] : $temPremiacao;
         if ($mostrarPremiacaoRodape) {
             $menuRodape[] = ['ancora' => 'premiacao', 'rotulo' => $blocoPremiacao !== null ? $blocoPremiacao['titulo'] : 'Premiação'];
         }
@@ -262,6 +284,7 @@ class HomeController extends Controller
                 'secoesOrdenadas' => $secoesOrdenadas,
                 'blocosPorId' => $blocosPorId,
                 'premios' => $premios,
+                'premiosPorTrilha' => $premiosPorTrilha,
                 'trilhasAtivas' => $trilhasAtivas,
                 'documentos' => $documentos,
                 'cronograma' => $cronograma,
@@ -380,6 +403,7 @@ class HomeController extends Controller
                 $progresso = $designacoes->progressoPorEtapa($etapa['id'], $totalCriterios);
 
                 $resultado[] = [
+                    'etapa_id' => (int) $etapa['id'],
                     'trilha_nome' => $trilha['nome'],
                     'etapa_nome' => $etapa['nome'],
                     'total' => $progresso['total'],

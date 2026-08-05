@@ -5,7 +5,12 @@
 <div class="pagina-titulo-acoes">
     <h1>Minha inscrição</h1>
     <div class="pagina-titulo-botoes">
-        <a href="<?php echo url('mentoria/index'); ?>" class="btn-acao">Agendar Mentoria</a>
+        <?php if (!empty($mentoriaDisponivel)): ?>
+            <a href="<?php echo url('mentoria/index'); ?>" class="btn-acao">Agendar Mentoria</a>
+        <?php endif; ?>
+        <?php if (!empty($oficinaDisponivel)): ?>
+            <a href="<?php echo url('oficina/index'); ?>" class="btn-acao">Oficinas</a>
+        <?php endif; ?>
     </div>
 </div>
 

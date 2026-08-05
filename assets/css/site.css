@@ -1958,6 +1958,17 @@ body.admin-page button.btn-icone.ativo {
     margin-bottom: 0.75rem;
 }
 
+.admin-progresso-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.2s ease;
+}
+
+.admin-progresso-link:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+
 .admin-progresso-cabecalho {
     display: flex;
     justify-content: space-between;
@@ -2772,6 +2783,18 @@ body.admin-page button.criterio-aba.ativo {
     font-size: 1.1rem;
     color: var(--cor-primaria-fim);
     margin-bottom: 0.35rem;
+}
+
+/* Fase 24: subtitulo de cada trilha quando a premiacao esta' no modo
+   'por_trilha' (uma grade separada por trilha, em vez de uma unica). */
+.site-premios-trilha-titulo {
+    font-size: 1.25rem;
+    color: var(--cor-escura);
+    margin: 2rem 0 0;
+}
+
+.site-premios-trilha-titulo:first-of-type {
+    margin-top: 0.5rem;
 }
 
 /* Temas/Desafios (3.8) - badges coloridos redesenhados na Fase 19 (#104),

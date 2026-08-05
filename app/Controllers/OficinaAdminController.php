@@ -13,36 +13,32 @@ use App\Core\Mailer;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\ConcursoRepository;
 use App\Repositories\EquipeRepository;
-use App\Repositories\MentoriaRepository;
 use App\Repositories\NotificacaoPainelRepository;
-use App\Repositories\PerfilRepository;
+use App\Repositories\OficinaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 
 /**
- * Fase 19 (#106): qualquer administrador/suporte cria horarios de
- * mentoria - por padrao pra si mesmo, mas pode escolher outro
- * administrador/suporte como mentor do horario. Quem pode editar/remover
- * depois e' quem FICOU como mentor (mentor_usuario_id), nao
- * necessariamente quem criou - Admin global sempre pode, pra moderacao.
+ * Fase 24: administrador/suporte cria horarios de oficina - encontro
+ * coletivo com tema pre-definido conduzido pelo organizador do concurso
+ * (sem "mentor" designado). Qualquer equipe interessada pode se inscrever,
+ * sem exclusividade (diferente de MentoriaAdminController).
  */
-class MentoriaAdminController extends Controller
+class OficinaAdminController extends Controller
 {
-    private $mentorias;
+    private $oficinas;
     private $concursos;
     private $equipes;
     private $usuarioParticipante;
     private $notificacoes;
-    private $perfis;
 
     public function __construct()
     {
         RoleMiddleware::exigir(['administrador', 'suporte']);
-        $this->mentorias = new MentoriaRepository();
+        $this->oficinas = new OficinaRepository();
         $this->concursos = new ConcursoRepository();
         $this->equipes = new EquipeRepository();
         $this->usuarioParticipante = new UsuarioParticipanteRepository();
         $this->notificacoes = new NotificacaoPainelRepository();
-        $this->perfis = new PerfilRepository();
     }
 
     public function index($concursoId)
@@ -54,11 +50,11 @@ class MentoriaAdminController extends Controller
             exit('Concurso não encontrado.');
         }
 
-        $this->renderizar('admin/mentorias/index', [
+        $this->renderizar('admin/oficinas/index', [
             'concurso' => $concurso,
-            'horarios' => $this->mentorias->listarPorConcurso($concursoId),
+            'horarios' => $this->oficinas->listarPorConcurso($concursoId),
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
-        ], 'Mentorias de ' . $concurso['nome'], ['tipo' => 'mentorias', 'id' => (int) $concursoId]);
+        ], 'Oficinas de ' . $concurso['nome'], ['tipo' => 'oficinas', 'id' => (int) $concursoId]);
 
         unset($_SESSION['flash']);
     }
@@ -72,96 +68,80 @@ class MentoriaAdminController extends Controller
             exit('Concurso não encontrado.');
         }
 
-        $mentores = $this->mentoresDisponiveis($concursoId);
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $tema = trim(isset($_POST['tema']) ? $_POST['tema'] : '');
             $dataInicio = trim(isset($_POST['data_inicio']) ? $_POST['data_inicio'] : '');
             $dataFim = trim(isset($_POST['data_fim']) ? $_POST['data_fim'] : '');
             $linkMeet = trim(isset($_POST['link_meet']) ? $_POST['link_meet'] : '');
             $observacao = trim(isset($_POST['observacao']) ? $_POST['observacao'] : '');
-            $mentorEscolhido = (int) (isset($_POST['mentor_usuario_id']) ? $_POST['mentor_usuario_id'] : 0);
-            $mentorValido = in_array($mentorEscolhido, array_column($mentores, 'id'), false);
 
-            if ($dataInicio === '' || $dataFim === '') {
+            if ($tema === '') {
+                $erro = 'Informe o tema da oficina.';
+            } elseif ($dataInicio === '' || $dataFim === '') {
                 $erro = 'Informe o início e o fim do horário.';
             } elseif (strtotime($dataFim) <= strtotime($dataInicio)) {
                 $erro = 'O fim do horário deve ser depois do início.';
             } elseif ($linkMeet !== '' && !linkHttpValido($linkMeet)) {
                 $erro = 'O link do Google Meet deve começar com http:// ou https://.';
-            } elseif (!$mentorValido) {
-                $erro = 'Selecione um mentor válido (administrador ou suporte).';
             } else {
-                $this->mentorias->criar($concursoId, $mentorEscolhido, $dataInicio, $dataFim, $linkMeet !== '' ? $linkMeet : null, $observacao !== '' ? $observacao : null);
-                $this->redirecionar('mentoriaAdmin/index/' . $concursoId);
+                $this->oficinas->criar(
+                    $concursoId,
+                    $tema,
+                    $dataInicio,
+                    $dataFim,
+                    $linkMeet !== '' ? $linkMeet : null,
+                    $observacao !== '' ? $observacao : null,
+                    Auth::usuarioId()
+                );
+                $this->redirecionar('oficinaAdmin/index/' . $concursoId);
                 return;
             }
         }
 
-        $this->renderizar('admin/mentorias/form', [
+        $this->renderizar('admin/oficinas/form', [
             'erro' => $erro,
             'concurso' => $concurso,
-            'mentores' => $mentores,
-        ], 'Novo horário de mentoria', ['tipo' => 'mentorias', 'id' => (int) $concursoId]);
-    }
-
-    /**
-     * Administrador/suporte globais (concurso_id NULL) + os escopados a
-     * este concurso, sem duplicar quem tiver os dois perfis.
-     */
-    private function mentoresDisponiveis($concursoId)
-    {
-        $porId = [];
-
-        foreach (['administrador', 'suporte'] as $perfilChave) {
-            foreach ($this->perfis->listarUsuariosPorPerfilConcurso($perfilChave, $concursoId) as $usuario) {
-                $porId[(int) $usuario['id']] = $usuario;
-            }
-        }
-
-        usort($porId, function ($a, $b) {
-            return strcmp($a['nome'], $b['nome']);
-        });
-
-        return array_values($porId);
+        ], 'Novo horário de oficina', ['tipo' => 'oficinas', 'id' => (int) $concursoId]);
     }
 
     public function remover()
     {
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $concursoId = (int) (isset($_POST['concurso_id']) ? $_POST['concurso_id'] : 0);
-        $horario = $this->mentorias->buscarPorId($id);
+        $horario = $this->oficinas->buscarPorId($id);
 
         if ($horario === null) {
-            $this->redirecionar('mentoriaAdmin/index/' . $concursoId);
+            $this->redirecionar('oficinaAdmin/index/' . $concursoId);
             return;
         }
 
-        $souDono = (int) $horario['mentor_usuario_id'] === (int) Auth::usuarioId();
+        $souDono = (int) $horario['criado_por'] === (int) Auth::usuarioId();
 
         if (!$souDono && !Auth::possuiPerfil('administrador')) {
             http_response_code(403);
-            exit('Acesso negado: este horário pertence a outro mentor.');
+            exit('Acesso negado: este horário pertence a outro organizador.');
         }
 
-        if ($horario['equipe_id'] !== null) {
+        foreach ($this->oficinas->listarInscritos($id) as $inscrito) {
             $this->notificarEquipe(
-                (int) $horario['equipe_id'],
-                'Horário de mentoria cancelado',
-                'O mentor cancelou o horário de ' . date('d/m/Y H:i', strtotime($horario['data_inicio'])) . ' que sua equipe havia reservado.'
+                (int) $inscrito['equipe_id'],
+                'Oficina cancelada',
+                'A oficina "' . $horario['tema'] . '" de ' . date('d/m/Y H:i', strtotime($horario['data_inicio'])) . ' foi cancelada.'
             );
         }
 
-        $this->mentorias->remover($id);
+        $this->oficinas->remover($id);
         $_SESSION['flash'] = 'Horário removido.';
-        $this->redirecionar('mentoriaAdmin/index/' . $concursoId);
+        $this->redirecionar('oficinaAdmin/index/' . $concursoId);
     }
 
     private function notificarEquipe($equipeId, $titulo, $mensagem)
     {
         foreach ($this->equipes->listarParticipantes($equipeId) as $participante) {
             foreach ($this->usuarioParticipante->usuariosDoParticipante($participante['id']) as $usuarioId) {
-                $this->notificacoes->criar($usuarioId, 'mentoria', $titulo, $mensagem, ['url' => url('mentoria/index')]);
+                $this->notificacoes->criar($usuarioId, 'oficina', $titulo, $mensagem, ['url' => url('oficina/index')]);
             }
 
             if (!empty($participante['email'])) {

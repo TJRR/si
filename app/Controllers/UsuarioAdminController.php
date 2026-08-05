@@ -13,6 +13,7 @@ use App\Repositories\AvaliadorCategoriaRepository;
 use App\Repositories\CategoriaAvaliadorRepository;
 use App\Repositories\ConcursoRepository;
 use App\Repositories\PerfilRepository;
+use App\Repositories\TokenSenhaRepository;
 use App\Repositories\UsuarioRepository;
 use App\Services\AcessoParticipanteService;
 
@@ -23,6 +24,7 @@ class UsuarioAdminController extends Controller
     private $concursos;
     private $categoriasAvaliador;
     private $avaliadorCategorias;
+    private $tokens;
 
     public function __construct()
     {
@@ -32,6 +34,7 @@ class UsuarioAdminController extends Controller
         $this->concursos = new ConcursoRepository();
         $this->categoriasAvaliador = new CategoriaAvaliadorRepository();
         $this->avaliadorCategorias = new AvaliadorCategoriaRepository();
+        $this->tokens = new TokenSenhaRepository();
     }
 
     public function index()
@@ -58,6 +61,22 @@ class UsuarioAdminController extends Controller
                 }
             }
             unset($vinculo);
+
+            // Fase 24: badge de "convite vencido" (coluna Acesso) - so' faz
+            // sentido pra quem ainda nao entrou (sem senha e sem Google);
+            // o token 'definir' mais recente diz se o link enviado ja
+            // expirou, pra facilitar identificar quem precisa de reenvio.
+            $usuario['convite_vencido'] = false;
+            $usuario['convite_expirado_em'] = null;
+
+            if ($usuario['senha_hash'] === null && $usuario['google_id'] === null) {
+                $ultimoConvite = $this->tokens->maisRecentePorUsuarioETipo($usuario['id'], 'definir');
+
+                if ($ultimoConvite !== null && $ultimoConvite['usado_em'] === null && strtotime($ultimoConvite['expira_em']) < time()) {
+                    $usuario['convite_vencido'] = true;
+                    $usuario['convite_expirado_em'] = $ultimoConvite['expira_em'];
+                }
+            }
         }
         unset($usuario);
 

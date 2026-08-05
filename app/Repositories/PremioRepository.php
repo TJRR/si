@@ -12,15 +12,29 @@ use App\Core\Database;
 
 /**
  * Fase 18 (3.7 Premiacao) - lista estruturada de colocacoes/premios por
- * concurso.
+ * concurso. Fase 24: passou a aceitar tambem uma lista por trilha
+ * (trilha_id) quando concursos.modo_premiacao = 'por_trilha' - ver
+ * listarPorTrilha(). listarPorConcurso() continua servindo so' o modo
+ * 'geral' (por isso o filtro trilha_id IS NULL: sem ele, premios
+ * cadastrados num modo 'por_trilha' anterior vazariam pra listagem geral
+ * se o Admin trocar o modo de volta).
  */
 class PremioRepository
 {
     public function listarPorConcurso($concursoId)
     {
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare('SELECT * FROM premios WHERE concurso_id = :concurso_id ORDER BY ordem ASC, id ASC');
+        $stmt = $pdo->prepare('SELECT * FROM premios WHERE concurso_id = :concurso_id AND trilha_id IS NULL ORDER BY ordem ASC, id ASC');
         $stmt->execute(['concurso_id' => $concursoId]);
+
+        return $stmt->fetchAll();
+    }
+
+    public function listarPorTrilha($trilhaId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM premios WHERE trilha_id = :trilha_id ORDER BY ordem ASC, id ASC');
+        $stmt->execute(['trilha_id' => $trilhaId]);
 
         return $stmt->fetchAll();
     }
@@ -36,18 +50,30 @@ class PremioRepository
         return $premio !== false ? $premio : null;
     }
 
+    /**
+     * $dados['trilha_id'] (Fase 24) e' null no modo 'geral'; a "proxima
+     * ordem" e' calculada dentro do mesmo escopo (trilha OU concurso todo)
+     * pra' cada lista comecar sua propria sequencia 0,1,2...
+     */
     public function criar($concursoId, array $dados)
     {
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare('SELECT COALESCE(MAX(ordem), -1) + 1 FROM premios WHERE concurso_id = :concurso_id');
-        $stmt->execute(['concurso_id' => $concursoId]);
+        $trilhaId = isset($dados['trilha_id']) ? $dados['trilha_id'] : null;
+
+        if ($trilhaId !== null) {
+            $stmt = $pdo->prepare('SELECT COALESCE(MAX(ordem), -1) + 1 FROM premios WHERE trilha_id = :trilha_id');
+            $stmt->execute(['trilha_id' => $trilhaId]);
+        } else {
+            $stmt = $pdo->prepare('SELECT COALESCE(MAX(ordem), -1) + 1 FROM premios WHERE concurso_id = :concurso_id AND trilha_id IS NULL');
+            $stmt->execute(['concurso_id' => $concursoId]);
+        }
         $proximaOrdem = (int) $stmt->fetchColumn();
 
-        $campos = $dados + ['concurso_id' => $concursoId, 'ordem' => $proximaOrdem];
+        $campos = $dados + ['concurso_id' => $concursoId, 'trilha_id' => $trilhaId, 'ordem' => $proximaOrdem];
 
         $stmt = $pdo->prepare(
-            'INSERT INTO premios (concurso_id, posicao, descricao, imagem_path, imagem_alt, ordem)
-             VALUES (:concurso_id, :posicao, :descricao, :imagem_path, :imagem_alt, :ordem)'
+            'INSERT INTO premios (concurso_id, trilha_id, posicao, descricao, imagem_path, imagem_alt, ordem)
+             VALUES (:concurso_id, :trilha_id, :posicao, :descricao, :imagem_path, :imagem_alt, :ordem)'
         );
         $stmt->execute($campos);
         $id = (int) $pdo->lastInsertId();

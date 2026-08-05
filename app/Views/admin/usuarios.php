@@ -137,6 +137,9 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                     }
                     if (!empty($tiposAcesso)) {
                         echo htmlspecialchars(implode(' + ', $tiposAcesso), ENT_QUOTES, 'UTF-8');
+                    } elseif (!empty($usuario['convite_vencido'])) {
+                        $tituloVencido = 'O link de definir senha expirou em ' . date('d/m/Y H:i', strtotime($usuario['convite_expirado_em'])) . ' — use "Reenviar convite" para gerar um novo.';
+                        echo '<span class="status-pill vermelho" title="' . htmlspecialchars($tituloVencido, ENT_QUOTES, 'UTF-8') . '">Convite vencido</span>';
                     } else {
                         echo '<span class="status-pill laranja">Nenhum ainda</span>';
                     }

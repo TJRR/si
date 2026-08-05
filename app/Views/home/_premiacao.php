@@ -2,7 +2,8 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<?php if ($blocoPremiacao !== null || !empty($premios)): ?>
+<?php $temPremiacao = !empty($premios) || !empty($premiosPorTrilha); ?>
+<?php if ($blocoPremiacao !== null || $temPremiacao): ?>
 <section class="site-section site-section-alt" id="premiacao">
     <div class="site-section-inner">
         <h2 class="section-title"><?php echo $blocoPremiacao !== null ? htmlspecialchars($blocoPremiacao['titulo'], ENT_QUOTES, 'UTF-8') : 'Premiação'; ?></h2>
@@ -19,6 +20,23 @@
                     </div>
                 <?php endforeach; ?>
             </div>
+        <?php endif; ?>
+
+        <?php if (!empty($premiosPorTrilha)): ?>
+            <?php foreach ($premiosPorTrilha as $grupo): ?>
+                <h3 class="site-premios-trilha-titulo"><?php echo htmlspecialchars($grupo['trilha']['nome'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                <div class="site-premios-grid">
+                    <?php foreach ($grupo['premios'] as $premio): ?>
+                        <div class="admin-card site-premio-card">
+                            <?php if (!empty($premio['imagem_path'])): ?>
+                                <img src="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $premio['imagem_path'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars((string) $premio['imagem_alt'], ENT_QUOTES, 'UTF-8'); ?>" class="site-premio-imagem">
+                            <?php endif; ?>
+                            <strong class="site-premio-posicao"><?php echo (int) $premio['posicao']; ?>º lugar</strong>
+                            <p><?php echo nl2br(htmlspecialchars($premio['descricao'], ENT_QUOTES, 'UTF-8')); ?></p>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endforeach; ?>
         <?php endif; ?>
 
         <?php if ($blocoPremiacao !== null && !empty($blocoPremiacao['conteudo_html'])): ?>

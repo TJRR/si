@@ -306,6 +306,8 @@ class ResultadoAdminController extends Controller
             'geradoEm' => date('d/m/Y H:i'),
         ]);
 
+        ini_set('memory_limit', '256M');
+
         $dompdf = new \Dompdf\Dompdf(['isRemoteEnabled' => false, 'defaultFont' => 'DejaVu Sans']);
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->setPaper('A4', 'landscape');

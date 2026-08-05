@@ -153,7 +153,7 @@ class NavegacaoService
         $trilhas = new TrilhaRepository();
         $etapas = new EtapaRepository();
 
-        if (in_array($tipo, ['concurso', 'formularios', 'trilhas', 'categorias_avaliador', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma', 'mentorias'], true)) {
+        if (in_array($tipo, ['concurso', 'formularios', 'trilhas', 'categorias_avaliador', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma', 'mentorias', 'oficinas'], true)) {
             $concurso = $concursos->buscarPorId($id);
 
             if ($concurso === null) {
@@ -178,6 +178,8 @@ class NavegacaoService
                 $caminho[] = self::noEventosCronograma($concurso);
             } elseif ($tipo === 'mentorias') {
                 $caminho[] = self::noMentorias($concurso);
+            } elseif ($tipo === 'oficinas') {
+                $caminho[] = self::noOficinas($concurso);
             }
 
             return $caminho;
@@ -252,7 +254,7 @@ class NavegacaoService
                 }
 
                 if (!\App\Core\Auth::possuiPerfil('administrador')) {
-                    return [self::noTrilhas($concurso), self::noMentorias($concurso)];
+                    return [self::noTrilhas($concurso), self::noMentorias($concurso), self::noOficinas($concurso)];
                 }
 
                 return [
@@ -263,6 +265,7 @@ class NavegacaoService
                     self::noDocumentos($concurso),
                     self::noEventosCronograma($concurso),
                     self::noMentorias($concurso),
+                    self::noOficinas($concurso),
                     self::noTrilhas($concurso),
                 ];
 
@@ -341,6 +344,21 @@ class NavegacaoService
             'rotulo' => 'Mentorias',
             'folha' => true,
             'url' => 'mentoriaAdmin/index/' . (int) $concurso['id'],
+        ];
+    }
+
+    /**
+     * Fase 24: visivel pra Administrador e Suporte, mesmo criterio da
+     * mentoria - encontro coletivo com tema pre-definido, sem "mentor".
+     */
+    private static function noOficinas(array $concurso)
+    {
+        return [
+            'tipo' => 'oficinas',
+            'id' => (int) $concurso['id'],
+            'rotulo' => 'Oficinas',
+            'folha' => true,
+            'url' => 'oficinaAdmin/index/' . (int) $concurso['id'],
         ];
     }
 

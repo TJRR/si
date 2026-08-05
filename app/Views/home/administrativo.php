@@ -34,7 +34,7 @@
 <?php if (!empty($etapasAvaliacaoVigentes)): ?>
     <h2>Progresso da avaliação</h2>
     <?php foreach ($etapasAvaliacaoVigentes as $item): ?>
-        <div class="admin-progresso-item">
+        <a class="admin-progresso-item admin-progresso-link" href="<?php echo url('designacoes/progresso/' . (int) $item['etapa_id']); ?>" title="Ver progresso por avaliador">
             <div class="admin-progresso-cabecalho">
                 <span><?php echo htmlspecialchars($item['trilha_nome'] . ' — ' . $item['etapa_nome'], ENT_QUOTES, 'UTF-8'); ?></span>
                 <span><?php echo (int) $item['percentual']; ?>% (<?php echo (int) $item['completas']; ?> de <?php echo (int) $item['total']; ?>)</span>
@@ -42,6 +42,6 @@
             <div class="admin-progresso-barra-fundo">
                 <div class="admin-progresso-barra-preenchimento" style="width: <?php echo (int) $item['percentual']; ?>%;"></div>
             </div>
-        </div>
+        </a>
     <?php endforeach; ?>
 <?php endif; ?>
