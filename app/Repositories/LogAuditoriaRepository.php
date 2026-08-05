@@ -148,7 +148,11 @@ class LogAuditoriaRepository
             $params[':data_fim'] = $filtros['data_fim'] . ' 23:59:59';
         }
         if (!empty($filtros['busca'])) {
-            $condicoes[] = '(u.nome LIKE :busca OR l.acao LIKE :busca OR l.entidade LIKE :busca OR l.ip_origem LIKE :busca OR l.mensagem LIKE :busca)';
+            // Fase 25: antes so' cobria nome/acao/entidade/ip/mensagem - nao
+            // achava nada digitando um id (entidade_id fica em coluna
+            // propria) nem um e-mail (que so' existe dentro do JSON de
+            // dados_antes/dados_depois, ex.: convite/reenvio de acesso).
+            $condicoes[] = '(u.nome LIKE :busca OR l.acao LIKE :busca OR l.entidade LIKE :busca OR l.entidade_id LIKE :busca OR l.ip_origem LIKE :busca OR l.mensagem LIKE :busca OR l.dados_antes LIKE :busca OR l.dados_depois LIKE :busca)';
             $params[':busca'] = '%' . $filtros['busca'] . '%';
         }
 

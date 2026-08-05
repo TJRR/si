@@ -11,7 +11,7 @@
     <form method="get" action="<?php echo config('base_path'); ?>/index.php" class="filtros-barra">
         <input type="hidden" name="r" value="auditoria/index">
         <label class="filtro-busca">Busca:
-            <input type="text" name="busca" placeholder="Usuário, ação, IP..." value="<?php echo htmlspecialchars((string) $filtros['busca'], ENT_QUOTES, 'UTF-8'); ?>">
+            <input type="text" name="busca" placeholder="Usuário, ação, IP, ID, e-mail..." value="<?php echo htmlspecialchars((string) $filtros['busca'], ENT_QUOTES, 'UTF-8'); ?>">
         </label>
         <label>Usuário:
             <select name="usuario_id">

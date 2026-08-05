@@ -47,6 +47,12 @@
                 <line x1="16" y1="17" x2="8" y2="17"></line>
             </svg>
         </a>
+        <a href="<?php echo url('resultados/relatorioNotasPdf/' . (int) $etapa['id']); ?>" class="btn-icone" title="Gerar relatório de notas (PDF)" target="_blank">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 11l3 3L22 4"></path>
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+        </a>
     </p>
 
     <table border="1" cellpadding="6">

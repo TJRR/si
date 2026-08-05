@@ -317,6 +317,126 @@ class ResultadoAdminController extends Controller
     }
 
     /**
+     * Fase 26: relatorio PDF simplificado de notas por equipe - mesma
+     * logica de tabela do relatorio de auditoria (relatorioPdf() acima:
+     * 1 linha por equipe, colunas por avaliador x criterio), mas SEM
+     * anonimizacao (o avaliador e' identificado por iniciais + legenda com
+     * o nome completo, nao uma letra sem identidade) e sem feedback/
+     * conteudo da submissao. Ao contrario da letra local de relatorioPdf()
+     * (que so' vale dentro de uma submissao, de proposito, pra nao dar pra
+     * seguir o padrao de UM avaliador ao longo do documento), aqui as
+     * iniciais sao GLOBAIS na etapa inteira - e' exatamente o ponto: um
+     * relatorio interno do Admin pra identificar quem avaliou o que.
+     * Mesmo controller = mesma restricao a administrador (RoleMiddleware
+     * no construtor, sem suporte).
+     */
+    public function relatorioNotasPdf($etapaId)
+    {
+        $etapa = $this->etapas->buscarPorId($etapaId);
+
+        if ($etapa === null) {
+            http_response_code(404);
+            exit('Etapa não encontrada.');
+        }
+
+        try {
+            $ranking = $this->servicoEtapa->jaPublicado($etapaId)
+                ? $this->resultadosEtapa->listarPorEtapa($etapaId)
+                : $this->servicoEtapa->calcularRanking($etapaId);
+        } catch (\RuntimeException $e) {
+            $_SESSION['flash'] = $e->getMessage();
+            $this->redirecionar('resultados/etapa/' . $etapaId);
+            return;
+        }
+
+        if (empty($ranking)) {
+            $_SESSION['flash'] = 'Nenhuma submissão encontrada nesta etapa ainda.';
+            $this->redirecionar('resultados/etapa/' . $etapaId);
+            return;
+        }
+
+        $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
+        $criteriosDaEtapa = $this->criterios->listarPorEtapa($etapaId);
+
+        $nomePorUsuario = [];
+        $notaPorSubmissaoUsuarioCriterio = [];
+
+        foreach ($ranking as $linha) {
+            $submissaoId = (int) $linha['submissao_id'];
+
+            foreach ($this->notas->listarPorSubmissaoComDetalhes($submissaoId) as $nota) {
+                $usuarioId = (int) $nota['usuario_id'];
+                $nomePorUsuario[$usuarioId] = $nota['usuario_nome'];
+                $notaPorSubmissaoUsuarioCriterio[$submissaoId][$usuarioId][(int) $nota['criterio_avaliacao_id']] = $nota['nota'];
+            }
+        }
+
+        $avaliadores = $this->avaliadoresComIniciais($nomePorUsuario);
+
+        $html = View::renderizarString('admin/resultados/relatorio_notas_pdf', [
+            'etapa' => $etapa,
+            'trilha' => $trilha,
+            'criterios' => $criteriosDaEtapa,
+            'ranking' => $ranking,
+            'avaliadores' => $avaliadores,
+            'notaPorSubmissaoUsuarioCriterio' => $notaPorSubmissaoUsuarioCriterio,
+            'geradoEm' => date('d/m/Y H:i'),
+        ]);
+
+        ini_set('memory_limit', '256M');
+
+        $dompdf = new \Dompdf\Dompdf(['isRemoteEnabled' => false, 'defaultFont' => 'DejaVu Sans']);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A3', 'landscape');
+        $dompdf->render();
+        $dompdf->stream('relatorio-notas-etapa-' . (int) $etapaId . '.pdf', ['Attachment' => false]);
+        exit;
+    }
+
+    /**
+     * Iniciais (1ª + última palavra do nome) globais na etapa, ordenadas
+     * por nome - com desempate numerico se duas pessoas gerarem a mesma
+     * inicial (ex.: "João Silva" e "Julia Santos" -> JS, JS2).
+     */
+    private function avaliadoresComIniciais(array $nomePorUsuario)
+    {
+        $lista = [];
+
+        foreach ($nomePorUsuario as $usuarioId => $nome) {
+            $lista[] = ['usuario_id' => $usuarioId, 'nome' => $nome];
+        }
+
+        usort($lista, function ($a, $b) {
+            return strcasecmp($a['nome'], $b['nome']);
+        });
+
+        $iniciaisUsadas = [];
+
+        foreach ($lista as &$avaliador) {
+            $partes = preg_split('/\s+/', trim($avaliador['nome']));
+            $primeira = mb_strtoupper(mb_substr($partes[0], 0, 1), 'UTF-8');
+            $ultima = count($partes) > 1
+                ? mb_strtoupper(mb_substr(end($partes), 0, 1), 'UTF-8')
+                : mb_strtoupper(mb_substr($partes[0], 1, 1), 'UTF-8');
+
+            $base = $primeira . $ultima;
+            $iniciais = $base;
+            $sufixo = 2;
+
+            while (isset($iniciaisUsadas[$iniciais])) {
+                $iniciais = $base . $sufixo;
+                $sufixo++;
+            }
+
+            $iniciaisUsadas[$iniciais] = true;
+            $avaliador['iniciais'] = $iniciais;
+        }
+        unset($avaliador);
+
+        return $lista;
+    }
+
+    /**
      * So' integrantes homologados, lider sempre em primeiro (Fase 23, item
      * C4-4) - EquipeRepository::listarParticipantes() ordena por papel ASC,
      * que colocaria "integrante" antes de "lider" em ordem alfabetica.

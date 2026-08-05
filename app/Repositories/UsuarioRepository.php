@@ -215,6 +215,22 @@ class UsuarioRepository
         Auditoria::registrar('atualizar_nome', 'usuarios', $id, $antes, ['nome' => $nome]);
     }
 
+    /**
+     * Fase 26: so' usada pelo script database/alterar_email_usuario.php
+     * (sem tela nenhuma, de proposito - decisao do usuario). Muda so' o
+     * e-mail de LOGIN (usuarios.email) - nunca mexe no e-mail de inscricao
+     * do participante (participantes.email), tabela separada.
+     */
+    public function atualizarEmail($id, $email)
+    {
+        $antes = $this->buscarPorId($id);
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE usuarios SET email = :email WHERE id = :id');
+        $stmt->execute(['email' => $email, 'id' => $id]);
+
+        Auditoria::registrar('atualizar_email', 'usuarios', $id, $antes, ['email' => $email]);
+    }
+
     public function atualizarFoto($id, $caminhoRelativo)
     {
         $antes = $this->buscarPorId($id);
