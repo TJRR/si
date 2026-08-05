@@ -43,4 +43,24 @@ class ConfiguracaoAdminController extends Controller
             'erro' => $erro,
         ], 'Configurações', ['tipo' => 'configuracaoGeral', 'id' => null]);
     }
+
+    public function desativarSistema()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->configuracoes->desativarSistema();
+            $_SESSION['flash'] = 'Sistema desativado: apenas administradores conseguem acessar agora.';
+        }
+
+        $this->redirecionar('configuracoes/index');
+    }
+
+    public function reativarSistema()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->configuracoes->reativarSistema();
+            $_SESSION['flash'] = 'Sistema reativado: acesso normal restabelecido para todos.';
+        }
+
+        $this->redirecionar('configuracoes/index');
+    }
 }

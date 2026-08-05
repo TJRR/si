@@ -125,16 +125,44 @@ class Router
         $acao = isset($partes[1]) && $partes[1] !== '' ? $partes[1] : 'index';
         $parametros = array_slice($partes, 2);
 
-        if (Auth::autenticado()) {
-            try {
-                $configuracao = (new ConfiguracaoSistemaRepository())->buscar();
-                $timeoutMinutos = $configuracao !== false ? (int) $configuracao['sessao_timeout_minutos'] : 30;
-            } catch (\PDOException $e) {
-                // Tabela configuracoes_sistema pode ainda nao existir (migration 053
-                // nao aplicada) - nunca derrubar a aplicacao inteira por isso.
-                $timeoutMinutos = 30;
-            }
+        try {
+            $configuracao = (new ConfiguracaoSistemaRepository())->buscar();
+            $timeoutMinutos = $configuracao !== false ? (int) $configuracao['sessao_timeout_minutos'] : 30;
+            // isset() (nao so' $configuracao !== false): a coluna sistema_desativado
+            // (migration 100) pode ainda nao existir no banco - acessar uma chave
+            // ausente sem isset() gera Notice, que e' impresso ANTES de qualquer
+            // header(), quebrando todo header('Location: ...') dali pra frente
+            // (ex.: redirecionamento do login com Google) com "headers already
+            // sent". Ausente = sistema ativo (fail-open), nunca desativado por engano.
+            $sistemaDesativado = $configuracao !== false
+                && isset($configuracao['sistema_desativado'])
+                && (int) $configuracao['sistema_desativado'] === 1;
+        } catch (\PDOException $e) {
+            // Tabela configuracoes_sistema pode ainda nao existir (migration 053
+            // nao aplicada) - nunca derrubar a aplicacao inteira por isso.
+            $timeoutMinutos = 30;
+            $sistemaDesativado = false;
+        }
 
+        // Fase 25: modo de manutencao. Bloqueia TUDO exceto o modulo 'auth'
+        // (pro administrador conseguir entrar) e um administrador ja
+        // autenticado. HTTP e' sem estado - nao da' pra "derrubar" uma aba ja
+        // aberta na hora, so' bloquear a proxima acao dela; sessao de quem
+        // nao e' administrador e' encerrada nesse momento.
+        if ($sistemaDesativado && $modulo !== 'auth') {
+            $ehAdministrador = Auth::autenticado() && Auth::temPerfil('administrador');
+
+            if (!$ehAdministrador) {
+                if (Auth::autenticado()) {
+                    Auth::logout();
+                }
+                http_response_code(503);
+                require __DIR__ . '/../Views/erro/manutencao.php';
+                exit;
+            }
+        }
+
+        if (Auth::autenticado()) {
             if (!Auth::validarAtividade($timeoutMinutos * 60)) {
                 header('Location: ' . url('auth/login') . '&expirado=1');
                 exit;

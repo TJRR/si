@@ -28,4 +28,22 @@ class ConfiguracaoSistemaRepository
 
         Auditoria::registrar('atualizar', 'configuracoes_sistema', 1, $antes, ['sessao_timeout_minutos' => $minutos]);
     }
+
+    public function desativarSistema()
+    {
+        $antes = $this->buscar();
+        $pdo = Database::conexao();
+        $pdo->exec('UPDATE configuracoes_sistema SET sistema_desativado = 1 WHERE id = 1');
+
+        Auditoria::registrar('desativar_sistema', 'configuracoes_sistema', 1, $antes, ['sistema_desativado' => 1]);
+    }
+
+    public function reativarSistema()
+    {
+        $antes = $this->buscar();
+        $pdo = Database::conexao();
+        $pdo->exec('UPDATE configuracoes_sistema SET sistema_desativado = 0 WHERE id = 1');
+
+        Auditoria::registrar('reativar_sistema', 'configuracoes_sistema', 1, $antes, ['sistema_desativado' => 0]);
+    }
 }
