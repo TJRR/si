@@ -132,13 +132,19 @@ class AvaliacaoController extends Controller
             exit('Acesso negado: você não é avaliador deste concurso.');
         }
 
+        // Fase 25 (#1): rede de seguranca para uma submissao criada depois
+        // do backfill (database/atribuir_numeros_sigilo_etapa.php) nao
+        // ficar sem numero - na pratica, quase sempre nao ha nada a fazer.
+        $this->submissoes->garantirNumerosSigilo($etapaId);
+
         $todasDaEtapa = $this->submissoes->listarPorEtapa($etapaId);
 
-        // Sigilo cego (Fase 19, #11): numera pela ordem de toda a etapa,
-        // nao so' da lista filtrada, para o mesmo "Equipe N" se manter
-        // estavel entre a listagem e a tela de notar.
-        foreach ($todasDaEtapa as $indice => &$submissaoNumerada) {
-            $submissaoNumerada['numero_equipe'] = $indice + 1;
+        // Sigilo cego (Fase 19, #11; numero estavel desde a Fase 25): usa
+        // numero_sigilo_etapa (persistido, atribuido uma vez) em vez da
+        // posicao na lista, que era recalculada a cada requisicao e mudava
+        // se qualquer submissao da etapa fosse removida depois.
+        foreach ($todasDaEtapa as &$submissaoNumerada) {
+            $submissaoNumerada['numero_equipe'] = $submissaoNumerada['numero_sigilo_etapa'];
         }
         unset($submissaoNumerada);
 

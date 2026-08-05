@@ -20,6 +20,7 @@ class CampoDinamicoService
         'email' => 'E-mail',
         'telefone' => 'Telefone',
         'link_youtube' => 'Link do YouTube',
+        'link_externo' => 'Link externo (URL)',
         'selecao_tema_desafio' => 'Seleção de Tema/Desafio',
         'upload_pdf' => 'Upload de PDF',
         'grupo_participantes' => 'Grupo repetível de participantes',

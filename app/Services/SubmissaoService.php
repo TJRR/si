@@ -400,6 +400,13 @@ class SubmissaoService
 
                 return ['valido' => true, 'valor' => $valor, 'cpfs' => []];
 
+            case 'link_externo':
+                if (!linkHttpValido($valor)) {
+                    return ['valido' => false, 'mensagem' => 'Informe um link válido, começando com http:// ou https://.'];
+                }
+
+                return ['valido' => true, 'valor' => $valor, 'cpfs' => []];
+
             case 'selecao_tema_desafio':
                 if (!in_array((int) $valor, $desafiosValidos, true)) {
                     return ['valido' => false, 'mensagem' => 'Selecione um desafio válido.'];

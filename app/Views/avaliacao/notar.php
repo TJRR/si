@@ -3,7 +3,13 @@
     exit('Acesso negado');
 } ?>
 <div class="pagina-avaliacao">
-    <h1>Lançar notas — Submissão #<?php echo (int) $submissao['id']; ?></h1>
+    <h1>Lançar notas —
+        <?php if ($sigiloCego && $submissao['numero_sigilo_etapa'] !== null): ?>
+            Equipe <?php echo (int) $submissao['numero_sigilo_etapa']; ?>
+        <?php else: ?>
+            Submissão #<?php echo (int) $submissao['id']; ?>
+        <?php endif; ?>
+    </h1>
 
     <p><a href="<?php echo url('avaliacao/submissoes/' . (int) $etapa['id']); ?>">Voltar às submissões</a></p>
 
@@ -63,6 +69,13 @@
                                                         allowfullscreen></iframe>
                                             </div>
                                         <?php elseif (\App\Validation\YoutubeValidador::valido($valor)): ?>
+                                            <a href="<?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?></a>
+                                        <?php else: ?>
+                                            <?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php endif; ?>
+
+                                    <?php elseif ($campo['tipo'] === 'link_externo'): ?>
+                                        <?php if (linkHttpValido($valor)): ?>
                                             <a href="<?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?></a>
                                         <?php else: ?>
                                             <?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?>

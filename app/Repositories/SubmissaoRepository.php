@@ -87,6 +87,49 @@ class SubmissaoRepository
         return $stmt->fetchAll();
     }
 
+    /**
+     * Fase 25 (#1): atribui numero_sigilo_etapa as submissoes da etapa que
+     * ainda nao tem um - idempotente, seguro de chamar em toda requisicao
+     * (so mexe em quem esta com NULL). Embaralha antes de numerar para nao
+     * atribuir na ordem real de submissao (ORDER BY s.id ASC vazaria a
+     * ordem cronologica de envio para o avaliador). Uso principal e' via
+     * database/atribuir_numeros_sigilo_etapa.php, rodado uma vez, de forma
+     * explicita, durante o deploy - aqui serve so' de rede de seguranca
+     * para uma submissao nova criada depois do backfill.
+     */
+    public function garantirNumerosSigilo($etapaId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT id FROM submissoes WHERE etapa_id = :etapa_id AND numero_sigilo_etapa IS NULL'
+        );
+        $stmt->execute(['etapa_id' => $etapaId]);
+        $semNumero = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+        if (empty($semNumero)) {
+            return 0;
+        }
+
+        $stmtMax = $pdo->prepare(
+            'SELECT MAX(numero_sigilo_etapa) FROM submissoes WHERE etapa_id = :etapa_id'
+        );
+        $stmtMax->execute(['etapa_id' => $etapaId]);
+        $proximoNumero = ((int) $stmtMax->fetchColumn()) + 1;
+
+        shuffle($semNumero);
+
+        $stmtUpdate = $pdo->prepare(
+            'UPDATE submissoes SET numero_sigilo_etapa = :numero WHERE id = :id'
+        );
+
+        foreach ($semNumero as $submissaoId) {
+            $stmtUpdate->execute(['numero' => $proximoNumero, 'id' => $submissaoId]);
+            $proximoNumero++;
+        }
+
+        return count($semNumero);
+    }
+
     public function buscarPorEquipe($equipeId)
     {
         $pdo = Database::conexao();

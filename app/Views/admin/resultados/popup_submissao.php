@@ -22,8 +22,17 @@
                                         style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"
                                         allowfullscreen></iframe>
                             </div>
-                        <?php else: ?>
+                        <?php elseif (linkHttpValido($valor)): ?>
                             <a href="<?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?></a>
+                        <?php else: ?>
+                            <?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?>
+                        <?php endif; ?>
+
+                    <?php elseif ($campo['tipo'] === 'link_externo'): ?>
+                        <?php if (linkHttpValido($valor)): ?>
+                            <a href="<?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?></a>
+                        <?php else: ?>
+                            <?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?>
                         <?php endif; ?>
 
                     <?php elseif ($campo['tipo'] === 'upload_pdf'): ?>

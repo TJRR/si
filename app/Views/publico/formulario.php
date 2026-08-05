@@ -70,6 +70,9 @@
                 <?php elseif ($campo['tipo'] === 'link_youtube'): ?>
                     <input type="url" name="campos[<?php echo $campoId; ?>]" placeholder="https://www.youtube.com/watch?v=..." value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
 
+                <?php elseif ($campo['tipo'] === 'link_externo'): ?>
+                    <input type="url" name="campos[<?php echo $campoId; ?>]" placeholder="https://meu-prototipo.exemplo.com" value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
+
                 <?php elseif ($campo['tipo'] === 'selecao_tema_desafio'): ?>
                     <select name="campos[<?php echo $campoId; ?>]" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
                         <option value="">Selecione...</option>
