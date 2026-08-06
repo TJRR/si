@@ -2231,6 +2231,14 @@ body.admin-page button.modal-fechar:focus {
     margin: 0 auto;
 }
 
+/* Fase 28: layout compartilhado (notar_compartilhado.php) precisa de mais
+   largura que o de abas - ficha unica + video 16:9 grande + linhas de
+   criterio com nota alinhada a direita ficam espremidos em 900px. So' essa
+   view usa o modificador; a tela de abas continua em 900px. */
+.pagina-avaliacao.pagina-avaliacao-larga {
+    max-width: 1200px;
+}
+
 .ficha-submissao-sticky {
     position: sticky;
     top: 0;
@@ -2317,6 +2325,114 @@ body.admin-page button.criterio-aba.ativo {
 .criterio-bloco textarea {
     width: 100%;
     box-sizing: border-box;
+}
+
+/* Fase 28: ficha da submissao no layout compartilhado - <details>/<summary>
+   nativo (acessivel, sem JS) no lugar do antigo .ficha-submissao-sticky
+   (max-height:40vh + scroll interno), que so' fazia sentido repetido dentro
+   de cada aba do layout antigo - aqui a ficha aparece uma unica vez, entao
+   forcar scroll so' escondia conteudo (ex.: ultimo campo da ficha) sem
+   motivo. Marcador padrao do navegador escondido, substituido por um
+   triangulo que gira ao abrir/fechar. */
+.ficha-submissao-colapsavel {
+    margin-bottom: 1.25rem;
+}
+
+.ficha-submissao-colapsavel summary {
+    cursor: pointer;
+    font-weight: 700;
+    padding: 0.75rem 1rem;
+    background: var(--cor-fundo-alt);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    list-style: none;
+}
+
+.ficha-submissao-colapsavel summary::-webkit-details-marker {
+    display: none;
+}
+
+.ficha-submissao-colapsavel summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.2s ease;
+}
+
+.ficha-submissao-colapsavel[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.ficha-submissao-colapsavel[open] summary {
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+}
+
+.ficha-submissao-colapsavel .ficha-submissao {
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 1rem;
+}
+
+/* Fase 28: layout compartilhado (notar_compartilhado.php) - quando todos os
+   criterios da etapa enxergam o mesmo conteudo, a ficha some do
+   .criterio-bloco (fica so' uma vez, fora do loop) e os criterios viram
+   colunas lado a lado (ate 5, calculado no controller/view via
+   grid-template-columns inline) em vez do empilhado das abas - melhor uso
+   de tela larga quando ha' poucos criterios pra avaliar de uma vez. Abaixo
+   de 720px cai pra 1 coluna (card empilhado), a tela fica estreita demais
+   pra caber nota+escala legivel em 4-5 colunas. */
+.criterios-compartilhados-grade {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+@media (max-width: 720px) {
+    .criterios-compartilhados-grade {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.criterio-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.criterio-card h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.criterio-card .campo-nota {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Precisa da mesma especificidade "body.admin-page button" que
+   .btn-icone/.criterio-aba ja usam (ver comentario acima de .btn-icone),
+   senao o padding/pill/degrade do botao padrao do painel esmaga o link. */
+body.admin-page button[data-toggle-feedback] {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--cor-primaria-fim);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+}
+
+body.admin-page button[data-toggle-feedback]::before,
+body.admin-page button[data-toggle-feedback]::after {
+    content: none;
+}
+
+body.admin-page button[data-toggle-feedback]:hover,
+body.admin-page button[data-toggle-feedback]:focus {
+    text-decoration: underline;
 }
 
 /* Fase 17 (Melhoria 2): faixa fixa avisando que o Admin esta visualizando

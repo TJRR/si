@@ -202,4 +202,43 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     });
+
+    /**
+     * Fase 28: layout compartilhado (notar_compartilhado.php) - feedback por
+     * criterio expansivel sob demanda. O textarea fica dentro do <label>
+     * seguinte ao botao (nao e' irmao direto), por isso o querySelector.
+     */
+    document.querySelectorAll('[data-toggle-feedback]').forEach(function (botao) {
+        botao.addEventListener('click', function () {
+            var textarea = botao.nextElementSibling.querySelector('textarea');
+
+            if (!textarea) {
+                return;
+            }
+
+            var vaiExpandir = textarea.hidden;
+            textarea.hidden = !vaiExpandir;
+            botao.textContent = vaiExpandir ? 'Ocultar feedback' : 'Adicionar feedback';
+
+            if (vaiExpandir) {
+                textarea.focus();
+            }
+        });
+    });
+
+    /**
+     * Fase 28: ficha da submissao (notar_compartilhado.php) comeca
+     * recolhida - ao abrir, rola a pagina pra alinhar a ficha no topo da
+     * viewport (cabecalho sai de vista), maximizando espaco pra ver
+     * video/conteudo. So' rola ao ABRIR, nao ao fechar de novo.
+     */
+    var fichaDetails = document.querySelector('.ficha-submissao-colapsavel');
+
+    if (fichaDetails) {
+        fichaDetails.addEventListener('toggle', function () {
+            if (fichaDetails.open) {
+                fichaDetails.scrollIntoView({ block: 'start' });
+            }
+        });
+    }
 });

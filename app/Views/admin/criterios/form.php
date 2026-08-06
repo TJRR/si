@@ -34,7 +34,7 @@
     </label><br>
 
     <fieldset>
-        <legend>Campos do formulário visíveis na aba deste critério (Fase 19 #10)</legend>
+        <legend>Campos do formulário visíveis na aba deste critério</legend>
         <?php if (empty($camposDoFormulario)): ?>
             <p><small>Esta etapa não tem formulário associado — a aba deste critério, na tela do avaliador, sempre mostra a ficha inteira da submissão.</small></p>
         <?php else: ?>

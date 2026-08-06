@@ -34,7 +34,11 @@ class DesignacaoAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador']);
+        // Fase 28: leitura (index, progresso) liberada pra Suporte tambem -
+        // acoes que alteram designacao (atribuir/remover/distribuir) travam
+        // individualmente com RoleMiddleware::exigir(['administrador'])
+        // dentro do proprio metodo, mesmo padrao de EtapaAdminController.
+        RoleMiddleware::exigir(['administrador', 'suporte']);
         $this->designacoes = new AvaliadorDesignacaoRepository();
         $this->etapas = new EtapaRepository();
         $this->trilhas = new TrilhaRepository();
@@ -121,6 +125,7 @@ class DesignacaoAdminController extends Controller
 
     public function atribuir()
     {
+        RoleMiddleware::exigir(['administrador']);
         $submissaoId = (int) (isset($_POST['submissao_id']) ? $_POST['submissao_id'] : 0);
         $usuarioId = (int) (isset($_POST['usuario_id']) ? $_POST['usuario_id'] : 0);
         $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
@@ -134,6 +139,7 @@ class DesignacaoAdminController extends Controller
 
     public function atribuirEmMassa()
     {
+        RoleMiddleware::exigir(['administrador']);
         $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
         $usuarioId = (int) (isset($_POST['usuario_id']) ? $_POST['usuario_id'] : 0);
         $submissaoIds = isset($_POST['submissao_ids']) && is_array($_POST['submissao_ids']) ? $_POST['submissao_ids'] : [];
@@ -161,6 +167,7 @@ class DesignacaoAdminController extends Controller
      */
     public function remover()
     {
+        RoleMiddleware::exigir(['administrador']);
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
 
@@ -213,6 +220,7 @@ class DesignacaoAdminController extends Controller
 
     public function distribuir($etapaId)
     {
+        RoleMiddleware::exigir(['administrador']);
         $etapa = $this->etapas->buscarPorId($etapaId);
 
         if ($etapa === null) {
@@ -271,6 +279,7 @@ class DesignacaoAdminController extends Controller
 
     public function distribuirComSelecao()
     {
+        RoleMiddleware::exigir(['administrador']);
         $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
         $avaliadorIds = isset($_POST['avaliador_id']) && is_array($_POST['avaliador_id'])
             ? array_map('intval', $_POST['avaliador_id'])
@@ -308,6 +317,7 @@ class DesignacaoAdminController extends Controller
 
     public function confirmarDistribuicao()
     {
+        RoleMiddleware::exigir(['administrador']);
         $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
         $submissaoIds = isset($_POST['submissao_id']) && is_array($_POST['submissao_id']) ? $_POST['submissao_id'] : [];
         $usuarioIds = isset($_POST['usuario_id']) && is_array($_POST['usuario_id']) ? $_POST['usuario_id'] : [];

@@ -41,6 +41,8 @@ class UsuarioAdminController extends Controller
     {
         $filtroConcursoId = (isset($_GET['concurso_id']) && $_GET['concurso_id'] !== '') ? (int) $_GET['concurso_id'] : null;
         $filtroPerfil = isset($_GET['perfil']) && $_GET['perfil'] !== '' ? $_GET['perfil'] : null;
+        $filtroStatus = isset($_GET['status']) && $_GET['status'] !== '' ? $_GET['status'] : null;
+        $filtroAcesso = isset($_GET['acesso']) && $_GET['acesso'] !== '' ? $_GET['acesso'] : null;
         $busca = isset($_GET['busca']) && trim($_GET['busca']) !== '' ? trim($_GET['busca']) : null;
         $ordenar = isset($_GET['ordenar']) ? $_GET['ordenar'] : 'nome';
         $direcao = isset($_GET['direcao']) && $_GET['direcao'] === 'desc' ? 'desc' : 'asc';
@@ -92,6 +94,40 @@ class UsuarioAdminController extends Controller
             }));
         }
 
+        // Fase 28: "Suspenso" nao e' um valor de usuarios.status (enum so'
+        // tem pendente/aprovado/rejeitado) - e' o campo `ativo` a parte, que
+        // pode acontecer com qualquer status. Por isso vira uma opcao a mais
+        // no mesmo filtro, checada separado do enum.
+        if ($filtroStatus === 'suspenso') {
+            $lista = array_values(array_filter($lista, function ($usuario) {
+                return !$usuario['ativo'];
+            }));
+        } elseif ($filtroStatus !== null) {
+            $lista = array_values(array_filter($lista, function ($usuario) use ($filtroStatus) {
+                return $usuario['status'] === $filtroStatus;
+            }));
+        }
+
+        // Fase 28: mesma logica usada pra montar a coluna "Acesso" - inclusiva
+        // (um usuario com Senha + Google aparece tanto em "Senha" quanto em
+        // "Google"), igual ao filtro de Perfil acima.
+        if ($filtroAcesso !== null) {
+            $lista = array_values(array_filter($lista, function ($usuario) use ($filtroAcesso) {
+                switch ($filtroAcesso) {
+                    case 'senha':
+                        return $usuario['senha_hash'] !== null;
+                    case 'google':
+                        return $usuario['google_id'] !== null;
+                    case 'convite_vencido':
+                        return !empty($usuario['convite_vencido']);
+                    case 'nenhum':
+                        return $usuario['senha_hash'] === null && $usuario['google_id'] === null && empty($usuario['convite_vencido']);
+                    default:
+                        return true;
+                }
+            }));
+        }
+
         if ($busca !== null) {
             $lista = array_values(array_filter($lista, function ($usuario) use ($busca) {
                 return $this->usuarioBateComBusca($usuario, $busca);
@@ -107,6 +143,8 @@ class UsuarioAdminController extends Controller
             'categoriasPorConcurso' => $categoriasPorConcurso,
             'filtroConcursoId' => $filtroConcursoId,
             'filtroPerfil' => $filtroPerfil,
+            'filtroStatus' => $filtroStatus,
+            'filtroAcesso' => $filtroAcesso,
             'busca' => $busca,
             'ordenar' => $ordenar,
             'direcao' => $direcao,

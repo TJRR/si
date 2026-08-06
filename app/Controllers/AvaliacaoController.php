@@ -247,8 +247,9 @@ class AvaliacaoController extends Controller
 
         $conteudoSubmissao = $this->conteudoSubmissao->montar($submissao);
         $conteudoPorCriterio = $this->montarConteudoPorCriterio($criteriosDaEtapa, $conteudoSubmissao);
+        $layoutCompartilhado = $this->possuiConteudoCompartilhado($criteriosDaEtapa);
 
-        $this->renderizar('avaliacao/notar', [
+        $this->renderizar($layoutCompartilhado ? 'avaliacao/notar_compartilhado' : 'avaliacao/notar', [
             'submissao' => $submissao,
             'etapa' => $etapa,
             'criterios' => $criteriosDaEtapa,
@@ -289,6 +290,39 @@ class AvaliacaoController extends Controller
         }
 
         return $porCriterio;
+    }
+
+    /**
+     * Fase 28: quando TODOS os criterios da etapa tem exatamente o mesmo
+     * vinculo de campos (CriterioCampoRepository), as abas por criterio so'
+     * repetem a ficha inteira sem filtrar nada de fato - troca pro layout
+     * unico (notar_compartilhado.php). Qualquer divergencia entre criterios
+     * (mesmo que so' um deles seja diferente) mantem o layout de abas atual,
+     * por seguranca - so' unifica quando e' comprovadamente redundante.
+     */
+    private function possuiConteudoCompartilhado(array $criteriosDaEtapa)
+    {
+        if (count($criteriosDaEtapa) <= 1) {
+            return false;
+        }
+
+        $referencia = null;
+
+        foreach ($criteriosDaEtapa as $criterio) {
+            $ids = $this->criterioCampo->listarCampoIdsPorCriterio($criterio['id']);
+            sort($ids);
+
+            if ($referencia === null) {
+                $referencia = $ids;
+                continue;
+            }
+
+            if ($ids !== $referencia) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

@@ -10,12 +10,14 @@ foreach ($concursos as $concurso) {
     }
 }
 
-function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $busca)
+function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $filtroStatus, $filtroAcesso, $busca)
 {
     $novaDirecao = ($ordenar === $coluna && $direcao === 'asc') ? 'desc' : 'asc';
     $params = array_filter([
         'concurso_id' => $filtroConcursoId,
         'perfil' => $filtroPerfil,
+        'status' => $filtroStatus,
+        'acesso' => $filtroAcesso,
         'busca' => $busca,
         'ordenar' => $coluna,
         'direcao' => $novaDirecao,
@@ -70,6 +72,26 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                 <?php endforeach; ?>
             </select>
         </label>
+        <label>Status:
+            <select name="status">
+                <option value="">Todos</option>
+                <?php foreach (['pendente' => 'Pendente', 'aprovado' => 'Aprovado', 'rejeitado' => 'Rejeitado', 'suspenso' => 'Suspenso'] as $valor => $rotulo): ?>
+                    <option value="<?php echo $valor; ?>" <?php echo $filtroStatus === $valor ? 'selected' : ''; ?>>
+                        <?php echo $rotulo; ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <label>Acesso:
+            <select name="acesso">
+                <option value="">Todos</option>
+                <?php foreach (['senha' => 'Senha', 'google' => 'Google', 'convite_vencido' => 'Convite vencido', 'nenhum' => 'Nenhum ainda'] as $valor => $rotulo): ?>
+                    <option value="<?php echo $valor; ?>" <?php echo $filtroAcesso === $valor ? 'selected' : ''; ?>>
+                        <?php echo $rotulo; ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </label>
         <div class="filtros-barra-acoes">
             <button type="submit" class="btn-icone" title="Filtrar">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -91,11 +113,11 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
 <?php else: ?>
     <table border="1" cellpadding="6">
         <tr>
-            <th><?php echo usuarios_link_ordenar('Nome', 'nome', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $busca); ?></th>
-            <th><?php echo usuarios_link_ordenar('E-mail', 'email', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $busca); ?></th>
-            <th><?php echo usuarios_link_ordenar('Status', 'status', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $busca); ?></th>
-            <th><?php echo usuarios_link_ordenar('Perfis', 'perfis', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $busca); ?></th>
-            <th><?php echo usuarios_link_ordenar('Acesso', 'acesso', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $busca); ?></th>
+            <th><?php echo usuarios_link_ordenar('Nome', 'nome', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $filtroStatus, $filtroAcesso, $busca); ?></th>
+            <th><?php echo usuarios_link_ordenar('E-mail', 'email', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $filtroStatus, $filtroAcesso, $busca); ?></th>
+            <th><?php echo usuarios_link_ordenar('Status', 'status', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $filtroStatus, $filtroAcesso, $busca); ?></th>
+            <th><?php echo usuarios_link_ordenar('Perfis', 'perfis', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $filtroStatus, $filtroAcesso, $busca); ?></th>
+            <th><?php echo usuarios_link_ordenar('Acesso', 'acesso', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $filtroStatus, $filtroAcesso, $busca); ?></th>
             <th>Ações</th>
         </tr>
         <?php foreach ($usuarios as $usuario): ?>
