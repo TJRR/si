@@ -15,17 +15,21 @@ use App\Repositories\DesafioRepository;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\FeedbackSubmissaoRepository;
+use App\Repositories\FormulaPontuacaoRepository;
 use App\Repositories\MentoriaRepository;
 use App\Repositories\NotaLancadaRepository;
 use App\Repositories\NotificacaoPainelRepository;
 use App\Repositories\OficinaRepository;
 use App\Repositories\ParticipanteRepository;
+use App\Repositories\PerfilRepository;
 use App\Repositories\ResultadoEtapaRepository;
 use App\Repositories\SubmissaoRepository;
 use App\Repositories\TemaRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
+use App\Repositories\UsuarioRepository;
 use App\Services\AcessoEtapaService;
+use App\Services\ResultadoEtapaService;
 use App\Validation\CpfValidador;
 
 class ParticipanteController extends Controller
@@ -46,6 +50,10 @@ class ParticipanteController extends Controller
     private $notificacoes;
     private $mentorias;
     private $oficinas;
+    private $usuarios;
+    private $perfis;
+    private $formulas;
+    private $resultadoEtapaService;
 
     public function __construct()
     {
@@ -63,9 +71,13 @@ class ParticipanteController extends Controller
         $this->feedbackSubmissao = new FeedbackSubmissaoRepository();
         $this->criterios = new CriterioAvaliacaoRepository();
         $this->acessoEtapa = new AcessoEtapaService();
+        $this->formulas = new FormulaPontuacaoRepository();
+        $this->resultadoEtapaService = new ResultadoEtapaService();
         $this->notificacoes = new NotificacaoPainelRepository();
         $this->mentorias = new MentoriaRepository();
         $this->oficinas = new OficinaRepository();
+        $this->usuarios = new UsuarioRepository();
+        $this->perfis = new PerfilRepository();
     }
 
     public function index()
@@ -105,10 +117,11 @@ class ParticipanteController extends Controller
                 $etapaDaLista['submissao_id_feedback'] = null;
                 $etapaDaLista['motivo_bloqueio'] = $this->acessoEtapa->motivoBloqueio($etapaDaLista, $equipe['id']);
 
-                if ($etapaDaLista['modo_feedback_avaliador'] === 'nenhum') {
-                    continue;
-                }
-
+                // Fase 27 (#4): o icone de "notas e feedback" agora depende so'
+                // do resultado ter sido publicado - as notas por criterio/
+                // avaliador (sempre existem quando ha' resultado) deixaram de
+                // estar atreladas a modo_feedback_avaliador, que so' controla
+                // se HA' texto qualitativo, nao se as notas aparecem.
                 $submissaoDaEquipe = $this->submissoes->buscarPorEquipeEEtapa($equipe['id'], $etapaDaLista['id']);
 
                 if ($submissaoDaEquipe === null) {
@@ -144,6 +157,14 @@ class ParticipanteController extends Controller
      * Fase 17 (Melhoria 1): feedback do avaliador, visivel ao participante so'
      * depois do resultado da etapa publicado - anonimato bidirecional mantido
      * (nunca identifica qual avaliador escreveu qual texto).
+     *
+     * Fase 27 (#4): passou a mostrar tambem as NOTAS por criterio x
+     * avaliador (nao so' o texto qualitativo) - disponivel sempre que o
+     * resultado foi publicado, independente de modo_feedback_avaliador (que
+     * so' controla se ha' texto, nunca controlou as notas). Avaliador
+     * identificado so' por numero de ordem ("Avaliador 1, 2..."), nunca por
+     * nome - mesmo padrao de anonimato ja usado no relatorio PDF do Admin
+     * (Fase 26), so' que aqui nem as iniciais aparecem.
      */
     public function verFeedback($submissaoId)
     {
@@ -165,38 +186,63 @@ class ParticipanteController extends Controller
         $etapa = $this->etapas->buscarPorId($submissao['etapa_id']);
         $resultadoPublicado = $this->resultadosEtapa->buscarPorSubmissaoEEtapa($submissaoId, $etapa['id']) !== null;
 
-        if (!$resultadoPublicado || $etapa['modo_feedback_avaliador'] === 'nenhum') {
+        if (!$resultadoPublicado) {
             http_response_code(404);
-            exit('Feedback não disponível para esta submissão.');
+            exit('Notas e feedback não disponíveis para esta submissão.');
         }
 
+        $criterios = $this->criterios->listarPorEtapa($etapa['id']);
         $feedbacksPorCriterio = [];
         $feedbacksPorSubmissao = [];
+        $notasPorCriterioEAvaliador = [];
+        $avaliadorOrdinal = [];
 
-        if ($etapa['modo_feedback_avaliador'] === 'criterio') {
-            foreach ($this->notas->listarPorSubmissao($submissaoId) as $nota) {
-                if (empty($nota['feedback'])) {
-                    continue;
-                }
+        $notas = $this->notas->listarPorSubmissao($submissaoId);
+        usort($notas, function ($a, $b) {
+            return ((int) $a['usuario_id']) <=> ((int) $b['usuario_id']);
+        });
 
-                $criterioId = (int) $nota['criterio_avaliacao_id'];
-                if (!isset($feedbacksPorCriterio[$criterioId])) {
-                    $feedbacksPorCriterio[$criterioId] = [];
-                }
+        foreach ($notas as $nota) {
+            $usuarioId = (int) $nota['usuario_id'];
+
+            if (!isset($avaliadorOrdinal[$usuarioId])) {
+                $avaliadorOrdinal[$usuarioId] = count($avaliadorOrdinal) + 1;
+            }
+
+            $criterioId = (int) $nota['criterio_avaliacao_id'];
+            $notasPorCriterioEAvaliador[$criterioId][$avaliadorOrdinal[$usuarioId]] = $nota['nota'];
+
+            if ($etapa['modo_feedback_avaliador'] === 'criterio' && !empty($nota['feedback'])) {
                 $feedbacksPorCriterio[$criterioId][] = $nota['feedback'];
             }
-        } else {
+        }
+
+        if ($etapa['modo_feedback_avaliador'] === 'submissao') {
             foreach ($this->feedbackSubmissao->listarPorSubmissao($submissaoId) as $linha) {
                 $feedbacksPorSubmissao[] = $linha['feedback'];
             }
         }
 
+        // Fase 27 (#2): media por criterio e nota final (NE) reaproveitam
+        // exatamente o calculo oficial de ResultadoEtapaService (o mesmo
+        // usado pra publicar o ranking) - nunca reimplementar a formula aqui,
+        // pra nao correr risco de mostrar um numero diferente do real.
+        $mediaPorCriterioId = $this->resultadoEtapaService->mediaPorCriterioId($submissaoId, $criterios);
+        $formula = $this->formulas->buscarPorEtapa($etapa['id']);
+        $notaFinal = $formula !== null
+            ? $this->resultadoEtapaService->calcularNe($submissaoId, $criterios, $formula['expressao'], $etapa['modo_consolidacao'])
+            : null;
+
         $this->renderizar('participante/feedback', [
             'etapa' => $etapa,
-            'criterios' => $this->criterios->listarPorEtapa($etapa['id']),
+            'criterios' => $criterios,
             'feedbacksPorCriterio' => $feedbacksPorCriterio,
             'feedbacksPorSubmissao' => $feedbacksPorSubmissao,
-        ], 'Feedback — ' . $etapa['nome']);
+            'notasPorCriterioEAvaliador' => $notasPorCriterioEAvaliador,
+            'totalAvaliadores' => count($avaliadorOrdinal),
+            'mediaPorCriterioId' => $mediaPorCriterioId,
+            'notaFinal' => $notaFinal,
+        ], 'Notas e Feedback — ' . $etapa['nome']);
     }
 
     public function meusDados()
@@ -252,10 +298,91 @@ class ParticipanteController extends Controller
         }
 
         $alvo = $this->participantes->buscarPorId($novoLiderId);
+
+        // Fase 27 (correcao de seguranca): sem e-mail, AcessoParticipanteService::
+        // liberarAcesso() nunca criou conta pra esse participante - promove-lo
+        // deixaria a equipe sem ninguem capaz de logar e gerenciar integrantes
+        // (equipeDoLiderAtual() exige papel = 'lider').
+        if (empty($alvo['email'])) {
+            $_SESSION['flash'] = 'Não foi possível promover "' . $alvo['nome'] . '": ele(a) ainda não tem e-mail cadastrado. Inclua o e-mail dele(a) na lista de integrantes antes de promover.';
+            $this->redirecionar('participante/index');
+            return;
+        }
+
         $this->equipes->alterarLider($equipe['id'], $novoLiderId);
 
         $_SESSION['flash'] = 'Liderança da equipe transferida para "' . $alvo['nome'] . '".';
         $this->redirecionar('participante/index');
+    }
+
+    /**
+     * Fase 27 (correcao de seguranca): excecao estreita e auditada a' regra
+     * da Fase 17 ("lider nao edita dados de outro integrante") - o lider
+     * pode APENAS incluir um e-mail hoje vazio, nunca sobrescrever um ja
+     * existente (o campo continua nao sendo livremente editavel). Resolve o
+     * caso em que um integrante foi homologado sem e-mail e por isso nunca
+     * ganhou conta de acesso (AcessoParticipanteService::liberarAcesso()
+     * pula em silencio quando o e-mail esta vazio).
+     */
+    public function incluirEmailIntegrante($participanteId)
+    {
+        $equipe = $this->equipeDoLiderAtual();
+        $participanteId = (int) $participanteId;
+        $vinculoAlvo = $this->equipes->buscarVinculo($equipe['id'], $participanteId);
+
+        if ($vinculoAlvo === null) {
+            http_response_code(404);
+            exit('Integrante não encontrado nesta equipe.');
+        }
+
+        $alvo = $this->participantes->buscarPorId($participanteId);
+
+        if (!empty($alvo['email'])) {
+            $_SESSION['flash'] = 'Este integrante já tem e-mail cadastrado.';
+            $this->redirecionar('participante/index');
+            return;
+        }
+
+        $email = trim(isset($_POST['email']) ? $_POST['email'] : '');
+
+        if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            $_SESSION['flash'] = 'Informe um e-mail válido.';
+            $this->redirecionar('participante/index');
+            return;
+        }
+
+        if ($this->participantes->buscarPorEmail($email) !== null || $this->usuarios->buscarPorEmail($email) !== null) {
+            $_SESSION['flash'] = 'Este e-mail já está em uso por outra conta ou cadastro.';
+            $this->redirecionar('participante/index');
+            return;
+        }
+
+        $this->participantes->atualizarEmail($participanteId, $email);
+        $this->notificarAdminEmailCompleto($equipe, $alvo['nome'], $email);
+
+        $_SESSION['flash'] = 'E-mail de "' . $alvo['nome'] . '" cadastrado. O Admin foi avisado para liberar o acesso dele(a).';
+        $this->redirecionar('participante/index');
+    }
+
+    /**
+     * Fase 27, Parte C: avisa todo administrador do concurso da trilha da
+     * equipe (sino de notificacoes, Fase 12) - o convite em si (criar conta +
+     * enviar link) fica a cargo do Admin, um clique na tela de Homologacao
+     * (HomologacaoController::convidarAcesso()), nunca automatico.
+     */
+    private function notificarAdminEmailCompleto(array $equipe, $nomeIntegrante, $email)
+    {
+        $trilha = $this->trilhas->buscarPorId($equipe['trilha_id']);
+
+        foreach ($this->perfis->listarUsuariosPorPerfilConcurso('administrador', $trilha['concurso_id']) as $admin) {
+            $this->notificacoes->criar(
+                $admin['id'],
+                'participante_email_completo',
+                'Participante com e-mail cadastrado',
+                '"' . $nomeIntegrante . '" (equipe "' . $equipe['nome_equipe'] . '") teve o e-mail ' . $email . ' cadastrado pelo líder. Convide-o para liberar o acesso.',
+                ['url' => url('homologacao/index/' . (int) $equipe['trilha_id'])]
+            );
+        }
     }
 
     /**

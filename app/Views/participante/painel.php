@@ -54,6 +54,9 @@
                 <?php if ($colega['status_homologacao'] === 'rejeitado' && !empty($colega['motivo_rejeicao'])): ?>
                     <br><small><?php echo htmlspecialchars($colega['motivo_rejeicao'], ENT_QUOTES, 'UTF-8'); ?></small>
                 <?php endif; ?>
+                <?php if ($colega['status_homologacao'] === 'homologado' && empty($colega['email'])): ?>
+                    <br><small style="color:#b00;">⚠ Sem e-mail cadastrado — sem acesso ao sistema</small>
+                <?php endif; ?>
             </td>
             <td>
                 <div class="acoes-icones">
@@ -65,7 +68,16 @@
                             </svg>
                         </a>
                     <?php endif; ?>
-                    <?php if ($ehLider && !$ehEuMesmo && $colega['status_homologacao'] === 'homologado'): ?>
+                    <?php if ($ehLider && !$ehEuMesmo && $colega['status_homologacao'] === 'homologado' && empty($colega['email'])): ?>
+                        <form method="post" action="<?php echo url('participante/incluirEmailIntegrante/' . (int) $colega['id']); ?>" style="display:inline-flex; align-items:center; gap:0.3rem;">
+                            <input type="email" name="email" placeholder="e-mail de <?php echo htmlspecialchars($colega['nome'], ENT_QUOTES, 'UTF-8'); ?>" style="display:inline; margin-top:0; width:12rem;" required>
+                            <button type="submit" class="btn-icone" title="Cadastrar e-mail deste integrante">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </button>
+                        </form>
+                    <?php elseif ($ehLider && !$ehEuMesmo && $colega['status_homologacao'] === 'homologado'): ?>
                         <?php $confirmacao = htmlspecialchars(addslashes('Promover ' . $colega['nome'] . ' a líder da equipe? Você deixará de ser o líder.'), ENT_QUOTES, 'UTF-8'); ?>
                         <form method="post" action="<?php echo url('participante/promoverLider/' . (int) $colega['id']); ?>" onsubmit="return confirm('<?php echo $confirmacao; ?>');">
                             <button type="submit" class="btn-icone" title="Promover a líder">
@@ -112,9 +124,9 @@
                 <?php if ($etapa['data_inicio'] === null && $etapa['data_fim'] === null): ?>
                     Período não definido
                 <?php else: ?>
-                    <?php echo htmlspecialchars(formatarData($etapa['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
+                    <?php echo htmlspecialchars(formatarDataHora($etapa['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
                     a
-                    <?php echo htmlspecialchars(formatarData($etapa['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
+                    <?php echo htmlspecialchars(formatarDataHora($etapa['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
                 <?php endif; ?>
             </td>
             <td>
@@ -133,7 +145,7 @@
                             </a>
                         <?php endif; ?>
                         <?php if (!empty($etapa['feedback_disponivel'])): ?>
-                            <a href="<?php echo url('participante/verFeedback/' . (int) $etapa['submissao_id_feedback']); ?>" class="btn-icone" title="Ver feedback">
+                            <a href="<?php echo url('participante/verFeedback/' . (int) $etapa['submissao_id_feedback']); ?>" class="btn-icone" title="Ver notas e feedback">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path>
                                     <circle cx="12" cy="12" r="3"></circle>

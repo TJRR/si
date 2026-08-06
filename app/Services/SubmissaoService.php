@@ -68,23 +68,12 @@ class SubmissaoService
             return ['sucesso' => false, 'mensagem' => 'Este formulário não está disponível no momento.'];
         }
 
-        $hoje = date('Y-m-d');
+        // Fase 27: data_inicio/data_fim agora tem hora (nao so' dia) - compara
+        // o instante completo, nao so' a data.
+        $agora = date('Y-m-d H:i:s');
 
-        if ($etapa['data_inicio'] !== null && $hoje < $etapa['data_inicio']) {
+        if ($etapa['data_inicio'] !== null && $agora < $etapa['data_inicio']) {
             return ['sucesso' => false, 'mensagem' => 'O prazo de submissão ainda não começou.'];
-        }
-
-        if ($etapa['data_fim'] !== null && $hoje > $etapa['data_fim']) {
-            return ['sucesso' => false, 'mensagem' => 'O prazo de submissão já foi encerrado.'];
-        }
-
-        // Fase 23 (Erro grave): resultado ja publicado significa que a
-        // avaliacao desta etapa foi encerrada com base no conteudo enviado -
-        // sem esta trava, a equipe podia editar a submissao depois de
-        // avaliada (dentro da janela de datas), invalidando as notas ja
-        // lancadas pelos avaliadores.
-        if ($this->resultados->jaPublicado($etapa['id'])) {
-            return ['sucesso' => false, 'mensagem' => 'O resultado desta etapa já foi publicado. Não é mais possível enviar ou alterar submissões.'];
         }
 
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
@@ -97,6 +86,43 @@ class SubmissaoService
             $valoresExistentes = isset($dados['campos']) && is_array($dados['campos']) ? $dados['campos'] : [];
         }
 
+        // Fase 27: prazo_final_submissao (quando preenchido) e' o gate real de
+        // edicao do participante, com precisao de minuto - separado de
+        // data_fim, que continua controlando so' o acesso do avaliador
+        // (AvaliacaoController) e da homepage. NULL (etapa ainda nao
+        // configurada) cai no fallback antigo, por data_fim.
+        $prazoEncerrado = $etapa['prazo_final_submissao'] !== null
+            ? $agora > $etapa['prazo_final_submissao']
+            : ($etapa['data_fim'] !== null && $agora > $etapa['data_fim']);
+
+        $somenteLeitura = false;
+        $mensagemSomenteLeitura = null;
+
+        if ($prazoEncerrado) {
+            if ($submissaoExistente === null) {
+                return ['sucesso' => false, 'mensagem' => 'O prazo de submissão já foi encerrado.'];
+            }
+
+            $somenteLeitura = true;
+            $mensagemSomenteLeitura = 'O prazo para envio ou alteração da submissão já foi encerrado. Você pode consultar abaixo o que foi enviado, mas não é mais possível alterá-lo.';
+        }
+
+        // Fase 23 (Erro grave): resultado ja publicado significa que a
+        // avaliacao desta etapa foi encerrada com base no conteudo enviado -
+        // sem esta trava, a equipe podia editar a submissao depois de
+        // avaliada (dentro da janela de datas), invalidando as notas ja
+        // lancadas pelos avaliadores. Fase 27: em vez de bloquear a
+        // visualizacao, so' passa a somente-leitura (quando ha' o que
+        // mostrar) - o participante continua podendo consultar o que enviou.
+        if ($this->resultados->jaPublicado($etapa['id'])) {
+            if ($submissaoExistente === null) {
+                return ['sucesso' => false, 'mensagem' => 'O resultado desta etapa já foi publicado. Não é mais possível enviar submissões.'];
+            }
+
+            $somenteLeitura = true;
+            $mensagemSomenteLeitura = 'O resultado desta etapa já foi publicado. Você pode consultar abaixo o que foi enviado, mas não é mais possível alterá-lo.';
+        }
+
         return [
             'sucesso' => true,
             'etapa' => $etapa,
@@ -106,6 +132,8 @@ class SubmissaoService
             'desafios' => $this->desafios->listarAtivosPorTrilha($trilha['id']),
             'submissaoExistente' => $submissaoExistente,
             'valoresExistentes' => $valoresExistentes,
+            'somenteLeitura' => $somenteLeitura,
+            'mensagemSomenteLeitura' => $mensagemSomenteLeitura,
         ];
     }
 
@@ -115,6 +143,13 @@ class SubmissaoService
 
         if (!$preparo['sucesso']) {
             return $preparo;
+        }
+
+        // Fase 27: preparar() agora deixa VISUALIZAR mesmo depois do prazo/
+        // publicacao (quando ja existe submissao) - mas enviar() continua
+        // proibido nesse caso, so' a leitura fica liberada.
+        if (!empty($preparo['somenteLeitura'])) {
+            return ['sucesso' => false, 'mensagem' => $preparo['mensagemSomenteLeitura']];
         }
 
         $trilhaId = $preparo['trilha']['id'];

@@ -24,7 +24,11 @@
 
 <h1><?php echo htmlspecialchars($preparo['formulario']['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<?php if (!empty($preparo['submissaoExistente'])): ?>
+<?php $somenteLeitura = !empty($preparo['somenteLeitura']); ?>
+
+<?php if ($somenteLeitura): ?>
+    <p style="background:#fff3cd; padding:0.75em; border-radius:4px;"><strong>Somente consulta.</strong> <?php echo htmlspecialchars($preparo['mensagemSomenteLeitura'], ENT_QUOTES, 'UTF-8'); ?></p>
+<?php elseif (!empty($preparo['submissaoExistente'])): ?>
     <p><em>Você já enviou esta submissão — os dados abaixo são os que foram salvos. Alterar e enviar novamente atualiza a submissão existente.</em></p>
 <?php endif; ?>
 
@@ -43,6 +47,7 @@
         $config = $campo['config_json'] !== null ? json_decode($campo['config_json'], true) : [];
         $temErro = isset($erros[$campoId]);
         $valorAtual = isset($preparo['valoresExistentes'][(string) $campoId]) ? $preparo['valoresExistentes'][(string) $campoId] : null;
+        $desabilitadoCampo = $somenteLeitura ? 'disabled' : '';
         ?>
         <fieldset style="margin-bottom:1em;">
             <label>
@@ -50,31 +55,31 @@
                 <?php echo $campo['obrigatorio'] ? '*' : ''; ?>
 
                 <?php if ($campo['tipo'] === 'texto'): ?>
-                    <input type="text" name="campos[<?php echo $campoId; ?>]" value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
+                    <input type="text" name="campos[<?php echo $campoId; ?>]" value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?> <?php echo $desabilitadoCampo; ?>>
 
                 <?php elseif ($campo['tipo'] === 'texto_longo'): ?>
-                    <textarea name="campos[<?php echo $campoId; ?>]" rows="6" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>><?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?></textarea>
+                    <textarea name="campos[<?php echo $campoId; ?>]" rows="6" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?> <?php echo $desabilitadoCampo; ?>><?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?></textarea>
 
                 <?php elseif ($campo['tipo'] === 'numero'): ?>
-                    <input type="number" step="any" name="campos[<?php echo $campoId; ?>]" value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
+                    <input type="number" step="any" name="campos[<?php echo $campoId; ?>]" value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?> <?php echo $desabilitadoCampo; ?>>
 
                 <?php elseif ($campo['tipo'] === 'cpf'): ?>
-                    <input type="text" name="campos[<?php echo $campoId; ?>]" class="campo-cpf-validar" placeholder="000.000.000-00" value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
+                    <input type="text" name="campos[<?php echo $campoId; ?>]" class="campo-cpf-validar" placeholder="000.000.000-00" value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?> <?php echo $desabilitadoCampo; ?>>
 
                 <?php elseif ($campo['tipo'] === 'email'): ?>
-                    <input type="email" name="campos[<?php echo $campoId; ?>]" value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
+                    <input type="email" name="campos[<?php echo $campoId; ?>]" value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?> <?php echo $desabilitadoCampo; ?>>
 
                 <?php elseif ($campo['tipo'] === 'telefone'): ?>
-                    <input type="text" name="campos[<?php echo $campoId; ?>]" placeholder="(00) 00000-0000" value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
+                    <input type="text" name="campos[<?php echo $campoId; ?>]" placeholder="(00) 00000-0000" value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?> <?php echo $desabilitadoCampo; ?>>
 
                 <?php elseif ($campo['tipo'] === 'link_youtube'): ?>
-                    <input type="url" name="campos[<?php echo $campoId; ?>]" placeholder="https://www.youtube.com/watch?v=..." value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
+                    <input type="url" name="campos[<?php echo $campoId; ?>]" placeholder="https://www.youtube.com/watch?v=..." value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?> <?php echo $desabilitadoCampo; ?>>
 
                 <?php elseif ($campo['tipo'] === 'link_externo'): ?>
-                    <input type="url" name="campos[<?php echo $campoId; ?>]" placeholder="https://meu-prototipo.exemplo.com" value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
+                    <input type="url" name="campos[<?php echo $campoId; ?>]" placeholder="https://meu-prototipo.exemplo.com" value="<?php echo htmlspecialchars((string) $valorAtual, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?> <?php echo $desabilitadoCampo; ?>>
 
                 <?php elseif ($campo['tipo'] === 'selecao_tema_desafio'): ?>
-                    <select name="campos[<?php echo $campoId; ?>]" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
+                    <select name="campos[<?php echo $campoId; ?>]" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?> <?php echo $desabilitadoCampo; ?>>
                         <option value="">Selecione...</option>
                         <?php $temaAberto = null; ?>
                         <?php foreach ($preparo['desafios'] as $desafio): ?>
@@ -92,10 +97,12 @@
 
                 <?php elseif ($campo['tipo'] === 'upload_pdf'): ?>
                     <?php if (is_array($valorAtual) && isset($valorAtual['nome_original'])): ?>
-                        <p>Arquivo já enviado: <strong><?php echo htmlspecialchars($valorAtual['nome_original'], ENT_QUOTES, 'UTF-8'); ?></strong> — escolha outro arquivo abaixo só se quiser substituí-lo.</p>
+                        <p>Arquivo já enviado: <strong><?php echo htmlspecialchars($valorAtual['nome_original'], ENT_QUOTES, 'UTF-8'); ?></strong><?php echo $somenteLeitura ? '.' : ' — escolha outro arquivo abaixo só se quiser substituí-lo.'; ?></p>
                     <?php endif; ?>
-                    <input type="file" name="campos[<?php echo $campoId; ?>]" accept="application/pdf" <?php echo ($campo['obrigatorio'] && $valorAtual === null) ? 'required' : ''; ?>>
-                    <br><small>PDF, até 15MB.</small>
+                    <?php if (!$somenteLeitura): ?>
+                        <input type="file" name="campos[<?php echo $campoId; ?>]" accept="application/pdf" <?php echo ($campo['obrigatorio'] && $valorAtual === null) ? 'required' : ''; ?>>
+                        <br><small>PDF, até 15MB.</small>
+                    <?php endif; ?>
 
                 <?php elseif ($campo['tipo'] === 'grupo_participantes'): ?>
                     <?php
@@ -111,7 +118,9 @@
                                 <?php include __DIR__ . '/_grupo_participante_linha.php'; ?>
                             <?php endfor; ?>
                         </div>
-                        <button type="button" class="grupo-participantes-adicionar">+ Adicionar participante</button>
+                        <?php if (!$somenteLeitura): ?>
+                            <button type="button" class="grupo-participantes-adicionar">+ Adicionar participante</button>
+                        <?php endif; ?>
                     </div>
 
                 <?php endif; ?>
@@ -123,7 +132,9 @@
         </fieldset>
     <?php endforeach; ?>
 
-    <button type="submit" class="btn btn-bordered">Enviar</button>
+    <?php if (!$somenteLeitura): ?>
+        <button type="submit" class="btn btn-bordered">Enviar</button>
+    <?php endif; ?>
 </form>
 
 <template id="template-grupo-participante-linha">

@@ -23,11 +23,15 @@
     </label><br>
 
     <label>Data de início:
-        <input type="date" name="data_inicio" value="<?php echo htmlspecialchars($etapa !== null ? (string) $etapa['data_inicio'] : '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $desabilitado; ?>>
+        <input type="datetime-local" name="data_inicio" value="<?php echo htmlspecialchars($etapa !== null && $etapa['data_inicio'] !== null ? str_replace(' ', 'T', substr((string) $etapa['data_inicio'], 0, 16)) : '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $desabilitado; ?>>
+    </label><br>
+
+    <label>Prazo final para submissão:
+        <input type="datetime-local" name="prazo_final_submissao" value="<?php echo htmlspecialchars($etapa !== null && $etapa['prazo_final_submissao'] !== null ? str_replace(' ', 'T', substr((string) $etapa['prazo_final_submissao'], 0, 16)) : '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $desabilitado; ?>>
     </label><br>
 
     <label>Data de fim:
-        <input type="date" name="data_fim" value="<?php echo htmlspecialchars($etapa !== null ? (string) $etapa['data_fim'] : '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $desabilitado; ?>>
+        <input type="datetime-local" name="data_fim" value="<?php echo htmlspecialchars($etapa !== null && $etapa['data_fim'] !== null ? str_replace(' ', 'T', substr((string) $etapa['data_fim'], 0, 16)) : '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $desabilitado; ?>>
     </label><br>
 
     <label>Regra de transição para a próxima etapa:

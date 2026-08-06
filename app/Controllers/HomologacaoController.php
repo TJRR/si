@@ -48,10 +48,23 @@ class HomologacaoController extends Controller
         }
 
         $status = isset($_GET['status']) ? $_GET['status'] : '';
+        $inscricoes = $this->equipes->listarTodosPorTrilha($trilhaId, $status);
+
+        // Fase 27, Parte C: "Convidar acesso" so aparece pra quem ja tem
+        // e-mail (incluido pelo lider via ParticipanteController::
+        // incluirEmailIntegrante(), Fase 27) mas ainda nao tem conta -
+        // liberarAcesso() so roda uma vez, na homologacao, e pula em
+        // silencio quando o e-mail estava vazio naquele momento.
+        foreach ($inscricoes as &$inscricao) {
+            $inscricao['precisa_convite'] = $inscricao['status_homologacao'] === 'homologado'
+                && !empty($inscricao['email'])
+                && empty($this->usuarioParticipante->usuariosDoParticipante($inscricao['participante_id']));
+        }
+        unset($inscricao);
 
         $this->renderizar('admin/homologacao/index', [
             'trilha' => $trilha,
-            'inscricoes' => $this->equipes->listarTodosPorTrilha($trilhaId, $status),
+            'inscricoes' => $inscricoes,
             'statusFiltro' => $status,
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
             'homologacaoPublicada' => $this->homologacaoPublica->jaPublicado($trilhaId),
@@ -102,6 +115,41 @@ class HomologacaoController extends Controller
         $this->rejeitarUmVinculo($vinculoId, $motivo !== '' ? $motivo : null);
         $_SESSION['flash'] = 'Participante rejeitado.';
 
+        $this->redirecionar('homologacao/index/' . $trilhaId);
+    }
+
+    /**
+     * Fase 27, Parte C: convite manual pra quem foi homologado sem e-mail e
+     * so' teve o e-mail incluido depois (pelo lider, via
+     * ParticipanteController::incluirEmailIntegrante()) - liberarAcesso()
+     * so' roda automaticamente uma vez, na homologacao, entao precisa desse
+     * gatilho separado pra criar a conta retroativamente. Um clique do
+     * Admin, nunca automatico.
+     */
+    public function convidarAcesso()
+    {
+        RoleMiddleware::exigir(['administrador']);
+        $participanteId = (int) (isset($_POST['participante_id']) ? $_POST['participante_id'] : 0);
+        $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
+
+        $participante = $this->participantes->buscarPorId($participanteId);
+        $equipe = $this->equipes->buscarPorParticipante($participanteId);
+
+        if ($participante === null || $equipe === null || empty($participante['email'])) {
+            $_SESSION['flash'] = 'Não foi possível convidar: participante ou e-mail não encontrado.';
+            $this->redirecionar('homologacao/index/' . $trilhaId);
+            return;
+        }
+
+        if (!empty($this->usuarioParticipante->usuariosDoParticipante($participanteId))) {
+            $_SESSION['flash'] = 'Este participante já tem acesso ao sistema.';
+            $this->redirecionar('homologacao/index/' . $trilhaId);
+            return;
+        }
+
+        (new AcessoParticipanteService())->liberarAcesso($participante, $trilhaId, $equipe['nome_equipe']);
+
+        $_SESSION['flash'] = 'Convite enviado para "' . $participante['nome'] . '".';
         $this->redirecionar('homologacao/index/' . $trilhaId);
     }
 

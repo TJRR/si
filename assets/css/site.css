@@ -1594,6 +1594,7 @@ body.admin-page label {
 body.admin-page input[type="text"],
 body.admin-page input[type="email"],
 body.admin-page input[type="date"],
+body.admin-page input[type="datetime-local"],
 body.admin-page input[type="number"],
 body.admin-page select,
 body.admin-page textarea {

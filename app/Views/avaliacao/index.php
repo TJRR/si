@@ -27,9 +27,9 @@
                 <?php if ($etapa['data_inicio'] === null && $etapa['data_fim'] === null): ?>
                     Período não definido
                 <?php else: ?>
-                    <?php echo htmlspecialchars(formatarData($etapa['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
+                    <?php echo htmlspecialchars(formatarDataHora($etapa['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
                     a
-                    <?php echo htmlspecialchars(formatarData($etapa['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
+                    <?php echo htmlspecialchars(formatarDataHora($etapa['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
                 <?php endif; ?>
             </td>
             <td><a href="<?php echo url('avaliacao/submissoes/' . (int) $etapa['id']); ?>">Ver submissões</a></td>

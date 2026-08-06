@@ -24,9 +24,15 @@
                 <?php if ($etapa['data_inicio'] === null && $etapa['data_fim'] === null): ?>
                     Período não definido
                 <?php else: ?>
-                    <?php echo htmlspecialchars(formatarData($etapa['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
+                    <?php echo htmlspecialchars(formatarDataHora($etapa['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
                     a
-                    <?php echo htmlspecialchars(formatarData($etapa['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
+                    <?php echo htmlspecialchars(formatarDataHora($etapa['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
+                <?php endif; ?>
+                <br>
+                <?php if ($etapa['prazo_final_submissao'] !== null): ?>
+                    <small>Prazo de submissão: <?php echo htmlspecialchars(formatarDataHora($etapa['prazo_final_submissao']), ENT_QUOTES, 'UTF-8'); ?></small>
+                <?php elseif ($etapa['mecanismo_avaliacao'] === 'avaliadores'): ?>
+                    <small style="color:#b00;">⚠ sem prazo de submissão definido</small>
                 <?php endif; ?>
             </td>
             <td><?php echo $etapa['regra_transicao_tipo'] !== null ? htmlspecialchars($etapa['regra_transicao_tipo'] . ': ' . $etapa['regra_transicao_valor'], ENT_QUOTES, 'UTF-8') : '—'; ?></td>

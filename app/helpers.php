@@ -52,6 +52,16 @@ function formatarData($data)
 }
 
 /**
+ * Mesmo padrao de formatarData(), mas com hora - usado pra prazos DATETIME
+ * (ex.: etapas.prazo_final_submissao, Fase 27) que precisam mostrar a
+ * precisao de minuto, nao so o dia.
+ */
+function formatarDataHora($data)
+{
+    return $data !== null ? date('d/m/Y H:i', strtotime($data)) : '';
+}
+
+/**
  * Fase 24: link_meet (mentoria/oficina) e' texto livre digitado por
  * administrador/suporte e renderizado como href em telas de outros perfis
  * (participante) - sem essa checagem, um "link" tipo "javascript:..."

@@ -99,10 +99,13 @@ class ParticipanteRepository
     }
 
     /**
-     * So' existe para o script de setup de ambiente de teste
-     * (database/definir_email_teste.php) - nao ha' nenhuma tela (nem admin,
-     * nem autoedicao) que altere o e-mail de um participante, de proposito
-     * (e' o identificador do vinculo com a conta de login).
+     * Usada pelo script de setup de ambiente de teste
+     * (database/definir_email_teste.php) e, desde a Fase 27, por
+     * ParticipanteController::incluirEmailIntegrante() - o unico caminho web
+     * que altera e-mail de participante, e mesmo assim so' quando o campo
+     * ainda esta vazio (nunca sobrescreve um e-mail ja cadastrado - ele
+     * continua sendo o identificador do vinculo com a conta de login,
+     * validacao de "so' inclui, nunca edita" fica a cargo de quem chama).
      */
     public function atualizarEmail($id, $email)
     {
@@ -111,7 +114,7 @@ class ParticipanteRepository
         $stmt = $pdo->prepare('UPDATE participantes SET email = :email WHERE id = :id');
         $stmt->execute(['email' => $email, 'id' => $id]);
 
-        Auditoria::registrar('atualizar_email_teste', 'participantes', $id, $antes, ['email' => $email]);
+        Auditoria::registrar('atualizar_email', 'participantes', $id, $antes, ['email' => $email]);
     }
 
     public function atualizarDados($id, $nome, $telefone, $cpf)

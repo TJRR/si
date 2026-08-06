@@ -74,6 +74,10 @@ class EtapaAdminController extends Controller
             if ($dados['nome'] === '') {
                 $erro = 'Informe o nome da etapa.';
             } else {
+                $erro = $this->validarPrazoSubmissao($dados);
+            }
+
+            if ($erro === null) {
                 $this->etapas->criar(
                     $trilhaId,
                     $dados['nome'],
@@ -84,7 +88,8 @@ class EtapaAdminController extends Controller
                     $dados['formulario_dinamico_id'],
                     $dados['regra_transicao_tipo'],
                     $dados['regra_transicao_valor'],
-                    $dados['config_avaliacao']
+                    $dados['config_avaliacao'],
+                    $dados['prazo_final_submissao']
                 );
                 $this->redirecionar('etapas/index/' . $trilhaId);
                 return;
@@ -118,6 +123,10 @@ class EtapaAdminController extends Controller
             if ($dados['nome'] === '') {
                 $erro = 'Informe o nome da etapa.';
             } else {
+                $erro = $this->validarPrazoSubmissao($dados);
+            }
+
+            if ($erro === null) {
                 $this->etapas->atualizar(
                     $id,
                     $dados['nome'],
@@ -128,7 +137,8 @@ class EtapaAdminController extends Controller
                     $dados['formulario_dinamico_id'],
                     $dados['regra_transicao_tipo'],
                     $dados['regra_transicao_valor'],
-                    $dados['config_avaliacao']
+                    $dados['config_avaliacao'],
+                    $dados['prazo_final_submissao']
                 );
                 $etapa = $this->etapas->buscarPorId($id);
             }
@@ -179,6 +189,32 @@ class EtapaAdminController extends Controller
         ], 'Formulário vinculado — ' . $etapa['nome'], ['tipo' => 'formulario_vinculado', 'id' => (int) $etapaId]);
     }
 
+    /**
+     * Fase 27: data_inicio, prazo_final_submissao e data_fim sao todos
+     * datetime-local ("AAAA-MM-DDTHH:MM"), mesmo formato - da' pra comparar
+     * as strings direto. prazo_final_submissao precisa ficar dentro de
+     * [data_inicio, data_fim] quando esses campos existirem - pega erro de
+     * digitacao (ex.: prazo depois do fim da etapa) sem impedir o caso de
+     * uso real (prazo bem antes do fim, que e' o motivo da correcao: data_fim
+     * continua aberta pros avaliadores).
+     */
+    private function validarPrazoSubmissao(array $dados)
+    {
+        if ($dados['prazo_final_submissao'] === '') {
+            return null;
+        }
+
+        if ($dados['data_inicio'] !== '' && $dados['prazo_final_submissao'] < $dados['data_inicio']) {
+            return 'O prazo final de submissão não pode ser anterior à Data de início.';
+        }
+
+        if ($dados['data_fim'] !== '' && $dados['prazo_final_submissao'] > $dados['data_fim']) {
+            return 'O prazo final de submissão não pode ser posterior à Data de fim da etapa.';
+        }
+
+        return null;
+    }
+
     private function lerDadosFormulario()
     {
         return [
@@ -187,6 +223,7 @@ class EtapaAdminController extends Controller
             'ordem' => (int) (isset($_POST['ordem']) ? $_POST['ordem'] : 0),
             'data_inicio' => isset($_POST['data_inicio']) ? $_POST['data_inicio'] : '',
             'data_fim' => isset($_POST['data_fim']) ? $_POST['data_fim'] : '',
+            'prazo_final_submissao' => isset($_POST['prazo_final_submissao']) ? trim($_POST['prazo_final_submissao']) : '',
             'formulario_dinamico_id' => isset($_POST['formulario_dinamico_id']) ? $_POST['formulario_dinamico_id'] : '',
             'regra_transicao_tipo' => isset($_POST['regra_transicao_tipo']) ? $_POST['regra_transicao_tipo'] : '',
             'regra_transicao_valor' => isset($_POST['regra_transicao_valor']) ? str_replace(',', '.', $_POST['regra_transicao_valor']) : '',

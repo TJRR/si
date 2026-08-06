@@ -142,7 +142,30 @@ class ResultadoEtapaService
         return $this->resultados->jaPublicado($etapaId);
     }
 
-    private function calcularNe($submissaoId, array $criterios, $expressao, $modoConsolidacao)
+    /**
+     * Fase 27 (#2): media simples por criterio (chave = criterio_avaliacao_id,
+     * nao o codigo interno da formula) - reaproveita mediaPorCriterio() ja
+     * usada no calculo oficial da NE, pra tela "Notas e Feedback" do
+     * participante mostrar a mesma media que realmente entra na formula, sem
+     * duplicar a logica de consolidacao.
+     */
+    public function mediaPorCriterioId($submissaoId, array $criterios)
+    {
+        $porAvaliador = $this->notasAgrupadasPorAvaliador($submissaoId);
+        $porCodigo = $this->mediaPorCriterio($porAvaliador, $criterios);
+
+        $porCriterioId = [];
+
+        foreach ($criterios as $criterio) {
+            if (isset($porCodigo[$criterio['codigo']])) {
+                $porCriterioId[(int) $criterio['id']] = $porCodigo[$criterio['codigo']];
+            }
+        }
+
+        return $porCriterioId;
+    }
+
+    public function calcularNe($submissaoId, array $criterios, $expressao, $modoConsolidacao)
     {
         $porAvaliador = $this->notasAgrupadasPorAvaliador($submissaoId);
 

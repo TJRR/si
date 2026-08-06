@@ -57,7 +57,9 @@ class AvaliacaoController extends Controller
 
     public function index()
     {
-        $hoje = date('Y-m-d');
+        // Fase 27: data_inicio/data_fim agora tem hora (nao so' dia) - compara
+        // o instante completo, nao so' a data.
+        $agora = date('Y-m-d H:i:s');
         $etapasDisponiveis = [];
 
         foreach ($this->concursos->listar() as $concurso) {
@@ -73,11 +75,11 @@ class AvaliacaoController extends Controller
                         continue;
                     }
 
-                    if ($etapa['data_inicio'] !== null && $hoje < $etapa['data_inicio']) {
+                    if ($etapa['data_inicio'] !== null && $agora < $etapa['data_inicio']) {
                         continue;
                     }
 
-                    if ($etapa['data_fim'] !== null && $hoje > $etapa['data_fim']) {
+                    if ($etapa['data_fim'] !== null && $agora > $etapa['data_fim']) {
                         continue;
                     }
 
