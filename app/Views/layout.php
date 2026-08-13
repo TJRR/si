@@ -46,9 +46,16 @@ if ($ehPainelAdmin) {
     $moduloAtual = $partesRota[0];
     $ehEscopoArvore = in_array($moduloAtual, $modulosArvore, true);
 
-    $abasAdmin = [
-        ['rotulo' => 'Painel', 'url' => 'home/administrativo', 'ativo' => $moduloAtual === 'home'],
-    ];
+    $abasAdmin = [];
+
+    // Fase 29 (ajuste pos-push): "Painel" e "Concursos" ficavam
+    // incondicionais aqui - qualquer perfil que caisse numa tela admin/*
+    // via herdava as duas abas, mesmo sem acesso (ex.: Colaborador, que so'
+    // pode abrir Duvidas). As duas passam a exigir administrador/suporte,
+    // igual as demais abas deste bloco.
+    if (\App\Core\Auth::possuiPerfil('administrador') || \App\Core\Auth::possuiPerfil('suporte')) {
+        $abasAdmin[] = ['rotulo' => 'Painel', 'url' => 'home/administrativo', 'ativo' => $moduloAtual === 'home'];
+    }
 
     if (\App\Core\Auth::possuiPerfil('administrador')) {
         // Fase 18: "Páginas" (ConteudoAdminController, conteudos_site) sai do
@@ -64,7 +71,9 @@ if ($ehPainelAdmin) {
         $abasAdmin[] = ['rotulo' => 'Configurações', 'url' => 'configuracoes/index', 'ativo' => in_array($moduloAtual, $modulosConfiguracao, true)];
     }
 
-    $abasAdmin[] = ['rotulo' => 'Concursos', 'url' => 'concursos/index', 'ativo' => $ehEscopoArvore];
+    if (\App\Core\Auth::possuiPerfil('administrador') || \App\Core\Auth::possuiPerfil('suporte')) {
+        $abasAdmin[] = ['rotulo' => 'Concursos', 'url' => 'concursos/index', 'ativo' => $ehEscopoArvore];
+    }
 
     if (\App\Core\Auth::possuiPerfil('administrador')) {
         $abasAdmin[] = ['rotulo' => 'Usuários', 'url' => 'usuarios/index', 'ativo' => $moduloAtual === 'usuarios'];
@@ -166,7 +175,7 @@ if ($ehPainelAdmin) {
         </div>
       </div>
     </div>
-    <?php if ($ehPainelAdmin): ?>
+    <?php if ($ehPainelAdmin && !empty($abasAdmin)): ?>
     <nav class="admin-tabs">
       <div class="admin-largura-max">
         <?php foreach ($abasAdmin as $aba): ?>

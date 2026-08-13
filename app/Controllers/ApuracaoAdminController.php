@@ -33,7 +33,13 @@ class ApuracaoAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador', 'suporte']);
+        // Fase 29 (ajuste pos-push): exigirEmQualquerConcurso() na entrada
+        // (so' confirma que o usuario tem o perfil em algum lugar) + exigir()
+        // com o concurso resolvido dentro de cada acao (ver index()) - exigir()
+        // sem concurso so' reconhece vinculo GLOBAL, barrando quem for
+        // administrador/suporte de UM concurso especifico mesmo sendo o
+        // perfil certo pra esta trilha.
+        RoleMiddleware::exigirEmQualquerConcurso(['administrador', 'suporte']);
         $this->trilhas = new TrilhaRepository();
         $this->etapas = new EtapaRepository();
         $this->formulas = new FormulaPontuacaoRepository();
@@ -50,6 +56,8 @@ class ApuracaoAdminController extends Controller
             http_response_code(404);
             exit('Trilha não encontrada.');
         }
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilha['concurso_id']);
 
         $formula = $this->formulas->buscarPorTrilha($trilhaId);
         $etapasDaTrilha = $this->etapas->listarPorTrilha($trilhaId);

@@ -36,7 +36,7 @@ if (isset($colunasCronograma["\0eventos"])) {
 <section class="site-section site-section-alt" id="cronograma">
     <div class="site-section-inner">
         <h2 class="section-title">Cronograma</h2>
-        <p class="site-cronograma-fuso">Horários no fuso de Roraima (GMT-4).</p>
+        <p class="site-cronograma-fuso">Horários no fuso de Roraima <?php echo sufixoFusoHorario(); ?>.</p>
         <?php if (empty($cronograma)): ?>
             <p class="section-text">Cronograma em definição.</p>
         <?php else: ?>
@@ -56,6 +56,9 @@ if (isset($colunasCronograma["\0eventos"])) {
                                     a <?php echo htmlspecialchars(formatarData($item['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
                                 <?php endif; ?>
                             </span>
+                            <?php if (!empty($item['prazo_final_submissao']) && $item['prazo_final_submissao'] !== $item['data_fim']): ?>
+                                <span class="timeline-prazo"><strong>Prazo final para submissão: <?php echo htmlspecialchars(formatarDataHora($item['prazo_final_submissao']), ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                            <?php endif; ?>
                             <?php if (!empty($item['descricao'])): ?>
                                 <p class="timeline-descricao"><?php echo htmlspecialchars($item['descricao'], ENT_QUOTES, 'UTF-8'); ?></p>
                             <?php endif; ?>

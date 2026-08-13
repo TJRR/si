@@ -84,6 +84,10 @@ class Auth
             return 'participante/index';
         }
 
+        if (self::possuiPerfil('colaborador')) {
+            return 'duvidaAdmin/minhasEscaladas';
+        }
+
         return 'home/administrativo';
     }
 

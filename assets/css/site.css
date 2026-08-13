@@ -689,6 +689,15 @@ body.admin-page a.btn-icone:focus {
     color: var(--cor-texto-suave);
 }
 
+/* Fase 29 (Bug 2): prazo final de submissao, quando diferente do fim da
+   etapa - precisa se destacar do resto (cor do texto normal), nao so'
+   herdar o cinza discreto de .timeline-datas. */
+.timeline-prazo {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--cor-escura);
+}
+
 .timeline-descricao {
     margin: 0.25rem 0 0;
     color: var(--cor-texto-suave);
@@ -3401,4 +3410,148 @@ body.admin-page button.campo-cor-limpar::after {
 .reordenar-botoes button:disabled {
     opacity: 0.35;
     cursor: default;
+}
+
+/* Fase 29 (Tira-Duvidas): tela de detalhe da duvida - cabecalho compacto,
+   card de mensagem com avatar de iniciais, Responder/Escalar lado a lado
+   (era duas secoes empilhadas em largura total, ocupando tela demais). */
+.duvida-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.duvida-cabecalho h1 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.duvida-responsavel-atual {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+    margin-left: auto;
+}
+
+.duvida-mensagem {
+    display: flex;
+    gap: 0.75rem;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.duvida-avatar {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--cor-primaria-inicio);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    /* Fase 29 (ajuste pos-push): mesma classe serve pra <img> (foto de "Meu
+       perfil") e pra <div> (iniciais, reserva pra quem nunca enviou foto) -
+       object-fit so' tem efeito na variante <img>. */
+    object-fit: cover;
+}
+
+.duvida-mensagem-corpo {
+    flex: 1;
+    min-width: 0;
+}
+
+.duvida-mensagem-meta {
+    font-size: 0.8rem;
+    color: var(--cor-texto-suave);
+    margin: 0.1rem 0 0.5rem;
+}
+
+.duvida-mensagem-texto {
+    margin: 0;
+}
+
+.duvida-anexo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.duvida-acoes-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+@media (max-width: 720px) {
+    .duvida-acoes-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.duvida-acao-card {
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.duvida-acao-card h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 1rem;
+    margin: 0 0 0.75rem;
+}
+
+.duvida-acao-card textarea,
+.duvida-acao-card select {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.duvida-acao-rodape {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+}
+
+.duvida-limite {
+    font-size: 0.78rem;
+    color: var(--cor-texto-suave);
+    margin: 0.5rem 0 0;
+}
+
+.duvida-historico-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+}
+
+.duvida-historico-quando {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--cor-texto-suave);
+    white-space: nowrap;
 }

@@ -15,15 +15,59 @@ if (!defined('SI_BOOT')) {
  * UploadPdfValidador/ImagemService - mas guarda em assets/uploads/arquivos
  * (publico, diferente do storage/ privado usado pelos PDFs de submissao,
  * ja que editais/documentos SAO para acesso publico direto).
+ *
+ * Fase 29 (Tira-Duvidas): passou a aceitar tambem imagem (anexo de duvida
+ * pode ser print de tela) e o limite deixou de ser fixo (15MB) - agora vem
+ * do proprio php.ini (upload_max_filesize/post_max_size), conforme pedido
+ * explicito do requisito. So' pra cima ou igual ao limite fixo anterior nos
+ * usos ja existentes (Documentos/Midia) - sem regressao.
  */
 class ArquivoService
 {
-    private const TAMANHO_MAXIMO = 15 * 1024 * 1024;
-
     private const TIPOS_PERMITIDOS = [
         'application/pdf' => 'pdf',
         'video/mp4' => 'mp4',
+        'image/webp' => 'webp',
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
     ];
+
+    /**
+     * Menor entre upload_max_filesize e post_max_size do php.ini em vigor -
+     * e' o limite real que o PHP aplica antes mesmo do codigo rodar, entao
+     * nao adianta validar so' um dos dois.
+     */
+    public static function limiteMaximoBytes()
+    {
+        return min(
+            self::converterParaBytes(ini_get('upload_max_filesize')),
+            self::converterParaBytes(ini_get('post_max_size'))
+        );
+    }
+
+    public static function limiteMaximoMB()
+    {
+        return round(self::limiteMaximoBytes() / 1024 / 1024, 1);
+    }
+
+    private static function converterParaBytes($valorIni)
+    {
+        $valorIni = trim((string) $valorIni);
+        $numero = (int) $valorIni;
+
+        switch (strtolower(substr($valorIni, -1))) {
+            case 'g':
+                $numero *= 1024;
+                // sem break: G tambem passa por M e K
+            case 'm':
+                $numero *= 1024;
+                // sem break: M tambem passa por K
+            case 'k':
+                $numero *= 1024;
+        }
+
+        return $numero;
+    }
 
     public function salvar(array $arquivo, $pasta)
     {
@@ -35,15 +79,15 @@ class ArquivoService
             throw new \RuntimeException('Upload inválido.');
         }
 
-        if ($arquivo['size'] > self::TAMANHO_MAXIMO) {
-            throw new \RuntimeException('Arquivo maior que o limite de 15MB.');
+        if ($arquivo['size'] > self::limiteMaximoBytes()) {
+            throw new \RuntimeException('Arquivo maior que o limite de ' . self::limiteMaximoMB() . 'MB.');
         }
 
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
         $mime = $finfo->file($arquivo['tmp_name']);
 
         if (!isset(self::TIPOS_PERMITIDOS[$mime])) {
-            throw new \RuntimeException('Formato de arquivo não suportado (use PDF ou MP4).');
+            throw new \RuntimeException('Formato de arquivo não suportado (use PDF, imagem ou MP4).');
         }
 
         $pastaBase = __DIR__ . '/../../assets/uploads/arquivos';

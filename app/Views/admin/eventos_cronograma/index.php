@@ -15,12 +15,12 @@
 <?php else: ?>
     <div class="tabela-scroll">
         <table>
-            <tr><th>Título</th><th>Início</th><th>Fim</th><th>Etapa vinculada</th><th>Ações</th></tr>
+            <tr><th>Título</th><th>Início</th><th>Fim <?php echo sufixoFusoHorario(); ?></th><th>Etapa vinculada</th><th>Ações</th></tr>
             <?php foreach ($eventos as $evento): ?>
             <tr>
                 <td><?php echo htmlspecialchars($evento['titulo'], ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($evento['data_inicio'])), ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?php echo $evento['data_fim'] ? htmlspecialchars(date('d/m/Y H:i', strtotime($evento['data_fim'])), ENT_QUOTES, 'UTF-8') : '—'; ?></td>
+                <td><?php echo htmlspecialchars(formatarDataHora($evento['data_inicio']), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?php echo $evento['data_fim'] ? htmlspecialchars(formatarDataHora($evento['data_fim']), ENT_QUOTES, 'UTF-8') : '—'; ?></td>
                 <td><?php echo $evento['etapa_id'] !== null ? 'Sim' : '—'; ?></td>
                 <td>
                     <div class="acoes-icones">

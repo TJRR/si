@@ -38,7 +38,17 @@ class DesignacaoAdminController extends Controller
         // acoes que alteram designacao (atribuir/remover/distribuir) travam
         // individualmente com RoleMiddleware::exigir(['administrador'])
         // dentro do proprio metodo, mesmo padrao de EtapaAdminController.
-        RoleMiddleware::exigir(['administrador', 'suporte']);
+        //
+        // Fase 29 (ajuste pos-push): exigirEmQualquerConcurso() aqui (nao
+        // exigir()) + exigir() com o concurso resolvido dentro de cada
+        // acao - exigir() sem concurso so' reconhece vinculo GLOBAL. Nos
+        // metodos que recebem submissao_id/usuario_id/etapa_id do POST, o
+        // concurso usado na checagem vem SEMPRE do registro buscado no
+        // banco (nunca do etapa_id cru do POST, que so' serve pro
+        // redirect) - senao um administrador/suporte escopado a outro
+        // concurso poderia forjar o etapa_id certo pra passar na checagem
+        // mesmo agindo sobre submissao de fora do escopo dele.
+        RoleMiddleware::exigirEmQualquerConcurso(['administrador', 'suporte']);
         $this->designacoes = new AvaliadorDesignacaoRepository();
         $this->etapas = new EtapaRepository();
         $this->trilhas = new TrilhaRepository();
@@ -60,6 +70,8 @@ class DesignacaoAdminController extends Controller
         }
 
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilha['concurso_id']);
+
         $avaliadores = $this->perfis->listarUsuariosPorPerfilConcurso('avaliador', $trilha['concurso_id']);
 
         $filtroAvaliador = isset($_GET['filtro_avaliador']) ? $_GET['filtro_avaliador'] : '';
@@ -125,10 +137,24 @@ class DesignacaoAdminController extends Controller
 
     public function atribuir()
     {
-        RoleMiddleware::exigir(['administrador']);
         $submissaoId = (int) (isset($_POST['submissao_id']) ? $_POST['submissao_id'] : 0);
         $usuarioId = (int) (isset($_POST['usuario_id']) ? $_POST['usuario_id'] : 0);
         $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
+
+        // Fase 29 (ajuste pos-push): $etapaId do POST antes so' servia pro
+        // redirect, nunca era conferido contra a submissao de verdade -
+        // agora tambem e' a base da checagem de concurso, entao precisa
+        // bater com a etapa real da submissao.
+        $submissao = $this->submissoes->buscarPorId($submissaoId);
+
+        if ($submissao === null || (int) $submissao['etapa_id'] !== $etapaId) {
+            http_response_code(404);
+            exit('Submissão não encontrada nesta etapa.');
+        }
+
+        $etapa = $this->etapas->buscarPorId($etapaId);
+        $trilha = $etapa !== null ? $this->trilhas->buscarPorId($etapa['trilha_id']) : null;
+        RoleMiddleware::exigir(['administrador'], $trilha !== null ? $trilha['concurso_id'] : null);
 
         if (!$this->designacoes->existeDesignacao($submissaoId, $usuarioId)) {
             $this->designacoes->criar($submissaoId, $usuarioId, Auth::usuarioId());
@@ -139,21 +165,36 @@ class DesignacaoAdminController extends Controller
 
     public function atribuirEmMassa()
     {
-        RoleMiddleware::exigir(['administrador']);
         $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
         $usuarioId = (int) (isset($_POST['usuario_id']) ? $_POST['usuario_id'] : 0);
         $submissaoIds = isset($_POST['submissao_ids']) && is_array($_POST['submissao_ids']) ? $_POST['submissao_ids'] : [];
 
+        $etapa = $this->etapas->buscarPorId($etapaId);
+        $trilha = $etapa !== null ? $this->trilhas->buscarPorId($etapa['trilha_id']) : null;
+        RoleMiddleware::exigir(['administrador'], $trilha !== null ? $trilha['concurso_id'] : null);
+
         if ($usuarioId > 0) {
+            $totalAtribuido = 0;
+
             foreach ($submissaoIds as $submissaoId) {
                 $submissaoId = (int) $submissaoId;
+                $submissao = $this->submissoes->buscarPorId($submissaoId);
+
+                // Fase 29 (ajuste pos-push): so' atribui submissao que
+                // realmente pertence a esta etapa - submissao_ids vem do
+                // POST, nao confiavel por si so'.
+                if ($submissao === null || (int) $submissao['etapa_id'] !== $etapaId) {
+                    continue;
+                }
 
                 if (!$this->designacoes->existeDesignacao($submissaoId, $usuarioId)) {
                     $this->designacoes->criar($submissaoId, $usuarioId, Auth::usuarioId());
                 }
+
+                $totalAtribuido++;
             }
 
-            $_SESSION['flash'] = count($submissaoIds) . ' submissão(ões) atribuída(s) ao avaliador selecionado.';
+            $_SESSION['flash'] = $totalAtribuido . ' submissão(ões) atribuída(s) ao avaliador selecionado.';
         }
 
         $this->redirecionar('designacoes/index/' . $etapaId);
@@ -167,7 +208,6 @@ class DesignacaoAdminController extends Controller
      */
     public function remover()
     {
-        RoleMiddleware::exigir(['administrador']);
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
 
@@ -178,6 +218,14 @@ class DesignacaoAdminController extends Controller
             $this->redirecionar('designacoes/index/' . $etapaId);
             return;
         }
+
+        // Fase 29 (ajuste pos-push): concurso resolvido a partir da
+        // designacao de verdade (submissao -> etapa -> trilha), nao do
+        // etapa_id cru do POST.
+        $submissaoDaDesignacao = $this->submissoes->buscarPorId($designacao['submissao_id']);
+        $etapaDaDesignacao = $submissaoDaDesignacao !== null ? $this->etapas->buscarPorId($submissaoDaDesignacao['etapa_id']) : null;
+        $trilhaDaDesignacao = $etapaDaDesignacao !== null ? $this->trilhas->buscarPorId($etapaDaDesignacao['trilha_id']) : null;
+        RoleMiddleware::exigir(['administrador'], $trilhaDaDesignacao !== null ? $trilhaDaDesignacao['concurso_id'] : null);
 
         if ($designacao['origem'] === 'sorteio') {
             $_SESSION['flash'] = 'Designações de sorteio não podem ser removidas — a distribuição já foi aceita.';
@@ -210,6 +258,7 @@ class DesignacaoAdminController extends Controller
         }
 
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilha['concurso_id']);
 
         $this->renderizar('admin/designacoes/progresso', [
             'etapa' => $etapa,
@@ -220,7 +269,6 @@ class DesignacaoAdminController extends Controller
 
     public function distribuir($etapaId)
     {
-        RoleMiddleware::exigir(['administrador']);
         $etapa = $this->etapas->buscarPorId($etapaId);
 
         if ($etapa === null) {
@@ -229,6 +277,7 @@ class DesignacaoAdminController extends Controller
         }
 
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
+        RoleMiddleware::exigir(['administrador'], $trilha['concurso_id']);
 
         if ($etapa['modo_designacao'] === 'sorteio_categoria') {
             $vagas = $this->etapaCategorias->listarPorEtapa($etapaId);
@@ -279,7 +328,6 @@ class DesignacaoAdminController extends Controller
 
     public function distribuirComSelecao()
     {
-        RoleMiddleware::exigir(['administrador']);
         $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
         $avaliadorIds = isset($_POST['avaliador_id']) && is_array($_POST['avaliador_id'])
             ? array_map('intval', $_POST['avaliador_id'])
@@ -293,6 +341,7 @@ class DesignacaoAdminController extends Controller
         }
 
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
+        RoleMiddleware::exigir(['administrador'], $trilha['concurso_id']);
 
         try {
             $linhas = $this->servico->calcularDistribuicaoPorCategoria($etapaId, $avaliadorIds);
@@ -317,10 +366,13 @@ class DesignacaoAdminController extends Controller
 
     public function confirmarDistribuicao()
     {
-        RoleMiddleware::exigir(['administrador']);
         $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
         $submissaoIds = isset($_POST['submissao_id']) && is_array($_POST['submissao_id']) ? $_POST['submissao_id'] : [];
         $usuarioIds = isset($_POST['usuario_id']) && is_array($_POST['usuario_id']) ? $_POST['usuario_id'] : [];
+
+        $etapa = $this->etapas->buscarPorId($etapaId);
+        $trilha = $etapa !== null ? $this->trilhas->buscarPorId($etapa['trilha_id']) : null;
+        RoleMiddleware::exigir(['administrador'], $trilha !== null ? $trilha['concurso_id'] : null);
 
         $atribuicoes = [];
         foreach ($submissaoIds as $indice => $submissaoId) {
@@ -332,7 +384,6 @@ class DesignacaoAdminController extends Controller
         // Fase 17 (Bug 3): so' a distribuicao por sorteio de categoria fica
         // travada contra remocao - a "automatica balanceada" nao foi pedida
         // pelo usuario pra travar.
-        $etapa = $this->etapas->buscarPorId($etapaId);
         $origem = ($etapa !== null && $etapa['modo_designacao'] === 'sorteio_categoria') ? 'sorteio' : 'manual';
 
         $total = $this->servico->confirmarDistribuicao($etapaId, $atribuicoes, Auth::usuarioId(), $origem);

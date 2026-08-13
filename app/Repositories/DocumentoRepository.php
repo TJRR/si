@@ -23,6 +23,10 @@ class DocumentoRepository
 {
     public const TIPOS = ['edital', 'edital_simples', 'anexo', 'retificacao', 'resultado_final', 'ata'];
 
+    /**
+     * Uso administrativo (tela de Documentos) - traz publicados e
+     * despublicados, pra quem gerencia poder ver e reverter a qualquer um.
+     */
     public function listarAtivosPorConcurso($concursoId)
     {
         $pdo = Database::conexao();
@@ -31,7 +35,27 @@ class DocumentoRepository
              FROM documentos d
              LEFT JOIN usuarios u ON u.id = d.criado_por
              WHERE d.concurso_id = :concurso_id AND d.ativo = 1
-             ORDER BY d.tipo ASC, d.titulo ASC'
+             ORDER BY d.ordem ASC, d.tipo ASC, d.titulo ASC'
+        );
+        $stmt->execute(['concurso_id' => $concursoId]);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Fase 29 (Bug 3): uso publico (home) - so' os que o Admin decidiu
+     * manter visiveis. Mesma ordem definida no drag-and-drop da tela
+     * administrativa.
+     */
+    public function listarPublicadosPorConcurso($concursoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT d.*, u.nome AS criado_por_nome
+             FROM documentos d
+             LEFT JOIN usuarios u ON u.id = d.criado_por
+             WHERE d.concurso_id = :concurso_id AND d.ativo = 1 AND d.publicado = 1
+             ORDER BY d.ordem ASC, d.tipo ASC, d.titulo ASC'
         );
         $stmt->execute(['concurso_id' => $concursoId]);
 
@@ -91,6 +115,22 @@ class DocumentoRepository
                 $pdo->prepare('UPDATE documentos SET ativo = 0 WHERE id = :id')->execute(['id' => $versaoAtiva['id']]);
             }
 
+            // Fase 29 (Bug 3): uma nova versao do MESMO documento herda
+            // ordem/publicado da versao anterior - senao subir uma
+            // retificacao republicaria e jogaria pro fim da lista um
+            // documento que o Admin tinha despublicado/reposicionado de
+            // proposito. So' documento realmente novo (grupo inedito) entra
+            // publicado, no fim da lista.
+            if ($versaoAtiva !== null) {
+                $ordem = (int) $versaoAtiva['ordem'];
+                $publicado = (int) $versaoAtiva['publicado'];
+            } else {
+                $ordemMaxima = $pdo->prepare('SELECT MAX(ordem) FROM documentos WHERE concurso_id = :concurso_id');
+                $ordemMaxima->execute(['concurso_id' => $concursoId]);
+                $ordem = ((int) $ordemMaxima->fetchColumn()) + 1;
+                $publicado = 1;
+            }
+
             $dados = [
                 'concurso_id' => $concursoId,
                 'trilha_id' => $trilhaId,
@@ -100,12 +140,14 @@ class DocumentoRepository
                 'grupo_documento' => $grupo,
                 'versao' => $novaVersao,
                 'ativo' => 1,
+                'ordem' => $ordem,
+                'publicado' => $publicado,
                 'criado_por' => $criadoPor,
             ];
 
             $stmt = $pdo->prepare(
-                'INSERT INTO documentos (concurso_id, trilha_id, tipo, titulo, arquivo_path, grupo_documento, versao, ativo, criado_por)
-                 VALUES (:concurso_id, :trilha_id, :tipo, :titulo, :arquivo_path, :grupo_documento, :versao, :ativo, :criado_por)'
+                'INSERT INTO documentos (concurso_id, trilha_id, tipo, titulo, arquivo_path, grupo_documento, versao, ativo, ordem, publicado, criado_por)
+                 VALUES (:concurso_id, :trilha_id, :tipo, :titulo, :arquivo_path, :grupo_documento, :versao, :ativo, :ordem, :publicado, :criado_por)'
             );
             $stmt->execute($dados);
             $id = (int) $pdo->lastInsertId();
@@ -150,6 +192,52 @@ class DocumentoRepository
         $stmt->execute($depois + ['id' => $id]);
 
         Auditoria::registrar('atualizar_metadados', 'documentos', $id, $antes, $depois);
+    }
+
+    /**
+     * Fase 29 (Bug 3): tira o documento da home sem apagar o arquivo nem o
+     * historico - alternativa a removerGrupo() pra quando o motivo e' so'
+     * "nao mostrar mais por enquanto", nao "foi cadastrado por engano".
+     */
+    public function despublicar($id)
+    {
+        $pdo = Database::conexao();
+        $pdo->prepare('UPDATE documentos SET publicado = 0 WHERE id = :id')->execute(['id' => $id]);
+
+        Auditoria::registrar('despublicar', 'documentos', $id, null, ['publicado' => 0]);
+    }
+
+    public function republicar($id)
+    {
+        $pdo = Database::conexao();
+        $pdo->prepare('UPDATE documentos SET publicado = 1 WHERE id = :id')->execute(['id' => $id]);
+
+        Auditoria::registrar('republicar', 'documentos', $id, null, ['publicado' => 1]);
+    }
+
+    /**
+     * Fase 29 (Bug 3): ordem manual via drag-and-drop na tela de Documentos,
+     * refletida na home - mesmo padrao ja usado em SlideRepository/
+     * PremioRepository etc. (assets/js/reordenar-arrastar.js).
+     */
+    public function reordenar(array $ids)
+    {
+        $pdo = Database::conexao();
+        $pdo->beginTransaction();
+
+        try {
+            $stmt = $pdo->prepare('UPDATE documentos SET ordem = :ordem WHERE id = :id');
+
+            foreach ($ids as $indice => $id) {
+                $stmt->execute(['ordem' => $indice, 'id' => (int) $id]);
+            }
+
+            $pdo->commit();
+            Auditoria::registrar('reordenar', 'documentos', null, null, ['ids' => $ids]);
+        } catch (\Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 
     /**

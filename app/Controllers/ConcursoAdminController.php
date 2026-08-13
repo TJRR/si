@@ -17,7 +17,14 @@ class ConcursoAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador', 'suporte']);
+        // Fase 29 (ajuste pos-push): exigirEmQualquerConcurso() na entrada +
+        // exigir() com o concurso resolvido dentro de editar()/remover() -
+        // exigir() sem concurso so' reconhece vinculo GLOBAL. index() fica
+        // sem filtro por concurso de proposito (e' uma listagem geral, mesmo
+        // padrao ja usado no dashboard administrativo) - quem for escopado
+        // consegue ver o nome de concursos de fora do escopo dele na lista,
+        // mas nao consegue abrir/editar/remover nenhum deles.
+        RoleMiddleware::exigirEmQualquerConcurso(['administrador', 'suporte']);
         $this->concursos = new ConcursoRepository();
     }
 
@@ -29,6 +36,10 @@ class ConcursoAdminController extends Controller
 
     public function novo()
     {
+        // Criar concurso NOVO fica exclusivo de administrador GLOBAL de
+        // proposito (nao exigirEmQualquerConcurso) - um administrador
+        // escopado a um concurso existente nao tem autoridade pra criar
+        // outro concurso do zero, que ele ainda nao esta' escopado a nada.
         RoleMiddleware::exigir(['administrador']);
         $erro = null;
 
@@ -63,10 +74,12 @@ class ConcursoAdminController extends Controller
             exit('Concurso não encontrado.');
         }
 
+        RoleMiddleware::exigir(['administrador', 'suporte'], $concurso['id']);
+
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            RoleMiddleware::exigir(['administrador']);
+            RoleMiddleware::exigir(['administrador'], $concurso['id']);
             $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
             $descricao = trim(isset($_POST['descricao']) ? $_POST['descricao'] : '');
             $dataInicio = isset($_POST['data_inicio']) ? $_POST['data_inicio'] : '';
@@ -89,8 +102,15 @@ class ConcursoAdminController extends Controller
 
     public function remover()
     {
-        RoleMiddleware::exigir(['administrador']);
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $concurso = $this->concursos->buscarPorId($id);
+
+        if ($concurso === null) {
+            http_response_code(404);
+            exit('Concurso não encontrado.');
+        }
+
+        RoleMiddleware::exigir(['administrador'], $concurso['id']);
 
         try {
             $this->concursos->remover($id);

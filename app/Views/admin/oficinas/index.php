@@ -19,12 +19,12 @@
 <?php else: ?>
     <div class="tabela-scroll">
         <table>
-            <tr><th>Tema</th><th>Início</th><th>Fim</th><th>Meet</th><th>Observação</th><th>Inscritas</th><th>Criado por</th><th>Ações</th></tr>
+            <tr><th>Tema</th><th>Início</th><th>Fim <?php echo sufixoFusoHorario(); ?></th><th>Meet</th><th>Observação</th><th>Inscritas</th><th>Criado por</th><th>Ações</th></tr>
             <?php foreach ($horarios as $horario): ?>
             <tr>
                 <td><?php echo htmlspecialchars($horario['tema'], ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?php echo date('d/m/Y H:i', strtotime($horario['data_inicio'])); ?></td>
-                <td><?php echo date('d/m/Y H:i', strtotime($horario['data_fim'])); ?></td>
+                <td><?php echo htmlspecialchars(formatarDataHora($horario['data_inicio']), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?php echo htmlspecialchars(formatarDataHora($horario['data_fim']), ENT_QUOTES, 'UTF-8'); ?></td>
                 <td>
                     <?php if (linkHttpValido($horario['link_meet'])): ?>
                         <a href="<?php echo htmlspecialchars($horario['link_meet'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">Abrir</a>
@@ -33,7 +33,16 @@
                     <?php endif; ?>
                 </td>
                 <td><?php echo htmlspecialchars((string) $horario['observacao'], ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><span class="status-pill verde"><?php echo (int) $horario['total_inscritos']; ?></span></td>
+                <td>
+                    <?php if ((int) $horario['total_inscritos'] > 0): ?>
+                        <a href="<?php echo url('oficinaAdmin/inscritos/' . (int) $horario['id']); ?>"
+                           onclick="abrirModalUrl('Equipes inscritas', this.href); return false;" title="Ver equipes inscritas">
+                            <span class="status-pill verde"><?php echo (int) $horario['total_inscritos']; ?></span>
+                        </a>
+                    <?php else: ?>
+                        <span class="status-pill"><?php echo (int) $horario['total_inscritos']; ?></span>
+                    <?php endif; ?>
+                </td>
                 <td><?php echo htmlspecialchars($horario['criado_por_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
                 <td>
                     <?php if ((int) $horario['criado_por'] === (int) \App\Core\Auth::usuarioId() || \App\Core\Auth::possuiPerfil('administrador')): ?>

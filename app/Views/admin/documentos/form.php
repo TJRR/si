@@ -32,7 +32,7 @@
     </label><br>
     <p style="color:var(--cor-texto-suave);font-size:.85rem;">Se já existir um documento com o mesmo tipo + título, este upload vira uma nova versão dele automaticamente.</p>
 
-    <label>Arquivo (PDF, até 15MB):
+    <label>Arquivo (PDF, até <?php echo \App\Services\ArquivoService::limiteMaximoMB(); ?>MB):
         <input type="file" name="arquivo" accept="application/pdf" required>
     </label>
 

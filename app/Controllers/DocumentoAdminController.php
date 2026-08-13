@@ -125,6 +125,49 @@ class DocumentoAdminController extends Controller
         ], 'Histórico de versões', ['tipo' => 'documentos', 'id' => (int) $concursoId]);
     }
 
+    public function despublicar()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $documento = $this->documentos->buscarPorId($id);
+
+        if ($documento === null) {
+            http_response_code(404);
+            exit('Documento não encontrado.');
+        }
+
+        $this->documentos->despublicar($id);
+
+        $_SESSION['flash'] = 'Documento despublicado - não aparece mais na home, mas continua salvo e acessível aqui.';
+        $this->redirecionar('documentos/index/' . $documento['concurso_id']);
+    }
+
+    public function republicar()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $documento = $this->documentos->buscarPorId($id);
+
+        if ($documento === null) {
+            http_response_code(404);
+            exit('Documento não encontrado.');
+        }
+
+        $this->documentos->republicar($id);
+
+        $_SESSION['flash'] = 'Documento republicado.';
+        $this->redirecionar('documentos/index/' . $documento['concurso_id']);
+    }
+
+    public function reordenar()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        $corpo = json_decode((string) file_get_contents('php://input'), true);
+        $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
+
+        $this->documentos->reordenar($ids);
+
+        echo json_encode(['ok' => true]);
+    }
+
     public function removerGrupo()
     {
         $concursoId = (int) (isset($_POST['concurso_id']) ? $_POST['concurso_id'] : 0);

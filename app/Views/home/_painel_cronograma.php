@@ -14,6 +14,9 @@
         <button type="button" class="site-painel-fechar" data-fechar-painel aria-label="Fechar">×</button>
     </div>
     <div class="site-painel-corpo">
+        <?php if (!empty($cronograma)): ?>
+            <p class="site-cronograma-fuso">Horários no fuso de Roraima <?php echo sufixoFusoHorario(); ?>.</p>
+        <?php endif; ?>
         <?php if (empty($cronograma)): ?>
             <p>Cronograma em definição.</p>
         <?php else: ?>
@@ -23,6 +26,9 @@
                     <?php echo htmlspecialchars(formatarData($item['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
                     <?php if ($item['data_fim']): ?>
                         a <?php echo htmlspecialchars(formatarData($item['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
+                    <?php endif; ?>
+                    <?php if (!empty($item['prazo_final_submissao']) && $item['prazo_final_submissao'] !== $item['data_fim']): ?>
+                        <br><strong>Prazo final para submissão: <?php echo htmlspecialchars(formatarDataHora($item['prazo_final_submissao']), ENT_QUOTES, 'UTF-8'); ?></strong>
                     <?php endif; ?>
                     <?php if (!empty($item['descricao'])): ?>
                         <br><?php echo nl2br(htmlspecialchars($item['descricao'], ENT_QUOTES, 'UTF-8')); ?>

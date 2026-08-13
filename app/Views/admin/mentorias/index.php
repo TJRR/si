@@ -19,12 +19,12 @@
 <?php else: ?>
     <div class="tabela-scroll">
         <table>
-            <tr><th>Mentor</th><th>Início</th><th>Fim</th><th>Meet</th><th>Observação</th><th>Status</th><th>Ações</th></tr>
+            <tr><th>Mentor</th><th>Início</th><th>Fim <?php echo sufixoFusoHorario(); ?></th><th>Meet</th><th>Observação</th><th>Status</th><th>Ações</th></tr>
             <?php foreach ($horarios as $horario): ?>
             <tr>
                 <td><?php echo htmlspecialchars($horario['mentor_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?php echo date('d/m/Y H:i', strtotime($horario['data_inicio'])); ?></td>
-                <td><?php echo date('d/m/Y H:i', strtotime($horario['data_fim'])); ?></td>
+                <td><?php echo htmlspecialchars(formatarDataHora($horario['data_inicio']), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?php echo htmlspecialchars(formatarDataHora($horario['data_fim']), ENT_QUOTES, 'UTF-8'); ?></td>
                 <td>
                     <?php if (linkHttpValido($horario['link_meet'])): ?>
                         <a href="<?php echo htmlspecialchars($horario['link_meet'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">Abrir</a>

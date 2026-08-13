@@ -109,4 +109,30 @@ class PerfilRepository
 
         return $stmt->fetchAll();
     }
+
+    /**
+     * Fase 29 (Tira-Duvidas): inverso de listarUsuariosPorPerfilConcurso() -
+     * a que concurso(s) este usuario tem acesso, num dado perfil. Retorna
+     * null quando o usuario tem vinculo GLOBAL (concurso_id NULL) - nesse
+     * caso quem chamar deve tratar como "sem filtro, ve tudo"; caso
+     * contrario devolve a lista de concurso_id escopados.
+     */
+    public function concursosDoUsuario($usuarioId, $perfilChave)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT upc.concurso_id
+             FROM usuario_perfil_concurso upc
+             INNER JOIN perfis p ON p.id = upc.perfil_id
+             WHERE upc.usuario_id = :usuario_id AND p.chave = :chave'
+        );
+        $stmt->execute(['usuario_id' => $usuarioId, 'chave' => $perfilChave]);
+        $concursoIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+        if (in_array(null, $concursoIds, true)) {
+            return null;
+        }
+
+        return array_map('intval', $concursoIds);
+    }
 }

@@ -303,7 +303,7 @@ class ResultadoAdminController extends Controller
             'ranking' => $ranking,
             'submissoesDetalhe' => $submissoesDetalhe,
             'letrasColunas' => $letrasColunas,
-            'geradoEm' => date('d/m/Y H:i'),
+            'geradoEm' => date('d/m/Y H:i') . ' ' . sufixoFusoHorario(),
         ]);
 
         ini_set('memory_limit', '256M');
@@ -380,7 +380,7 @@ class ResultadoAdminController extends Controller
             'ranking' => $ranking,
             'avaliadores' => $avaliadores,
             'notaPorSubmissaoUsuarioCriterio' => $notaPorSubmissaoUsuarioCriterio,
-            'geradoEm' => date('d/m/Y H:i'),
+            'geradoEm' => date('d/m/Y H:i') . ' ' . sufixoFusoHorario(),
         ]);
 
         ini_set('memory_limit', '256M');

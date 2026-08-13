@@ -100,7 +100,7 @@ $urlExportar = url('auditoria/exportarCsv') . '&' . http_build_query($paramsComp
     <div class="tabela-scroll">
         <table>
             <tr>
-                <th><?php echo auditoria_link_ordenar('Horário', 'criado_em', $ordenar, $direcao, $paramsFiltro); ?></th>
+                <th><?php echo auditoria_link_ordenar('Horário ' . sufixoFusoHorario(), 'criado_em', $ordenar, $direcao, $paramsFiltro); ?></th>
                 <th><?php echo auditoria_link_ordenar('Usuário', 'usuario_nome', $ordenar, $direcao, $paramsFiltro); ?></th>
                 <th><?php echo auditoria_link_ordenar('Ação', 'acao', $ordenar, $direcao, $paramsFiltro); ?></th>
                 <th><?php echo auditoria_link_ordenar('Entidade', 'entidade', $ordenar, $direcao, $paramsFiltro); ?></th>

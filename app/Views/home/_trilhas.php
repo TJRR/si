@@ -7,6 +7,7 @@
     <?php if (empty($trilhasAtivas)): ?>
         <p class="section-text">Trilhas em definição.</p>
     <?php else: ?>
+        <p class="site-cronograma-fuso">Horários no fuso de Roraima <?php echo sufixoFusoHorario(); ?>.</p>
         <div class="site-trilhas-grid">
             <?php foreach ($trilhasAtivas as $trilha): ?>
             <?php
@@ -49,6 +50,9 @@
                                         <?php echo htmlspecialchars(formatarData($etapaItem['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
                                         <?php if ($etapaItem['data_fim']): ?>
                                             a <?php echo htmlspecialchars(formatarData($etapaItem['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php endif; ?>
+                                        <?php if (!empty($etapaItem['prazo_final_submissao']) && $etapaItem['prazo_final_submissao'] !== $etapaItem['data_fim']): ?>
+                                            <br><strong>Prazo final para submissão: <?php echo htmlspecialchars(formatarDataHora($etapaItem['prazo_final_submissao']), ENT_QUOTES, 'UTF-8'); ?></strong>
                                         <?php endif; ?>
                                     </span>
                                 </span>

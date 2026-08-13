@@ -15,12 +15,12 @@
     <p>Sua equipe ainda não reservou nenhum horário de mentoria.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th>Mentor</th><th>Início</th><th>Fim</th><th>Meet</th><th>Observação</th><th>Ações</th></tr>
+        <tr><th>Mentor</th><th>Início</th><th>Fim <?php echo sufixoFusoHorario(); ?></th><th>Meet</th><th>Observação</th><th>Ações</th></tr>
         <?php foreach ($reservas as $reserva): ?>
         <tr>
             <td><?php echo htmlspecialchars($reserva['mentor_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo date('d/m/Y H:i', strtotime($reserva['data_inicio'])); ?></td>
-            <td><?php echo date('d/m/Y H:i', strtotime($reserva['data_fim'])); ?></td>
+            <td><?php echo htmlspecialchars(formatarDataHora($reserva['data_inicio']), ENT_QUOTES, 'UTF-8'); ?></td>
+            <td><?php echo htmlspecialchars(formatarDataHora($reserva['data_fim']), ENT_QUOTES, 'UTF-8'); ?></td>
             <td>
                 <?php if (linkHttpValido($reserva['link_meet'])): ?>
                     <a href="<?php echo htmlspecialchars($reserva['link_meet'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">Entrar</a>
@@ -44,12 +44,12 @@
     <p>Nenhum horário disponível no momento.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th>Mentor</th><th>Início</th><th>Fim</th><th>Observação</th><th>Ações</th></tr>
+        <tr><th>Mentor</th><th>Início</th><th>Fim <?php echo sufixoFusoHorario(); ?></th><th>Observação</th><th>Ações</th></tr>
         <?php foreach ($vagos as $vaga): ?>
         <tr>
             <td><?php echo htmlspecialchars($vaga['mentor_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo date('d/m/Y H:i', strtotime($vaga['data_inicio'])); ?></td>
-            <td><?php echo date('d/m/Y H:i', strtotime($vaga['data_fim'])); ?></td>
+            <td><?php echo htmlspecialchars(formatarDataHora($vaga['data_inicio']), ENT_QUOTES, 'UTF-8'); ?></td>
+            <td><?php echo htmlspecialchars(formatarDataHora($vaga['data_fim']), ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars((string) $vaga['observacao'], ENT_QUOTES, 'UTF-8'); ?></td>
             <td>
                 <form method="post" action="<?php echo url('mentoria/reservar/' . (int) $vaga['id']); ?>">

@@ -33,7 +33,10 @@ class OficinaAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador', 'suporte']);
+        // Fase 29 (ajuste pos-push): exigirEmQualquerConcurso() na entrada +
+        // exigir()/temPerfil() com o concurso resolvido dentro de cada acao -
+        // exigir() sem concurso so' reconhece vinculo GLOBAL.
+        RoleMiddleware::exigirEmQualquerConcurso(['administrador', 'suporte']);
         $this->oficinas = new OficinaRepository();
         $this->concursos = new ConcursoRepository();
         $this->equipes = new EquipeRepository();
@@ -49,6 +52,8 @@ class OficinaAdminController extends Controller
             http_response_code(404);
             exit('Concurso não encontrado.');
         }
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $concurso['id']);
 
         $this->renderizar('admin/oficinas/index', [
             'concurso' => $concurso,
@@ -67,6 +72,8 @@ class OficinaAdminController extends Controller
             http_response_code(404);
             exit('Concurso não encontrado.');
         }
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $concurso['id']);
 
         $erro = null;
 
@@ -106,6 +113,30 @@ class OficinaAdminController extends Controller
         ], 'Novo horário de oficina', ['tipo' => 'oficinas', 'id' => (int) $concursoId]);
     }
 
+    /**
+     * Fase 29 (Melhoria 4): fragmento para o modal "Ver equipes inscritas" -
+     * ate' aqui a tela so' mostrava o quantitativo (total_inscritos), sem
+     * como saber quais equipes eram. Reaproveita OficinaRepository::
+     * listarInscritos(), que ja existia (usado so' internamente por
+     * remover() pra notificar as equipes).
+     */
+    public function inscritos($id)
+    {
+        $horario = $this->oficinas->buscarPorId($id);
+
+        if ($horario === null) {
+            http_response_code(404);
+            exit('Horário não encontrado.');
+        }
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $horario['concurso_id']);
+
+        $this->renderizar('admin/oficinas/inscritos', [
+            'horario' => $horario,
+            'inscritos' => $this->oficinas->listarInscritos($id),
+        ]);
+    }
+
     public function remover()
     {
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
@@ -119,7 +150,13 @@ class OficinaAdminController extends Controller
 
         $souDono = (int) $horario['criado_por'] === (int) Auth::usuarioId();
 
-        if (!$souDono && !Auth::possuiPerfil('administrador')) {
+        // Fase 29 (ajuste pos-push): Auth::possuiPerfil('administrador') era
+        // global - um administrador escopado a OUTRO concurso passava aqui
+        // igual, mesmo o horario sendo de um concurso fora do escopo dele.
+        // Auth::temPerfil() com o concurso do horario resolve os dois casos
+        // (administrador global continua passando; administrador de outro
+        // concurso passa a ser barrado tambem).
+        if (!$souDono && !Auth::temPerfil('administrador', $horario['concurso_id'])) {
             http_response_code(403);
             exit('Acesso negado: este horário pertence a outro organizador.');
         }
@@ -128,7 +165,7 @@ class OficinaAdminController extends Controller
             $this->notificarEquipe(
                 (int) $inscrito['equipe_id'],
                 'Oficina cancelada',
-                'A oficina "' . $horario['tema'] . '" de ' . date('d/m/Y H:i', strtotime($horario['data_inicio'])) . ' foi cancelada.'
+                'A oficina "' . $horario['tema'] . '" de ' . formatarDataHora($horario['data_inicio']) . ' ' . sufixoFusoHorario() . ' foi cancelada.'
             );
         }
 

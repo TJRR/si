@@ -77,7 +77,7 @@ class MentoriaController extends Controller
         }
 
         $mentor = $this->usuarios->buscarPorId($horario['mentor_usuario_id']);
-        $mensagem = 'A equipe "' . $contexto['equipe']['nome_equipe'] . '" reservou seu horário de ' . date('d/m/Y H:i', strtotime($horario['data_inicio'])) . '.';
+        $mensagem = 'A equipe "' . $contexto['equipe']['nome_equipe'] . '" reservou seu horário de ' . formatarDataHora($horario['data_inicio']) . ' ' . sufixoFusoHorario() . '.';
         $this->notificacoes->criar((int) $horario['mentor_usuario_id'], 'mentoria', 'Mentoria reservada', $mensagem, ['url' => url('mentoriaAdmin/index/' . (int) $horario['concurso_id'])]);
 
         if ($mentor !== null && !empty($mentor['email'])) {
@@ -101,7 +101,7 @@ class MentoriaController extends Controller
         $this->mentorias->cancelarReserva($horarioId);
 
         $mentor = $this->usuarios->buscarPorId($horario['mentor_usuario_id']);
-        $mensagem = 'A equipe "' . $contexto['equipe']['nome_equipe'] . '" cancelou a reserva do horário de ' . date('d/m/Y H:i', strtotime($horario['data_inicio'])) . '.';
+        $mensagem = 'A equipe "' . $contexto['equipe']['nome_equipe'] . '" cancelou a reserva do horário de ' . formatarDataHora($horario['data_inicio']) . ' ' . sufixoFusoHorario() . '.';
         $this->notificacoes->criar((int) $horario['mentor_usuario_id'], 'mentoria', 'Reserva de mentoria cancelada', $mensagem, ['url' => url('mentoriaAdmin/index/' . (int) $horario['concurso_id'])]);
 
         if ($mentor !== null && !empty($mentor['email'])) {

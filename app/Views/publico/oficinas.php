@@ -21,12 +21,12 @@
             <p><em>Nenhuma oficina cadastrada ainda.</em></p>
         <?php else: ?>
             <table border="1" cellpadding="6">
-                <tr><th>Tema</th><th>Início</th><th>Fim</th><th>Observação</th><th>Equipes inscritas</th></tr>
+                <tr><th>Tema</th><th>Início</th><th>Fim <?php echo sufixoFusoHorario(); ?></th><th>Observação</th><th>Equipes inscritas</th></tr>
                 <?php foreach ($horarios as $horario): ?>
                 <tr>
                     <td><?php echo htmlspecialchars($horario['tema'], ENT_QUOTES, 'UTF-8'); ?></td>
-                    <td><?php echo date('d/m/Y H:i', strtotime($horario['data_inicio'])); ?></td>
-                    <td><?php echo date('d/m/Y H:i', strtotime($horario['data_fim'])); ?></td>
+                    <td><?php echo htmlspecialchars(formatarDataHora($horario['data_inicio']), ENT_QUOTES, 'UTF-8'); ?></td>
+                    <td><?php echo htmlspecialchars(formatarDataHora($horario['data_fim']), ENT_QUOTES, 'UTF-8'); ?></td>
                     <td><?php echo htmlspecialchars((string) $horario['observacao'], ENT_QUOTES, 'UTF-8'); ?></td>
                     <td>
                         <?php if (empty($horario['inscritos'])): ?>

@@ -36,7 +36,10 @@ class MentoriaAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador', 'suporte']);
+        // Fase 29 (ajuste pos-push): exigirEmQualquerConcurso() na entrada +
+        // exigir()/temPerfil() com o concurso resolvido dentro de cada acao -
+        // exigir() sem concurso so' reconhece vinculo GLOBAL.
+        RoleMiddleware::exigirEmQualquerConcurso(['administrador', 'suporte']);
         $this->mentorias = new MentoriaRepository();
         $this->concursos = new ConcursoRepository();
         $this->equipes = new EquipeRepository();
@@ -53,6 +56,8 @@ class MentoriaAdminController extends Controller
             http_response_code(404);
             exit('Concurso não encontrado.');
         }
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $concurso['id']);
 
         $this->renderizar('admin/mentorias/index', [
             'concurso' => $concurso,
@@ -71,6 +76,8 @@ class MentoriaAdminController extends Controller
             http_response_code(404);
             exit('Concurso não encontrado.');
         }
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $concurso['id']);
 
         $mentores = $this->mentoresDisponiveis($concursoId);
         $erro = null;
@@ -139,7 +146,10 @@ class MentoriaAdminController extends Controller
 
         $souDono = (int) $horario['mentor_usuario_id'] === (int) Auth::usuarioId();
 
-        if (!$souDono && !Auth::possuiPerfil('administrador')) {
+        // Fase 29 (ajuste pos-push): Auth::possuiPerfil('administrador') era
+        // global - trocado por temPerfil() com o concurso do horario, mesmo
+        // ajuste de OficinaAdminController::remover().
+        if (!$souDono && !Auth::temPerfil('administrador', $horario['concurso_id'])) {
             http_response_code(403);
             exit('Acesso negado: este horário pertence a outro mentor.');
         }
@@ -148,7 +158,7 @@ class MentoriaAdminController extends Controller
             $this->notificarEquipe(
                 (int) $horario['equipe_id'],
                 'Horário de mentoria cancelado',
-                'O mentor cancelou o horário de ' . date('d/m/Y H:i', strtotime($horario['data_inicio'])) . ' que sua equipe havia reservado.'
+                'O mentor cancelou o horário de ' . formatarDataHora($horario['data_inicio']) . ' ' . sufixoFusoHorario() . ' que sua equipe havia reservado.'
             );
         }
 

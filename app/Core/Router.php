@@ -23,6 +23,8 @@ use App\Controllers\ConteudoAdminController;
 use App\Controllers\CriterioAvaliacaoAdminController;
 use App\Controllers\DesignacaoAdminController;
 use App\Controllers\DocumentoAdminController;
+use App\Controllers\DuvidaAdminController;
+use App\Controllers\DuvidaController;
 use App\Controllers\EdicaoPublicaController;
 use App\Controllers\EditorMidiaAdminController;
 use App\Controllers\EtapaAdminController;
@@ -85,6 +87,8 @@ class Router
         'oficinaAdmin' => OficinaAdminController::class,
         'oficina' => OficinaController::class,
         'oficinaPublica' => OficinaPublicaController::class,
+        'duvidaAdmin' => DuvidaAdminController::class,
+        'duvida' => DuvidaController::class,
         'conteudo' => ConteudoAdminController::class,
         'tema' => TemaAdminController::class,
         'criterios' => CriterioAvaliacaoAdminController::class,

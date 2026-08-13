@@ -62,6 +62,40 @@ function formatarDataHora($data)
 }
 
 /**
+ * Fase 29 (Tira-Duvidas): iniciais do avatar - primeira letra das duas
+ * primeiras palavras do nome (ex.: "Victor Mouzinho Spinelli" -> "VM").
+ * Usado nas telas de detalhe de duvida (participante e admin).
+ */
+function iniciaisAvatar($nome)
+{
+    $partes = preg_split('/\s+/', trim($nome));
+    $iniciais = '';
+
+    foreach (array_slice($partes, 0, 2) as $parte) {
+        $iniciais .= mb_strtoupper(mb_substr($parte, 0, 1));
+    }
+
+    return $iniciais;
+}
+
+/**
+ * Fase 29 (Melhoria 5): "(GMT-4)" (ou o que o fuso configurado valer no
+ * momento) - calculado a partir de config('timezone') (config/config.php,
+ * aplicado em config/bootstrap.php via date_default_timezone_set()) em vez
+ * de fixo no texto, pra nao ficar errado se o fuso do servidor mudar um dia.
+ *
+ * Chamado no cabecalho de cada coluna/lista de horario (uma vez so'), nao
+ * dentro de formatarDataHora() - repetir "(GMT-4)" em toda linha de uma
+ * tabela com dezenas de linhas so' teria poluido a tela.
+ */
+function sufixoFusoHorario()
+{
+    $horasOffset = intdiv((int) date('O'), 100);
+
+    return '(GMT' . sprintf('%+d', $horasOffset) . ')';
+}
+
+/**
  * Fase 24: link_meet (mentoria/oficina) e' texto livre digitado por
  * administrador/suporte e renderizado como href em telas de outros perfis
  * (participante) - sem essa checagem, um "link" tipo "javascript:..."

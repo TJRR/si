@@ -21,7 +21,10 @@ class TrilhaAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador', 'suporte']);
+        // Fase 29 (ajuste pos-push): exigirEmQualquerConcurso() na entrada +
+        // exigir() com o concurso resolvido dentro de cada acao - exigir()
+        // sem concurso so' reconhece vinculo GLOBAL.
+        RoleMiddleware::exigirEmQualquerConcurso(['administrador', 'suporte']);
         $this->trilhas = new TrilhaRepository();
         $this->concursos = new ConcursoRepository();
         $this->etapas = new EtapaRepository();
@@ -35,6 +38,8 @@ class TrilhaAdminController extends Controller
             http_response_code(404);
             exit('Concurso não encontrado.');
         }
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $concurso['id']);
 
         $lista = $this->trilhas->listarPorConcurso($concursoId);
 
@@ -53,13 +58,14 @@ class TrilhaAdminController extends Controller
 
     public function alternarInscricoes($trilhaId)
     {
-        RoleMiddleware::exigir(['administrador']);
         $trilha = $this->trilhas->buscarPorId($trilhaId);
 
         if ($trilha === null) {
             http_response_code(404);
             exit('Trilha não encontrada.');
         }
+
+        RoleMiddleware::exigir(['administrador'], $trilha['concurso_id']);
 
         $etapaCadastro = $this->etapas->buscarCadastroDaTrilha($trilhaId);
 
@@ -74,9 +80,20 @@ class TrilhaAdminController extends Controller
 
     public function remover()
     {
-        RoleMiddleware::exigir(['administrador']);
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $concursoId = (int) (isset($_POST['concurso_id']) ? $_POST['concurso_id'] : 0);
+
+        // Fase 29 (ajuste pos-push): antes ia direto pro remover() sem
+        // buscar a trilha - alem de nao existir checagem de concurso, nem
+        // existencia era confirmada.
+        $trilha = $this->trilhas->buscarPorId($id);
+
+        if ($trilha === null) {
+            http_response_code(404);
+            exit('Trilha não encontrada.');
+        }
+
+        RoleMiddleware::exigir(['administrador'], $trilha['concurso_id']);
 
         try {
             $this->trilhas->remover($id);
@@ -92,13 +109,14 @@ class TrilhaAdminController extends Controller
 
     public function novo($concursoId)
     {
-        RoleMiddleware::exigir(['administrador']);
         $concurso = $this->concursos->buscarPorId($concursoId);
 
         if ($concurso === null) {
             http_response_code(404);
             exit('Concurso não encontrado.');
         }
+
+        RoleMiddleware::exigir(['administrador'], $concurso['id']);
 
         $erro = null;
 
@@ -135,10 +153,12 @@ class TrilhaAdminController extends Controller
         }
 
         $concurso = $this->concursos->buscarPorId($trilha['concurso_id']);
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilha['concurso_id']);
+
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            RoleMiddleware::exigir(['administrador']);
+            RoleMiddleware::exigir(['administrador'], $trilha['concurso_id']);
             $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
             $descricao = trim(isset($_POST['descricao']) ? $_POST['descricao'] : '');
             $ordem = (int) (isset($_POST['ordem']) ? $_POST['ordem'] : 0);

@@ -16,13 +16,13 @@
     <p>Nenhuma oficina disponível no momento.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th>Tema</th><th>Início</th><th>Fim</th><th>Meet</th><th>Observação</th><th>Ações</th></tr>
+        <tr><th>Tema</th><th>Início</th><th>Fim <?php echo sufixoFusoHorario(); ?></th><th>Meet</th><th>Observação</th><th>Ações</th></tr>
         <?php foreach ($horarios as $horario): ?>
         <?php $inscrita = in_array((int) $horario['id'], $inscritosIds, true); ?>
         <tr>
             <td><?php echo htmlspecialchars($horario['tema'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo date('d/m/Y H:i', strtotime($horario['data_inicio'])); ?></td>
-            <td><?php echo date('d/m/Y H:i', strtotime($horario['data_fim'])); ?></td>
+            <td><?php echo htmlspecialchars(formatarDataHora($horario['data_inicio']), ENT_QUOTES, 'UTF-8'); ?></td>
+            <td><?php echo htmlspecialchars(formatarDataHora($horario['data_fim']), ENT_QUOTES, 'UTF-8'); ?></td>
             <td>
                 <?php if ($inscrita && linkHttpValido($horario['link_meet'])): ?>
                     <a href="<?php echo htmlspecialchars($horario['link_meet'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">Entrar</a>

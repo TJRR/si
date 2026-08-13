@@ -11,6 +11,7 @@
         <?php if (!empty($oficinaDisponivel)): ?>
             <a href="<?php echo url('oficina/index'); ?>" class="btn-acao">Oficinas</a>
         <?php endif; ?>
+        <a href="<?php echo url('duvida/index'); ?>" class="btn-acao">Dúvidas</a>
     </div>
 </div>
 
@@ -116,17 +117,32 @@
     <p>Nenhuma etapa de submissão disponível no momento para a sua trilha.</p>
 <?php else: ?>
     <table>
-        <tr><th>Etapa</th><th>Período</th><th>Ação</th></tr>
+        <tr><th>Etapa</th><th>Período <?php echo sufixoFusoHorario(); ?></th><th>Ação</th></tr>
         <?php foreach ($etapas as $etapa): ?>
         <tr>
             <td><?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></td>
             <td>
-                <?php if ($etapa['data_inicio'] === null && $etapa['data_fim'] === null): ?>
+                <?php
+                    // Fase 29 (Bug 2): prazo_final_submissao (quando preenchido) e' o
+                    // que realmente vale pro participante - data_fim so' controla ate'
+                    // quando a etapa segue em avaliacao (fica aberta bem depois, pro
+                    // avaliador). Mesmo criterio de SubmissaoService::preparar().
+                    $prazoSubmissao = $etapa['prazo_final_submissao'] !== null
+                        ? $etapa['prazo_final_submissao']
+                        : $etapa['data_fim'];
+                ?>
+                <?php if ($etapa['data_inicio'] === null && $prazoSubmissao === null): ?>
                     Período não definido
                 <?php else: ?>
-                    <?php echo htmlspecialchars(formatarDataHora($etapa['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
-                    a
-                    <?php echo htmlspecialchars(formatarDataHora($etapa['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
+                    <?php if ($etapa['data_inicio'] !== null): ?>
+                        Início: <?php echo htmlspecialchars(formatarDataHora($etapa['data_inicio']), ENT_QUOTES, 'UTF-8'); ?><br>
+                    <?php endif; ?>
+                    <?php if ($prazoSubmissao !== null): ?>
+                        <strong>Prazo final p/ submissão: <?php echo htmlspecialchars(formatarDataHora($prazoSubmissao), ENT_QUOTES, 'UTF-8'); ?></strong>
+                    <?php endif; ?>
+                    <?php if ($etapa['data_fim'] !== null && $etapa['prazo_final_submissao'] !== null && $etapa['data_fim'] !== $etapa['prazo_final_submissao']): ?>
+                        <br><small>Etapa em avaliação até: <?php echo htmlspecialchars(formatarDataHora($etapa['data_fim']), ENT_QUOTES, 'UTF-8'); ?></small>
+                    <?php endif; ?>
                 <?php endif; ?>
             </td>
             <td>

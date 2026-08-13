@@ -21,7 +21,10 @@ class EtapaAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador', 'suporte']);
+        // Fase 29 (ajuste pos-push): exigirEmQualquerConcurso() na entrada +
+        // exigir() com o concurso resolvido dentro de cada acao - exigir()
+        // sem concurso so' reconhece vinculo GLOBAL.
+        RoleMiddleware::exigirEmQualquerConcurso(['administrador', 'suporte']);
         $this->etapas = new EtapaRepository();
         $this->trilhas = new TrilhaRepository();
         $this->formularios = new FormularioDinamicoRepository();
@@ -35,6 +38,8 @@ class EtapaAdminController extends Controller
             http_response_code(404);
             exit('Trilha não encontrada.');
         }
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilha['concurso_id']);
 
         $lista = $this->etapas->listarPorTrilha($trilhaId);
 
@@ -58,13 +63,14 @@ class EtapaAdminController extends Controller
 
     public function novo($trilhaId)
     {
-        RoleMiddleware::exigir(['administrador']);
         $trilha = $this->trilhas->buscarPorId($trilhaId);
 
         if ($trilha === null) {
             http_response_code(404);
             exit('Trilha não encontrada.');
         }
+
+        RoleMiddleware::exigir(['administrador'], $trilha['concurso_id']);
 
         $erro = null;
 
@@ -114,10 +120,13 @@ class EtapaAdminController extends Controller
         }
 
         $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilha['concurso_id']);
+
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            RoleMiddleware::exigir(['administrador']);
+            RoleMiddleware::exigir(['administrador'], $trilha['concurso_id']);
             $dados = $this->lerDadosFormulario();
 
             if ($dados['nome'] === '') {
@@ -154,9 +163,23 @@ class EtapaAdminController extends Controller
 
     public function remover()
     {
-        RoleMiddleware::exigir(['administrador']);
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
+
+        // Fase 29 (ajuste pos-push): antes ia direto pro remover() sem
+        // buscar a etapa - alem de nao existir checagem de concurso, nem
+        // existencia era confirmada. $trilhaId do POST so' serve pro
+        // redirect no final; a checagem usa o trilha_id de verdade, vindo
+        // da propria etapa buscada no banco.
+        $etapa = $this->etapas->buscarPorId($id);
+
+        if ($etapa === null) {
+            http_response_code(404);
+            exit('Etapa não encontrada.');
+        }
+
+        $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
+        RoleMiddleware::exigir(['administrador'], $trilha !== null ? $trilha['concurso_id'] : null);
 
         try {
             $this->etapas->remover($id);
@@ -178,6 +201,9 @@ class EtapaAdminController extends Controller
             http_response_code(404);
             exit('Etapa não encontrada.');
         }
+
+        $trilha = $this->trilhas->buscarPorId($etapa['trilha_id']);
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilha !== null ? $trilha['concurso_id'] : null);
 
         $formulario = $etapa['formulario_dinamico_id'] !== null
             ? $this->formularios->buscarPorId($etapa['formulario_dinamico_id'])

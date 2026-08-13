@@ -27,7 +27,10 @@ class TemaDesafioAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador', 'suporte']);
+        // Fase 29 (ajuste pos-push): exigirEmQualquerConcurso() na entrada +
+        // exigir() com o concurso resolvido dentro de cada acao - exigir()
+        // sem concurso so' reconhece vinculo GLOBAL.
+        RoleMiddleware::exigirEmQualquerConcurso(['administrador', 'suporte']);
         $this->temas = new TemaRepository();
         $this->desafios = new DesafioRepository();
         $this->trilhas = new TrilhaRepository();
@@ -42,6 +45,8 @@ class TemaDesafioAdminController extends Controller
             exit('Trilha não encontrada.');
         }
 
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilha['concurso_id']);
+
         $lista = $this->temas->listarPorTrilha($trilhaId);
         $this->renderizar('admin/temas/index', [
             'trilha' => $trilha,
@@ -55,6 +60,18 @@ class TemaDesafioAdminController extends Controller
      */
     public function reordenar($trilhaId)
     {
+        // Fase 29 (ajuste pos-push): antes ia direto pro reordenar() sem
+        // buscar a trilha - alem de nao existir checagem de concurso, nem
+        // existencia era confirmada.
+        $trilha = $this->trilhas->buscarPorId($trilhaId);
+
+        if ($trilha === null) {
+            http_response_code(404);
+            exit('Trilha não encontrada.');
+        }
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilha['concurso_id']);
+
         header('Content-Type: application/json; charset=utf-8');
         $corpo = json_decode((string) file_get_contents('php://input'), true);
         $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
@@ -70,6 +87,16 @@ class TemaDesafioAdminController extends Controller
      */
     public function reordenarDesafios($temaId)
     {
+        $tema = $this->temas->buscarPorId($temaId);
+
+        if ($tema === null) {
+            http_response_code(404);
+            exit('Tema não encontrado.');
+        }
+
+        $trilha = $this->trilhas->buscarPorId($tema['trilha_id']);
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilha !== null ? $trilha['concurso_id'] : null);
+
         header('Content-Type: application/json; charset=utf-8');
         $corpo = json_decode((string) file_get_contents('php://input'), true);
         $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
@@ -81,9 +108,21 @@ class TemaDesafioAdminController extends Controller
 
     public function remover()
     {
-        RoleMiddleware::exigir(['administrador']);
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
+
+        // Fase 29 (ajuste pos-push): antes ia direto pro remover() sem
+        // buscar o tema - alem de nao existir checagem de concurso, nem
+        // existencia era confirmada.
+        $tema = $this->temas->buscarPorId($id);
+
+        if ($tema === null) {
+            http_response_code(404);
+            exit('Tema não encontrado.');
+        }
+
+        $trilha = $this->trilhas->buscarPorId($tema['trilha_id']);
+        RoleMiddleware::exigir(['administrador'], $trilha !== null ? $trilha['concurso_id'] : null);
 
         try {
             $this->temas->remover($id);
@@ -99,13 +138,14 @@ class TemaDesafioAdminController extends Controller
 
     public function novo($trilhaId)
     {
-        RoleMiddleware::exigir(['administrador']);
         $trilha = $this->trilhas->buscarPorId($trilhaId);
 
         if ($trilha === null) {
             http_response_code(404);
             exit('Trilha não encontrada.');
         }
+
+        RoleMiddleware::exigir(['administrador'], $trilha['concurso_id']);
 
         $erro = null;
 
@@ -149,10 +189,12 @@ class TemaDesafioAdminController extends Controller
         }
 
         $trilha = $this->trilhas->buscarPorId($tema['trilha_id']);
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilha !== null ? $trilha['concurso_id'] : null);
+
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            RoleMiddleware::exigir(['administrador']);
+            RoleMiddleware::exigir(['administrador'], $trilha !== null ? $trilha['concurso_id'] : null);
             $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
             $descricaoLonga = trim(isset($_POST['descricao_longa']) ? $_POST['descricao_longa'] : '');
             $ativo = isset($_POST['ativo']) ? 1 : 0;
@@ -189,6 +231,8 @@ class TemaDesafioAdminController extends Controller
         }
 
         $trilha = $this->trilhas->buscarPorId($tema['trilha_id']);
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilha !== null ? $trilha['concurso_id'] : null);
+
         $lista = $this->desafios->listarPorTema($temaId);
 
         $this->renderizar('admin/temas/desafios', [
@@ -200,9 +244,22 @@ class TemaDesafioAdminController extends Controller
 
     public function removerDesafio()
     {
-        RoleMiddleware::exigir(['administrador']);
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $temaId = (int) (isset($_POST['tema_id']) ? $_POST['tema_id'] : 0);
+
+        // Fase 29 (ajuste pos-push): antes ia direto pro remover() sem
+        // buscar o desafio - alem de nao existir checagem de concurso, nem
+        // existencia era confirmada.
+        $desafio = $this->desafios->buscarPorId($id);
+
+        if ($desafio === null) {
+            http_response_code(404);
+            exit('Desafio não encontrado.');
+        }
+
+        $temaDoDesafio = $this->temas->buscarPorId($desafio['tema_id']);
+        $trilhaDoDesafio = $temaDoDesafio !== null ? $this->trilhas->buscarPorId($temaDoDesafio['trilha_id']) : null;
+        RoleMiddleware::exigir(['administrador'], $trilhaDoDesafio !== null ? $trilhaDoDesafio['concurso_id'] : null);
 
         try {
             $this->desafios->remover($id);
@@ -218,7 +275,6 @@ class TemaDesafioAdminController extends Controller
 
     public function novoDesafio($temaId)
     {
-        RoleMiddleware::exigir(['administrador']);
         $tema = $this->temas->buscarPorId($temaId);
 
         if ($tema === null) {
@@ -227,6 +283,8 @@ class TemaDesafioAdminController extends Controller
         }
 
         $trilha = $this->trilhas->buscarPorId($tema['trilha_id']);
+        RoleMiddleware::exigir(['administrador'], $trilha !== null ? $trilha['concurso_id'] : null);
+
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -263,10 +321,12 @@ class TemaDesafioAdminController extends Controller
 
         $tema = $this->temas->buscarPorId($desafio['tema_id']);
         $trilha = $this->trilhas->buscarPorId($tema['trilha_id']);
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilha !== null ? $trilha['concurso_id'] : null);
+
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            RoleMiddleware::exigir(['administrador']);
+            RoleMiddleware::exigir(['administrador'], $trilha !== null ? $trilha['concurso_id'] : null);
             $pergunta = trim(isset($_POST['pergunta']) ? $_POST['pergunta'] : '');
             $ativo = isset($_POST['ativo']) ? 1 : 0;
             $icone = $this->iconeSelecionado();

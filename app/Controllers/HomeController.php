@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\Mailer;
 use App\Middleware\RoleMiddleware;
@@ -19,6 +20,7 @@ use App\Repositories\ContatoConcursoRepository;
 use App\Repositories\CriterioAvaliacaoRepository;
 use App\Repositories\DesafioRepository;
 use App\Repositories\DocumentoRepository;
+use App\Repositories\DuvidaRepository;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\EventoCronogramaRepository;
@@ -87,6 +89,10 @@ class HomeController extends Controller
                     'descricao' => $etapa['descricao'],
                     'data_inicio' => $etapa['data_inicio'],
                     'data_fim' => $etapa['data_fim'],
+                    // Fase 29 (Bug 2): prazo real de submissao do participante,
+                    // separado de data_fim (janela de avaliacao) - ver
+                    // migration 102 e SubmissaoService::preparar().
+                    'prazo_final_submissao' => $etapa['prazo_final_submissao'],
                 ];
 
                 if ($etapa['visibilidade_publica'] !== 'oculto' && $servicoResultadoEtapa->jaPublicado($etapa['id'])) {
@@ -142,6 +148,7 @@ class HomeController extends Controller
                 'descricao' => $evento['descricao'],
                 'data_inicio' => $evento['data_inicio'],
                 'data_fim' => $evento['data_fim'],
+                'prazo_final_submissao' => null,
             ];
         }
 
@@ -195,7 +202,7 @@ class HomeController extends Controller
 
         $temPremiacao = !empty($premios) || !empty($premiosPorTrilha);
         $faqAtivas = (new FaqConcursoRepository())->listarAtivasPorConcurso($concursoId);
-        $documentos = (new DocumentoRepository())->listarAtivosPorConcurso($concursoId);
+        $documentos = (new DocumentoRepository())->listarPublicadosPorConcurso($concursoId);
         $contato = (new ContatoConcursoRepository())->buscar();
         $configVisual = (new ConfiguracaoVisualRepository())->buscar();
 
@@ -351,7 +358,7 @@ class HomeController extends Controller
             return $concurso['status'] === 'encerrado';
         });
 
-        $this->renderizar('home/administrativo', [
+        $this->renderizar('home/administrativo', array_merge([
             'totalParticipantes' => (new ParticipanteRepository())->contarTodos(),
             'totalEquipes' => count((new EquipeRepository())->listarComContagemParticipantes()),
             'totalAvaliadores' => (new PerfilRepository())->contarDistintosPorPerfil('avaliador'),
@@ -359,7 +366,60 @@ class HomeController extends Controller
             'totalConcursosRealizados' => count($concursosRealizados),
             'totalCadastrosPendentes' => count((new UsuarioRepository())->listarPendentes()),
             'etapasAvaliacaoVigentes' => $this->etapasAvaliacaoVigentes(),
-        ], 'Painel');
+        ], $this->dadosDuvidasPainel()), 'Painel');
+    }
+
+    /**
+     * Fase 29 (Tira-Duvidas): a pedido do usuario, o "painel de gestao" de
+     * duvidas nao e' mais uma tela separada - virou uma secao aqui dentro
+     * do dashboard administrativo (abaixo de "Progresso da avaliacao").
+     * Administrador ve a secao completa (contagem + lista filtravel);
+     * Suporte so' ve "Escaladas para mim", que fica visivel pros dois.
+     */
+    private function dadosDuvidasPainel()
+    {
+        $duvidas = new DuvidaRepository();
+        $souAdministrador = Auth::possuiPerfil('administrador');
+        $statusFiltro = isset($_GET['duvidas_status']) ? $_GET['duvidas_status'] : null;
+
+        $minhasEscaladas = $duvidas->listarEscaladasPara(Auth::usuarioId());
+        foreach ($minhasEscaladas as &$item) {
+            $item['atrasada'] = $this->duvidaEmAtraso($item);
+        }
+        unset($item);
+
+        $todasDuvidas = [];
+        $contagemDuvidas = [];
+
+        if ($souAdministrador) {
+            $concursosPermitidos = (new PerfilRepository())->concursosDoUsuario(Auth::usuarioId(), 'administrador');
+            $contagemDuvidas = $duvidas->contarPorStatus($concursosPermitidos);
+            $todasDuvidas = $duvidas->listarTodas($concursosPermitidos, $statusFiltro);
+
+            foreach ($todasDuvidas as &$item) {
+                $item['atrasada'] = $this->duvidaEmAtraso($item);
+            }
+            unset($item);
+        }
+
+        return [
+            'souAdministradorDuvidas' => $souAdministrador,
+            'duvidasStatusFiltro' => $statusFiltro,
+            'contagemDuvidas' => $contagemDuvidas,
+            'todasDuvidas' => $todasDuvidas,
+            'minhasEscaladasDuvidas' => $minhasEscaladas,
+        ];
+    }
+
+    private function duvidaEmAtraso(array $duvida)
+    {
+        if ($duvida['status'] === 'respondida') {
+            return false;
+        }
+
+        $referencia = $duvida['reaberta_em'] !== null ? $duvida['reaberta_em'] : $duvida['criado_em'];
+
+        return strtotime($referencia) < strtotime('-48 hours');
     }
 
     /**

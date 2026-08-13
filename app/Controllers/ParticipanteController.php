@@ -27,7 +27,6 @@ use App\Repositories\SubmissaoRepository;
 use App\Repositories\TemaRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
-use App\Repositories\UsuarioRepository;
 use App\Services\AcessoEtapaService;
 use App\Services\ResultadoEtapaService;
 use App\Validation\CpfValidador;
@@ -50,7 +49,6 @@ class ParticipanteController extends Controller
     private $notificacoes;
     private $mentorias;
     private $oficinas;
-    private $usuarios;
     private $perfis;
     private $formulas;
     private $resultadoEtapaService;
@@ -76,7 +74,6 @@ class ParticipanteController extends Controller
         $this->notificacoes = new NotificacaoPainelRepository();
         $this->mentorias = new MentoriaRepository();
         $this->oficinas = new OficinaRepository();
-        $this->usuarios = new UsuarioRepository();
         $this->perfis = new PerfilRepository();
     }
 
@@ -323,6 +320,15 @@ class ParticipanteController extends Controller
      * caso em que um integrante foi homologado sem e-mail e por isso nunca
      * ganhou conta de acesso (AcessoParticipanteService::liberarAcesso()
      * pula em silencio quando o e-mail esta vazio).
+     *
+     * Fase 29 (Bug 1): nao bloqueia mais quando o e-mail ja pertence a uma
+     * conta em usuarios (antes barrava em silencio quando o integrante ja
+     * tinha se auto-cadastrado pela tela publica de Cadastro com o mesmo
+     * e-mail, deixando participantes.email pra sempre vazio - decisao
+     * confirmada com o usuario: sempre reconciliar). A propria
+     * AcessoParticipanteService::vincularUsuarioEPerfil() ja reaproveita
+     * essa conta pelo e-mail quando o acesso for liberado (na homologacao
+     * ou no convite manual do admin), aprovando-a se preciso.
      */
     public function incluirEmailIntegrante($participanteId)
     {
@@ -351,8 +357,8 @@ class ParticipanteController extends Controller
             return;
         }
 
-        if ($this->participantes->buscarPorEmail($email) !== null || $this->usuarios->buscarPorEmail($email) !== null) {
-            $_SESSION['flash'] = 'Este e-mail já está em uso por outra conta ou cadastro.';
+        if ($this->participantes->buscarPorEmail($email) !== null) {
+            $_SESSION['flash'] = 'Este e-mail já está em uso por outro participante cadastrado.';
             $this->redirecionar('participante/index');
             return;
         }
