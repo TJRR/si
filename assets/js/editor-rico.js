@@ -172,6 +172,9 @@
                 salvarSelecao(area);
                 area.closest('.editor-rico').querySelector('[data-editor-arquivo]').click();
                 return;
+            case 'palavraChave':
+                if (valor) { inserirNaPosicao(area, document.createTextNode(valor)); }
+                return;
         }
 
         sincronizarHidden(area);
@@ -320,5 +323,10 @@
 
         var area = areaDoControle(controle);
         if (area) { executarComando(area, comando, controle.value); }
+
+        // Fase 30: reseta o seletor de palavra-chave depois de usar - senao
+        // escolher a mesma opcao duas vezes seguidas nao dispara 'change'
+        // de novo (mesmo cuidado que o campo de arquivo, acima, ja toma).
+        if (comando === 'palavraChave') { controle.value = ''; }
     });
 })();

@@ -35,6 +35,7 @@ class NavegacaoService
             ['tipo' => 'vagas_avaliador', 'rotulo' => 'Vagas por categoria', 'rota' => 'vagasAvaliador/index'],
             ['tipo' => 'resultado_etapa', 'rotulo' => 'Resultado', 'rota' => 'resultados/etapa'],
             ['tipo' => 'formulario_vinculado', 'rotulo' => 'Formulário vinculado', 'rota' => 'etapas/formularioVinculado'],
+            ['tipo' => 'modelos_documento', 'rotulo' => 'Modelos de Documento', 'rota' => 'modelosDocumento/index'],
         ],
         /**
          * Fase 19 (#84 v2): Tema/Slideshow/Banners/Blocos/Contato deixaram
@@ -76,6 +77,7 @@ class NavegacaoService
         'vagas_avaliador' => 'etapa',
         'resultado_etapa' => 'etapa',
         'formulario_vinculado' => 'etapa',
+        'modelos_documento' => 'etapa',
         'configuracaoGeral' => 'configuracao',
         'configuracaoTema' => 'configuracao',
         'configuracaoMidia' => 'configuracao',

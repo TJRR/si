@@ -12,6 +12,9 @@
             <a href="<?php echo url('oficina/index'); ?>" class="btn-acao">Oficinas</a>
         <?php endif; ?>
         <a href="<?php echo url('duvida/index'); ?>" class="btn-acao">Dúvidas</a>
+        <?php if ($ehLider): ?>
+            <a href="<?php echo url('requerimento/index'); ?>" class="btn-acao">Requerimentos</a>
+        <?php endif; ?>
     </div>
 </div>
 

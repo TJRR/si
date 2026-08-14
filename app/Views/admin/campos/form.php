@@ -36,6 +36,11 @@ $tipoAtual = $campo !== null ? $campo['tipo'] : 'texto';
         Obrigatório
     </label><br>
 
+    <label>
+        <input type="checkbox" name="papel_documento_solucao_proposta" value="1" <?php echo (!empty($configAtual['_papel_documento']) && $configAtual['_papel_documento'] === 'solucao_proposta') ? 'checked' : ''; ?>>
+        Marcar como: Solução proposta (usada em modelos de documento — no máximo um campo por trilha)
+    </label><br>
+
     <div id="config-grupo-participantes" style="display:none;">
         <label>Mínimo de participantes:
             <input type="number" name="minimo_repeticoes" min="1" value="<?php echo isset($configAtual['minimo_repeticoes']) ? (int) $configAtual['minimo_repeticoes'] : 1; ?>">

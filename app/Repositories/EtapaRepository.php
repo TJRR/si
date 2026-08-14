@@ -43,6 +43,24 @@ class EtapaRepository
         return $etapa !== false ? $etapa : null;
     }
 
+    /**
+     * Fase 30: inverso de "$etapa['formulario_dinamico_id']" - usado por
+     * CampoDinamicoService pra descobrir a que trilha um formulario
+     * pertence (formularios_dinamicos so' tem concurso_id direto, nao
+     * trilha_id), ao validar a marcacao "_papel_documento" unica por
+     * trilha.
+     */
+    public function buscarPorFormularioId($formularioId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM etapas WHERE formulario_dinamico_id = :formulario_id LIMIT 1');
+        $stmt->execute(['formulario_id' => $formularioId]);
+
+        $etapa = $stmt->fetch();
+
+        return $etapa !== false ? $etapa : null;
+    }
+
     public function buscarCadastroDaTrilha($trilhaId)
     {
         return $this->buscarPorTrilhaEOrdem($trilhaId, 1);

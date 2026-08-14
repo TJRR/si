@@ -257,7 +257,10 @@ class DuvidaAdminController extends Controller
 
         $referencia = $duvida['reaberta_em'] !== null ? $duvida['reaberta_em'] : $duvida['criado_em'];
 
-        return strtotime($referencia) < strtotime('-48 hours');
+        // Fase 30: calculo extraido pra App\Services\SlaService (usado
+        // tambem por RequerimentoAdminController) - so' mudou de lugar,
+        // mesma logica de antes.
+        return \App\Services\SlaService::emAtraso($referencia);
     }
 
     /**

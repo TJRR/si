@@ -155,6 +155,8 @@ class CampoAdminController extends Controller
             'config' => [
                 'minimo_repeticoes' => isset($_POST['minimo_repeticoes']) ? $_POST['minimo_repeticoes'] : null,
                 'maximo_repeticoes' => isset($_POST['maximo_repeticoes']) ? $_POST['maximo_repeticoes'] : null,
+                // Fase 30: marcacao "Solucao proposta" pros modelos de documento.
+                'papel_documento_solucao_proposta' => isset($_POST['papel_documento_solucao_proposta']) ? 1 : 0,
             ],
         ];
     }

@@ -4,6 +4,7 @@
 } ?>
 <h1>Dúvidas</h1>
 <p>Dúvidas escaladas para você — responda ou, se não for a pessoa certa, escale para outro colaborador.</p>
+<p><a href="<?php echo url('requerimentoAdmin/minhasEscaladas'); ?>">Ver meus requerimentos escalados</a></p>
 
 <?php if (!empty($flash)): ?>
     <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>

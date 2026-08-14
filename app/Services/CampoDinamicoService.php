@@ -51,6 +51,12 @@ class CampoDinamicoService
             return ['sucesso' => false, 'mensagem' => 'Tipo de campo inválido.'];
         }
 
+        $erroPapelDocumento = $this->validarPapelDocumentoUnico($formularioId, $configPost, null);
+
+        if ($erroPapelDocumento !== null) {
+            return ['sucesso' => false, 'mensagem' => $erroPapelDocumento];
+        }
+
         $config = $this->montarConfig($tipo, $configPost);
         $id = $this->campos->criar($formularioId, $rotulo, $tipo, $obrigatorio, $config);
 
@@ -77,6 +83,12 @@ class CampoDinamicoService
 
         if (!isset(self::TIPOS[$tipo])) {
             return ['sucesso' => false, 'mensagem' => 'Tipo de campo inválido.'];
+        }
+
+        $erroPapelDocumento = $this->validarPapelDocumentoUnico($campo['formulario_id'], $configPost, $id);
+
+        if ($erroPapelDocumento !== null) {
+            return ['sucesso' => false, 'mensagem' => $erroPapelDocumento];
         }
 
         $configAnterior = $campo['config_json'] !== null ? json_decode($campo['config_json'], true) : [];
@@ -165,6 +177,56 @@ class CampoDinamicoService
             $config['_papel'] = $configAnterior['_papel'];
         }
 
+        // Fase 30: marcacao editavel pelo Administrador (diferente de
+        // "_papel", que e' so' interna do motor de inscricao) - identifica
+        // qual campo de submissao alimenta [[equipe.solucao_proposta]] nos
+        // modelos de documento. So' um por trilha, ja validado antes de
+        // chegar aqui (ver validarPapelDocumentoUnico(), chamado por
+        // criar()/atualizar()).
+        if (!empty($configPost['papel_documento_solucao_proposta'])) {
+            $config['_papel_documento'] = 'solucao_proposta';
+        }
+
         return $config;
+    }
+
+    /**
+     * Fase 30: no maximo um campo marcado como "solucao_proposta" por
+     * trilha - dois campos marcados deixariam a resolucao de
+     * [[equipe.solucao_proposta]] (ModeloDocumentoService) ambigua, ja que
+     * ela para no primeiro que encontrar, em silencio.
+     */
+    private function validarPapelDocumentoUnico($formularioId, array $configPost, $ignorarCampoId)
+    {
+        if (empty($configPost['papel_documento_solucao_proposta'])) {
+            return null;
+        }
+
+        $etapaRepository = new \App\Repositories\EtapaRepository();
+        $etapaDoFormulario = $etapaRepository->buscarPorFormularioId($formularioId);
+
+        if ($etapaDoFormulario === null) {
+            return null;
+        }
+
+        foreach ($etapaRepository->listarPorTrilha($etapaDoFormulario['trilha_id']) as $etapaDaTrilha) {
+            if ($etapaDaTrilha['formulario_dinamico_id'] === null) {
+                continue;
+            }
+
+            foreach ($this->campos->listarPorFormulario($etapaDaTrilha['formulario_dinamico_id']) as $campoExistente) {
+                if ($ignorarCampoId !== null && (int) $campoExistente['id'] === (int) $ignorarCampoId) {
+                    continue;
+                }
+
+                $configExistente = $campoExistente['config_json'] !== null ? json_decode($campoExistente['config_json'], true) : [];
+
+                if (isset($configExistente['_papel_documento']) && $configExistente['_papel_documento'] === 'solucao_proposta') {
+                    return 'Já existe um campo marcado como "Solução proposta" nesta trilha ("' . $campoExistente['rotulo'] . '"). Desmarque-o antes de marcar outro.';
+                }
+            }
+        }
+
+        return null;
     }
 }

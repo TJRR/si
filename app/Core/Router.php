@@ -43,6 +43,7 @@ use App\Controllers\MentoriaController;
 use App\Controllers\MentoriaPublicaController;
 use App\Controllers\MeuPerfilController;
 use App\Controllers\MidiaAdminController;
+use App\Controllers\ModeloDocumentoAdminController;
 use App\Controllers\NavegacaoController;
 use App\Controllers\NotificacaoPainelController;
 use App\Controllers\OficinaAdminController;
@@ -51,6 +52,8 @@ use App\Controllers\OficinaPublicaController;
 use App\Controllers\ParticipanteController;
 use App\Controllers\PremioAdminController;
 use App\Controllers\RegraDesempateAdminController;
+use App\Controllers\RequerimentoAdminController;
+use App\Controllers\RequerimentoController;
 use App\Controllers\ResultadoAdminController;
 use App\Controllers\ResultadoPublicoController;
 use App\Controllers\SessaoController;
@@ -60,6 +63,7 @@ use App\Controllers\TemaAdminController;
 use App\Controllers\TemaDesafioAdminController;
 use App\Controllers\TrilhaAdminController;
 use App\Controllers\UsuarioAdminController;
+use App\Controllers\ValidacaoPublicaController;
 use App\Controllers\VagaAvaliadorAdminController;
 use App\Repositories\ConfiguracaoSistemaRepository;
 
@@ -89,6 +93,10 @@ class Router
         'oficinaPublica' => OficinaPublicaController::class,
         'duvidaAdmin' => DuvidaAdminController::class,
         'duvida' => DuvidaController::class,
+        'modelosDocumento' => ModeloDocumentoAdminController::class,
+        'requerimento' => RequerimentoController::class,
+        'requerimentoAdmin' => RequerimentoAdminController::class,
+        'validacaoPublica' => ValidacaoPublicaController::class,
         'conteudo' => ConteudoAdminController::class,
         'tema' => TemaAdminController::class,
         'criterios' => CriterioAvaliacaoAdminController::class,

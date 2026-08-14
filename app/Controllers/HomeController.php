@@ -366,7 +366,7 @@ class HomeController extends Controller
             'totalConcursosRealizados' => count($concursosRealizados),
             'totalCadastrosPendentes' => count((new UsuarioRepository())->listarPendentes()),
             'etapasAvaliacaoVigentes' => $this->etapasAvaliacaoVigentes(),
-        ], $this->dadosDuvidasPainel()), 'Painel');
+        ], $this->dadosDuvidasPainel(), $this->dadosRequerimentosPainel()), 'Painel');
     }
 
     /**
@@ -419,7 +419,64 @@ class HomeController extends Controller
 
         $referencia = $duvida['reaberta_em'] !== null ? $duvida['reaberta_em'] : $duvida['criado_em'];
 
-        return strtotime($referencia) < strtotime('-48 hours');
+        // Fase 30: calculo extraido pra App\Services\SlaService (usado
+        // tambem por RequerimentoAdminController) - so' mudou de lugar,
+        // mesma logica de antes.
+        return \App\Services\SlaService::emAtraso($referencia);
+    }
+
+    /**
+     * Fase 30: secao "Requerimentos" no dashboard administrativo, no mesmo
+     * molde da secao "Dúvidas" acima (dadosDuvidasPainel()) - Administrador
+     * ve' a fila geral completa (com filtro de status), Suporte/Colaborador
+     * so' "Escaladas para mim" (essa sempre visivel a quem tiver alguma).
+     * Colaborador chega aqui so' se navegar manualmente (o destino
+     * pos-login dele continua sendo duvidaAdmin/minhasEscaladas) - por
+     * isso tambem tem tela propria (RequerimentoAdminController::
+     * minhasEscaladas()).
+     */
+    private function dadosRequerimentosPainel()
+    {
+        $requerimentos = new \App\Repositories\RequerimentoRepository();
+        $souAdministrador = Auth::possuiPerfil('administrador');
+        $statusFiltro = isset($_GET['requerimentos_status']) ? $_GET['requerimentos_status'] : null;
+
+        $minhasEscaladas = $requerimentos->listarEscaladasPara(Auth::usuarioId());
+        foreach ($minhasEscaladas as &$item) {
+            $item['atrasado'] = $this->requerimentoEmAtraso($item);
+        }
+        unset($item);
+
+        $todosRequerimentos = [];
+        $contagemRequerimentos = [];
+
+        if ($souAdministrador) {
+            $concursosPermitidos = (new PerfilRepository())->concursosDoUsuario(Auth::usuarioId(), 'administrador');
+            $contagemRequerimentos = $requerimentos->contarPorStatus($concursosPermitidos);
+            $todosRequerimentos = $requerimentos->listarTodas($concursosPermitidos, $statusFiltro);
+
+            foreach ($todosRequerimentos as &$item) {
+                $item['atrasado'] = $this->requerimentoEmAtraso($item);
+            }
+            unset($item);
+        }
+
+        return [
+            'souAdministradorRequerimentos' => $souAdministrador,
+            'requerimentosStatusFiltro' => $statusFiltro,
+            'contagemRequerimentos' => $contagemRequerimentos,
+            'todosRequerimentos' => $todosRequerimentos,
+            'minhasEscaladasRequerimentos' => $minhasEscaladas,
+        ];
+    }
+
+    private function requerimentoEmAtraso(array $requerimento)
+    {
+        if (!in_array($requerimento['status'], ['recebido', 'escalado'], true)) {
+            return false;
+        }
+
+        return \App\Services\SlaService::emAtraso($requerimento['enviado_em']);
     }
 
     /**

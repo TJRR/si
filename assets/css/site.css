@@ -1532,6 +1532,20 @@ body.admin-page .status-avaliacao.pendente {
     color: #0f7a8c;
 }
 
+/* Fase 30: cinza pra "aguardando assinatura" (ainda nao chegou pra equipe
+   do TJRR agir) e roxo pra "esclarecimento solicitado" (bola com o lider,
+   nao com um atendente especifico - sinal visualmente diferente de
+   "escalado", que ja usa laranja). */
+.status-pill.cinza {
+    background: #e8e8ea;
+    color: #55585c;
+}
+
+.status-pill.roxo {
+    background: #ede4fb;
+    color: #6b3fa0;
+}
+
 /* Recuo do conteudo dentro da arvore (#conteudo-admin) fica no proprio
    container, no mesmo valor de .abas-secundarias (0.5rem), em vez de listar
    tag por tag (h1/p/form/table/fieldset) - repetia o mesmo bug de alinhamento
@@ -2384,6 +2398,52 @@ body.admin-page button.criterio-aba.ativo {
     padding: 1rem;
 }
 
+/* Fase 30 (melhoria pos-teste): mesmo padrao de acordeao de
+   .ficha-submissao-colapsavel, reaproveitado nas secoes do Painel
+   administrativo (Duvidas/Requerimentos/Progresso da avaliacao) - comecam
+   recolhidas (sem o atributo "open" no <details>). */
+.painel-secao-colapsavel {
+    margin-bottom: 1.5rem;
+}
+
+.painel-secao-colapsavel summary {
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+    background: var(--cor-fundo-alt);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    list-style: none;
+}
+
+.painel-secao-colapsavel summary::-webkit-details-marker {
+    display: none;
+}
+
+.painel-secao-colapsavel summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.2s ease;
+}
+
+.painel-secao-colapsavel[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.painel-secao-colapsavel[open] summary {
+    border-radius: 8px 8px 0 0;
+    border-bottom: none;
+}
+
+.painel-secao-colapsavel-corpo {
+    border: 1px solid var(--cor-borda);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 1rem;
+}
+
 /* Fase 28: layout compartilhado (notar_compartilhado.php) - quando todos os
    criterios da etapa enxergam o mesmo conteudo, a ficha some do
    .criterio-bloco (fica so' uma vez, fora do loop) e os criterios viram
@@ -3145,6 +3205,98 @@ body.admin-page button[data-toggle-feedback]:focus {
     border: 1px solid var(--cor-borda);
     border-radius: 4px;
     padding: 0.2rem 0.35rem;
+}
+
+/* Fase 30 (correcao pos-teste): dicionario de palavras-chave, exclusivo da
+   tela de Modelos de Documento - fora do editor rico compartilhado de
+   proposito (ver modelo-documento-dicionario.js). Icone no canto superior
+   direito, logo acima do editor; passar o mouse mostra o painel (balao
+   suspenso, so' CSS); clicar fixa aberto ate' outro clique. */
+.modelo-corpo-wrapper {
+    position: relative;
+}
+
+.modelo-dicionario-area {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 5;
+}
+
+/* body.admin-page button (regra generica de botao-pilula, com pseudo-
+   elementos de gradiente) tem mais especificidade que uma classe sozinha e
+   cobria o SVG por dentro - precisa do prefixo "body.admin-page" pra vencer
+   e "content: none" pra desligar os pseudo-elementos aqui. */
+body.admin-page .modelo-dicionario-botao {
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 6px;
+    border: 1px solid var(--cor-borda);
+    background: var(--cor-branco);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--cor-texto);
+}
+
+body.admin-page .modelo-dicionario-botao::before,
+body.admin-page .modelo-dicionario-botao::after {
+    content: none;
+}
+
+body.admin-page .modelo-dicionario-botao:hover,
+body.admin-page .modelo-dicionario-botao:focus {
+    border-color: var(--cor-primaria-fim);
+    color: var(--cor-primaria-fim);
+}
+
+.modelo-dicionario-painel {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 6px;
+    width: 300px;
+    max-height: 420px;
+    overflow-y: auto;
+    z-index: 20;
+    background: #fff;
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    text-align: left;
+}
+
+.modelo-dicionario-area:hover .modelo-dicionario-painel,
+.modelo-dicionario-painel.aberto {
+    display: block;
+}
+
+.modelo-dicionario-painel h3 {
+    margin-top: 0;
+}
+
+.modelo-dicionario-painel dl {
+    margin: 0.5rem 0 0;
+}
+
+.modelo-dicionario-painel dt {
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.modelo-dicionario-painel dd {
+    margin: 0.15rem 0 0;
+    color: #555;
+}
+
+@media (max-width: 900px) {
+    .modelo-dicionario-painel {
+        width: min(300px, 90vw);
+    }
 }
 
 .editor-rico-tamanho {
