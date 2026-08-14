@@ -82,6 +82,37 @@ class NotificacaoPainelRepository
         Auditoria::registrar('remover_por_tipo', 'notificacoes_painel', $usuarioId, null, ['tipo' => $tipo]);
     }
 
+    /**
+     * Variante de removerPorTipo() para tipos onde varios participantes
+     * diferentes podem ter notificacao ativa ao mesmo tempo (ex.: convite
+     * pendente) - remover por tipo sozinho apagaria a de todo mundo, nao so
+     * a do participante que acabou de ser resolvido. Le em PHP em vez de
+     * JSON_EXTRACT no SQL porque `dados` e' salvo como TEXT simples.
+     */
+    public function removerPorTipoEParticipante($tipo, $participanteId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT id, dados FROM notificacoes_painel WHERE tipo = :tipo');
+        $stmt->execute(['tipo' => $tipo]);
+
+        $ids = [];
+        foreach ($stmt->fetchAll() as $linha) {
+            $dados = $linha['dados'] !== null ? json_decode($linha['dados'], true) : null;
+            if ($dados !== null && isset($dados['participante_id']) && (int) $dados['participante_id'] === (int) $participanteId) {
+                $ids[] = (int) $linha['id'];
+            }
+        }
+
+        if (empty($ids)) {
+            return;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $pdo->prepare("DELETE FROM notificacoes_painel WHERE id IN ($placeholders)")->execute($ids);
+
+        Auditoria::registrar('remover_por_tipo_participante', 'notificacoes_painel', $participanteId, null, ['tipo' => $tipo, 'ids' => $ids]);
+    }
+
     public function listarRecentes($usuarioId, $limite = 10)
     {
         $pdo = Database::conexao();

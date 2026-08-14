@@ -168,6 +168,7 @@ class HomologacaoController extends Controller
         }
 
         (new AcessoParticipanteService())->liberarAcesso($participante, $equipe['trilha_id'], $equipe['nome_equipe']);
+        $this->notificacoes->removerPorTipoEParticipante('participante_email_completo', $participanteId);
 
         $_SESSION['flash'] = 'Convite enviado para "' . $participante['nome'] . '".';
         $this->redirecionar('homologacao/index/' . $equipe['trilha_id']);

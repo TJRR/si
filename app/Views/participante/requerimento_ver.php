@@ -49,7 +49,7 @@
     <div class="admin-card">
         <form method="post" action="<?php echo url('requerimento/gerarPdfNovamente/' . (int) $requerimento['id']); ?>">
             <label>Necessidade (descrever brevemente):
-                <textarea name="necessidade" rows="5" required><?php echo htmlspecialchars($requerimento['necessidade'], ENT_QUOTES, 'UTF-8'); ?></textarea>
+                <textarea name="necessidade" rows="5" required style="width:100%; box-sizing:border-box;"><?php echo htmlspecialchars($requerimento['necessidade'], ENT_QUOTES, 'UTF-8'); ?></textarea>
             </label><br>
             <button type="submit">Gerar PDF</button>
         </form>

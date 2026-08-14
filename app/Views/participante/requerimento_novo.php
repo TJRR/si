@@ -10,7 +10,7 @@
 
 <form method="post" action="<?php echo url('requerimento/gerarPdf/' . (int) $modelo['id']); ?>">
     <label>Necessidade (descrever brevemente):
-        <textarea name="necessidade" rows="5" required></textarea>
+        <textarea name="necessidade" rows="5" required style="width:100%; box-sizing:border-box;"></textarea>
     </label><br>
 
     <p>Ao clicar em "Gerar PDF", os demais campos do documento são preenchidos automaticamente com os dados já cadastrados da sua equipe. Você poderá baixar o PDF sem assinatura, assiná-lo por conta própria no <strong>gov.br</strong> e depois voltar aqui para enviar o documento assinado.</p>

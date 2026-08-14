@@ -4,10 +4,6 @@
 } ?>
 <h1>Modelos de Documento — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<?php if (!empty($flash)): ?>
-    <p style="color:#b06000;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
-<?php endif; ?>
-
 <p><a href="<?php echo url('modelosDocumento/novo/' . (int) $etapa['id']); ?>" class="btn-acao">+ Novo modelo</a></p>
 
 <?php if (empty($modelos)): ?>

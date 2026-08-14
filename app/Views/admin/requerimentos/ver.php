@@ -92,7 +92,7 @@
             </select>
         </label><br>
         <label>Resposta:
-            <textarea name="resposta" rows="5" required placeholder="Se aprovado: detalhes de como acessar. Se recusado: motivo. Se esclarecimento: o que falta esclarecer."></textarea>
+            <textarea name="resposta" rows="5" required placeholder="Se aprovado: detalhes de como acessar. Se recusado: motivo. Se esclarecimento: o que falta esclarecer." style="width:100%; box-sizing:border-box;"></textarea>
         </label><br>
         <label>Anexo (opcional, PDF):
             <input type="file" name="anexo" accept="application/pdf">
@@ -113,7 +113,7 @@
     <form method="post" action="<?php echo url('requerimentoAdmin/responder/' . (int) $requerimento['id']); ?>" enctype="multipart/form-data" onsubmit="return confirm('Revogar o acesso já concedido a esta equipe? Esta ação não pode ser desfeita.');">
         <input type="hidden" name="desfecho" value="revogado">
         <label>Motivo da revogação:
-            <textarea name="resposta" rows="3" required></textarea>
+            <textarea name="resposta" rows="3" required style="width:100%; box-sizing:border-box;"></textarea>
         </label><br>
         <label>Anexo (opcional, PDF):
             <input type="file" name="anexo" accept="application/pdf">

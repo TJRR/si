@@ -145,11 +145,19 @@ if ($ehPainelAdmin) {
                                         <span class="notificacoes-sino-mensagem"><?php echo htmlspecialchars($notificacao['mensagem'], ENT_QUOTES, 'UTF-8'); ?></span>
                                     </a>
                                     <?php if (empty($notificacao['lida'])): ?>
-                                        <form method="post" action="<?php echo url('notificacoesPainel/marcarLida/' . (int) $notificacao['id']); ?>">
-                                            <button type="submit" class="btn-icone" title="Marcar como lida">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                </svg>
+                                        <?php $ehConvitePendente = $notificacao['tipo'] === 'participante_email_completo'; ?>
+                                        <form method="post" action="<?php echo url('notificacoesPainel/marcarLida/' . (int) $notificacao['id']); ?>"<?php echo $ehConvitePendente ? ' onsubmit="return confirm(\'Convidar esta pessoa agora? Um e-mail de acesso sera enviado.\');"' : ''; ?>>
+                                            <button type="submit" class="btn-icone" title="<?php echo $ehConvitePendente ? 'Convidar acesso agora' : 'Marcar como lida'; ?>">
+                                                <?php if ($ehConvitePendente): ?>
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <path d="M22 2 11 13"></path>
+                                                        <path d="M22 2 15 22l-4-9-9-4 20-7Z"></path>
+                                                    </svg>
+                                                <?php else: ?>
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                <?php endif; ?>
                                             </button>
                                         </form>
                                     <?php endif; ?>

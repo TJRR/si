@@ -364,7 +364,7 @@ class ParticipanteController extends Controller
         }
 
         $this->participantes->atualizarEmail($participanteId, $email);
-        $this->notificarAdminEmailCompleto($equipe, $alvo['nome'], $email);
+        $this->notificarAdminEmailCompleto($equipe, $participanteId, $alvo['nome'], $email);
 
         $_SESSION['flash'] = 'E-mail de "' . $alvo['nome'] . '" cadastrado. O Admin foi avisado para liberar o acesso dele(a).';
         $this->redirecionar('participante/index');
@@ -372,11 +372,15 @@ class ParticipanteController extends Controller
 
     /**
      * Fase 27, Parte C: avisa todo administrador do concurso da trilha da
-     * equipe (sino de notificacoes, Fase 12) - o convite em si (criar conta +
-     * enviar link) fica a cargo do Admin, um clique na tela de Homologacao
-     * (HomologacaoController::convidarAcesso()), nunca automatico.
+     * equipe (sino de notificacoes, Fase 12). Fase 31: o texto sempre disse
+     * "Convide-o", mas o clique no check so descartava o aviso sem convidar
+     * ninguem - agora o check desta notificacao (NotificacaoPainelController::
+     * marcarLida()) dispara o convite de verdade, reaproveitando a mesma
+     * rotina de HomologacaoController::convidarAcesso(). participante_id
+     * guardado em `dados` e' o que permite esse atalho sem precisar abrir a
+     * tela de Homologacao.
      */
-    private function notificarAdminEmailCompleto(array $equipe, $nomeIntegrante, $email)
+    private function notificarAdminEmailCompleto(array $equipe, $participanteId, $nomeIntegrante, $email)
     {
         $trilha = $this->trilhas->buscarPorId($equipe['trilha_id']);
 
@@ -386,7 +390,10 @@ class ParticipanteController extends Controller
                 'participante_email_completo',
                 'Participante com e-mail cadastrado',
                 '"' . $nomeIntegrante . '" (equipe "' . $equipe['nome_equipe'] . '") teve o e-mail ' . $email . ' cadastrado pelo líder. Convide-o para liberar o acesso.',
-                ['url' => url('homologacao/index/' . (int) $equipe['trilha_id'])]
+                [
+                    'url' => url('homologacao/index/' . (int) $equipe['trilha_id']),
+                    'participante_id' => (int) $participanteId,
+                ]
             );
         }
     }

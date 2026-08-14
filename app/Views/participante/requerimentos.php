@@ -6,6 +6,7 @@
     <h1>Requerimentos</h1>
     <div class="pagina-titulo-botoes">
         <a href="<?php echo url('participante/index'); ?>" class="btn-acao">Minha inscrição</a>
+        <a href="<?php echo url('participante/index'); ?>" class="btn-voltar">Voltar</a>
     </div>
 </div>
 
