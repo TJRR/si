@@ -146,7 +146,7 @@ if ($ehPainelAdmin) {
                                     </a>
                                     <?php if (empty($notificacao['lida'])): ?>
                                         <?php $ehConvitePendente = $notificacao['tipo'] === 'participante_email_completo'; ?>
-                                        <form method="post" action="<?php echo url('notificacoesPainel/marcarLida/' . (int) $notificacao['id']); ?>"<?php echo $ehConvitePendente ? ' onsubmit="return confirm(\'Convidar esta pessoa agora? Um e-mail de acesso sera enviado.\');"' : ''; ?>>
+                                        <form method="post" action="<?php echo url('notificacoesPainel/marcarLida/' . (int) $notificacao['id']); ?>">
                                             <button type="submit" class="btn-icone" title="<?php echo $ehConvitePendente ? 'Convidar acesso agora' : 'Marcar como lida'; ?>">
                                                 <?php if ($ehConvitePendente): ?>
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
