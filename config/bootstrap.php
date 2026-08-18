@@ -12,7 +12,23 @@ ini_set('display_errors', $config['env'] === 'local' ? '1' : '0');
 date_default_timezone_set($config['timezone']);
 
 session_save_path(__DIR__ . '/../storage/sessions');
+
+$https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+session_set_cookie_params([
+    'httponly' => true,
+    'secure' => $https,
+    'samesite' => 'Lax',
+]);
+
 session_start();
+
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
 
 set_exception_handler(function (\Throwable $e) use ($config) {
     http_response_code(500);

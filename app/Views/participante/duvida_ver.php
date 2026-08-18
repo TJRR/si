@@ -51,8 +51,8 @@
     <span class="status-pill <?php echo $coresStatus[$duvida['status']]; ?>"><?php echo $rotulosStatus[$duvida['status']]; ?></span>
 </div>
 
-<?php if (!empty($flash)): ?>
-    <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php if (!empty($_SESSION['flash'])): ?>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
 <div class="duvida-mensagem">
@@ -88,7 +88,7 @@
                 Reabrir dúvida
             </h2>
             <p class="duvida-limite" style="margin-top:-0.4rem;margin-bottom:0.6rem;">Se a resposta não resolveu, explique o que ainda falta esclarecer.</p>
-            <form method="post" action="<?php echo url('duvida/reabrir/' . (int) $duvida['id']); ?>" enctype="multipart/form-data">
+            <form method="post" action="<?php echo url('duvida/reabrir/' . (int) $duvida['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
                 <textarea name="pergunta" rows="4" placeholder="O que ainda falta esclarecer" required></textarea>
                 <div class="duvida-acao-rodape">
                     <label class="btn-icone" title="Anexar arquivo" style="cursor:pointer;">

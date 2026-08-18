@@ -186,6 +186,7 @@
 
         fetch(window.SI_BASE_PATH + '/index.php?r=editorMidia/uploadImagem', {
             method: 'POST',
+            headers: { 'X-CSRF-Token': window.SI_CSRF_TOKEN },
             body: dados,
             credentials: 'same-origin'
         })

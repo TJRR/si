@@ -4,15 +4,15 @@
 } ?>
 <h1>Inscritos — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<?php if (!empty($flash)): ?>
-    <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php if (!empty($_SESSION['flash'])): ?>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
 <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
     <p>
         <?php if ($homologacaoPublicada): ?>
             <strong>Página pública de equipes homologadas: publicada.</strong>
-            <form method="post" action="<?php echo url('homologacao/despublicar/' . (int) $trilha['id']); ?>" style="display:inline;">
+            <form method="post" action="<?php echo url('homologacao/despublicar/' . (int) $trilha['id']); ?>" style="display:inline;"><?= campoCsrf() ?>
                 <button type="submit" class="btn-icone" title="Despublicar" onclick="return confirm('A página pública de equipes homologadas desta trilha vai sair do ar. Confirmar?');">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <polyline points="1 4 1 10 7 10"></polyline>
@@ -22,7 +22,7 @@
             </form>
         <?php else: ?>
             <strong>Página pública de equipes homologadas: não publicada.</strong>
-            <form method="post" action="<?php echo url('homologacao/publicar/' . (int) $trilha['id']); ?>" style="display:inline;">
+            <form method="post" action="<?php echo url('homologacao/publicar/' . (int) $trilha['id']); ?>" style="display:inline;"><?= campoCsrf() ?>
                 <button type="submit" class="btn-icone" title="Publicar" onclick="return confirm('Publica a lista de equipes homologadas desta trilha numa página pública. Confirmar?');">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -59,7 +59,7 @@
         "Rejeitar" de cada linha acabavam submetendo ESTE form em vez do
         deles, sem action nenhuma - por isso o botao "nao funcionava").
     -->
-    <form method="post" id="form-acoes-em-massa">
+    <form method="post" id="form-acoes-em-massa"><?= campoCsrf() ?>
         <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
     </form>
 
@@ -89,7 +89,7 @@
                 <td>
                     <div class="acoes-icones">
                         <?php if ($item['status_homologacao'] !== 'homologado'): ?>
-                            <form method="post" action="<?php echo url('homologacao/homologar'); ?>">
+                            <form method="post" action="<?php echo url('homologacao/homologar'); ?>"><?= campoCsrf() ?>
                                 <input type="hidden" name="vinculo_id" value="<?php echo (int) $item['vinculo_id']; ?>">
                                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                                 <button type="submit" class="btn-icone" title="Homologar">
@@ -101,7 +101,7 @@
                             </form>
                         <?php endif; ?>
                         <?php if ($item['status_homologacao'] !== 'rejeitado'): ?>
-                            <form method="post" action="<?php echo url('homologacao/rejeitar'); ?>" onsubmit="return confirm('Rejeitar esta inscrição?');">
+                            <form method="post" action="<?php echo url('homologacao/rejeitar'); ?>" onsubmit="return confirm('Rejeitar esta inscrição?');"><?= campoCsrf() ?>
                                 <input type="hidden" name="vinculo_id" value="<?php echo (int) $item['vinculo_id']; ?>">
                                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                                 <button type="submit" class="btn-icone" title="Rejeitar">
@@ -114,7 +114,7 @@
                             </form>
                         <?php endif; ?>
                         <?php if (!empty($item['precisa_convite']) && \App\Core\Auth::possuiPerfil('administrador')): ?>
-                            <form method="post" action="<?php echo url('homologacao/convidarAcesso'); ?>">
+                            <form method="post" action="<?php echo url('homologacao/convidarAcesso'); ?>"><?= campoCsrf() ?>
                                 <input type="hidden" name="participante_id" value="<?php echo (int) $item['participante_id']; ?>">
                                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                                 <button type="submit" class="btn-icone" title="Convidar acesso — e-mail cadastrado, conta ainda não criada">

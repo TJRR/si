@@ -10,10 +10,10 @@
 </div>
 
 <?php if (!empty($_SESSION['flash'])): ?>
-    <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('tema/rodape'); ?>" enctype="multipart/form-data" id="form-rodape">
+<form method="post" action="<?php echo url('tema/rodape'); ?>" enctype="multipart/form-data" id="form-rodape"><?= campoCsrf() ?>
     <fieldset>
         <legend>Logo do rodapé (opcional)</legend>
         <p>Se enviada, substitui a logo padrão no rodapé (útil pra uma versão em cor diferente, sem precisar de tratamento de imagem toda vez). Sem imagem, o rodapé usa a mesma logo do cabeçalho.</p>

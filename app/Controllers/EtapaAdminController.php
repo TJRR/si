@@ -185,9 +185,9 @@ class EtapaAdminController extends Controller
             $this->etapas->remover($id);
             $_SESSION['flash'] = 'Etapa removida.';
         } catch (\PDOException $e) {
-            $_SESSION['flash'] = $e->getCode() === '23000'
+            flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: esta etapa já tem critérios, fórmula, avaliações ou submissões vinculadas.'
-                : 'Não foi possível remover a etapa.';
+                : 'Não foi possível remover a etapa.');
         }
 
         $this->redirecionar('etapas/index/' . $trilhaId);

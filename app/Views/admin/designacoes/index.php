@@ -6,8 +6,8 @@
 
 <p><a href="<?php echo url('etapas/index/' . (int) $trilha['id']); ?>">Voltar às etapas</a> — <a href="<?php echo url('designacoes/progresso/' . (int) $etapa['id']); ?>">Ver progresso por avaliador</a></p>
 
-<?php if (!empty($flash)): ?>
-    <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php if (!empty($_SESSION['flash'])): ?>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
 <p>Modo de designação desta etapa: <strong><?php
@@ -58,7 +58,7 @@
         <button type="submit">Filtrar</button>
     </form>
 
-    <form method="post" action="<?php echo url('designacoes/atribuirEmMassa'); ?>">
+    <form method="post" action="<?php echo url('designacoes/atribuirEmMassa'); ?>"><?= campoCsrf() ?>
         <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
         <p>
             <input type="checkbox" id="marcar-todos">

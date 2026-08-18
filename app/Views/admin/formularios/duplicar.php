@@ -8,7 +8,7 @@
 
 <p>Cria uma nova versão deste formulário (com os mesmos campos) no concurso escolhido abaixo.</p>
 
-<form method="post" action="<?php echo url('formularios/duplicar'); ?>">
+<form method="post" action="<?php echo url('formularios/duplicar'); ?>"><?= campoCsrf() ?>
     <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
     <input type="hidden" name="concurso_origem_id" value="<?php echo (int) $formulario['concurso_id']; ?>">
 

@@ -8,7 +8,7 @@
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('documentos/novo/' . (int) $concurso['id']); ?>" enctype="multipart/form-data">
+<form method="post" action="<?php echo url('documentos/novo/' . (int) $concurso['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
     <label>Tipo:
         <select name="tipo" required>
             <?php $rotulosTipo = ['edital' => 'Edital', 'edital_simples' => 'Edital em linguagem simples', 'anexo' => 'Anexo', 'retificacao' => 'Retificação', 'resultado_final' => 'Resultado final', 'ata' => 'Ata']; ?>

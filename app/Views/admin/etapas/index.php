@@ -46,7 +46,7 @@
                         </svg>
                     </a>
                     <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
-                    <form method="post" action="<?php echo url('etapas/remover'); ?>" onsubmit="return confirm('Remover esta etapa? Só funciona se ela ainda não tiver critérios, notas ou submissões.');">
+                    <form method="post" action="<?php echo url('etapas/remover'); ?>" onsubmit="return confirm('Remover esta etapa? Só funciona se ela ainda não tiver critérios, notas ou submissões.');"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $etapa['id']; ?>">
                         <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                         <button type="submit" class="btn-icone" title="Remover">

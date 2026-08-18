@@ -7,15 +7,18 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\AvaliadorCategoriaRepository;
 use App\Repositories\CategoriaAvaliadorRepository;
 use App\Repositories\ConcursoRepository;
 use App\Repositories\PerfilRepository;
+use App\Repositories\TentativaLoginRepository;
 use App\Repositories\TokenSenhaRepository;
 use App\Repositories\UsuarioRepository;
 use App\Services\AcessoParticipanteService;
+use App\Services\AuthService;
 
 class UsuarioAdminController extends Controller
 {
@@ -25,6 +28,7 @@ class UsuarioAdminController extends Controller
     private $categoriasAvaliador;
     private $avaliadorCategorias;
     private $tokens;
+    private $tentativasLogin;
 
     public function __construct()
     {
@@ -35,6 +39,7 @@ class UsuarioAdminController extends Controller
         $this->categoriasAvaliador = new CategoriaAvaliadorRepository();
         $this->avaliadorCategorias = new AvaliadorCategoriaRepository();
         $this->tokens = new TokenSenhaRepository();
+        $this->tentativasLogin = new TentativaLoginRepository();
     }
 
     public function index()
@@ -63,6 +68,15 @@ class UsuarioAdminController extends Controller
                 }
             }
             unset($vinculo);
+
+            // Fase 31 (melhoria pos-auditoria): badge de "bloqueado por
+            // tentativas de login" (rate limiting do achado #11) - so'
+            // relevante pra quem tem senha propria, ja que Google nao passa
+            // por AuthService::autenticar().
+            $usuario['bloqueado_login'] = $this->tentativasLogin->contarFalhasRecentes(
+                $usuario['email'],
+                AuthService::JANELA_TENTATIVAS_MINUTOS
+            ) >= AuthService::LIMITE_TENTATIVAS;
 
             // Fase 24: badge de "convite vencido" (coluna Acesso) - so' faz
             // sentido pra quem ainda nao entrou (sem senha e sem Google);
@@ -224,7 +238,7 @@ class UsuarioAdminController extends Controller
         $perfil = $this->perfis->buscarPorChave($perfilChave);
 
         if ($perfil === null) {
-            $_SESSION['flash'] = 'Selecione um perfil válido antes de aprovar.';
+            flashErro('Selecione um perfil válido antes de aprovar.');
             $this->redirecionar('usuarios/index');
             return;
         }
@@ -352,14 +366,39 @@ class UsuarioAdminController extends Controller
         $this->redirecionar('usuarios/index');
     }
 
+    /**
+     * Fase 31 (melhoria pos-auditoria): remove o bloqueio por tentativas de
+     * login (achado #11) antes do prazo normal (15min). A tela ja avisa o
+     * Admin do risco antes de confirmar (ver admin/usuarios.php) - aqui so'
+     * fica o registro de auditoria de quem decidiu assumir esse risco.
+     */
+    public function removerBloqueioLogin()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $usuario = $this->usuarios->buscarPorId($id);
+
+        if ($usuario === null) {
+            flashErro('Usuário não encontrado.');
+            $this->redirecionar('usuarios/index');
+            return;
+        }
+
+        $this->tentativasLogin->limparFalhas($usuario['email']);
+        Auditoria::registrar('remover_bloqueio_login', 'usuarios', $id, null, ['email' => $usuario['email']]);
+        flashSucesso('Bloqueio de login removido para ' . $usuario['nome'] . '.');
+        $this->redirecionar('usuarios/index');
+    }
+
     public function reenviarConvite()
     {
         $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $sucesso = (new AcessoParticipanteService())->reenviarConvite($id);
 
-        $_SESSION['flash'] = $sucesso
-            ? 'Convite reenviado.'
-            : 'Não foi possível reenviar: usuário não encontrado ou já possui acesso definido.';
+        if ($sucesso) {
+            flashSucesso('Convite reenviado.');
+        } else {
+            flashErro('Não foi possível reenviar: usuário não encontrado ou já possui acesso definido.');
+        }
 
         $this->redirecionar('usuarios/index');
     }

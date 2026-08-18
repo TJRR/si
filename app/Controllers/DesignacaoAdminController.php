@@ -214,7 +214,7 @@ class DesignacaoAdminController extends Controller
         $designacao = $this->designacoes->buscarPorId($id);
 
         if ($designacao === null) {
-            $_SESSION['flash'] = 'Designação não encontrada.';
+            flashErro('Designação não encontrada.');
             $this->redirecionar('designacoes/index/' . $etapaId);
             return;
         }
@@ -228,13 +228,13 @@ class DesignacaoAdminController extends Controller
         RoleMiddleware::exigir(['administrador'], $trilhaDaDesignacao !== null ? $trilhaDaDesignacao['concurso_id'] : null);
 
         if ($designacao['origem'] === 'sorteio') {
-            $_SESSION['flash'] = 'Designações de sorteio não podem ser removidas — a distribuição já foi aceita.';
+            flashErro('Designações de sorteio não podem ser removidas — a distribuição já foi aceita.');
             $this->redirecionar('designacoes/index/' . $etapaId);
             return;
         }
 
         if ($this->notas->contarNotasPorUsuario($designacao['submissao_id'], $designacao['usuario_id']) > 0) {
-            $_SESSION['flash'] = 'Este avaliador já lançou nota para esta submissão — não é possível remover a designação.';
+            flashErro('Este avaliador já lançou nota para esta submissão — não é possível remover a designação.');
             $this->redirecionar('designacoes/index/' . $etapaId);
             return;
         }
@@ -283,7 +283,7 @@ class DesignacaoAdminController extends Controller
             $vagas = $this->etapaCategorias->listarPorEtapa($etapaId);
 
             if (empty($vagas)) {
-                $_SESSION['flash'] = 'Configure as vagas por categoria desta etapa antes de sortear.';
+                flashErro('Configure as vagas por categoria desta etapa antes de sortear.');
                 $this->redirecionar('designacoes/index/' . $etapaId);
                 return;
             }
@@ -308,13 +308,13 @@ class DesignacaoAdminController extends Controller
         try {
             $linhas = $this->servico->calcularDistribuicao($etapaId);
         } catch (\RuntimeException $e) {
-            $_SESSION['flash'] = $e->getMessage();
+            flashErro($e->getMessage());
             $this->redirecionar('designacoes/index/' . $etapaId);
             return;
         }
 
         if (empty($linhas)) {
-            $_SESSION['flash'] = 'Todas as submissões já têm a quantidade de avaliadores configurada.';
+            flashAlerta('Todas as submissões já têm a quantidade de avaliadores configurada.');
             $this->redirecionar('designacoes/index/' . $etapaId);
             return;
         }
@@ -346,13 +346,13 @@ class DesignacaoAdminController extends Controller
         try {
             $linhas = $this->servico->calcularDistribuicaoPorCategoria($etapaId, $avaliadorIds);
         } catch (\RuntimeException $e) {
-            $_SESSION['flash'] = $e->getMessage();
+            flashErro($e->getMessage());
             $this->redirecionar('designacoes/index/' . $etapaId);
             return;
         }
 
         if (empty($linhas)) {
-            $_SESSION['flash'] = 'Todas as submissões já têm a quantidade de avaliadores configurada.';
+            flashAlerta('Todas as submissões já têm a quantidade de avaliadores configurada.');
             $this->redirecionar('designacoes/index/' . $etapaId);
             return;
         }

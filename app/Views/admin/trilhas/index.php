@@ -26,7 +26,7 @@
                 <?php else: ?>
                     <strong><?php echo $trilha['inscricoes_abertas'] ? 'Abertas' : 'Fechadas'; ?></strong>
                     <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
-                    <form method="post" action="<?php echo url('trilhas/alternarInscricoes/' . (int) $trilha['id']); ?>" style="display:inline;">
+                    <form method="post" action="<?php echo url('trilhas/alternarInscricoes/' . (int) $trilha['id']); ?>" style="display:inline;"><?= campoCsrf() ?>
                         <?php if ($trilha['inscricoes_abertas']): ?>
                         <button type="submit" class="btn-icone" title="Fechar inscrições">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -55,7 +55,7 @@
                         </svg>
                     </a>
                     <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
-                    <form method="post" action="<?php echo url('trilhas/remover'); ?>" onsubmit="return confirm('Remover esta trilha? Só funciona se ela ainda não tiver etapas, equipes ou outros dados vinculados.');">
+                    <form method="post" action="<?php echo url('trilhas/remover'); ?>" onsubmit="return confirm('Remover esta trilha? Só funciona se ela ainda não tiver etapas, equipes ou outros dados vinculados.');"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $trilha['id']; ?>">
                         <input type="hidden" name="concurso_id" value="<?php echo (int) $concurso['id']; ?>">
                         <button type="submit" class="btn-icone" title="Remover">

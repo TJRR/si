@@ -70,7 +70,7 @@ class TrilhaAdminController extends Controller
         $etapaCadastro = $this->etapas->buscarCadastroDaTrilha($trilhaId);
 
         if ($etapaCadastro === null) {
-            $_SESSION['flash'] = 'Esta trilha não tem etapa "Cadastro de Equipe" (ordem 1) configurada.';
+            flashErro('Esta trilha não tem etapa "Cadastro de Equipe" (ordem 1) configurada.');
         } else {
             $this->etapas->alternarCapturaAtiva($etapaCadastro['id']);
         }
@@ -99,9 +99,9 @@ class TrilhaAdminController extends Controller
             $this->trilhas->remover($id);
             $_SESSION['flash'] = 'Trilha removida.';
         } catch (\PDOException $e) {
-            $_SESSION['flash'] = $e->getCode() === '23000'
+            flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: esta trilha já tem etapas, equipes, fórmula ou regras de desempate vinculadas.'
-                : 'Não foi possível remover a trilha.';
+                : 'Não foi possível remover a trilha.');
         }
 
         $this->redirecionar('trilhas/index/' . $concursoId);

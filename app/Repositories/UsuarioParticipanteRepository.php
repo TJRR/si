@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Database;
 
 class UsuarioParticipanteRepository
@@ -18,6 +19,12 @@ class UsuarioParticipanteRepository
             'INSERT IGNORE INTO usuario_participante (usuario_id, participante_id) VALUES (:usuario_id, :participante_id)'
         );
         $stmt->execute(['usuario_id' => $usuarioId, 'participante_id' => $participanteId]);
+
+        // INSERT IGNORE: so' audita quando o vinculo era realmente novo (rowCount
+        // 0 = ja existia, chamada foi um no-op) - Fase 31 (Auditoria de Seguranca).
+        if ($stmt->rowCount() > 0) {
+            Auditoria::registrar('vincular', 'usuario_participante', $usuarioId, null, ['participante_id' => $participanteId]);
+        }
     }
 
     public function participantesDoUsuario($usuarioId)

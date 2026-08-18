@@ -41,6 +41,16 @@ class ArquivoPrivadoService
             throw new \RuntimeException('Upload inválido.');
         }
 
+        // Fase 31 (Auditoria de Seguranca, achado #15): validacao de MIME
+        // real (nao extensao/Content-Type declarado) direto aqui, em vez de
+        // depender so' de quem chama (UploadPdfValidador) - fecha o
+        // contrato implicito, ja que este metodo so' grava ".pdf" mesmo.
+        $tipoReal = finfo_file(finfo_open(FILEINFO_MIME_TYPE), $arquivo['tmp_name']);
+
+        if ($tipoReal !== 'application/pdf') {
+            throw new \RuntimeException('O arquivo enviado não é um PDF válido.');
+        }
+
         $pastaBase = self::baseFisica();
         $pastaFisica = $pastaBase . '/' . $subpasta;
 

@@ -105,7 +105,7 @@ class RequerimentoController extends Controller
         $modelo = $this->modeloDisponivelOuAbortar($modeloDocumentoId, $equipe);
 
         if ($this->requerimentos->buscarEmAndamentoPorEquipeEModelo($equipe['id'], $modeloDocumentoId) !== null) {
-            $_SESSION['flash'] = 'Já existe um pedido em andamento para este modelo.';
+            flashErro('Já existe um pedido em andamento para este modelo.');
             $this->redirecionar('requerimento/index');
             return;
         }
@@ -113,7 +113,7 @@ class RequerimentoController extends Controller
         $necessidade = trim(isset($_POST['necessidade']) ? $_POST['necessidade'] : '');
 
         if ($necessidade === '') {
-            $_SESSION['flash'] = 'Descreva a necessidade antes de gerar o documento.';
+            flashErro('Descreva a necessidade antes de gerar o documento.');
             $this->redirecionar('requerimento/novo/' . $modeloDocumentoId);
             return;
         }
@@ -148,7 +148,7 @@ class RequerimentoController extends Controller
         $necessidade = trim(isset($_POST['necessidade']) ? $_POST['necessidade'] : '');
 
         if ($necessidade === '') {
-            $_SESSION['flash'] = 'Descreva a necessidade antes de gerar o documento.';
+            flashErro('Descreva a necessidade antes de gerar o documento.');
             $this->redirecionar('requerimento/ver/' . $id);
             return;
         }
@@ -188,7 +188,7 @@ class RequerimentoController extends Controller
         }
 
         if (empty($_FILES['pdf_assinado']) || $_FILES['pdf_assinado']['error'] === UPLOAD_ERR_NO_FILE) {
-            $_SESSION['flash'] = 'Selecione o PDF assinado antes de enviar.';
+            flashErro('Selecione o PDF assinado antes de enviar.');
             $this->redirecionar('requerimento/ver/' . $id);
             return;
         }
@@ -196,13 +196,13 @@ class RequerimentoController extends Controller
         $validacao = UploadPdfValidador::validar($_FILES['pdf_assinado'], self::LIMITE_UPLOAD_BYTES);
 
         if (!$validacao['valido']) {
-            $_SESSION['flash'] = $validacao['mensagem'];
+            flashErro($validacao['mensagem']);
             $this->redirecionar('requerimento/ver/' . $id);
             return;
         }
 
         if (!$this->contemAssinaturaDigital($_FILES['pdf_assinado']['tmp_name'])) {
-            $_SESSION['flash'] = 'Este PDF não contém nenhuma assinatura digital — assine no gov.br antes de enviar.';
+            flashErro('Este PDF não contém nenhuma assinatura digital — assine no gov.br antes de enviar.');
             $this->redirecionar('requerimento/ver/' . $id);
             return;
         }
@@ -210,7 +210,7 @@ class RequerimentoController extends Controller
         try {
             $caminho = ArquivoPrivadoService::salvar($_FILES['pdf_assinado'], 'requerimentos/' . (int) $id);
         } catch (\RuntimeException $e) {
-            $_SESSION['flash'] = $e->getMessage();
+            flashErro($e->getMessage());
             $this->redirecionar('requerimento/ver/' . $id);
             return;
         }

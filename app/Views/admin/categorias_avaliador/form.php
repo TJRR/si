@@ -8,7 +8,7 @@
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo $categoria === null ? url('categoriasAvaliador/novo/' . (int) $concurso['id']) : url('categoriasAvaliador/editar/' . (int) $categoria['id']); ?>">
+<form method="post" action="<?php echo $categoria === null ? url('categoriasAvaliador/novo/' . (int) $concurso['id']) : url('categoriasAvaliador/editar/' . (int) $categoria['id']); ?>"><?= campoCsrf() ?>
     <label>Nome (ex.: Professor, Área finalística/meio, TI):
         <input type="text" name="nome" required value="<?php echo htmlspecialchars($categoria !== null ? $categoria['nome'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>

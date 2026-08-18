@@ -30,7 +30,7 @@
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                         </svg>
                     </a>
-                    <form method="post" action="<?php echo url('criterios/mover'); ?>">
+                    <form method="post" action="<?php echo url('criterios/mover'); ?>"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $criterio['id']; ?>">
                         <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
                         <input type="hidden" name="direcao" value="cima">
@@ -41,7 +41,7 @@
                             </svg>
                         </button>
                     </form>
-                    <form method="post" action="<?php echo url('criterios/mover'); ?>">
+                    <form method="post" action="<?php echo url('criterios/mover'); ?>"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $criterio['id']; ?>">
                         <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
                         <input type="hidden" name="direcao" value="baixo">
@@ -52,7 +52,7 @@
                             </svg>
                         </button>
                     </form>
-                    <form method="post" action="<?php echo url('criterios/remover'); ?>">
+                    <form method="post" action="<?php echo url('criterios/remover'); ?>"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $criterio['id']; ?>">
                         <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
                         <button type="submit" class="btn-icone" title="Remover">

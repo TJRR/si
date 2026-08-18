@@ -10,7 +10,7 @@
 
 <p><small>Aqui só é possível corrigir Tipo, Trilha e Título — para trocar o arquivo, use "+ Novo documento" (vira uma nova versão).</small></p>
 
-<form method="post" action="<?php echo url('documentos/editar/' . (int) $documento['id']); ?>">
+<form method="post" action="<?php echo url('documentos/editar/' . (int) $documento['id']); ?>"><?= campoCsrf() ?>
     <label>Tipo:
         <select name="tipo" required>
             <?php $rotulosTipo = ['edital' => 'Edital', 'edital_simples' => 'Edital em linguagem simples', 'anexo' => 'Anexo', 'retificacao' => 'Retificação', 'resultado_final' => 'Resultado final', 'ata' => 'Ata']; ?>

@@ -39,7 +39,7 @@
             </svg>
         </a>
         <?php if (in_array($formulario['status'], ['rascunho', 'despublicado'], true)): ?>
-            <form method="post" action="<?php echo url('formularios/publicar'); ?>">
+            <form method="post" action="<?php echo url('formularios/publicar'); ?>"><?= campoCsrf() ?>
                 <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
                 <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
                 <button type="submit" class="btn-icone" title="Publicar">
@@ -51,7 +51,7 @@
             </form>
         <?php endif; ?>
         <?php if ($formulario['status'] === 'publicado'): ?>
-            <form method="post" action="<?php echo url('formularios/despublicar'); ?>">
+            <form method="post" action="<?php echo url('formularios/despublicar'); ?>"><?= campoCsrf() ?>
                 <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
                 <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
                 <button type="submit" class="btn-icone" title="Despublicar">
@@ -63,7 +63,7 @@
             </form>
         <?php endif; ?>
         <?php if ($formulario['status'] === 'despublicado'): ?>
-            <form method="post" action="<?php echo url('formularios/arquivar'); ?>">
+            <form method="post" action="<?php echo url('formularios/arquivar'); ?>"><?= campoCsrf() ?>
                 <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
                 <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
                 <button type="submit" class="btn-icone" title="Arquivar">
@@ -76,7 +76,7 @@
             </form>
         <?php endif; ?>
         <?php if ($formulario['status'] === 'arquivado'): ?>
-            <form method="post" action="<?php echo url('formularios/desarquivar'); ?>">
+            <form method="post" action="<?php echo url('formularios/desarquivar'); ?>"><?= campoCsrf() ?>
                 <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
                 <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
                 <button type="submit" class="btn-icone" title="Desarquivar">

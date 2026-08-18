@@ -8,7 +8,7 @@
 
 <p>Revise as sugestões abaixo — troque o avaliador em qualquer linha antes de confirmar. Nada é gravado até você clicar em "Confirmar distribuição".</p>
 
-<form method="post" action="<?php echo url('designacoes/confirmarDistribuicao'); ?>">
+<form method="post" action="<?php echo url('designacoes/confirmarDistribuicao'); ?>"><?= campoCsrf() ?>
     <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
 
     <table border="1" cellpadding="6">

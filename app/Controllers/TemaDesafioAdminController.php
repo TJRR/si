@@ -128,9 +128,9 @@ class TemaDesafioAdminController extends Controller
             $this->temas->remover($id);
             $_SESSION['flash'] = 'Tema removido.';
         } catch (\PDOException $e) {
-            $_SESSION['flash'] = $e->getCode() === '23000'
+            flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: este tema ainda tem desafios cadastrados.'
-                : 'Não foi possível remover o tema.';
+                : 'Não foi possível remover o tema.');
         }
 
         $this->redirecionar('temas/index/' . $trilhaId);
@@ -265,9 +265,9 @@ class TemaDesafioAdminController extends Controller
             $this->desafios->remover($id);
             $_SESSION['flash'] = 'Desafio removido.';
         } catch (\PDOException $e) {
-            $_SESSION['flash'] = $e->getCode() === '23000'
+            flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: este desafio já tem equipes vinculadas.'
-                : 'Não foi possível remover o desafio.';
+                : 'Não foi possível remover o desafio.');
         }
 
         $this->redirecionar('temas/desafios/' . $temaId);

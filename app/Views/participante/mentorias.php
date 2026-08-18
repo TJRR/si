@@ -6,8 +6,8 @@
 
 <p><a href="<?php echo url('participante/index'); ?>">Voltar ao painel</a></p>
 
-<?php if (!empty($flash)): ?>
-    <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php if (!empty($_SESSION['flash'])): ?>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
 <h2>Suas reservas</h2>
@@ -24,13 +24,15 @@
             <td>
                 <?php if (linkHttpValido($reserva['link_meet'])): ?>
                     <a href="<?php echo htmlspecialchars($reserva['link_meet'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">Entrar</a>
+                <?php elseif (!empty($reserva['integracao_google']) && !empty($reserva['meet_pendente'])): ?>
+                    <span class="status-pill laranja">Gerando sala...</span>
                 <?php else: ?>
                     —
                 <?php endif; ?>
             </td>
             <td><?php echo htmlspecialchars((string) $reserva['observacao'], ENT_QUOTES, 'UTF-8'); ?></td>
             <td>
-                <form method="post" action="<?php echo url('mentoria/cancelar/' . (int) $reserva['id']); ?>" onsubmit="return confirm('Cancelar esta reserva?');">
+                <form method="post" action="<?php echo url('mentoria/cancelar/' . (int) $reserva['id']); ?>" onsubmit="return confirm('Cancelar esta reserva?');"><?= campoCsrf() ?>
                     <button type="submit">Cancelar</button>
                 </form>
             </td>
@@ -52,7 +54,7 @@
             <td><?php echo htmlspecialchars(formatarDataHora($vaga['data_fim']), ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars((string) $vaga['observacao'], ENT_QUOTES, 'UTF-8'); ?></td>
             <td>
-                <form method="post" action="<?php echo url('mentoria/reservar/' . (int) $vaga['id']); ?>">
+                <form method="post" action="<?php echo url('mentoria/reservar/' . (int) $vaga['id']); ?>"><?= campoCsrf() ?>
                     <button type="submit">Reservar</button>
                 </form>
             </td>

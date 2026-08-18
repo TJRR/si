@@ -9,7 +9,7 @@
 <?php endif; ?>
 
 <?php $somenteLeitura = !\App\Core\Auth::possuiPerfil('administrador'); $desabilitado = $somenteLeitura ? 'disabled' : ''; ?>
-<form method="post" action="<?php echo $desafio === null ? url('temas/novoDesafio/' . (int) $tema['id']) : url('temas/editarDesafio/' . (int) $desafio['id']); ?>">
+<form method="post" action="<?php echo $desafio === null ? url('temas/novoDesafio/' . (int) $tema['id']) : url('temas/editarDesafio/' . (int) $desafio['id']); ?>"><?= campoCsrf() ?>
     <label>Pergunta do desafio (texto integral):<br>
         <textarea name="pergunta" rows="6" cols="80" required <?php echo $desabilitado; ?>><?php echo htmlspecialchars($desafio !== null ? $desafio['pergunta'] : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
     </label><br>

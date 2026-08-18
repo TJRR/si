@@ -10,10 +10,10 @@
 </div>
 
 <?php if (!empty($_SESSION['flash'])): ?>
-    <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('tema/cabecalho'); ?>" enctype="multipart/form-data" id="form-cabecalho">
+<form method="post" action="<?php echo url('tema/cabecalho'); ?>" enctype="multipart/form-data" id="form-cabecalho"><?= campoCsrf() ?>
     <fieldset>
         <legend>Logo padrão do sistema</legend>
         <?php if (!empty($configuracaoVisual['logo_path'])): ?>

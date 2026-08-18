@@ -1140,8 +1140,11 @@ body.admin-page .admin-topbar-acoes {
    tamanho/borda/hover pra formar um conjunto visual unico. Seletor com tag
    (button/a) + classe pra vencer a regra generica "body.admin-page button"
    do painel (que senao aplica seu proprio padding/pill e o !important da
-   especificidade ganha da classe sozinha). */
+   especificidade ganha da classe sozinha).
+   Fase 31: button.topbar-icone entra na mesma lista - e' o botao "?" de
+   ajuda contextual, mesmo tratamento visual dos demais icones do topbar. */
 body.admin-page button.notificacoes-sino-botao,
+body.admin-page button.topbar-icone,
 body.admin-page a.topbar-icone {
     position: relative;
     width: 2.25rem;
@@ -1160,17 +1163,30 @@ body.admin-page a.topbar-icone {
 }
 
 body.admin-page button.notificacoes-sino-botao::before,
-body.admin-page button.notificacoes-sino-botao::after {
+body.admin-page button.notificacoes-sino-botao::after,
+body.admin-page button.topbar-icone::before,
+body.admin-page button.topbar-icone::after {
     content: none;
 }
 
 body.admin-page button.notificacoes-sino-botao:hover,
 body.admin-page button.notificacoes-sino-botao:focus,
+body.admin-page button.topbar-icone:hover,
+body.admin-page button.topbar-icone:focus,
 body.admin-page a.topbar-icone:hover,
 body.admin-page a.topbar-icone:focus {
     background: var(--cor-fundo-alt);
     color: var(--cor-texto);
     border-color: var(--cor-texto-suave);
+}
+
+/* Fase 31: o botao "?" liga/desliga via atributo [hidden] (tela sem ajuda
+   ainda escrita, ou apos navegacao em arvore trocar de tela) - precisa de
+   especificidade maior que "body.admin-page button.topbar-icone" acima
+   (que ja define display:inline-flex), senao o [hidden] do navegador nao
+   vence e o botao fica visivel mesmo sem conteudo. */
+body.admin-page button.topbar-icone[hidden] {
+    display: none;
 }
 
 .notificacoes-sino-badge {
@@ -1544,6 +1560,43 @@ body.admin-page .status-avaliacao.pendente {
 .status-pill.roxo {
     background: #ede4fb;
     color: #6b3fa0;
+}
+
+/* Fase 31 (convencao de UI, ver README "Convencoes de UI"): mesma paleta
+   do status-pill acima, em texto simples (sem fundo/pilula) - usado pela
+   mensagem de flash pos-acao. verde = sucesso, laranja = alerta
+   (nada quebrou, mas nao e' um sucesso limpo), vermelho = erro (a acao
+   nao aconteceu). Ver app/helpers.php: flashSucesso()/flashAlerta()/
+   flashErro()/classeFlash(). */
+.flash-mensagem {
+    font-weight: 600;
+}
+
+.flash-mensagem.sucesso {
+    color: #1e7d3c;
+}
+
+.flash-mensagem.alerta {
+    color: #a0630d;
+}
+
+.flash-mensagem.erro {
+    color: #a3242c;
+}
+
+.site-flash.sucesso {
+    border-left-color: #1e7d3c;
+    color: #1e7d3c;
+}
+
+.site-flash.alerta {
+    border-left-color: #a0630d;
+    color: #a0630d;
+}
+
+.site-flash.erro {
+    border-left-color: #a3242c;
+    color: #a3242c;
 }
 
 /* Recuo do conteudo dentro da arvore (#conteudo-admin) fica no proprio
@@ -2032,6 +2085,7 @@ body.guest-page {
 }
 
 .guest-card {
+    position: relative;
     width: 100%;
     max-width: 380px;
     background: var(--cor-branco);
@@ -2040,6 +2094,36 @@ body.guest-page {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
     padding: 2rem;
     box-sizing: border-box;
+}
+
+/* Fase 31: botao de ajuda contextual nas paginas convidadas (login,
+   cadastro, esqueci senha, definir senha) - mesmo circulo/borda do
+   .site-header-icone da Home publica, sem escopo de body class porque essas
+   paginas tem body class "guest-page" (sem regra generica de button-pilula
+   pra vencer, diferente do painel admin). */
+.guest-ajuda-botao {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 2rem;
+    height: 2rem;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--cor-borda);
+    border-radius: 50%;
+    background: var(--cor-branco);
+    color: var(--cor-texto-suave);
+    padding: 0;
+    cursor: pointer;
+}
+
+.guest-ajuda-botao:hover,
+.guest-ajuda-botao:focus {
+    background: var(--cor-fundo-alt);
+    color: var(--cor-texto);
+    border-color: var(--cor-texto-suave);
 }
 
 .guest-logo {
@@ -2185,6 +2269,34 @@ body.guest-page {
     padding-right: 2rem;
 }
 
+/* Fase 31: baseline sem escopo de body class - o modal generico tambem
+   passa a ser usado fora do painel admin (paginas convidadas de
+   login/cadastro, para a ajuda contextual). Ali nao existe a regra
+   "body.admin-page button" de botao-pilula pra vencer, entao um seletor
+   simples basta; dentro do admin, a regra mais especifica abaixo continua
+   valendo por ter maior especificidade. */
+.modal-fechar {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.9rem;
+    width: auto;
+    height: auto;
+    background: none;
+    border: none;
+    border-radius: 0;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--cor-texto-suave);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+}
+
+.modal-fechar:hover,
+.modal-fechar:focus {
+    color: var(--cor-primaria-fim);
+    background: none;
+}
+
 /* Fase 19 (#109): precisa da mesma especificidade "body.admin-page button"
    que .btn-icone ja usa (ver comentario acima de .btn-icone) - senao o
    padding/border-radius/anel em degrade do botao padrao do painel vaza por
@@ -2214,6 +2326,73 @@ body.admin-page button.modal-fechar:hover,
 body.admin-page button.modal-fechar:focus {
     color: var(--cor-primaria-fim);
     background: none;
+}
+
+/* Fase 31: conteudo da ajuda contextual - usado tanto dentro do modal
+   generico (#modal-generico, painel admin) quanto dentro do painel lateral
+   publico (#painel-ajuda, Home) - e' so' estilo de conteudo, nao depende do
+   container em que aparece. */
+.ajuda-resumo {
+    color: var(--cor-texto-suave);
+    margin-top: 0;
+}
+
+.ajuda-operacoes {
+    margin: 0 0 1.25rem;
+}
+
+.ajuda-operacoes dt {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    margin-top: 0.85rem;
+}
+
+.ajuda-operacao-icone {
+    flex: none;
+    color: var(--cor-texto-suave);
+}
+
+.ajuda-operacoes dd {
+    margin: 0.15rem 0 0;
+}
+
+.ajuda-pills {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+}
+
+/* Card destacado (mesmo padrao de .filtros-barra-wrapper: fundo
+   --cor-fundo-alt + border-radius) - sinaliza visualmente "isto e' um
+   conceito geral do sistema, referenciado por varias telas", diferente das
+   operacoes especificas desta tela acima. */
+.ajuda-conceito {
+    background: var(--cor-fundo-alt);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-top: 1rem;
+}
+
+.ajuda-conceito-rotulo {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--cor-texto-suave);
+    margin-bottom: 0.35rem;
+}
+
+.ajuda-conceito h4 {
+    margin: 0 0 0.35rem;
+    font-size: 1rem;
+}
+
+.ajuda-conceito p {
+    margin: 0;
 }
 
 /* Ficha de leitura do conteudo de uma submissao (Fase 17 - Bug 5/Melhoria 1) -

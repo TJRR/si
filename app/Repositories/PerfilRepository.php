@@ -57,8 +57,17 @@ class PerfilRepository
     public function substituirPerfil($usuarioId, $perfilId, $concursoId = null)
     {
         $pdo = Database::conexao();
+
+        $stmtAntes = $pdo->prepare('SELECT * FROM usuario_perfil_concurso WHERE usuario_id = :usuario_id');
+        $stmtAntes->execute(['usuario_id' => $usuarioId]);
+        $antes = $stmtAntes->fetchAll();
+
         $stmt = $pdo->prepare('DELETE FROM usuario_perfil_concurso WHERE usuario_id = :usuario_id');
         $stmt->execute(['usuario_id' => $usuarioId]);
+
+        if (!empty($antes)) {
+            Auditoria::registrar('substituir_perfil', 'usuario_perfil_concurso', $usuarioId, $antes, null);
+        }
 
         $this->atribuir($usuarioId, $perfilId, $concursoId);
     }

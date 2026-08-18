@@ -32,7 +32,7 @@ $disponiveis = array_values(array_filter($faqs, function ($faq) {
                     <span class="status-pill"><?php echo htmlspecialchars($faq['categoria'], ENT_QUOTES, 'UTF-8'); ?></span>
                 <?php endif; ?>
             </div>
-            <form method="post" action="<?php echo url('faqConcurso/alternar/' . (int) $concurso['id'] . '/' . (int) $faq['id']); ?>">
+            <form method="post" action="<?php echo url('faqConcurso/alternar/' . (int) $concurso['id'] . '/' . (int) $faq['id']); ?>"><?= campoCsrf() ?>
                 <input type="hidden" name="ativo" value="0">
                 <button type="submit" class="btn-icone" title="Desativar nesta edição">✕</button>
             </form>
@@ -58,7 +58,7 @@ $disponiveis = array_values(array_filter($faqs, function ($faq) {
                     <span class="status-pill"><?php echo htmlspecialchars($faq['categoria'], ENT_QUOTES, 'UTF-8'); ?></span>
                 <?php endif; ?>
             </div>
-            <form method="post" action="<?php echo url('faqConcurso/alternar/' . (int) $concurso['id'] . '/' . (int) $faq['id']); ?>">
+            <form method="post" action="<?php echo url('faqConcurso/alternar/' . (int) $concurso['id'] . '/' . (int) $faq['id']); ?>"><?= campoCsrf() ?>
                 <input type="hidden" name="ativo" value="1">
                 <button type="submit" class="btn-acao">Ativar nesta edição</button>
             </form>

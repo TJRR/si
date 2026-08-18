@@ -87,7 +87,7 @@ class SlideAdminController extends Controller
 
             $_SESSION['flash'] = 'Slide removido.';
         } catch (\PDOException $e) {
-            $_SESSION['flash'] = 'Não foi possível remover o slide.';
+            flashErro('Não foi possível remover o slide.');
         }
 
         $this->redirecionar('slides/index');

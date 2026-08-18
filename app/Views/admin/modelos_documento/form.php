@@ -10,7 +10,7 @@
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo $modelo === null ? url('modelosDocumento/novo/' . (int) $etapa['id']) : url('modelosDocumento/editar/' . (int) $modelo['id']); ?>">
+<form method="post" action="<?php echo $modelo === null ? url('modelosDocumento/novo/' . (int) $etapa['id']) : url('modelosDocumento/editar/' . (int) $modelo['id']); ?>"><?= campoCsrf() ?>
     <label>Nome do modelo:
         <input type="text" name="nome" required value="<?php echo htmlspecialchars($modelo !== null ? $modelo['nome'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>

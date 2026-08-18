@@ -14,7 +14,7 @@ pode responder mais rápido.</p>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data"><?= campoCsrf() ?>
     <label>Sua dúvida:<br>
         <textarea name="pergunta" rows="6" style="width:100%;max-width:640px;" required><?php echo htmlspecialchars(isset($_POST['pergunta']) ? $_POST['pergunta'] : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
     </label><br><br>

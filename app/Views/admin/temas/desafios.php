@@ -34,7 +34,7 @@
                     </svg>
                 </a>
                 <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
-                <form method="post" action="<?php echo url('temas/removerDesafio'); ?>" onsubmit="return confirm('Remover este desafio? Só funciona se ele ainda não tiver equipes vinculadas.');">
+                <form method="post" action="<?php echo url('temas/removerDesafio'); ?>" onsubmit="return confirm('Remover este desafio? Só funciona se ele ainda não tiver equipes vinculadas.');"><?= campoCsrf() ?>
                     <input type="hidden" name="id" value="<?php echo (int) $desafio['id']; ?>">
                     <input type="hidden" name="tema_id" value="<?php echo (int) $tema['id']; ?>">
                     <button type="submit" class="btn-icone" title="Remover">

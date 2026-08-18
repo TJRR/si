@@ -289,7 +289,7 @@ class ParticipanteController extends Controller
         $vinculoAlvo = $this->equipes->buscarVinculo($equipe['id'], $novoLiderId);
 
         if ($vinculoAlvo === null || $vinculoAlvo['status_homologacao'] !== 'homologado' || $vinculoAlvo['papel'] === 'lider') {
-            $_SESSION['flash'] = 'Não foi possível promover: selecione um integrante homologado, diferente do líder atual.';
+            flashErro('Não foi possível promover: selecione um integrante homologado, diferente do líder atual.');
             $this->redirecionar('participante/index');
             return;
         }
@@ -301,7 +301,7 @@ class ParticipanteController extends Controller
         // deixaria a equipe sem ninguem capaz de logar e gerenciar integrantes
         // (equipeDoLiderAtual() exige papel = 'lider').
         if (empty($alvo['email'])) {
-            $_SESSION['flash'] = 'Não foi possível promover "' . $alvo['nome'] . '": ele(a) ainda não tem e-mail cadastrado. Inclua o e-mail dele(a) na lista de integrantes antes de promover.';
+            flashErro('Não foi possível promover "' . $alvo['nome'] . '": ele(a) ainda não tem e-mail cadastrado. Inclua o e-mail dele(a) na lista de integrantes antes de promover.');
             $this->redirecionar('participante/index');
             return;
         }
@@ -344,7 +344,7 @@ class ParticipanteController extends Controller
         $alvo = $this->participantes->buscarPorId($participanteId);
 
         if (!empty($alvo['email'])) {
-            $_SESSION['flash'] = 'Este integrante já tem e-mail cadastrado.';
+            flashAlerta('Este integrante já tem e-mail cadastrado.');
             $this->redirecionar('participante/index');
             return;
         }
@@ -352,13 +352,13 @@ class ParticipanteController extends Controller
         $email = trim(isset($_POST['email']) ? $_POST['email'] : '');
 
         if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-            $_SESSION['flash'] = 'Informe um e-mail válido.';
+            flashErro('Informe um e-mail válido.');
             $this->redirecionar('participante/index');
             return;
         }
 
         if ($this->participantes->buscarPorEmail($email) !== null) {
-            $_SESSION['flash'] = 'Este e-mail já está em uso por outro participante cadastrado.';
+            flashErro('Este e-mail já está em uso por outro participante cadastrado.');
             $this->redirecionar('participante/index');
             return;
         }
@@ -417,13 +417,13 @@ class ParticipanteController extends Controller
         }
 
         if ($vinculoAlvo['papel'] === 'lider') {
-            $_SESSION['flash'] = 'Não é possível excluir o líder da equipe. Promova outro integrante a líder antes.';
+            flashErro('Não é possível excluir o líder da equipe. Promova outro integrante a líder antes.');
             $this->redirecionar('participante/index');
             return;
         }
 
         if (count($this->equipes->listarParticipantes($equipe['id'])) <= 2) {
-            $_SESSION['flash'] = 'A equipe precisa ter no mínimo 2 integrantes — não é possível excluir.';
+            flashErro('A equipe precisa ter no mínimo 2 integrantes — não é possível excluir.');
             $this->redirecionar('participante/index');
             return;
         }

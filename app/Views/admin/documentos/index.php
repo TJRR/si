@@ -55,7 +55,7 @@ $rotulosTipo = [
                     </svg>
                 </a>
                 <?php if ((int) $documento['publicado'] === 1): ?>
-                    <form method="post" action="<?php echo url('documentos/despublicar'); ?>">
+                    <form method="post" action="<?php echo url('documentos/despublicar'); ?>"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $documento['id']; ?>">
                         <button type="submit" class="btn-icone" title="Despublicar (some da home, continua salvo)">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -65,7 +65,7 @@ $rotulosTipo = [
                         </button>
                     </form>
                 <?php else: ?>
-                    <form method="post" action="<?php echo url('documentos/republicar'); ?>">
+                    <form method="post" action="<?php echo url('documentos/republicar'); ?>"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $documento['id']; ?>">
                         <button type="submit" class="btn-icone" title="Republicar (volta a aparecer na home)">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -75,7 +75,7 @@ $rotulosTipo = [
                         </button>
                     </form>
                 <?php endif; ?>
-                <form method="post" action="<?php echo url('documentos/removerGrupo'); ?>" onsubmit="return confirm('Remover TODAS as versões deste documento? Não pode ser desfeito.');">
+                <form method="post" action="<?php echo url('documentos/removerGrupo'); ?>" onsubmit="return confirm('Remover TODAS as versões deste documento? Não pode ser desfeito.');"><?= campoCsrf() ?>
                     <input type="hidden" name="concurso_id" value="<?php echo (int) $concurso['id']; ?>">
                     <input type="hidden" name="grupo_documento" value="<?php echo htmlspecialchars($documento['grupo_documento'], ENT_QUOTES, 'UTF-8'); ?>">
                     <button type="submit" class="btn-icone" title="Remover todas as versões">

@@ -11,6 +11,10 @@ class View
 {
     public static function renderizar($view, array $dados = [], $titulo = null, array $noAtual = null)
     {
+        list($ajudaHtml, $ajudaTitulo) = self::resolverAjuda($view);
+        $dados['ajudaHtml'] = $ajudaHtml;
+        $dados['ajudaTitulo'] = $ajudaTitulo;
+
         $conteudo = self::renderizarConteudo($view, $dados);
 
         $abasSecundarias = $noAtual !== null ? \App\Services\NavegacaoService::abasPara($noAtual['tipo'], $noAtual['id']) : null;
@@ -26,6 +30,10 @@ class View
      */
     public static function renderizarParcial($view, array $dados = [], $titulo = null, array $noAtual = null)
     {
+        list($ajudaHtml, $ajudaTitulo) = self::resolverAjuda($view);
+        $dados['ajudaHtml'] = $ajudaHtml;
+        $dados['ajudaTitulo'] = $ajudaTitulo;
+
         $conteudo = self::renderizarConteudo($view, $dados);
         $abasSecundarias = $noAtual !== null ? \App\Services\NavegacaoService::abasPara($noAtual['tipo'], $noAtual['id']) : null;
         $mecanismoAvaliacaoEtapa = $noAtual !== null ? \App\Services\NavegacaoService::mecanismoAvaliacaoEtapa($noAtual['tipo'], $noAtual['id']) : null;
@@ -40,6 +48,8 @@ class View
             'abas' => $abasSecundarias,
             'mecanismoAvaliacaoEtapa' => $mecanismoAvaliacaoEtapa,
             'flash' => $flash,
+            'ajuda' => $ajudaHtml,
+            'ajudaTitulo' => $ajudaTitulo,
         ]);
     }
 
@@ -50,6 +60,24 @@ class View
     public static function renderizarString($view, array $dados = [])
     {
         return self::renderizarConteudo($view, $dados);
+    }
+
+    /**
+     * Fase 31: resolve o conteudo de ajuda contextual da tela ($view e' a
+     * mesma chave usada por renderizarConteudo) e ja devolve o HTML pronto
+     * (ou null se a tela ainda nao tem ajuda escrita) - tanto pro layout.php
+     * (reload completo) quanto pro JSON do renderizarParcial (navegacao em
+     * arvore via AJAX), sem duplicar a logica de resolucao nos dois lugares.
+     */
+    private static function resolverAjuda($view)
+    {
+        $ajudaDados = \App\Services\AjudaService::paraView($view);
+
+        if ($ajudaDados === null) {
+            return [null, null];
+        }
+
+        return [self::renderizarString('_ajuda_painel', ['ajuda' => $ajudaDados]), $ajudaDados['titulo']];
     }
 
     private static function renderizarConteudo($view, array $dados)

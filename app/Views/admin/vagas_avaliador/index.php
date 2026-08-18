@@ -6,8 +6,8 @@
 
 <p><a href="<?php echo url('etapas/index/' . (int) $trilha['id']); ?>">Voltar às etapas</a></p>
 
-<?php if (!empty($flash)): ?>
-    <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php if (!empty($_SESSION['flash'])): ?>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
 <p>Usada quando "Designação de avaliadores" desta etapa está em "Sorteio aleatório garantindo 1 avaliador de cada categoria": defina quantos avaliadores de cada categoria são exigidos por submissão. Categorias com quantidade 0 (ou em branco) não entram no sorteio.</p>
@@ -25,7 +25,7 @@
     <p><strong>Nenhuma categoria cadastrada para este concurso ainda.</strong>
         <a href="<?php echo url('categoriasAvaliador/index/' . (int) $trilha['concurso_id']); ?>">Cadastre categorias de avaliador</a> antes de configurar as vagas.</p>
 <?php else: ?>
-    <form method="post" action="<?php echo url('vagasAvaliador/index/' . (int) $etapa['id']); ?>">
+    <form method="post" action="<?php echo url('vagasAvaliador/index/' . (int) $etapa['id']); ?>"><?= campoCsrf() ?>
         <table border="1" cellpadding="6">
             <tr><th>Categoria</th><th>Quantidade por submissão</th></tr>
             <?php foreach ($categorias as $categoria): ?>

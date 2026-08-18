@@ -8,6 +8,7 @@ if (!defined('SI_BOOT')) {
 }
 
 use App\Core\GoogleOAuth;
+use App\Repositories\TentativaLoginRepository;
 use App\Repositories\TokenSenhaRepository;
 use App\Repositories\UsuarioRepository;
 
@@ -15,36 +16,48 @@ class AuthService
 {
     private $usuarios;
     private $tokens;
+    private $tentativas;
+
+    const MENSAGEM_LOGIN_INVALIDO = 'E-mail ou senha inválidos, ou cadastro ainda não liberado.';
+    const LIMITE_TENTATIVAS = 5;
+    const JANELA_TENTATIVAS_MINUTOS = 15;
 
     public function __construct()
     {
         $this->usuarios = new UsuarioRepository();
         $this->tokens = new TokenSenhaRepository();
+        $this->tentativas = new TentativaLoginRepository();
     }
 
+    /**
+     * Fase 31 (Auditoria de Seguranca): achado #11 (rate limiting) e achado
+     * #12 (mensagem genericizada) resolvidos juntos aqui - a MESMA mensagem
+     * cobre e-mail inexistente, senha errada e status pendente/rejeitado/
+     * suspenso, pra nao dar pista de qual dos casos e' o real. So' credencial
+     * errada conta pra rate limiting (status bloqueado com senha certa nao
+     * conta - quem digitou a senha certa ja provou que sabe a credencial,
+     * nao e' tentativa de adivinhar).
+     */
     public function autenticar($email, $senha)
     {
+        if ($this->tentativas->contarFalhasRecentes($email, self::JANELA_TENTATIVAS_MINUTOS) >= self::LIMITE_TENTATIVAS) {
+            return ['sucesso' => false, 'mensagem' => 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.'];
+        }
+
         $usuario = $this->usuarios->buscarPorEmail($email);
 
-        if ($usuario === null || $usuario['senha_hash'] === null) {
-            return ['sucesso' => false, 'mensagem' => 'E-mail ou senha inválidos.'];
+        if ($usuario === null || $usuario['senha_hash'] === null || !password_verify($senha, $usuario['senha_hash'])) {
+            $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
+            $this->tentativas->registrarFalha($email, $ip);
+
+            return ['sucesso' => false, 'mensagem' => self::MENSAGEM_LOGIN_INVALIDO];
         }
 
-        if (!password_verify($senha, $usuario['senha_hash'])) {
-            return ['sucesso' => false, 'mensagem' => 'E-mail ou senha inválidos.'];
+        if ($usuario['status'] !== 'aprovado' || (int) $usuario['ativo'] === 0) {
+            return ['sucesso' => false, 'mensagem' => self::MENSAGEM_LOGIN_INVALIDO];
         }
 
-        if ($usuario['status'] === 'pendente') {
-            return ['sucesso' => false, 'mensagem' => 'Cadastro aguardando aprovação do Administrador.'];
-        }
-
-        if ($usuario['status'] === 'rejeitado') {
-            return ['sucesso' => false, 'mensagem' => 'Cadastro rejeitado. Entre em contato com o NPI.'];
-        }
-
-        if ((int) $usuario['ativo'] === 0) {
-            return ['sucesso' => false, 'mensagem' => 'Cadastro suspenso. Entre em contato com o NPI.'];
-        }
+        $this->tentativas->limparFalhas($email);
 
         $perfis = $this->usuarios->perfisDoUsuario($usuario['id']);
 

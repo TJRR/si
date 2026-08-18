@@ -51,7 +51,7 @@
 
         fetch(url(lista.dataset.reordenarRota), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.SI_CSRF_TOKEN },
             credentials: 'same-origin',
             body: JSON.stringify({ ids: ids })
         })

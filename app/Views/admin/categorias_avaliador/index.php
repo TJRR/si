@@ -24,7 +24,7 @@
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                         </svg>
                     </a>
-                    <form method="post" action="<?php echo url('categoriasAvaliador/remover'); ?>">
+                    <form method="post" action="<?php echo url('categoriasAvaliador/remover'); ?>"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $categoria['id']; ?>">
                         <input type="hidden" name="concurso_id" value="<?php echo (int) $concurso['id']; ?>">
                         <button type="submit" class="btn-icone" title="Remover" onclick="return confirm('Remover esta categoria? Avaliadores vinculados a ela perdem a categoria.');">

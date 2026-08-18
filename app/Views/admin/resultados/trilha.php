@@ -7,7 +7,7 @@
 <p><a href="<?php echo url('trilhas/index/' . (int) $trilha['concurso_id']); ?>">Voltar às trilhas</a></p>
 
 <?php if (!empty($_SESSION['flash'])): ?>
-    <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
 <?php if ($erro !== null): ?>
@@ -18,7 +18,7 @@
     <p>
         <?php if ($publicado): ?>
             <strong>Resultado final publicado.</strong>
-            <form method="post" action="<?php echo url('resultados/reabrirTrilha'); ?>" style="display:inline;">
+            <form method="post" action="<?php echo url('resultados/reabrirTrilha'); ?>" style="display:inline;"><?= campoCsrf() ?>
                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                 <button type="submit" class="btn-icone" title="Reabrir" onclick="return confirm('Reabrir apaga o resultado final publicado. Confirmar?');">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -29,7 +29,7 @@
             </form>
         <?php else: ?>
             <strong>Prévia (ainda não publicada)</strong> — recalculada a cada acesso.
-            <form method="post" action="<?php echo url('resultados/publicarTrilha'); ?>" style="display:inline;">
+            <form method="post" action="<?php echo url('resultados/publicarTrilha'); ?>" style="display:inline;"><?= campoCsrf() ?>
                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                 <button type="submit" class="btn-icone" title="Confirmar e publicar" onclick="return confirm('Publicar congela a colocação final desta trilha. Confirmar?');">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

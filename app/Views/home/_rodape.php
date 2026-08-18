@@ -73,7 +73,7 @@
 
     <?php if ($contato !== null && !empty($contato['formulario_contato_ativo'])): ?>
         <div class="site-footer-colunas">
-            <form method="post" action="<?php echo url('home/enviarContato/' . (int) $concursoAtivo['id']); ?>" class="site-formulario-contato">
+            <form method="post" action="<?php echo url('home/enviarContato/' . (int) $concursoAtivo['id']); ?>" class="site-formulario-contato"><?= campoCsrf() ?>
                 <h3>Fale conosco</h3>
                 <label for="contato-nome">Nome</label>
                 <input type="text" id="contato-nome" name="nome" required>

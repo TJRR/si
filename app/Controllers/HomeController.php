@@ -319,7 +319,7 @@ class HomeController extends Controller
         $mensagem = trim(isset($_POST['mensagem']) ? $_POST['mensagem'] : '');
 
         if ($nome === '' || $email === '' || $mensagem === '') {
-            $_SESSION['flash'] = 'Preencha nome, e-mail e mensagem.';
+            flashErro('Preencha nome, e-mail e mensagem.');
             $this->redirecionar('home/index#contato');
             return;
         }

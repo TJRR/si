@@ -8,7 +8,7 @@
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('midia/novo'); ?>" enctype="multipart/form-data">
+<form method="post" action="<?php echo url('midia/novo'); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
     <label>Tipo:
         <select name="tipo" required>
             <option value="imagem">Imagem</option>

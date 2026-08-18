@@ -11,10 +11,10 @@
 </div>
 
 <?php if (!empty($_SESSION['flash'])): ?>
-    <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('conteudo/index'); ?>" enctype="multipart/form-data" id="form-conteudo">
+<form method="post" action="<?php echo url('conteudo/index'); ?>" enctype="multipart/form-data" id="form-conteudo"><?= campoCsrf() ?>
     <fieldset>
         <legend>Textos e imagens</legend>
         <?php foreach ($conteudos as $conteudo): ?>

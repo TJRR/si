@@ -7,7 +7,7 @@
 <p><a href="<?php echo url('etapas/index/' . (int) $etapa['trilha_id']); ?>">Voltar às etapas</a></p>
 
 <?php if (!empty($_SESSION['flash'])): ?>
-    <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
 <?php if ($erro !== null): ?>
@@ -18,7 +18,7 @@
     <p>
         <?php if ($publicado): ?>
             <strong>Resultado publicado.</strong> Novas notas ficam bloqueadas para as submissões desta etapa.
-            <form method="post" action="<?php echo url('resultados/reabrirEtapa'); ?>" style="display:inline;">
+            <form method="post" action="<?php echo url('resultados/reabrirEtapa'); ?>" style="display:inline;"><?= campoCsrf() ?>
                 <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
                 <button type="submit" class="btn-icone" title="Reabrir etapa" onclick="return confirm('Reabrir apaga o resultado publicado e libera novas notas. Confirmar?');">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -29,7 +29,7 @@
             </form>
         <?php else: ?>
             <strong>Prévia (ainda não publicada)</strong> — recalculada a cada acesso conforme as notas lançadas até agora.
-            <form method="post" action="<?php echo url('resultados/publicarEtapa'); ?>" style="display:inline;">
+            <form method="post" action="<?php echo url('resultados/publicarEtapa'); ?>" style="display:inline;"><?= campoCsrf() ?>
                 <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
                 <button type="submit" class="btn-icone" title="Confirmar e publicar" onclick="return confirm('Publicar congela este ranking e bloqueia novas notas nesta etapa. Confirmar?');">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

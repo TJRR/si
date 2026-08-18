@@ -27,7 +27,7 @@
                     </a>
 
                     <?php if (in_array($formulario['status'], ['rascunho', 'despublicado'], true)): ?>
-                        <form method="post" action="<?php echo url('formularios/publicar'); ?>">
+                        <form method="post" action="<?php echo url('formularios/publicar'); ?>"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
                             <button type="submit" class="btn-icone" title="Publicar">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -39,7 +39,7 @@
                     <?php endif; ?>
 
                     <?php if ($formulario['status'] === 'publicado'): ?>
-                        <form method="post" action="<?php echo url('formularios/despublicar'); ?>">
+                        <form method="post" action="<?php echo url('formularios/despublicar'); ?>"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
                             <button type="submit" class="btn-icone" title="Despublicar">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -51,7 +51,7 @@
                     <?php endif; ?>
 
                     <?php if ($formulario['status'] === 'despublicado'): ?>
-                        <form method="post" action="<?php echo url('formularios/arquivar'); ?>">
+                        <form method="post" action="<?php echo url('formularios/arquivar'); ?>"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
                             <button type="submit" class="btn-icone" title="Arquivar">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -64,7 +64,7 @@
                     <?php endif; ?>
 
                     <?php if ($formulario['status'] === 'arquivado'): ?>
-                        <form method="post" action="<?php echo url('formularios/desarquivar'); ?>">
+                        <form method="post" action="<?php echo url('formularios/desarquivar'); ?>"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
                             <button type="submit" class="btn-icone" title="Desarquivar">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -91,7 +91,7 @@
                         </a>
                     <?php endif; ?>
 
-                    <form method="post" action="<?php echo url('formularios/remover'); ?>" onsubmit="return confirm('Remover este formulário? Só funciona se ele ainda não tiver campos, etapas vinculadas ou submissões.');">
+                    <form method="post" action="<?php echo url('formularios/remover'); ?>" onsubmit="return confirm('Remover este formulário? Só funciona se ele ainda não tiver campos, etapas vinculadas ou submissões.');"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $formulario['id']; ?>">
                         <input type="hidden" name="concurso_id" value="<?php echo (int) $concurso['id']; ?>">
                         <button type="submit" class="btn-icone" title="Remover">

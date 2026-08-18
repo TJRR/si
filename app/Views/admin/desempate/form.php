@@ -8,7 +8,7 @@
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('desempate/novo/' . (int) $trilha['id'] . '/' . (int) $etapa['id']); ?>">
+<form method="post" action="<?php echo url('desempate/novo/' . (int) $trilha['id'] . '/' . (int) $etapa['id']); ?>"><?= campoCsrf() ?>
     <label>Tipo:
         <select name="tipo">
             <option value="criterio">Nota de um critério</option>

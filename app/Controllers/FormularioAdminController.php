@@ -46,9 +46,9 @@ class FormularioAdminController extends Controller
             $this->formularios->remover($id);
             $_SESSION['flash'] = 'Formulário removido.';
         } catch (\PDOException $e) {
-            $_SESSION['flash'] = $e->getCode() === '23000'
+            flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: este formulário já tem campos, etapas vinculadas ou submissões.'
-                : 'Não foi possível remover o formulário.';
+                : 'Não foi possível remover o formulário.');
         }
 
         $this->redirecionar('formularios/index/' . $concursoId);
@@ -117,7 +117,7 @@ class FormularioAdminController extends Controller
         $resultado = (new FormularioDinamicoService())->publicar($id);
 
         if (!$resultado['sucesso']) {
-            $_SESSION['flash'] = $resultado['mensagem'];
+            flashErro($resultado['mensagem']);
         }
 
         $this->redirecionar($this->destinoAposAcao($formulario));

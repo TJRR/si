@@ -16,7 +16,7 @@ if ($campo !== null && $campo['config_json'] !== null) {
 $tipoAtual = $campo !== null ? $campo['tipo'] : 'texto';
 ?>
 
-<form method="post" action="<?php echo $campo === null ? url('campos/novo/' . (int) $formulario['id']) : url('campos/editar/' . (int) $campo['id']); ?>">
+<form method="post" action="<?php echo $campo === null ? url('campos/novo/' . (int) $formulario['id']) : url('campos/editar/' . (int) $campo['id']); ?>"><?= campoCsrf() ?>
     <label>Rótulo:
         <input type="text" name="rotulo" required value="<?php echo htmlspecialchars($campo !== null ? $campo['rotulo'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>

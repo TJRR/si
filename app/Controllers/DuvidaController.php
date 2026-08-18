@@ -101,7 +101,7 @@ class DuvidaController extends Controller
         $duvida = $this->duvidaDaEquipeAtual($id);
 
         if ($duvida['status'] !== 'respondida') {
-            $_SESSION['flash'] = 'Só é possível reabrir uma dúvida já respondida.';
+            flashErro('Só é possível reabrir uma dúvida já respondida.');
             $this->redirecionar('duvida/ver/' . (int) $id);
             return;
         }
@@ -109,7 +109,7 @@ class DuvidaController extends Controller
         $texto = trim(isset($_POST['pergunta']) ? $_POST['pergunta'] : '');
 
         if ($texto === '') {
-            $_SESSION['flash'] = 'Descreva o que ainda falta esclarecer antes de reabrir.';
+            flashErro('Descreva o que ainda falta esclarecer antes de reabrir.');
             $this->redirecionar('duvida/ver/' . (int) $id);
             return;
         }
@@ -117,7 +117,7 @@ class DuvidaController extends Controller
         list($anexoPath, $anexoNomeOriginal, $erroAnexo) = $this->processarAnexoOpcional();
 
         if ($erroAnexo !== null) {
-            $_SESSION['flash'] = $erroAnexo;
+            flashErro($erroAnexo);
             $this->redirecionar('duvida/ver/' . (int) $id);
             return;
         }

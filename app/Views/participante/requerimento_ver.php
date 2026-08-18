@@ -47,15 +47,25 @@
         <?php echo $requerimento['pdf_assinado_path'] === null ? 'Gerar e assinar o documento' : 'Gerar novo documento (correção pedida)'; ?>
     </h2>
     <div class="admin-card">
-        <form method="post" action="<?php echo url('requerimento/gerarPdfNovamente/' . (int) $requerimento['id']); ?>">
+        <form method="post" action="<?php echo url('requerimento/gerarPdfNovamente/' . (int) $requerimento['id']); ?>"><?= campoCsrf() ?>
             <label>Necessidade (descrever brevemente):
                 <textarea name="necessidade" rows="5" required style="width:100%; box-sizing:border-box;"><?php echo htmlspecialchars($requerimento['necessidade'], ENT_QUOTES, 'UTF-8'); ?></textarea>
             </label><br>
             <button type="submit">Gerar PDF</button>
         </form>
 
+        <?php
+        // Fase 31 (melhoria pos-auditoria, correcao): nao existe coluna
+        // nenhuma tipo "pdf sem assinatura ja gerado" - o registro so' entra
+        // em status aguardando_assinatura no mesmo INSERT que ja gera e
+        // transmite o PDF (RequerimentoController::gerarPdf()). Ou seja,
+        // toda vez que esta secao aparece, um PDF ja foi gerado antes -
+        // esconder o bloco de envio por padrao (tentativa anterior, corrigida
+        // aqui) escondia algo que deveria estar sempre visivel numa
+        // revisita, inclusive dias depois.
+        ?>
         <p style="margin-top:1rem;">Depois de assinar no gov.br, envie o documento assinado abaixo.</p>
-        <form method="post" action="<?php echo url('requerimento/enviarAssinado/' . (int) $requerimento['id']); ?>" enctype="multipart/form-data">
+        <form method="post" action="<?php echo url('requerimento/enviarAssinado/' . (int) $requerimento['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
             <label>Documento assinado (PDF, até <?php echo htmlspecialchars($limiteMB, ENT_QUOTES, 'UTF-8'); ?>MB):
                 <input type="file" name="pdf_assinado" accept="application/pdf" required>
             </label><br>
@@ -63,7 +73,7 @@
         </form>
 
         <?php if ($requerimento['enviado_em'] === null): ?>
-            <form method="post" action="<?php echo url('requerimento/descartar/' . (int) $requerimento['id']); ?>" onsubmit="return confirm('Descartar este rascunho? Esta ação não pode ser desfeita.');" style="margin-top:1rem;">
+            <form method="post" action="<?php echo url('requerimento/descartar/' . (int) $requerimento['id']); ?>" onsubmit="return confirm('Descartar este rascunho? Esta ação não pode ser desfeita.');" style="margin-top:1rem;"><?= campoCsrf() ?>
                 <button type="submit" class="btn-voltar">Descartar rascunho</button>
             </form>
         <?php endif; ?>

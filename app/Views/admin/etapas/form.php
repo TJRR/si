@@ -9,7 +9,7 @@
 <?php endif; ?>
 
 <?php $somenteLeitura = !\App\Core\Auth::possuiPerfil('administrador'); $desabilitado = $somenteLeitura ? 'disabled' : ''; ?>
-<form method="post" action="<?php echo $etapa === null ? url('etapas/novo/' . (int) $trilha['id']) : url('etapas/editar/' . (int) $etapa['id']); ?>">
+<form method="post" action="<?php echo $etapa === null ? url('etapas/novo/' . (int) $trilha['id']) : url('etapas/editar/' . (int) $etapa['id']); ?>"><?= campoCsrf() ?>
     <label>Nome:
         <input type="text" name="nome" required value="<?php echo htmlspecialchars($etapa !== null ? $etapa['nome'] : '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $desabilitado; ?>>
     </label><br>

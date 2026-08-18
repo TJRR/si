@@ -65,7 +65,7 @@
         </div>
     <?php endif; ?>
     <?php if (in_array($requerimento['status'], ['recebido', 'escalado'], true)): ?>
-    <form method="post" action="<?php echo url('requerimentoAdmin/validarIti/' . (int) $requerimento['id']); ?>" style="margin-bottom:1rem;">
+    <form method="post" action="<?php echo url('requerimentoAdmin/validarIti/' . (int) $requerimento['id']); ?>" style="margin-bottom:1rem;"><?= campoCsrf() ?>
         <button type="submit">Validar automaticamente no ITI</button>
         <p><small>Envia o PDF assinado direto pro validador oficial do governo, por uma janela de poucos minutos e uso único — um atalho de apoio, não substitui a conferência manual abaixo.</small></p>
     </form>
@@ -81,7 +81,7 @@
 
     <?php if (in_array($requerimento['status'], ['recebido', 'escalado'], true)): ?>
     <h3>Responder</h3>
-    <form method="post" action="<?php echo url('requerimentoAdmin/responder/' . (int) $requerimento['id']); ?>" enctype="multipart/form-data">
+    <form method="post" action="<?php echo url('requerimentoAdmin/responder/' . (int) $requerimento['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
         <label>Desfecho:
             <select name="desfecho" required>
                 <?php if ($podeGerenciar): ?>
@@ -110,7 +110,7 @@
 
     <?php if ($requerimento['status'] === 'aprovado' && $podeGerenciar): ?>
     <h3 style="margin-top:1rem;">Revogar acesso</h3>
-    <form method="post" action="<?php echo url('requerimentoAdmin/responder/' . (int) $requerimento['id']); ?>" enctype="multipart/form-data" onsubmit="return confirm('Revogar o acesso já concedido a esta equipe? Esta ação não pode ser desfeita.');">
+    <form method="post" action="<?php echo url('requerimentoAdmin/responder/' . (int) $requerimento['id']); ?>" enctype="multipart/form-data" onsubmit="return confirm('Revogar o acesso já concedido a esta equipe? Esta ação não pode ser desfeita.');"><?= campoCsrf() ?>
         <input type="hidden" name="desfecho" value="revogado">
         <label>Motivo da revogação:
             <textarea name="resposta" rows="3" required style="width:100%; box-sizing:border-box;"></textarea>
@@ -130,7 +130,7 @@
     <?php if (empty($atendentesDisponiveis)): ?>
         <p>Nenhum outro administrador, suporte ou colaborador disponível neste concurso.</p>
     <?php else: ?>
-        <form method="post" action="<?php echo url('requerimentoAdmin/escalar/' . (int) $requerimento['id']); ?>">
+        <form method="post" action="<?php echo url('requerimentoAdmin/escalar/' . (int) $requerimento['id']); ?>"><?= campoCsrf() ?>
             <label>Escalar para:
                 <select name="usuario_id" required>
                     <option value="">Selecione…</option>
@@ -143,7 +143,7 @@
         </form>
     <?php endif; ?>
     <?php if ($requerimento['status'] === 'escalado' && $podeGerenciar): ?>
-        <form method="post" action="<?php echo url('requerimentoAdmin/retomar/' . (int) $requerimento['id']); ?>" onsubmit="return confirm('Retomar este requerimento pra fila geral?');" style="margin-top:0.5rem;">
+        <form method="post" action="<?php echo url('requerimentoAdmin/retomar/' . (int) $requerimento['id']); ?>" onsubmit="return confirm('Retomar este requerimento pra fila geral?');" style="margin-top:0.5rem;"><?= campoCsrf() ?>
             <button type="submit">Retomar pra fila geral</button>
         </form>
     <?php endif; ?>

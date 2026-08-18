@@ -89,12 +89,12 @@ class MentoriaRepository
         return $horario !== false ? $horario : null;
     }
 
-    public function criar($concursoId, $mentorUsuarioId, $dataInicio, $dataFim, $linkMeet, $observacao)
+    public function criar($concursoId, $mentorUsuarioId, $dataInicio, $dataFim, $linkMeet, $observacao, $integracaoGoogle = false)
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'INSERT INTO mentoria_horarios (concurso_id, mentor_usuario_id, data_inicio, data_fim, link_meet, observacao)
-             VALUES (:concurso_id, :mentor_usuario_id, :data_inicio, :data_fim, :link_meet, :observacao)'
+            'INSERT INTO mentoria_horarios (concurso_id, mentor_usuario_id, data_inicio, data_fim, link_meet, observacao, integracao_google)
+             VALUES (:concurso_id, :mentor_usuario_id, :data_inicio, :data_fim, :link_meet, :observacao, :integracao_google)'
         );
         $dados = [
             'concurso_id' => $concursoId,
@@ -103,6 +103,7 @@ class MentoriaRepository
             'data_fim' => $dataFim,
             'link_meet' => $linkMeet,
             'observacao' => $observacao,
+            'integracao_google' => $integracaoGoogle ? 1 : 0,
         ];
         $stmt->execute($dados);
         $id = (int) $pdo->lastInsertId();
@@ -110,6 +111,51 @@ class MentoriaRepository
         Auditoria::registrar('criar', 'mentoria_horarios', $id, null, $dados);
 
         return $id;
+    }
+
+    /**
+     * Fase 31: colunas da integracao com o Google Agenda - usado tanto logo
+     * apos criar()/verificarNovamente() (preenche google_event_id etc.)
+     * quanto na reconciliacao sob demanda (so' atualiza meet_link/
+     * meet_pendente/google_sincronizado_em). $colunas usa as chaves de
+     * GoogleCalendarSyncService (meet_link, nao link_meet) - o mapeamento
+     * pro nome real da coluna e' feito aqui dentro.
+     */
+    public function atualizarGoogle($id, array $colunas)
+    {
+        $mapa = [
+            'google_event_id' => 'google_event_id',
+            'google_calendar_id' => 'google_calendar_id',
+            'meet_link' => 'link_meet',
+            'meet_link_origem' => 'meet_link_origem',
+            'meet_pendente' => 'meet_pendente',
+            'google_sincronizado_em' => 'google_sincronizado_em',
+        ];
+
+        $campos = [];
+
+        foreach ($mapa as $chave => $coluna) {
+            if (array_key_exists($chave, $colunas)) {
+                $campos[$coluna] = $colunas[$chave];
+            }
+        }
+
+        if (empty($campos)) {
+            return;
+        }
+
+        $antes = $this->buscarPorId($id);
+        $sets = [];
+
+        foreach (array_keys($campos) as $coluna) {
+            $sets[] = "$coluna = :$coluna";
+        }
+
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE mentoria_horarios SET ' . implode(', ', $sets) . ' WHERE id = :id');
+        $stmt->execute($campos + ['id' => $id]);
+
+        Auditoria::registrar('atualizar_google', 'mentoria_horarios', $id, $antes, $campos);
     }
 
     /**

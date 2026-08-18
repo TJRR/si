@@ -6,8 +6,8 @@
 
 <p><a href="<?php echo url('participante/index'); ?>">Voltar ao painel</a></p>
 
-<?php if (!empty($flash)): ?>
-    <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php if (!empty($_SESSION['flash'])): ?>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
 <p>Encontros coletivos com tema pré-definido — sua equipe pode se inscrever em quantas oficinas quiser, sem exclusividade.</p>
@@ -26,6 +26,8 @@
             <td>
                 <?php if ($inscrita && linkHttpValido($horario['link_meet'])): ?>
                     <a href="<?php echo htmlspecialchars($horario['link_meet'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">Entrar</a>
+                <?php elseif ($inscrita && !empty($horario['integracao_google']) && !empty($horario['meet_pendente'])): ?>
+                    <span class="status-pill laranja">Gerando sala...</span>
                 <?php else: ?>
                     —
                 <?php endif; ?>
@@ -34,11 +36,11 @@
             <td>
                 <?php if ($inscrita): ?>
                     <span class="status-pill verde">Inscrita</span>
-                    <form method="post" action="<?php echo url('oficina/cancelar/' . (int) $horario['id']); ?>" onsubmit="return confirm('Cancelar a inscrição nesta oficina?');">
+                    <form method="post" action="<?php echo url('oficina/cancelar/' . (int) $horario['id']); ?>" onsubmit="return confirm('Cancelar a inscrição nesta oficina?');"><?= campoCsrf() ?>
                         <button type="submit">Cancelar</button>
                     </form>
                 <?php else: ?>
-                    <form method="post" action="<?php echo url('oficina/inscrever/' . (int) $horario['id']); ?>">
+                    <form method="post" action="<?php echo url('oficina/inscrever/' . (int) $horario['id']); ?>"><?= campoCsrf() ?>
                         <button type="submit">Inscrever-se</button>
                     </form>
                 <?php endif; ?>

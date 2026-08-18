@@ -8,7 +8,7 @@
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('participante/editarEquipe'); ?>">
+<form method="post" action="<?php echo url('participante/editarEquipe'); ?>"><?= campoCsrf() ?>
     <label>Nome da equipe:
         <input type="text" name="nome_equipe" required value="<?php echo htmlspecialchars($equipe['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>

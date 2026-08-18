@@ -185,6 +185,30 @@
         });
     }
 
+    /**
+     * Fase 31: apos trocar de tela via arvore (sem reload), atualiza o botao
+     * "?" do topbar (que nao e' recriado - so' #conteudo-admin/#abas-admin
+     * sao trocados) com o conteudo de ajuda da nova tela, ou o esconde se a
+     * tela ainda nao tiver ajuda escrita.
+     */
+    function sincronizarAjuda(ajudaHtml, ajudaTitulo) {
+        var botao = document.getElementById('ajuda-botao');
+        var fonte = document.getElementById('ajuda-painel-fonte');
+
+        if (!botao || !fonte) {
+            return;
+        }
+
+        if (ajudaHtml) {
+            fonte.innerHTML = ajudaHtml;
+            botao.dataset.ajudaTitulo = 'Ajuda — ' + (ajudaTitulo || '');
+            botao.hidden = false;
+        } else {
+            fonte.innerHTML = '';
+            botao.hidden = true;
+        }
+    }
+
     function navegar(rota, opcoes) {
         opcoes = opcoes || {};
 
@@ -199,6 +223,8 @@
                 if (dados.titulo) {
                     document.title = dados.titulo;
                 }
+
+                sincronizarAjuda(dados.ajuda, dados.ajudaTitulo);
 
                 if (dados.flash) {
                     var aviso = document.createElement('p');

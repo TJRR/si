@@ -11,23 +11,25 @@
  * ja usado pra restaurar o dump inicial em producao.
  *
  * Fase 18: arquivo passa a ser gravado na raiz do projeto (nao mais em
- * storage/exports/) e o nome usa so' a data (nao mais data+hora) - um
- * backup por dia e' suficiente pra rotina de deploy, e roda por cima do de
- * hoje se rodado de novo no mesmo dia (sobrescreve, nao acumula).
+ * storage/exports/) - um backup por rodada e' suficiente pra rotina de
+ * deploy.
  *
  * ATENCAO - dado sensivel: o arquivo gerado contem TODOS os dados pessoais
  * do sistema (CPF, nome, e-mail, telefone de participantes/avaliadores/
- * usuarios). Trate a saida como confidencial: transfira por canal seguro
- * (scp, nunca HTTP publico) e apague a copia do servidor assim que baixada.
+ * usuarios). O servidor de producao nao tem scp funcional (ver memoria de
+ * deploy) - a transferencia real acontece via curl numa URL publica
+ * temporaria (ver DeployFaseXX.md), entao trate a janela entre gerar e
+ * apagar como o unico controle de fato: apague a copia do servidor assim
+ * que confirmar o download local.
  *
  * Por padrao roda em modo consulta (dry-run): so lista as tabelas e a
  * contagem de linhas, sem gravar nada. Para gerar o arquivo de verdade:
  *   php exportar_dump_completo.php --confirmar
  *   php exportar_dump_completo.php --confirmar --nome=dump_completo_pre_faseXX.sql
  *
- * --nome= e opcional (sem ele, mantem o padrao dump_completo_AAAAMMDD.sql) -
- * serve pra rotina de deploy poder pedir um nome fixo/previsivel (ex.: "pre
- * fase XX"), sem precisar renomear o arquivo depois de gerado.
+ * --nome= e opcional - sem ele, o padrao e'
+ * dump_completo_AAAAMMDD_XXXXXXXX.sql (Fase 31: sufixo de 4 bytes aleatorios
+ * alem da data, pra nao ficar previsivel enquanto fica exposto por HTTP).
  */
 
 if (php_sapi_name() !== 'cli') {
@@ -76,7 +78,13 @@ if (!$confirmar) {
 }
 
 $pastaDestino = __DIR__ . '/..';
-$nomeArquivo = ($nomeParam !== null && $nomeParam !== '') ? $nomeParam : 'dump_completo_' . date('Ymd') . '.sql';
+// Fase 31 (Auditoria de Seguranca, achado #2): sufixo aleatorio alem da data
+// - o arquivo ainda fica servido publicamente por HTTP enquanto nao for
+// apagado (limitacao de infraestrutura, ver achado #8), mas um nome
+// imprevisivel fecha a janela de "quem sabe o padrao acha na hora".
+$nomeArquivo = ($nomeParam !== null && $nomeParam !== '')
+    ? $nomeParam
+    : 'dump_completo_' . date('Ymd') . '_' . bin2hex(random_bytes(4)) . '.sql';
 $caminhoArquivo = $pastaDestino . '/' . $nomeArquivo;
 $handle = fopen($caminhoArquivo, 'w');
 

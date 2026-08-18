@@ -65,8 +65,8 @@
     <?php endif; ?>
 </div>
 
-<?php if (!empty($flash)): ?>
-    <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php if (!empty($_SESSION['flash'])): ?>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
 <div class="duvida-mensagem">
@@ -102,7 +102,7 @@
                 </svg>
                 Responder
             </h2>
-            <form method="post" action="<?php echo url('duvidaAdmin/responder/' . (int) $duvida['id']); ?>" enctype="multipart/form-data">
+            <form method="post" action="<?php echo url('duvidaAdmin/responder/' . (int) $duvida['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
                 <textarea name="resposta" rows="4" placeholder="Escreva a resposta" required></textarea>
                 <div class="duvida-acao-rodape">
                     <label class="btn-icone" title="Anexar arquivo" style="cursor:pointer;">
@@ -134,7 +134,7 @@
             <?php if (empty($atendentesDisponiveis)): ?>
                 <p>Nenhum outro administrador/suporte disponível neste concurso.</p>
             <?php else: ?>
-                <form method="post" action="<?php echo url('duvidaAdmin/escalar/' . (int) $duvida['id']); ?>">
+                <form method="post" action="<?php echo url('duvidaAdmin/escalar/' . (int) $duvida['id']); ?>"><?= campoCsrf() ?>
                     <label for="duvida-escalar-usuario">Escalar para</label>
                     <select id="duvida-escalar-usuario" name="usuario_id" required>
                         <option value="">Selecione um responsável</option>

@@ -8,7 +8,7 @@
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo $criterio === null ? url('criterios/novo/' . (int) $etapa['id']) : url('criterios/editar/' . (int) $criterio['id']); ?>">
+<form method="post" action="<?php echo $criterio === null ? url('criterios/novo/' . (int) $etapa['id']) : url('criterios/editar/' . (int) $criterio['id']); ?>"><?= campoCsrf() ?>
     <label>Código (usado nas fórmulas, ex.: C1):
         <input type="text" name="codigo" required value="<?php echo htmlspecialchars($criterio !== null ? $criterio['codigo'] : $codigoSugerido, ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>

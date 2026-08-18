@@ -16,7 +16,7 @@ foreach ($concursos as $concurso) {
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('usuarios/convidar'); ?>">
+<form method="post" action="<?php echo url('usuarios/convidar'); ?>"><?= campoCsrf() ?>
     <label>Nome:
         <input type="text" name="nome" required>
     </label><br>

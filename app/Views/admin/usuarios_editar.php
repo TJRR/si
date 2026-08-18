@@ -14,11 +14,11 @@ foreach ($concursos as $concurso) {
 
 <p><a href="<?php echo url('usuarios/index'); ?>">Voltar aos usuários</a></p>
 
-<?php if (!empty($flash)): ?>
-    <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php if (!empty($_SESSION['flash'])): ?>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('usuarios/salvarEdicao'); ?>">
+<form method="post" action="<?php echo url('usuarios/salvarEdicao'); ?>"><?= campoCsrf() ?>
     <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
 
     <label>Nome completo:

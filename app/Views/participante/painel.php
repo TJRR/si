@@ -73,7 +73,7 @@
                         </a>
                     <?php endif; ?>
                     <?php if ($ehLider && !$ehEuMesmo && $colega['status_homologacao'] === 'homologado' && empty($colega['email'])): ?>
-                        <form method="post" action="<?php echo url('participante/incluirEmailIntegrante/' . (int) $colega['id']); ?>" style="display:inline-flex; align-items:center; gap:0.3rem;">
+                        <form method="post" action="<?php echo url('participante/incluirEmailIntegrante/' . (int) $colega['id']); ?>" style="display:inline-flex; align-items:center; gap:0.3rem;"><?= campoCsrf() ?><?= campoCsrf() ?>
                             <input type="email" name="email" placeholder="e-mail de <?php echo htmlspecialchars($colega['nome'], ENT_QUOTES, 'UTF-8'); ?>" style="display:inline; margin-top:0; width:12rem;" required>
                             <button type="submit" class="btn-icone" title="Cadastrar e-mail deste integrante">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -83,7 +83,7 @@
                         </form>
                     <?php elseif ($ehLider && !$ehEuMesmo && $colega['status_homologacao'] === 'homologado'): ?>
                         <?php $confirmacao = htmlspecialchars(addslashes('Promover ' . $colega['nome'] . ' a líder da equipe? Você deixará de ser o líder.'), ENT_QUOTES, 'UTF-8'); ?>
-                        <form method="post" action="<?php echo url('participante/promoverLider/' . (int) $colega['id']); ?>" onsubmit="return confirm('<?php echo $confirmacao; ?>');">
+                        <form method="post" action="<?php echo url('participante/promoverLider/' . (int) $colega['id']); ?>" onsubmit="return confirm('<?php echo $confirmacao; ?>');"><?= campoCsrf() ?><?= campoCsrf() ?>
                             <button type="submit" class="btn-icone" title="Promover a líder">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <circle cx="12" cy="12" r="10"></circle>
@@ -95,7 +95,7 @@
                     <?php endif; ?>
                     <?php if ($ehLider && !$ehEuMesmo): ?>
                         <?php $confirmacaoExcluir = htmlspecialchars(addslashes('Excluir ' . $colega['nome'] . ' da equipe? Esta ação não pode ser desfeita.'), ENT_QUOTES, 'UTF-8'); ?>
-                        <form method="post" action="<?php echo url('participante/excluirIntegrante/' . (int) $colega['id']); ?>" onsubmit="return confirm('<?php echo $confirmacaoExcluir; ?>');">
+                        <form method="post" action="<?php echo url('participante/excluirIntegrante/' . (int) $colega['id']); ?>" onsubmit="return confirm('<?php echo $confirmacaoExcluir; ?>');"><?= campoCsrf() ?><?= campoCsrf() ?>
                             <button type="submit" class="btn-icone" title="Excluir integrante">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <polyline points="3 6 5 6 21 6"></polyline>

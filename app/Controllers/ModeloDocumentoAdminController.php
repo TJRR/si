@@ -127,9 +127,9 @@ class ModeloDocumentoAdminController extends Controller
             $this->modelos->remover($id);
             $_SESSION['flash'] = 'Modelo removido.';
         } catch (\PDOException $e) {
-            $_SESSION['flash'] = $e->getCode() === '23000'
+            flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: já existe pedido protocolado a partir deste modelo.'
-                : 'Não foi possível remover o modelo.';
+                : 'Não foi possível remover o modelo.');
         }
 
         $this->redirecionar('modelosDocumento/index/' . $etapaId);
@@ -150,7 +150,7 @@ class ModeloDocumentoAdminController extends Controller
         $etapa = $this->etapaAutorizada($etapaId);
 
         if ($etapa['data_fim'] === null || strtotime($etapa['data_fim']) > time()) {
-            $_SESSION['flash'] = 'Só é possível expurgar documentos de uma etapa que já passou da própria data final.';
+            flashErro('Só é possível expurgar documentos de uma etapa que já passou da própria data final.');
             $this->redirecionar('modelosDocumento/index/' . $etapaId);
             return;
         }
@@ -158,7 +158,7 @@ class ModeloDocumentoAdminController extends Controller
         $confirmacao = trim(isset($_POST['confirmacao']) ? $_POST['confirmacao'] : '');
 
         if ($confirmacao !== $etapa['nome']) {
-            $_SESSION['flash'] = 'Confirmação incorreta — digite exatamente o nome da etapa para expurgar.';
+            flashErro('Confirmação incorreta — digite exatamente o nome da etapa para expurgar.');
             $this->redirecionar('modelosDocumento/index/' . $etapaId);
             return;
         }

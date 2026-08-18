@@ -189,6 +189,23 @@ class Router
                 http_response_code(403);
                 exit('Ação bloqueada: modo de visualização somente leitura. Volte para sua conta de administrador para realizar ações.');
             }
+
+            // Fase 31 (Auditoria de Seguranca, achado #1/#3): protecao CSRF
+            // central - cobre toda acao de escrita de uma vez, sem precisar
+            // validar em cada Controller. Token aceito via campo de form
+            // (campoCsrf(), em app/helpers.php) ou header X-CSRF-Token
+            // (usado pelos 2 pontos que enviam POST via fetch() em vez de
+            // <form>: editor-rico.js e reordenar-arrastar.js).
+            if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+                $tokenRecebido = isset($_POST['csrf_token'])
+                    ? $_POST['csrf_token']
+                    : (isset($_SERVER['HTTP_X_CSRF_TOKEN']) ? $_SERVER['HTTP_X_CSRF_TOKEN'] : '');
+
+                if (!hash_equals($_SESSION['csrf_token'], $tokenRecebido)) {
+                    http_response_code(403);
+                    exit('Sessão expirada ou requisição inválida. Recarregue a página e tente novamente.');
+                }
+            }
         }
 
         if (!isset(self::$rotas[$modulo])) {

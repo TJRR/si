@@ -81,9 +81,9 @@ class FaqAdminController extends Controller
             $this->faqs->remover($id);
             $_SESSION['flash'] = 'Pergunta removida do banco.';
         } catch (\PDOException $e) {
-            $_SESSION['flash'] = $e->getCode() === '23000'
+            flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: esta pergunta está ativa em uma ou mais edições. Desative-a nas edições antes de remover.'
-                : 'Não foi possível remover a pergunta.';
+                : 'Não foi possível remover a pergunta.');
         }
 
         $this->redirecionar('faq/index');

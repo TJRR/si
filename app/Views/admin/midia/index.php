@@ -38,7 +38,7 @@
                         <line x1="10" y1="14" x2="21" y2="3"></line>
                     </svg>
                 </a>
-                <form method="post" action="<?php echo url('midia/remover'); ?>" onsubmit="return confirm('Remover esta mídia?');">
+                <form method="post" action="<?php echo url('midia/remover'); ?>" onsubmit="return confirm('Remover esta mídia?');"><?= campoCsrf() ?>
                     <input type="hidden" name="id" value="<?php echo (int) $midia['id']; ?>">
                     <button type="submit" class="btn-icone" title="Remover">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -17,6 +17,7 @@ use App\Repositories\NotificacaoPainelRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Repositories\UsuarioRepository;
+use App\Services\GoogleCalendarSyncService;
 
 /**
  * Fase 19 (#106): lado do participante - ve horarios vagos do concurso da
@@ -32,6 +33,7 @@ class MentoriaController extends Controller
     private $mentorias;
     private $usuarios;
     private $notificacoes;
+    private $googleSync;
 
     public function __construct()
     {
@@ -42,16 +44,42 @@ class MentoriaController extends Controller
         $this->mentorias = new MentoriaRepository();
         $this->usuarios = new UsuarioRepository();
         $this->notificacoes = new NotificacaoPainelRepository();
+        $this->googleSync = new GoogleCalendarSyncService();
     }
 
     public function index()
     {
         $contexto = $this->contextoAtual();
+        $reservas = $this->mentorias->listarReservasDaEquipe($contexto['equipe']['id']);
+
+        // Fase 31: reconciliacao sob demanda (Meet pendente/RSVP) - sempre
+        // no maximo 1 reserva de mentoria por equipe, entao nao precisa do
+        // teto de "2 itens" que a listagem do admin exigiria.
+        foreach ($reservas as &$reserva) {
+            if (empty($reserva['integracao_google']) || empty($reserva['google_event_id'])) {
+                continue;
+            }
+
+            $mentor = $this->usuarios->buscarPorId($reserva['mentor_usuario_id']);
+
+            if ($mentor === null) {
+                continue;
+            }
+
+            $resultado = $this->googleSync->reconciliar('mentoria', $reserva, $mentor['email']);
+
+            if ($resultado !== null) {
+                $this->mentorias->atualizarGoogle($reserva['id'], $resultado);
+                $reserva['link_meet'] = $resultado['meet_link'];
+                $reserva['meet_pendente'] = $resultado['meet_pendente'];
+            }
+        }
+        unset($reserva);
 
         $this->renderizar('participante/mentorias', [
             'equipe' => $contexto['equipe'],
             'vagos' => $this->mentorias->listarVagosPorConcurso($contexto['concursoId']),
-            'reservas' => $this->mentorias->listarReservasDaEquipe($contexto['equipe']['id']),
+            'reservas' => $reservas,
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
         ], 'Mentorias');
 
@@ -71,7 +99,7 @@ class MentoriaController extends Controller
         $sucesso = $this->mentorias->reservar($horarioId, $contexto['equipe']['id']);
 
         if (!$sucesso) {
-            $_SESSION['flash'] = 'Esse horário acabou de ser reservado por outra equipe.';
+            flashAlerta('Esse horário acabou de ser reservado por outra equipe.');
             $this->redirecionar('mentoria/index');
             return;
         }
@@ -82,6 +110,18 @@ class MentoriaController extends Controller
 
         if ($mentor !== null && !empty($mentor['email'])) {
             Mailer::enviar($mentor['email'], 'Mentoria reservada', '<p>' . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . '</p>');
+        }
+
+        if (!empty($horario['integracao_google']) && $mentor !== null) {
+            $emails = $this->equipes->listarEmailsPorEquipes([(int) $contexto['equipe']['id']]);
+            $resultado = $this->googleSync->sincronizarAttendees(
+                'mentoria', (int) $horarioId, $mentor['email'], $horario['google_calendar_id'], $horario['google_event_id'],
+                array_keys($emails), $emails
+            );
+
+            if ($resultado !== null) {
+                $this->mentorias->atualizarGoogle($horarioId, $resultado);
+            }
         }
 
         $_SESSION['flash'] = 'Horário reservado.';
@@ -106,6 +146,16 @@ class MentoriaController extends Controller
 
         if ($mentor !== null && !empty($mentor['email'])) {
             Mailer::enviar($mentor['email'], 'Reserva de mentoria cancelada', '<p>' . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . '</p>');
+        }
+
+        if (!empty($horario['integracao_google']) && $mentor !== null) {
+            $resultado = $this->googleSync->sincronizarAttendees(
+                'mentoria', (int) $horarioId, $mentor['email'], $horario['google_calendar_id'], $horario['google_event_id'], []
+            );
+
+            if ($resultado !== null) {
+                $this->mentorias->atualizarGoogle($horarioId, $resultado);
+            }
         }
 
         $_SESSION['flash'] = 'Reserva cancelada.';

@@ -8,7 +8,7 @@
 
 <p>Marque quem participa desta rodada de sorteio em cada categoria. Só os avaliadores marcados entram no sorteio; os demais ficam de fora desta rodada.</p>
 
-<form method="post" action="<?php echo url('designacoes/distribuirComSelecao'); ?>">
+<form method="post" action="<?php echo url('designacoes/distribuirComSelecao'); ?>"><?= campoCsrf() ?>
     <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
 
     <?php foreach ($categorias as $categoria): ?>

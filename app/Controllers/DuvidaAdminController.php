@@ -141,7 +141,7 @@ class DuvidaAdminController extends Controller
         $resposta = trim(isset($_POST['resposta']) ? $_POST['resposta'] : '');
 
         if ($resposta === '') {
-            $_SESSION['flash'] = 'Escreva a resposta antes de enviar.';
+            flashErro('Escreva a resposta antes de enviar.');
             $this->redirecionar('duvidaAdmin/ver/' . (int) $id);
             return;
         }
@@ -149,7 +149,7 @@ class DuvidaAdminController extends Controller
         list($anexoPath, $anexoNomeOriginal, $erroAnexo) = $this->processarAnexoOpcional();
 
         if ($erroAnexo !== null) {
-            $_SESSION['flash'] = $erroAnexo;
+            flashErro($erroAnexo);
             $this->redirecionar('duvidaAdmin/ver/' . (int) $id);
             return;
         }
@@ -180,7 +180,7 @@ class DuvidaAdminController extends Controller
         $disponiveis = $this->atendentesDisponiveis((int) $duvida['concurso_id']);
 
         if (!in_array($novoResponsavelId, array_column($disponiveis, 'id'), false)) {
-            $_SESSION['flash'] = 'Selecione um administrador ou suporte válido.';
+            flashErro('Selecione um administrador ou suporte válido.');
             $this->redirecionar('duvidaAdmin/ver/' . (int) $id);
             return;
         }

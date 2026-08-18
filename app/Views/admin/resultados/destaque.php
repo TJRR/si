@@ -9,7 +9,7 @@
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('resultados/editarDestaque/' . (int) $resultado['id']); ?>" enctype="multipart/form-data">
+<form method="post" action="<?php echo url('resultados/editarDestaque/' . (int) $resultado['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
     <label>Resumo de destaque (texto curto, pensado para leitura pública — ex.: "Edições Anteriores"):<br>
         <textarea name="resumo_destaque" rows="5" cols="60"><?php echo htmlspecialchars((string) $resultado['resumo_destaque'], ENT_QUOTES, 'UTF-8'); ?></textarea>
     </label><br>

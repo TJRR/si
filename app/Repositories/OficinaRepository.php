@@ -61,12 +61,12 @@ class OficinaRepository
         return $horario !== false ? $horario : null;
     }
 
-    public function criar($concursoId, $tema, $dataInicio, $dataFim, $linkMeet, $observacao, $criadoPor)
+    public function criar($concursoId, $tema, $dataInicio, $dataFim, $linkMeet, $observacao, $criadoPor, $integracaoGoogle = false)
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'INSERT INTO oficina_horarios (concurso_id, tema, data_inicio, data_fim, link_meet, observacao, criado_por)
-             VALUES (:concurso_id, :tema, :data_inicio, :data_fim, :link_meet, :observacao, :criado_por)'
+            'INSERT INTO oficina_horarios (concurso_id, tema, data_inicio, data_fim, link_meet, observacao, criado_por, integracao_google)
+             VALUES (:concurso_id, :tema, :data_inicio, :data_fim, :link_meet, :observacao, :criado_por, :integracao_google)'
         );
         $dados = [
             'concurso_id' => $concursoId,
@@ -76,6 +76,7 @@ class OficinaRepository
             'link_meet' => $linkMeet,
             'observacao' => $observacao,
             'criado_por' => $criadoPor,
+            'integracao_google' => $integracaoGoogle ? 1 : 0,
         ];
         $stmt->execute($dados);
         $id = (int) $pdo->lastInsertId();
@@ -83,6 +84,47 @@ class OficinaRepository
         Auditoria::registrar('criar', 'oficina_horarios', $id, null, $dados);
 
         return $id;
+    }
+
+    /**
+     * Fase 31: mesma logica de MentoriaRepository::atualizarGoogle() - ver
+     * comentario la' (mapeamento meet_link -> coluna link_meet, etc).
+     */
+    public function atualizarGoogle($id, array $colunas)
+    {
+        $mapa = [
+            'google_event_id' => 'google_event_id',
+            'google_calendar_id' => 'google_calendar_id',
+            'meet_link' => 'link_meet',
+            'meet_link_origem' => 'meet_link_origem',
+            'meet_pendente' => 'meet_pendente',
+            'google_sincronizado_em' => 'google_sincronizado_em',
+        ];
+
+        $campos = [];
+
+        foreach ($mapa as $chave => $coluna) {
+            if (array_key_exists($chave, $colunas)) {
+                $campos[$coluna] = $colunas[$chave];
+            }
+        }
+
+        if (empty($campos)) {
+            return;
+        }
+
+        $antes = $this->buscarPorId($id);
+        $sets = [];
+
+        foreach (array_keys($campos) as $coluna) {
+            $sets[] = "$coluna = :$coluna";
+        }
+
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE oficina_horarios SET ' . implode(', ', $sets) . ' WHERE id = :id');
+        $stmt->execute($campos + ['id' => $id]);
+
+        Auditoria::registrar('atualizar_google', 'oficina_horarios', $id, $antes, $campos);
     }
 
     public function remover($id)

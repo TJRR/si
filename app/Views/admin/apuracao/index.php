@@ -20,7 +20,7 @@
     </ul>
 
     <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
-    <form method="post" action="<?php echo url('formulas/trilha/' . (int) $trilha['id']); ?>">
+    <form method="post" action="<?php echo url('formulas/trilha/' . (int) $trilha['id']); ?>"><?= campoCsrf() ?>
         <label>Expressão (ex.: NE2*0.4 + NE3*0.6):<br>
             <textarea name="expressao" rows="3" cols="70" required><?php echo htmlspecialchars((string) $expressaoAtual, ENT_QUOTES, 'UTF-8'); ?></textarea>
         </label><br>
@@ -51,7 +51,7 @@
             <td>
                 <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
                 <div class="acoes-icones">
-                    <form method="post" action="<?php echo url('desempate/mover'); ?>">
+                    <form method="post" action="<?php echo url('desempate/mover'); ?>"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
                         <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                         <input type="hidden" name="direcao" value="cima">
@@ -62,7 +62,7 @@
                             </svg>
                         </button>
                     </form>
-                    <form method="post" action="<?php echo url('desempate/mover'); ?>">
+                    <form method="post" action="<?php echo url('desempate/mover'); ?>"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
                         <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                         <input type="hidden" name="direcao" value="baixo">
@@ -73,7 +73,7 @@
                             </svg>
                         </button>
                     </form>
-                    <form method="post" action="<?php echo url('desempate/remover'); ?>">
+                    <form method="post" action="<?php echo url('desempate/remover'); ?>"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
                         <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                         <button type="submit" class="btn-icone" title="Remover">
@@ -107,7 +107,7 @@
         <?php if ($publicado): ?>
             <strong>Resultado final publicado.</strong>
             <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
-            <form method="post" action="<?php echo url('resultados/reabrirTrilha'); ?>" style="display:inline;">
+            <form method="post" action="<?php echo url('resultados/reabrirTrilha'); ?>" style="display:inline;"><?= campoCsrf() ?>
                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                 <button type="submit" class="btn-icone" title="Reabrir" onclick="return confirm('Reabrir apaga o resultado final publicado. Confirmar?');">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -120,7 +120,7 @@
         <?php else: ?>
             <strong>Prévia (ainda não publicada)</strong> — recalculada a cada acesso.
             <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
-            <form method="post" action="<?php echo url('resultados/publicarTrilha'); ?>" style="display:inline;">
+            <form method="post" action="<?php echo url('resultados/publicarTrilha'); ?>" style="display:inline;"><?= campoCsrf() ?>
                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                 <button type="submit" class="btn-icone" title="Confirmar e publicar" onclick="return confirm('Publicar congela a colocação final desta trilha. Confirmar?');">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

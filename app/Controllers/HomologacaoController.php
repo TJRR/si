@@ -147,7 +147,7 @@ class HomologacaoController extends Controller
         $equipe = $this->equipes->buscarPorParticipante($participanteId);
 
         if ($participante === null || $equipe === null || empty($participante['email'])) {
-            $_SESSION['flash'] = 'Não foi possível convidar: participante ou e-mail não encontrado.';
+            flashErro('Não foi possível convidar: participante ou e-mail não encontrado.');
             $this->redirecionar('homologacao/index/' . $trilhaIdPost);
             return;
         }
@@ -162,7 +162,7 @@ class HomologacaoController extends Controller
         RoleMiddleware::exigir(['administrador'], $trilhaReal !== null ? $trilhaReal['concurso_id'] : null);
 
         if (!empty($this->usuarioParticipante->usuariosDoParticipante($participanteId))) {
-            $_SESSION['flash'] = 'Este participante já tem acesso ao sistema.';
+            flashAlerta('Este participante já tem acesso ao sistema.');
             $this->redirecionar('homologacao/index/' . $equipe['trilha_id']);
             return;
         }

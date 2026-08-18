@@ -25,13 +25,14 @@ class CadastroController extends Controller
             if ($nome === '' || $email === '' || $senha === '') {
                 $erro = 'Preencha nome, e-mail e senha.';
             } else {
-                $resultado = (new AuthService())->cadastrar($nome, $email, $senha);
-
-                if ($resultado['sucesso']) {
-                    $sucesso = 'Cadastro realizado. Aguarde a aprovação do Administrador para acessar o sistema.';
-                } else {
-                    $erro = $resultado['mensagem'];
-                }
+                // Fase 31 (Auditoria de Seguranca, achado #10): mensagem de
+                // sucesso e' sempre a mesma, exista ou nao o e-mail antes -
+                // AuthService::cadastrar() continua recusando duplicidade
+                // internamente (nunca cria conta repetida), so' nao revela
+                // isso pra quem preenche o formulario (evita enumeracao de
+                // contas cadastradas).
+                (new AuthService())->cadastrar($nome, $email, $senha);
+                $sucesso = 'Cadastro recebido. Se este e-mail ainda não tinha conta, aguarde a aprovação do Administrador para acessar o sistema.';
             }
         }
 

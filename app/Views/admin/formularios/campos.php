@@ -36,7 +36,7 @@
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                             </svg>
                         </a>
-                        <form method="post" action="<?php echo url('campos/mover'); ?>">
+                        <form method="post" action="<?php echo url('campos/mover'); ?>"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $campo['id']; ?>">
                             <input type="hidden" name="formulario_id" value="<?php echo (int) $formulario['id']; ?>">
                             <input type="hidden" name="direcao" value="cima">
@@ -47,7 +47,7 @@
                                 </svg>
                             </button>
                         </form>
-                        <form method="post" action="<?php echo url('campos/mover'); ?>">
+                        <form method="post" action="<?php echo url('campos/mover'); ?>"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $campo['id']; ?>">
                             <input type="hidden" name="formulario_id" value="<?php echo (int) $formulario['id']; ?>">
                             <input type="hidden" name="direcao" value="baixo">
@@ -58,7 +58,7 @@
                                 </svg>
                             </button>
                         </form>
-                        <form method="post" action="<?php echo url('campos/remover'); ?>">
+                        <form method="post" action="<?php echo url('campos/remover'); ?>"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $campo['id']; ?>">
                             <input type="hidden" name="formulario_id" value="<?php echo (int) $formulario['id']; ?>">
                             <button type="submit" class="btn-icone" title="Remover">

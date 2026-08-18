@@ -39,10 +39,13 @@ if ($configVisual !== false && $configVisual !== null) {
 
     <?php include __DIR__ . '/_cabecalho.php'; ?>
     <?php include __DIR__ . '/_painel_cronograma.php'; ?>
+    <?php if (isset($ajudaHtml) && $ajudaHtml !== null): ?>
+    <?php include __DIR__ . '/_painel_ajuda.php'; ?>
+    <?php endif; ?>
 
     <main id="conteudo-principal">
         <?php if (!empty($_SESSION['flash'])): ?>
-            <p class="site-flash"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
+            <p class="site-flash <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
         <?php endif; ?>
 
         <?php include __DIR__ . '/_slideshow.php'; ?>

@@ -1,16 +1,18 @@
 /**
- * Fase 19 (#86): painel lateral generico (deslizante da direita) - hoje so'
- * usado pelo painel do cronograma (#painel-cronograma), mas o nome/logica
- * nao amarram nele: qualquer elemento com `.site-painel-lateral` + o
- * respectivo backdrop `.site-painel-backdrop` funciona com os mesmos
- * gatilhos (`data-abrir-painel-cronograma`, `data-fechar-painel`).
+ * Fase 19 (#86): painel lateral generico (deslizante da direita) - hoje
+ * usado pelo painel do cronograma (#painel-cronograma) e, desde a Fase 31,
+ * pelo painel de ajuda contextual da Home publica (#painel-ajuda): qualquer
+ * elemento com `.site-painel-lateral` + o backdrop compartilhado
+ * `.site-painel-backdrop` funciona com os mesmos gatilhos - o alvo e'
+ * escolhido pelo atributo `data-abrir-painel="<id-do-painel>"` no elemento
+ * clicado (`data-fechar-painel` fecha qualquer painel aberto).
  * Delegacao em `document`, mesmo padrao dos demais componentes desta fase.
  */
 (function () {
     'use strict';
 
-    function abrir() {
-        var painel = document.getElementById('painel-cronograma');
+    function abrir(idPainel) {
+        var painel = document.getElementById(idPainel);
         var backdrop = document.querySelector('.site-painel-backdrop');
 
         if (!painel) { return; }
@@ -31,8 +33,10 @@
     }
 
     document.addEventListener('click', function (evento) {
-        if (evento.target.closest && evento.target.closest('[data-abrir-painel-cronograma]')) {
-            abrir();
+        var gatilho = evento.target.closest && evento.target.closest('[data-abrir-painel]');
+
+        if (gatilho) {
+            abrir(gatilho.dataset.abrirPainel);
             return;
         }
 

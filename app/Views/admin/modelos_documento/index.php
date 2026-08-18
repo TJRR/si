@@ -26,7 +26,7 @@
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
                 </a>
-                <form method="post" action="<?php echo url('modelosDocumento/remover'); ?>" onsubmit="return confirm('Remover este modelo?');">
+                <form method="post" action="<?php echo url('modelosDocumento/remover'); ?>" onsubmit="return confirm('Remover este modelo?');"><?= campoCsrf() ?>
                     <input type="hidden" name="id" value="<?php echo (int) $modelo['id']; ?>">
                     <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
                     <button type="submit" class="btn-icone" title="Remover">
@@ -58,7 +58,7 @@
         <p>O expurgo de documentos só fica disponível depois que a etapa passar da própria data final.</p>
     <?php else: ?>
         <p>Esta ação apaga fisicamente os PDFs assinados (e os anexos de resposta) dos pedidos já decididos (aprovado/recusado/revogado) desta etapa. Pedidos ainda em análise não são afetados. É irreversível.</p>
-        <form method="post" action="<?php echo url('modelosDocumento/expurgar/' . (int) $etapa['id']); ?>" onsubmit="return confirm('Confirma o expurgo definitivo dos documentos já decididos desta etapa?');">
+        <form method="post" action="<?php echo url('modelosDocumento/expurgar/' . (int) $etapa['id']); ?>" onsubmit="return confirm('Confirma o expurgo definitivo dos documentos já decididos desta etapa?');"><?= campoCsrf() ?>
             <label>Digite o nome exato da etapa para confirmar (<strong><?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></strong>):
                 <input type="text" name="confirmacao" required>
             </label>

@@ -12,11 +12,11 @@
 </div>
 <p>Regras gerais de premiação em texto rico ficam na tela de <a href="<?php echo url('blocos/index'); ?>">Blocos de conteúdo</a> (bloco padrão "Premiação").</p>
 
-<?php if (!empty($flash)): ?>
-    <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php if (!empty($_SESSION['flash'])): ?>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('premios/definirModo/' . (int) $concurso['id']); ?>" class="admin-card" style="margin-bottom:1.5rem;">
+<form method="post" action="<?php echo url('premios/definirModo/' . (int) $concurso['id']); ?>" class="admin-card" style="margin-bottom:1.5rem;"><?= campoCsrf() ?>
     <p><strong>Modo de premiação:</strong></p>
     <label>
         <input type="radio" name="modo_premiacao" value="geral" <?php echo $concurso['modo_premiacao'] === 'geral' ? 'checked' : ''; ?> onchange="this.form.submit()">
@@ -53,7 +53,7 @@ $renderizarLista = function (array $premios, $concursoId) {
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
                 </a>
-                <form method="post" action="<?php echo url('premios/remover'); ?>" onsubmit="return confirm('Remover este prêmio?');">
+                <form method="post" action="<?php echo url('premios/remover'); ?>" onsubmit="return confirm('Remover este prêmio?');"><?= campoCsrf() ?>
                     <input type="hidden" name="id" value="<?php echo (int) $premio['id']; ?>">
                     <input type="hidden" name="concurso_id" value="<?php echo (int) $concursoId; ?>">
                     <button type="submit" class="btn-icone" title="Remover">

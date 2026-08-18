@@ -14,6 +14,8 @@ use App\Repositories\EquipeRepository;
 use App\Repositories\OficinaRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
+use App\Repositories\UsuarioRepository;
+use App\Services\GoogleCalendarSyncService;
 
 /**
  * Fase 24: lado do participante - qualquer equipe do concurso pode ver os
@@ -26,6 +28,13 @@ class OficinaController extends Controller
     private $equipes;
     private $trilhas;
     private $oficinas;
+    private $usuarios;
+    private $googleSync;
+
+    // Fase 31: teto de reconciliacao automatica sob demanda no lado do
+    // participante (ver plano da Fase 31) - evita que uma equipe inscrita
+    // em muitas oficinas pendentes deixe o load da tela lento.
+    const RECONCILIACOES_MAXIMAS_POR_PAGINA = 2;
 
     public function __construct()
     {
@@ -34,17 +43,53 @@ class OficinaController extends Controller
         $this->equipes = new EquipeRepository();
         $this->trilhas = new TrilhaRepository();
         $this->oficinas = new OficinaRepository();
+        $this->usuarios = new UsuarioRepository();
+        $this->googleSync = new GoogleCalendarSyncService();
     }
 
     public function index()
     {
         $contexto = $this->contextoAtual();
         $inscricoes = $this->oficinas->listarInscricoesDaEquipe($contexto['equipe']['id']);
+        $inscritosIds = array_map('intval', array_column($inscricoes, 'id'));
+        $horarios = $this->oficinas->listarFuturasPorConcurso($contexto['concursoId']);
+
+        $reconciliacoesFeitas = 0;
+
+        foreach ($horarios as &$horario) {
+            if ($reconciliacoesFeitas >= self::RECONCILIACOES_MAXIMAS_POR_PAGINA) {
+                break;
+            }
+
+            if (!in_array((int) $horario['id'], $inscritosIds, true)) {
+                continue;
+            }
+
+            if (empty($horario['integracao_google']) || empty($horario['google_event_id'])) {
+                continue;
+            }
+
+            $organizador = $this->usuarios->buscarPorId($horario['criado_por']);
+
+            if ($organizador === null) {
+                continue;
+            }
+
+            $resultado = $this->googleSync->reconciliar('oficina', $horario, $organizador['email']);
+            $reconciliacoesFeitas++;
+
+            if ($resultado !== null) {
+                $this->oficinas->atualizarGoogle($horario['id'], $resultado);
+                $horario['link_meet'] = $resultado['meet_link'];
+                $horario['meet_pendente'] = $resultado['meet_pendente'];
+            }
+        }
+        unset($horario);
 
         $this->renderizar('participante/oficinas', [
             'equipe' => $contexto['equipe'],
-            'horarios' => $this->oficinas->listarFuturasPorConcurso($contexto['concursoId']),
-            'inscritosIds' => array_map('intval', array_column($inscricoes, 'id')),
+            'horarios' => $horarios,
+            'inscritosIds' => $inscritosIds,
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
         ], 'Oficinas');
 
@@ -62,17 +107,62 @@ class OficinaController extends Controller
         }
 
         $sucesso = $this->oficinas->inscrever($horarioId, $contexto['equipe']['id']);
-        $_SESSION['flash'] = $sucesso ? 'Inscrição confirmada.' : 'Sua equipe já está inscrita nesta oficina.';
+
+        if ($sucesso) {
+            flashSucesso('Inscrição confirmada.');
+        } else {
+            flashAlerta('Sua equipe já está inscrita nesta oficina.');
+        }
+
+        if ($sucesso) {
+            $this->sincronizarAttendeesGoogle($horario);
+        }
+
         $this->redirecionar('oficina/index');
     }
 
     public function cancelar($horarioId)
     {
         $contexto = $this->contextoAtual();
+        $horario = $this->oficinas->buscarPorId($horarioId);
         $this->oficinas->cancelarInscricao($horarioId, $contexto['equipe']['id']);
+
+        if ($horario !== null) {
+            $this->sincronizarAttendeesGoogle($horario);
+        }
 
         $_SESSION['flash'] = 'Inscrição cancelada.';
         $this->redirecionar('oficina/index');
+    }
+
+    /**
+     * Fase 31: recomputa a lista COMPLETA de attendees a partir de TODAS as
+     * equipes atualmente inscritas (chamado depois de inscrever/cancelar já
+     * ter alterado oficina_inscricoes) - nunca merge incremental.
+     */
+    private function sincronizarAttendeesGoogle(array $horario)
+    {
+        if (empty($horario['integracao_google']) || empty($horario['google_event_id'])) {
+            return;
+        }
+
+        $organizador = $this->usuarios->buscarPorId($horario['criado_por']);
+
+        if ($organizador === null) {
+            return;
+        }
+
+        $equipeIds = array_map('intval', array_column($this->oficinas->listarInscritos($horario['id']), 'equipe_id'));
+        $emails = $this->equipes->listarEmailsPorEquipes($equipeIds);
+
+        $resultado = $this->googleSync->sincronizarAttendees(
+            'oficina', $horario['id'], $organizador['email'], $horario['google_calendar_id'], $horario['google_event_id'],
+            array_keys($emails), $emails
+        );
+
+        if ($resultado !== null) {
+            $this->oficinas->atualizarGoogle($horario['id'], $resultado);
+        }
     }
 
     private function contextoAtual()

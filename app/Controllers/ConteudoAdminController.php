@@ -63,14 +63,14 @@ class ConteudoAdminController extends Controller
             }
 
             if ($erro !== UPLOAD_ERR_OK) {
-                $_SESSION['flash'] = 'Falha ao enviar a imagem "' . $chave . '".';
+                flashErro('Falha ao enviar a imagem "' . $chave . '".');
                 continue;
             }
 
             $atual = $this->conteudos->buscarPorChave($chave);
 
             if ($atual === null || $atual['tipo'] !== 'imagem') {
-                $_SESSION['flash'] = 'Chave de conteúdo inválida.';
+                flashErro('Chave de conteúdo inválida.');
                 continue;
             }
 
@@ -82,7 +82,7 @@ class ConteudoAdminController extends Controller
             try {
                 $novoCaminho = $this->imagens->salvar($arquivo, $chave, 1200, 1200);
             } catch (\RuntimeException $e) {
-                $_SESSION['flash'] = $e->getMessage();
+                flashErro($e->getMessage());
                 continue;
             }
 

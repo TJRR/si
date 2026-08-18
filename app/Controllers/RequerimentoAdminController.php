@@ -131,7 +131,7 @@ class RequerimentoAdminController extends Controller
         $desfecho = isset($_POST['desfecho']) ? $_POST['desfecho'] : '';
 
         if (!in_array($desfecho, ['aprovado', 'recusado', 'esclarecimento_solicitado', 'revogado'], true)) {
-            $_SESSION['flash'] = 'Desfecho inválido.';
+            flashErro('Desfecho inválido.');
             $this->redirecionar('requerimentoAdmin/ver/' . (int) $id);
             return;
         }
@@ -155,7 +155,7 @@ class RequerimentoAdminController extends Controller
         $resposta = trim(isset($_POST['resposta']) ? $_POST['resposta'] : '');
 
         if ($resposta === '') {
-            $_SESSION['flash'] = 'Escreva o texto da resposta antes de enviar.';
+            flashErro('Escreva o texto da resposta antes de enviar.');
             $this->redirecionar('requerimentoAdmin/ver/' . (int) $id);
             return;
         }
@@ -163,7 +163,7 @@ class RequerimentoAdminController extends Controller
         $assinaturaConferida = isset($_POST['assinatura_conferida']) ? 1 : 0;
 
         if ($desfecho === 'aprovado' && $assinaturaConferida !== 1) {
-            $_SESSION['flash'] = 'Confirme que validou a assinatura no site oficial do gov.br antes de aprovar.';
+            flashErro('Confirme que validou a assinatura no site oficial do gov.br antes de aprovar.');
             $this->redirecionar('requerimentoAdmin/ver/' . (int) $id);
             return;
         }
@@ -171,7 +171,7 @@ class RequerimentoAdminController extends Controller
         list($anexoPath, $anexoNomeOriginal, $erroAnexo) = $this->processarAnexoOpcional((int) $id);
 
         if ($erroAnexo !== null) {
-            $_SESSION['flash'] = $erroAnexo;
+            flashErro($erroAnexo);
             $this->redirecionar('requerimentoAdmin/ver/' . (int) $id);
             return;
         }
@@ -211,7 +211,7 @@ class RequerimentoAdminController extends Controller
         }
 
         if ($requerimento['pdf_assinado_path'] === null || $requerimento['expurgado_em'] !== null) {
-            $_SESSION['flash'] = 'Não há documento assinado disponível para validar.';
+            flashErro('Não há documento assinado disponível para validar.');
             $this->redirecionar('requerimentoAdmin/ver/' . (int) $id);
             return;
         }
@@ -226,14 +226,29 @@ class RequerimentoAdminController extends Controller
         $this->requerimentos->invalidarTokenValidacaoIti((int) $id);
         $this->requerimentos->registrarValidacaoIti((int) $id, $resultado);
 
-        $_SESSION['flash'] = $this->mensagemResultadoIti($resultado, $requerimento);
+        list($mensagemIti, $tipoIti) = $this->mensagemResultadoIti($resultado, $requerimento);
+
+        if ($tipoIti === 'erro') {
+            flashErro($mensagemIti);
+        } else {
+            flashAlerta($mensagemIti);
+        }
+
         $this->redirecionar('requerimentoAdmin/ver/' . (int) $id);
     }
 
+    /**
+     * Fase 31 (convencao de UI): devolve [texto, tipo]. Nunca 'sucesso' -
+     * mesmo uma checagem limpa (sem divergencia) e' so' apoio, nunca
+     * confirmacao definitiva (ver comentario da classe). 'erro' so' quando
+     * ha divergencia real de nome/CPF (alertaDivergenciaIti) - e' o unico
+     * caso que precisa chamar atencao de verdade; resultado nulo ou match
+     * limpo sao 'alerta' (informativo).
+     */
     private function mensagemResultadoIti($resultado, array $requerimento)
     {
         if ($resultado === null) {
-            return 'Não foi possível confirmar automaticamente no ITI — confira manualmente no site oficial, abaixo.';
+            return ['Não foi possível confirmar automaticamente no ITI — confira manualmente no site oficial, abaixo.', 'alerta'];
         }
 
         $partes = ['Validação automática ITI: ' . $resultado['status_geral']];
@@ -253,7 +268,7 @@ class RequerimentoAdminController extends Controller
         $mensagem = implode(' — ', $partes) . '. Isto não substitui a conferência manual abaixo.';
         $alerta = $this->alertaDivergenciaIti($resultado, $requerimento);
 
-        return $alerta !== null ? ($alerta . ' ' . $mensagem) : $mensagem;
+        return $alerta !== null ? [$alerta . ' ' . $mensagem, 'erro'] : [$mensagem, 'alerta'];
     }
 
     /**
@@ -320,7 +335,7 @@ class RequerimentoAdminController extends Controller
         $disponiveis = $this->atendentesDisponiveis((int) $requerimento['concurso_id']);
 
         if (!in_array($novoResponsavelId, array_column($disponiveis, 'id'), false)) {
-            $_SESSION['flash'] = 'Selecione um administrador, suporte ou colaborador válido.';
+            flashErro('Selecione um administrador, suporte ou colaborador válido.');
             $this->redirecionar('requerimentoAdmin/ver/' . (int) $id);
             return;
         }

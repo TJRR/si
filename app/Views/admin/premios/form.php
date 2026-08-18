@@ -12,7 +12,7 @@
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo $premio === null ? url('premios/novo/' . (int) $concurso['id'] . ($trilha !== null ? '/' . (int) $trilha['id'] : '')) : url('premios/editar/' . (int) $premio['id']); ?>" enctype="multipart/form-data">
+<form method="post" action="<?php echo $premio === null ? url('premios/novo/' . (int) $concurso['id'] . ($trilha !== null ? '/' . (int) $trilha['id'] : '')) : url('premios/editar/' . (int) $premio['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
     <label>Posição (1, 2, 3...):
         <input type="number" name="posicao" min="1" required value="<?php echo $premio !== null ? (int) $premio['posicao'] : ''; ?>">
     </label><br>

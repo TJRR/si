@@ -111,7 +111,7 @@ class TemaAdminController extends Controller
                 $logoPath = $novoCaminho;
                 $this->configuracaoVisual->atualizarLogo($logoPath);
             } catch (\RuntimeException $e) {
-                $_SESSION['flash'] = $e->getMessage();
+                flashErro($e->getMessage());
             }
         }
 
@@ -125,7 +125,7 @@ class TemaAdminController extends Controller
 
                 $cabecalhoImagemPath = $novoCaminho;
             } catch (\RuntimeException $e) {
-                $_SESSION['flash'] = $e->getMessage();
+                flashErro($e->getMessage());
             }
         }
 
@@ -139,7 +139,7 @@ class TemaAdminController extends Controller
 
                 $cabecalhoLogoClaroPath = $novoCaminho;
             } catch (\RuntimeException $e) {
-                $_SESSION['flash'] = $e->getMessage();
+                flashErro($e->getMessage());
             }
         }
 
@@ -175,7 +175,7 @@ class TemaAdminController extends Controller
 
                 $rodapeLogoPath = $novoCaminho;
             } catch (\RuntimeException $e) {
-                $_SESSION['flash'] = $e->getMessage();
+                flashErro($e->getMessage());
             }
         }
 
@@ -195,7 +195,7 @@ class TemaAdminController extends Controller
         }
 
         if ($_FILES['favicon']['error'] !== UPLOAD_ERR_OK) {
-            $_SESSION['flash'] = 'Falha ao enviar o favicon.';
+            flashErro('Falha ao enviar o favicon.');
             return;
         }
 
@@ -203,14 +203,14 @@ class TemaAdminController extends Controller
         $mime = $finfo->file($_FILES['favicon']['tmp_name']);
 
         if ($mime !== 'image/png') {
-            $_SESSION['flash'] = 'Favicon precisa ser um arquivo PNG.';
+            flashErro('Favicon precisa ser um arquivo PNG.');
             return;
         }
 
         try {
             $novoCaminho = $this->imagens->salvar($_FILES['favicon'], 'favicon', 512, 512, false);
         } catch (\RuntimeException $e) {
-            $_SESSION['flash'] = $e->getMessage();
+            flashErro($e->getMessage());
             return;
         }
 

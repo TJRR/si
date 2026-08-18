@@ -87,7 +87,7 @@ class BannerAdminController extends Controller
 
             $_SESSION['flash'] = 'Banner removido.';
         } catch (\PDOException $e) {
-            $_SESSION['flash'] = 'Não foi possível remover o banner.';
+            flashErro('Não foi possível remover o banner.');
         }
 
         $this->redirecionar('banners/index');

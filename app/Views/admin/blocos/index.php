@@ -34,7 +34,7 @@
                     </svg>
                 </a>
                 <?php if ($bloco['chave'] === null): ?>
-                <form method="post" action="<?php echo url('blocos/remover'); ?>" onsubmit="return confirm('Remover este bloco?');">
+                <form method="post" action="<?php echo url('blocos/remover'); ?>" onsubmit="return confirm('Remover este bloco?');"><?= campoCsrf() ?>
                     <input type="hidden" name="id" value="<?php echo (int) $bloco['id']; ?>">
                     <button type="submit" class="btn-icone" title="Remover">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

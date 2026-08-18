@@ -82,7 +82,7 @@ class BlocoConteudoAdminController extends Controller
         $bloco = $this->blocos->buscarPorId($id);
 
         if ($bloco !== null && $bloco['chave'] !== null) {
-            $_SESSION['flash'] = 'Este é um bloco padrão do sistema (Sobre/Premiação) e não pode ser removido — apenas editado ou desativado.';
+            flashErro('Este é um bloco padrão do sistema (Sobre/Premiação) e não pode ser removido — apenas editado ou desativado.');
             $this->redirecionar('blocos/index');
             return;
         }
@@ -96,7 +96,7 @@ class BlocoConteudoAdminController extends Controller
 
             $_SESSION['flash'] = 'Bloco removido.';
         } catch (\PDOException $e) {
-            $_SESSION['flash'] = 'Não foi possível remover o bloco.';
+            flashErro('Não foi possível remover o bloco.');
         }
 
         $this->redirecionar('blocos/index');

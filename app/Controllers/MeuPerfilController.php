@@ -106,7 +106,7 @@ class MeuPerfilController extends Controller
         $alvo = $this->usuarios->buscarPorId($usuarioAlvoId);
 
         if ($alvo === null || $alvo['status'] !== 'aprovado' || !$alvo['ativo']) {
-            $_SESSION['flash'] = 'Usuário não encontrado ou inativo.';
+            flashErro('Usuário não encontrado ou inativo.');
             $this->redirecionar('meuPerfil/index');
             return;
         }
@@ -115,7 +115,7 @@ class MeuPerfilController extends Controller
 
         foreach ($perfisAlvo as $vinculo) {
             if ($vinculo['perfil'] === 'administrador') {
-                $_SESSION['flash'] = 'Não é possível visualizar como outro Administrador.';
+                flashErro('Não é possível visualizar como outro Administrador.');
                 $this->redirecionar('meuPerfil/index');
                 return;
             }

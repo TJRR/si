@@ -220,6 +220,18 @@ si/
 └── docker-compose.yml
 ```
 
+## Convenções de UI
+
+**Cor de mensagem/status é semântica em todo o sistema, sem exceção:**
+
+| Cor | Significado | Uso |
+|---|---|---|
+| Verde | Sucesso | Confirmação de que uma ação deu certo (ex.: "Horário removido.", "Perfil atualizado.") |
+| Laranja | Alerta | Aviso/estado intermediário, não é erro nem confirmação plena (ex.: "Nenhuma submissão encontrada ainda.", "Gerando sala...", status pendente) |
+| Vermelho | Erro | Falha real, ação não realizada, algo que impede o fluxo (ex.: exceção capturada, validação rejeitada, "Não foi possível...") |
+
+Vale tanto pra `<p style="color:...">` quanto pras classes `.status-pill.verde/.laranja/.vermelho` (`assets/css/site.css`). Ao adicionar uma tela nova ou uma mensagem nova, classifique pelo significado real da mensagem, nunca por "cor default" do bloco onde ela mora — `$_SESSION['flash']`/`$flash` (confirmação pós-ação) já foi usado no passado pra carregar tanto sucesso quanto erro/aviso no mesmo texto sem essa distinção; ao mexer num ponto que usa isso, prefira sinalizar o tipo explicitamente em vez de assumir verde por padrão.
+
 ## Scripts de manutenção (`database/*.php`)
 
 Todos seguem o mesmo contrato: **só rodam via CLI** (bloqueados por HTTP),

@@ -82,9 +82,9 @@ class MidiaAdminController extends Controller
 
             $_SESSION['flash'] = 'Mídia removida.';
         } catch (\PDOException $e) {
-            $_SESSION['flash'] = $e->getCode() === '23000'
+            flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: esta mídia está em uso.'
-                : 'Não foi possível remover a mídia.';
+                : 'Não foi possível remover a mídia.');
         }
 
         $this->redirecionar('midia/index');

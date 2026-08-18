@@ -8,7 +8,7 @@
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo $faq === null ? url('faq/novo') : url('faq/editar/' . (int) $faq['id']); ?>">
+<form method="post" action="<?php echo $faq === null ? url('faq/novo') : url('faq/editar/' . (int) $faq['id']); ?>"><?= campoCsrf() ?>
     <label>Categoria (ex.: Inscrição, Avaliação, Premiação):
         <input type="text" name="categoria" value="<?php echo htmlspecialchars($faq !== null ? (string) $faq['categoria'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>

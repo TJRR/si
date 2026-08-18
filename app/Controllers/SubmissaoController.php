@@ -84,7 +84,13 @@ class SubmissaoController extends Controller
 
         $submissao = (new SubmissaoRepository())->buscarPorId($submissaoId);
 
-        if ($submissao === null) {
+        // Fase 31 (Auditoria de Seguranca, achado #13): confirma que a
+        // submissao pertence a equipe do participante autenticado, mesmo
+        // padrao ja usado em ParticipanteController::verFeedback().
+        $participantes = (new UsuarioParticipanteRepository())->participantesDoUsuario(Auth::usuarioId());
+        $equipe = !empty($participantes) ? (new EquipeRepository())->buscarPorParticipante($participantes[0]['id']) : null;
+
+        if ($submissao === null || $equipe === null || (int) $submissao['equipe_id'] !== (int) $equipe['id']) {
             http_response_code(404);
             exit('Submissão não encontrada.');
         }

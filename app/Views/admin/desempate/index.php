@@ -30,7 +30,7 @@
                     <td><?php echo $regra['direcao'] === 'asc' ? 'Crescente (menor valor vence)' : 'Decrescente (maior valor vence)'; ?></td>
                     <td>
                         <div class="acoes-icones">
-                            <form method="post" action="<?php echo url('desempate/mover'); ?>">
+                            <form method="post" action="<?php echo url('desempate/mover'); ?>"><?= campoCsrf() ?>
                                 <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
                                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                                 <input type="hidden" name="direcao" value="cima">
@@ -41,7 +41,7 @@
                                     </svg>
                                 </button>
                             </form>
-                            <form method="post" action="<?php echo url('desempate/mover'); ?>">
+                            <form method="post" action="<?php echo url('desempate/mover'); ?>"><?= campoCsrf() ?>
                                 <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
                                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                                 <input type="hidden" name="direcao" value="baixo">
@@ -52,7 +52,7 @@
                                     </svg>
                                 </button>
                             </form>
-                            <form method="post" action="<?php echo url('desempate/remover'); ?>">
+                            <form method="post" action="<?php echo url('desempate/remover'); ?>"><?= campoCsrf() ?>
                                 <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
                                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
                                 <button type="submit" class="btn-icone" title="Remover">

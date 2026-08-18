@@ -42,8 +42,8 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
     </div>
 </div>
 
-<?php if (!empty($flash)): ?>
-    <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php if (!empty($_SESSION['flash'])): ?>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
 <div class="filtros-barra-wrapper">
@@ -169,7 +169,7 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
             </td>
             <td>
                 <?php if ($usuario['status'] === 'pendente'): ?>
-                    <form method="post" action="<?php echo url('usuarios/aprovar'); ?>" style="display:inline;">
+                    <form method="post" action="<?php echo url('usuarios/aprovar'); ?>" style="display:inline;"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
                         <select name="perfil" id="campo-perfil-aprovar-<?php echo (int) $usuario['id']; ?>" required>
                             <option value="">Perfil...</option>
@@ -217,7 +217,7 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                         atualizar();
                     })();
                     </script>
-                    <form method="post" action="<?php echo url('usuarios/rejeitar'); ?>" style="display:inline;">
+                    <form method="post" action="<?php echo url('usuarios/rejeitar'); ?>" style="display:inline;"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
                         <button type="submit" class="btn-icone" title="Rejeitar">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -230,7 +230,7 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                 <?php endif; ?>
 
                 <?php if ($usuario['status'] === 'rejeitado'): ?>
-                    <form method="post" action="<?php echo url('usuarios/reverterRejeicao'); ?>" style="display:inline;">
+                    <form method="post" action="<?php echo url('usuarios/reverterRejeicao'); ?>" style="display:inline;"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
                         <button type="submit" class="btn-icone" title="Reverter rejeição (volta para pendente)" onclick="return confirm('Reverter a rejeição deste cadastro e voltar para \'pendente\'?');">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -248,8 +248,19 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                         </svg>
                     </a>
+                    <?php if ($usuario['bloqueado_login']): ?>
+                        <form method="post" action="<?php echo url('usuarios/removerBloqueioLogin'); ?>"><?= campoCsrf() ?>
+                            <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
+                            <button type="submit" class="btn-icone" title="Bloqueado por tentativas de login — remover bloqueio" onclick="return confirm('Este usuário está bloqueado por várias tentativas de login malsucedidas recentes. Se for um ataque em andamento (alguém tentando adivinhar a senha), remover o bloqueio agora permite que a pessoa continue tentando. Só remova se tiver certeza de que foi o próprio usuário se confundindo com a senha. Remover o bloqueio mesmo assim?');">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                                </svg>
+                            </button>
+                        </form>
+                    <?php endif; ?>
                     <?php if ($usuario['senha_hash'] === null && $usuario['google_id'] === null): ?>
-                        <form method="post" action="<?php echo url('usuarios/reenviarConvite'); ?>">
+                        <form method="post" action="<?php echo url('usuarios/reenviarConvite'); ?>"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
                             <button type="submit" class="btn-icone" title="Reenviar convite" onclick="return confirm('Reenviar o convite de acesso para <?php echo htmlspecialchars(addslashes($usuario['email']), ENT_QUOTES, 'UTF-8'); ?>? O link anterior deixará de funcionar.');">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -260,7 +271,7 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                         </form>
                     <?php endif; ?>
                     <?php if ($usuario['ativo']): ?>
-                        <form method="post" action="<?php echo url('usuarios/suspender'); ?>">
+                        <form method="post" action="<?php echo url('usuarios/suspender'); ?>"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
                             <button type="submit" class="btn-icone" title="Suspender" onclick="return confirm('Suspender este usuário? Ele não conseguirá mais fazer login.');">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -270,7 +281,7 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                             </button>
                         </form>
                     <?php else: ?>
-                        <form method="post" action="<?php echo url('usuarios/reativar'); ?>">
+                        <form method="post" action="<?php echo url('usuarios/reativar'); ?>"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
                             <button type="submit" class="btn-icone" title="Reativar">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -108,6 +108,71 @@ function linkHttpValido($link)
 }
 
 /**
+ * Fase 31 (convencao de UI, ver README "Convencoes de UI"): grava a
+ * mensagem pos-redirect (`$_SESSION['flash']`) junto com seu tipo
+ * semantico. Chamar so' $_SESSION['flash'] = '...' direto (sem passar por
+ * uma destas 3) continua valendo em todo o codigo legado - classeFlash()
+ * trata "sem tipo" como sucesso, entao nada quebra. Em codigo novo, sempre
+ * usar a funcao certa em vez de atribuir a sessao na mao.
+ */
+function flashSucesso($mensagem)
+{
+    $_SESSION['flash'] = $mensagem;
+    $_SESSION['flash_tipo'] = 'sucesso';
+}
+
+function flashAlerta($mensagem)
+{
+    $_SESSION['flash'] = $mensagem;
+    $_SESSION['flash_tipo'] = 'alerta';
+}
+
+function flashErro($mensagem)
+{
+    $_SESSION['flash'] = $mensagem;
+    $_SESSION['flash_tipo'] = 'erro';
+}
+
+/**
+ * Classe CSS do tipo da flash atual - default 'sucesso' quando ninguem
+ * setou flash_tipo (mensagem antiga, so' com $_SESSION['flash'] = '...').
+ * Efeito colateral proposital: desmarca flash_tipo, espelhando o mesmo
+ * padrao ja usado pra $_SESSION['flash'] (ver views que chamam isso dentro
+ * do proprio echo, unset() do texto e da classe juntos).
+ */
+function classeFlash()
+{
+    $tipo = isset($_SESSION['flash_tipo']) ? $_SESSION['flash_tipo'] : 'sucesso';
+    unset($_SESSION['flash_tipo']);
+
+    return in_array($tipo, ['sucesso', 'alerta', 'erro'], true) ? $tipo : 'sucesso';
+}
+
+/**
+ * Fase 31 (Auditoria de Seguranca): campo oculto com o token CSRF da sessao
+ * atual, pra incluir logo apos a abertura de todo <form method="post">.
+ * Validado centralmente em Router::despachar() pra qualquer requisicao
+ * nao-GET de usuario autenticado.
+ */
+function campoCsrf()
+{
+    return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') . '">';
+}
+
+/**
+ * Fase 31: so administrador/suporte com e-mail institucional do Workspace
+ * (@tjrr.jus.br) pode ser organizador (mentor/criador de oficina) de um
+ * compromisso integrado ao Google Agenda - a Service Account usa Domain-Wide
+ * Delegation, que so consegue impersonar contas do dominio institucional.
+ * Chamado tanto na view (desabilitar o checkbox) quanto no controller/
+ * GoogleCalendarSyncService (validacao real, nunca confiar so no client).
+ */
+function organizadorElegivelGoogle($email)
+{
+    return is_string($email) && preg_match('/@tjrr\.jus\.br$/i', trim($email)) === 1;
+}
+
+/**
  * Logo GLOBAL/default do sistema (usado no topbar do painel, paginas
  * convidadas, e como fallback da home publica quando a edicao ativa nao tem
  * logo proprio). Fase 18: fonte de verdade passou de conteudos_site

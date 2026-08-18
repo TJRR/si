@@ -202,7 +202,7 @@ class ResultadoAdminController extends Controller
         try {
             $this->servicoEtapa->publicar($etapaId, Auth::usuarioId());
         } catch (\RuntimeException $e) {
-            $_SESSION['flash'] = $e->getMessage();
+            flashErro($e->getMessage());
         }
 
         $this->redirecionar('resultados/etapa/' . $etapaId);
@@ -235,13 +235,13 @@ class ResultadoAdminController extends Controller
                 ? $this->resultadosEtapa->listarPorEtapa($etapaId)
                 : $this->servicoEtapa->calcularRanking($etapaId);
         } catch (\RuntimeException $e) {
-            $_SESSION['flash'] = $e->getMessage();
+            flashErro($e->getMessage());
             $this->redirecionar('resultados/etapa/' . $etapaId);
             return;
         }
 
         if (empty($ranking)) {
-            $_SESSION['flash'] = 'Nenhuma submissão encontrada nesta etapa ainda.';
+            flashAlerta('Nenhuma submissão encontrada nesta etapa ainda.');
             $this->redirecionar('resultados/etapa/' . $etapaId);
             return;
         }
@@ -344,13 +344,13 @@ class ResultadoAdminController extends Controller
                 ? $this->resultadosEtapa->listarPorEtapa($etapaId)
                 : $this->servicoEtapa->calcularRanking($etapaId);
         } catch (\RuntimeException $e) {
-            $_SESSION['flash'] = $e->getMessage();
+            flashErro($e->getMessage());
             $this->redirecionar('resultados/etapa/' . $etapaId);
             return;
         }
 
         if (empty($ranking)) {
-            $_SESSION['flash'] = 'Nenhuma submissão encontrada nesta etapa ainda.';
+            flashAlerta('Nenhuma submissão encontrada nesta etapa ainda.');
             $this->redirecionar('resultados/etapa/' . $etapaId);
             return;
         }
@@ -497,7 +497,7 @@ class ResultadoAdminController extends Controller
         try {
             $this->servicoTrilha->publicar($trilhaId, Auth::usuarioId());
         } catch (\RuntimeException $e) {
-            $_SESSION['flash'] = $e->getMessage();
+            flashErro($e->getMessage());
         }
 
         $this->redirecionar('apuracao/index/' . $trilhaId);

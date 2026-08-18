@@ -126,7 +126,7 @@ class CampoAdminController extends Controller
         $resultado = (new CampoDinamicoService())->mover($id, $direcao);
 
         if (!$resultado['sucesso']) {
-            $_SESSION['flash'] = $resultado['mensagem'];
+            flashErro($resultado['mensagem']);
         }
 
         $this->redirecionar('campos/index/' . $formularioId);
@@ -140,7 +140,7 @@ class CampoAdminController extends Controller
         $resultado = (new CampoDinamicoService())->remover($id);
 
         if (!$resultado['sucesso']) {
-            $_SESSION['flash'] = $resultado['mensagem'];
+            flashErro($resultado['mensagem']);
         }
 
         $this->redirecionar('campos/index/' . $formularioId);

@@ -13,7 +13,7 @@ $paraInputDatetime = function ($valor) {
     return $valor !== null ? date('Y-m-d\TH:i', strtotime($valor)) : '';
 };
 ?>
-<form method="post" action="<?php echo $evento === null ? url('eventosCronograma/novo/' . (int) $concurso['id']) : url('eventosCronograma/editar/' . (int) $evento['id']); ?>">
+<form method="post" action="<?php echo $evento === null ? url('eventosCronograma/novo/' . (int) $concurso['id']) : url('eventosCronograma/editar/' . (int) $evento['id']); ?>"><?= campoCsrf() ?>
     <label>Título:
         <input type="text" name="titulo" required value="<?php echo htmlspecialchars($evento !== null ? $evento['titulo'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>

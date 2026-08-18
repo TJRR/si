@@ -71,7 +71,7 @@
     <?php endif; ?>
 
     <?php $colunasCriterios = min(5, count($criterios)); ?>
-    <form method="post" action="<?php echo url('avaliacao/notar/' . (int) $submissao['id']); ?>" id="form-notas">
+    <form method="post" action="<?php echo url('avaliacao/notar/' . (int) $submissao['id']); ?>" id="form-notas"><?= campoCsrf() ?>
         <div class="criterios-compartilhados-grade" style="grid-template-columns: repeat(<?php echo $colunasCriterios; ?>, minmax(0, 1fr));">
             <?php foreach ($criterios as $criterio): ?>
                 <section class="criterio-bloco criterio-card" data-criterio-nome="<?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>">

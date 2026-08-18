@@ -44,7 +44,7 @@
             $exemplo[] = $criterio['codigo'] . '*' . number_format((float) $criterio['peso'], 2, '.', '');
         }
     ?>
-    <form method="post" action="<?php echo url('formulas/etapa/' . (int) $etapa['id']); ?>">
+    <form method="post" action="<?php echo url('formulas/etapa/' . (int) $etapa['id']); ?>"><?= campoCsrf() ?>
         <label>Expressão (ex.: <?php
             echo htmlspecialchars('(' . implode(' + ', $exemplo) . ') / ' . number_format($somaPesos, 2, '.', ''), ENT_QUOTES, 'UTF-8');
         ?>):<br>

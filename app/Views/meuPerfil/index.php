@@ -4,8 +4,8 @@
 } ?>
 <h1>Meu perfil</h1>
 
-<?php if (!empty($flash)): ?>
-    <p style="color:green;"><?php echo htmlspecialchars($flash, ENT_QUOTES, 'UTF-8'); ?></p>
+<?php if (!empty($_SESSION['flash'])): ?>
+    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
 <?php if (!empty($erro)): ?>
@@ -16,7 +16,7 @@
     <p><img src="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $usuario['foto_path'], ENT_QUOTES, 'UTF-8'); ?>" alt="Foto de perfil" width="120" height="120" style="border-radius:50%;object-fit:cover;"></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('meuPerfil/index'); ?>" enctype="multipart/form-data">
+<form method="post" action="<?php echo url('meuPerfil/index'); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
     <label>Nome completo:
         <input type="text" name="nome" value="<?php echo htmlspecialchars($usuario['nome'], ENT_QUOTES, 'UTF-8'); ?>" required>
     </label><br>
@@ -37,7 +37,7 @@
     <h2>Visualizar como outro usuário</h2>
     <p>Somente leitura: o que você salvar enquanto visualiza como outro usuário não é gravado. Use para dar suporte técnico ou identificar problemas relatados por um usuário.</p>
 
-    <form method="post" action="<?php echo url('meuPerfil/visualizarComo'); ?>">
+    <form method="post" action="<?php echo url('meuPerfil/visualizarComo'); ?>"><?= campoCsrf() ?>
         <label>Usuário:
             <input type="text" name="usuario_id" list="lista-usuarios-visualizar" placeholder="Digite o nome ou e-mail...">
         </label>

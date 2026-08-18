@@ -32,7 +32,7 @@ if ($ehPaginaPublicaComLogo) {
     $logoAdminSrc = logoAtual();
 }
 
-$modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'vagasAvaliador', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao', 'categoriasAvaliador', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma'];
+$modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'vagasAvaliador', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao', 'categoriasAvaliador', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma', 'mentoriaAdmin', 'oficinaAdmin'];
 
 if ($ehPainelInterno && \App\Core\Auth::autenticado()) {
     $repoNotificacoes = new \App\Repositories\NotificacaoPainelRepository();
@@ -102,7 +102,7 @@ if ($ehPainelAdmin) {
 <?php if ($ehPainelInterno && \App\Core\Auth::estaVisualizandoComoOutro()): ?>
     <div class="faixa-visualizacao-como">
         Visualizando como <strong><?php echo htmlspecialchars(\App\Core\Auth::nome(), ENT_QUOTES, 'UTF-8'); ?></strong> (somente leitura)
-        <form method="post" action="<?php echo url('meuPerfil/pararVisualizacao'); ?>" style="display:inline;">
+        <form method="post" action="<?php echo url('meuPerfil/pararVisualizacao'); ?>" style="display:inline;"><?= campoCsrf() ?>
             <button type="submit" class="faixa-visualizacao-como-botao">Voltar para minha conta</button>
         </form>
     </div>
@@ -125,7 +125,7 @@ if ($ehPainelAdmin) {
                     <div class="notificacoes-sino-cabecalho">
                         <span>Notificações</span>
                         <?php if (!empty($notificacoesNaoLidas)): ?>
-                            <form method="post" action="<?php echo url('notificacoesPainel/marcarTodasLidas'); ?>">
+                            <form method="post" action="<?php echo url('notificacoesPainel/marcarTodasLidas'); ?>"><?= campoCsrf() ?>
                                 <button type="submit" class="btn-icone" title="Marcar todas como lidas">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <polyline points="20 6 9 17 4 12"></polyline>
@@ -146,7 +146,7 @@ if ($ehPainelAdmin) {
                                     </a>
                                     <?php if (empty($notificacao['lida'])): ?>
                                         <?php $ehConvitePendente = $notificacao['tipo'] === 'participante_email_completo'; ?>
-                                        <form method="post" action="<?php echo url('notificacoesPainel/marcarLida/' . (int) $notificacao['id']); ?>">
+                                        <form method="post" action="<?php echo url('notificacoesPainel/marcarLida/' . (int) $notificacao['id']); ?>"><?= campoCsrf() ?>
                                             <button type="submit" class="btn-icone" title="<?php echo $ehConvitePendente ? 'Convidar acesso agora' : 'Marcar como lida'; ?>">
                                                 <?php if ($ehConvitePendente): ?>
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -167,6 +167,14 @@ if ($ehPainelAdmin) {
                     </div>
                 </div>
             </div>
+            <button type="button" id="ajuda-botao" class="topbar-icone" title="Ajuda desta tela" data-ajuda-titulo="<?php echo htmlspecialchars('Ajuda — ' . (string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?>" onclick="abrirModal(this.dataset.ajudaTitulo, document.getElementById('ajuda-painel-fonte').innerHTML)" <?php echo $ajudaHtml === null ? 'hidden' : ''; ?>>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </button>
+            <div id="ajuda-painel-fonte" hidden><?php echo $ajudaHtml !== null ? $ajudaHtml : ''; ?></div>
             <a href="<?php echo url('meuPerfil/index'); ?>" class="topbar-icone" title="Meu perfil">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -214,7 +222,7 @@ if ($ehPainelAdmin) {
             <?php endif; ?>
             <main id="conteudo-admin">
                 <?php if (!empty($_SESSION['flash'])): ?>
-                    <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); ?></p>
+                    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); ?></p>
                     <?php unset($_SESSION['flash']); ?>
                 <?php endif; ?>
                 <?php echo $conteudo; ?>
@@ -234,7 +242,7 @@ if ($ehPainelAdmin) {
         </nav>
         <?php endif; ?>
         <?php if (!empty($_SESSION['flash'])): ?>
-            <p style="color:red;"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); ?></p>
+            <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); ?></p>
             <?php unset($_SESSION['flash']); ?>
         <?php endif; ?>
         <?php echo $conteudo; ?>
@@ -253,11 +261,27 @@ if ($ehPainelAdmin) {
     </div>
     <script src="<?php echo config('base_path'); ?>/assets/js/modal.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/modal.js'); ?>" defer></script>
     <?php if ($ehPainelAdmin): ?>
-    <script>window.SI_BASE_PATH = <?php echo json_encode(config('base_path')); ?>;</script>
+    <script>window.SI_BASE_PATH = <?php echo json_encode(config('base_path')); ?>; window.SI_CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token']); ?>;</script>
     <script src="<?php echo config('base_path'); ?>/assets/js/editor-rico.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/editor-rico.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/reordenar-arrastar.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/reordenar-arrastar.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/campo-cor.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/campo-cor.js'); ?>" defer></script>
     <?php endif; ?>
+<?php endif; ?>
+<?php $ehPaginaPublicaSemTopbar = $ehPaginaConvidado || (isset($view) && strpos($view, 'publico/') === 0); ?>
+<?php if ($ehPaginaPublicaSemTopbar && $ajudaHtml !== null): ?>
+    <!-- Fase 31: paginas convidadas (login/cadastro/senha) e publico/* nao
+         passam pelo bloco $ehPainelInterno acima (cada uma monta o proprio
+         cabecalho, sem topbar), entao o shell do modal generico precisa ser
+         injetado aqui tambem para a ajuda contextual funcionar nelas. -->
+    <div id="ajuda-painel-fonte" hidden><?php echo $ajudaHtml; ?></div>
+    <div id="modal-generico" class="modal-overlay" hidden>
+        <div class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+            <button type="button" class="modal-fechar" onclick="fecharModal()" aria-label="Fechar">&times;</button>
+            <h2 id="modal-titulo"></h2>
+            <div id="modal-conteudo"></div>
+        </div>
+    </div>
+    <script src="<?php echo config('base_path'); ?>/assets/js/modal.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/modal.js'); ?>" defer></script>
 <?php endif; ?>
 <?php if (isset($view) && ($view === 'home/index' || strpos($view, 'publico/') === 0)): ?>
     <script src="<?php echo config('base_path'); ?>/assets/js/scrollspy.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/scrollspy.js'); ?>" defer></script>

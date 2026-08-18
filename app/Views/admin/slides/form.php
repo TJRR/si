@@ -8,7 +8,7 @@
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo $slide === null ? url('slides/novo') : url('slides/editar/' . (int) $slide['id']); ?>" enctype="multipart/form-data">
+<form method="post" action="<?php echo $slide === null ? url('slides/novo') : url('slides/editar/' . (int) $slide['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
     <fieldset>
         <legend>Imagem</legend>
 

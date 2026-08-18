@@ -246,6 +246,41 @@ class EquipeRepository
         return $stmt->fetchAll();
     }
 
+    /**
+     * Fase 31: e-mail de cada integrante de uma ou mais equipes (union),
+     * pra recomputar a lista de attendees do Google Agenda de um horario
+     * de mentoria (1 equipe) ou oficina (N equipes). Mesma fonte ja usada
+     * em notificarEquipe() (MentoriaAdminController/OficinaAdminController)
+     * - inclui integrante sem login vinculado e independente de status de
+     * homologacao, pra nao deixar ninguem de fora silenciosamente. Chave do
+     * array e' o e-mail (dedup automatico); valor e' o participante_id,
+     * usado so' como rotulo de exibicao em google_convite_status.
+     */
+    public function listarEmailsPorEquipes(array $equipeIds)
+    {
+        if (empty($equipeIds)) {
+            return [];
+        }
+
+        $pdo = Database::conexao();
+        $placeholders = implode(',', array_fill(0, count($equipeIds), '?'));
+        $stmt = $pdo->prepare(
+            "SELECT p.id AS participante_id, p.email
+             FROM participantes p
+             JOIN equipe_participante ep ON ep.participante_id = p.id
+             WHERE ep.equipe_id IN ($placeholders) AND p.email IS NOT NULL AND p.email <> ''"
+        );
+        $stmt->execute(array_values($equipeIds));
+
+        $porEmail = [];
+
+        foreach ($stmt->fetchAll() as $linha) {
+            $porEmail[$linha['email']] = (int) $linha['participante_id'];
+        }
+
+        return $porEmail;
+    }
+
     public function listarParticipantes($equipeId)
     {
         $pdo = Database::conexao();
@@ -303,6 +338,91 @@ class EquipeRepository
         unset($equipe);
 
         return $equipes;
+    }
+
+    /**
+     * Fase 31: equipes homologadas do concurso (mesmo criterio de
+     * listarHomologadasPorTrilha() - minimo de integrantes homologados por
+     * trilha) que ainda nao tem nenhuma participacao registrada em evento
+     * (reserva de mentoria ou inscricao em oficina) - usada pelas telas de
+     * Mentorias/Oficinas do admin pra identificar quem falta engajar.
+     * $trilhaId opcional restringe a uma trilha so'.
+     */
+    public function listarHomologadasSemParticipacaoEmEventos($concursoId, $trilhaId = null)
+    {
+        $pdo = Database::conexao();
+        $sql = "SELECT e.id AS equipe_id, e.nome_equipe, t.id AS trilha_id, t.nome AS trilha_nome
+                FROM equipes e
+                JOIN trilhas t ON t.id = e.trilha_id
+                WHERE t.concurso_id = :concurso_id
+                  AND (
+                      SELECT COUNT(*) FROM equipe_participante ep
+                      WHERE ep.equipe_id = e.id AND ep.status_homologacao = 'homologado'
+                  ) >= t.minimo_integrantes_homologados
+                  AND NOT EXISTS (
+                      SELECT 1 FROM mentoria_horarios mh
+                      WHERE mh.equipe_id = e.id AND mh.concurso_id = :concurso_id
+                  )
+                  AND NOT EXISTS (
+                      SELECT 1 FROM oficina_inscricoes oi
+                      JOIN oficina_horarios oh ON oh.id = oi.oficina_horario_id
+                      WHERE oi.equipe_id = e.id AND oh.concurso_id = :concurso_id
+                  )";
+        $parametros = ['concurso_id' => $concursoId];
+
+        if ($trilhaId !== null) {
+            $sql .= ' AND e.trilha_id = :trilha_id';
+            $parametros['trilha_id'] = $trilhaId;
+        }
+
+        $sql .= ' ORDER BY t.nome ASC, e.nome_equipe ASC';
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($parametros);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Fase 31: equipes CLASSIFICADAS na etapa anterior da trilha
+     * (resultados_etapa.classificado = 1 pra submissao da equipe naquela
+     * etapa - mesmo criterio que AcessoEtapaService::motivoBloqueio usa
+     * pra liberar acesso a etapa atual) que ainda nao tem nenhuma
+     * participacao registrada em evento (reserva de mentoria ou inscricao
+     * em oficina) no concurso. Complementa
+     * listarHomologadasSemParticipacaoEmEventos(): essa aqui e' o "aprovada"
+     * de etapas > 1 (a homologacao de cadastro so' vale pra etapa 1) - quem
+     * chama resolve $etapaAnteriorId via EtapaRepository::
+     * buscarAnteriorNaTrilha() antes de chegar aqui.
+     */
+    public function listarClassificadasNaEtapaSemParticipacaoEmEventos($concursoId, $trilhaId, $etapaAnteriorId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            "SELECT e.id AS equipe_id, e.nome_equipe, t.id AS trilha_id, t.nome AS trilha_nome
+             FROM equipes e
+             JOIN trilhas t ON t.id = e.trilha_id
+             JOIN submissoes s ON s.equipe_id = e.id AND s.etapa_id = :etapa_anterior_id
+             JOIN resultados_etapa re ON re.submissao_id = s.id AND re.etapa_id = :etapa_anterior_id AND re.classificado = 1
+             WHERE e.trilha_id = :trilha_id
+               AND NOT EXISTS (
+                   SELECT 1 FROM mentoria_horarios mh
+                   WHERE mh.equipe_id = e.id AND mh.concurso_id = :concurso_id
+               )
+               AND NOT EXISTS (
+                   SELECT 1 FROM oficina_inscricoes oi
+                   JOIN oficina_horarios oh ON oh.id = oi.oficina_horario_id
+                   WHERE oi.equipe_id = e.id AND oh.concurso_id = :concurso_id
+               )
+             ORDER BY e.nome_equipe ASC"
+        );
+        $stmt->execute([
+            'etapa_anterior_id' => $etapaAnteriorId,
+            'trilha_id' => $trilhaId,
+            'concurso_id' => $concursoId,
+        ]);
+
+        return $stmt->fetchAll();
     }
 
     public function listarPendentesHomologacaoPorTrilha($trilhaId)
