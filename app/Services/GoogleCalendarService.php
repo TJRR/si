@@ -199,6 +199,13 @@ class GoogleCalendarService
         $meetLink = isset($evento['hangoutLink']) ? $evento['hangoutLink'] : null;
         $statusCode = $evento['conferenceData']['createRequest']['status']['statusCode'] ?? null;
 
+        // Fase 32: identificador da sala do Meet - e' o que a Meet API precisa
+        // pra localizar o conferenceRecord depois que a reuniao acabar (ver
+        // App\Services\GoogleMeetService). A Fase 31 nao capturava isso, entao
+        // horarios criados antes ficam sem - o backfill retroativo acontece
+        // aqui mesmo, de graca, na proxima reconciliacao do horario.
+        $conferenceId = $evento['conferenceData']['conferenceId'] ?? null;
+
         if ($meetLink !== null) {
             $meetStatus = 'success';
         } elseif ($statusCode === 'failure') {
@@ -221,6 +228,7 @@ class GoogleCalendarService
             'event_id' => $evento['id'],
             'meet_link' => $meetLink,
             'meet_status' => $meetStatus,
+            'conference_id' => $conferenceId,
             'attendees' => $attendees,
         ];
     }

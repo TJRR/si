@@ -485,15 +485,48 @@ no navegador.
   fora da interface web.
   `php database/reativar_sistema.php --confirmar`
 
+### Presença no Google Meet (Fase 32)
+
+- **`capturar_presenca_google_meet.php`** — **chamado pelo cron**, não por
+  pessoa. Varre horários de Mentoria/Oficina com integração Google já
+  encerrados há mais de 2h e busca no Meet quem entrou na sala e por quanto
+  tempo. Único script de `database/` **sem** flag `--confirmar`: roda sozinho,
+  sem ninguém para confirmar nada, e escrever é o trabalho dele. Idempotente —
+  seguro rodar manualmente a qualquer momento.
+  `php database/capturar_presenca_google_meet.php [--limite=N]`
+
+- **`testar_google_meet_presenca.php`** — diagnóstico, só leitura. Confirma,
+  em ordem, se o escopo do Meet foi autorizado, se o identificador da sala
+  resolve, se a conferência já foi encerrada e quais nomes a API devolve.
+  Rode isto antes de confiar na captura automática.
+  `php database/testar_google_meet_presenca.php organizador@tjrr.jus.br CONFERENCE_ID`
+
+- **`backfill_conference_id.php`** — preenche retroativamente o identificador
+  da sala nos horários integrados **antes** da Fase 32 (a Fase 31 não o
+  guardava). Urgente no deploy: o Google apaga os dados de presença 30 dias
+  após a reunião, então cada dia sem rodar é presença perdida em definitivo.
+  `php database/backfill_conference_id.php --confirmar`
+
+- **`expurgar_nomes_presenca.php`** — política de retenção: anonimiza
+  (`NULL`) o nome de exibição capturado há mais de 30 dias, **sem apagar a
+  linha** — permanência, contagem de pessoas e vínculo com participante
+  cadastrado continuam disponíveis. Ver a justificativa completa no cabeçalho
+  do próprio script.
+  `php database/expurgar_nomes_presenca.php --confirmar`
+
 ### Auditoria/backup
 
 - **`exportar_dump_completo.php`** — exporta um dump SQL completo (estrutura
-  + dados) via PDO puro (produção não tem `mysqldump` instalado), gravado na
-  raiz do projeto como `dump_completo_AAAAMMDD.sql` (um por dia, sobrescreve
-  se rodado de novo no mesmo dia). **Contém dado pessoal sensível** (CPF,
-  e-mail, telefone) — baixe por `scp` (nunca por URL pública) e apague a
-  cópia do servidor assim que confirmar que chegou íntegra na outra máquina.
-  `php database/exportar_dump_completo.php --confirmar`
+  + dados) via PDO puro (produção não tem `mysqldump` instalado). A partir da
+  Fase 32 o arquivo é gravado **um nível acima da raiz do projeto** (em
+  produção, `/sites/npi/www/`, a mesma pasta dos `bkp-faseXX.tar.gz`), com o
+  nome `dump_completo_faseXX.sql` definido pelo parâmetro obrigatório
+  `--fase`. Gravar fora de `si/` é o que mantém o arquivo **fora do alcance
+  do HTTP** — antes ele nascia dentro de `si/`, era barrado pelo
+  `si-seguranca.conf` e exigia um `sudo mv` manual antes do download.
+  **Contém dado pessoal sensível** (CPF, e-mail, telefone): baixe e **apague
+  a cópia do servidor assim que confirmar que chegou íntegra**.
+  `php database/exportar_dump_completo.php --fase=32 --confirmar`
 
 ## Modo de manutenção do sistema (Fase 25)
 
@@ -530,6 +563,27 @@ para proteger deploys que mexem em schema/comportamento de avaliação: rodar
 migrations, testar como administrador (nunca é bloqueado), e só então
 `reativar_sistema.php --confirmar`.
 
+### Processo agendado (cron) — a partir da Fase 32
+
+Até a Fase 31 o sistema era **100% requisição-resposta**: sem fila, sem
+worker, sem nada rodando em segundo plano. A Fase 32 introduziu o primeiro
+processo agendado — `database/capturar_presenca_google_meet.php`, chamado
+pelo crontab do servidor a cada 30 minutos para buscar no Google a presença
+real dos horários de Mentoria/Oficina já encerrados.
+
+Consequências práticas para quem opera o sistema:
+
+- **Um deploy agora pode interromper um processo em andamento.** O script é
+  seguro de matar a qualquer momento: processa um lote limitado por execução,
+  grava de forma idempotente (reprocessar nunca duplica dado) e tem trava
+  interna contra execuções sobrepostas — a trava é local ao host, então não
+  cobriria mais de um servidor rodando o mesmo cron.
+- **Falha do cron é silenciosa por natureza** (ninguém está olhando quando
+  roda). Por isso o próprio script notifica os administradores no painel
+  quando esgota as tentativas de um horário, e escreve log a cada execução.
+- O guia de instalação, monitoramento e diagnóstico do cron está em
+  `DeployFase32.md`, seção 3.
+
 ## Histórico de fases (resumo)
 
 | Fase | Entrega |
@@ -556,3 +610,10 @@ migrations, testar como administrador (nunca é bloqueado), e só então
 | 23 | Correções da Etapa 1, **divulgação pública configurável por etapa** (`visibilidade_publica`), relatório PDF de auditoria (anonimizado por linha) |
 | 24 | Progresso de avaliação por avaliador, **Mentoria/Oficina** com agenda e link do Meet, premiação geral vs. por trilha, busca ampliada nos Desafios, badge de convite vencido |
 | 25 | **Modo de manutenção do sistema**, numeração "Equipe N" estável sob sigilo cego (antes recalculada a cada requisição), campo genérico "Link externo (URL)", script de limpeza de notas por avaliador |
+| 26 | Busca da Auditoria estendida (entidade_id + dados antes/depois), script de troca de e-mail de login, reabertura pontual de formulário publicado, relatório PDF simplificado de notas por equipe (iniciais + legenda, A3) |
+| 27 | Correção de 2 vulnerabilidades reais (edição de submissão durante avaliação ativa; promoção de líder sem e-mail), visualização somente-leitura pós-prazo/publicação, notas por avaliador anonimizado no painel do participante, `data_inicio`/`data_fim` de etapa viraram DATETIME |
+| 28 | Layout compartilhado do avaliador, correções de acesso do perfil Suporte, filtros de Status/Acesso |
+| 29 | **Tira-Dúvidas**, convite de acesso via notificação, correções de horário/documentos, remoção da equipe duplicada InoveSW |
+| 30 | **Modelos de Documento** (`[[palavra.chave]]`) e **Requerimentos** com assinatura gov.br e validação automática no ITI, painel admin em acordeão |
+| 31 | Importação em lote de dúvidas pré-existentes (equipe holodeck), **integração com Google Agenda** em Mentoria/Oficina (Service Account + Domain-Wide Delegation, RSVP do convite), filtro trilha/etapa de equipes sem participação em eventos, auditoria de segurança completa (CSRF central, rate limiting de login, headers HTTP, correções de IDOR/validação) |
+| 32 | **Relatório de presença real no Google Meet** por horário de Mentoria/Oficina (quem entrou, por quanto tempo, quem entrou sem estar convidado), cruzando convidado → RSVP → presença; **primeiro processo agendado do projeto** (cron de captura, ver seção própria abaixo), política de retenção de 30 dias para os nomes capturados |

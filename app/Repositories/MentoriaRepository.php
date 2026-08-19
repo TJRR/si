@@ -129,6 +129,7 @@ class MentoriaRepository
             'meet_link' => 'link_meet',
             'meet_link_origem' => 'meet_link_origem',
             'meet_pendente' => 'meet_pendente',
+            'google_conference_id' => 'google_conference_id',
             'google_sincronizado_em' => 'google_sincronizado_em',
         ];
 
@@ -156,6 +157,72 @@ class MentoriaRepository
         $stmt->execute($campos + ['id' => $id]);
 
         Auditoria::registrar('atualizar_google', 'mentoria_horarios', $id, $antes, $campos);
+    }
+
+    /**
+     * Fase 32: horarios prontos pra ter a presenca capturada pelo cron
+     * (database/capturar_presenca_google_meet.php).
+     *
+     * O intervalo de 2h depois de data_fim e' margem: a reuniao pode se
+     * estender alem do horario marcado, e o Google leva um tempo pra fechar o
+     * conferenceRecord depois que a chamada termina de verdade.
+     *
+     * O filtro por presenca_ultima_tentativa_em e' o que garante a cadencia de
+     * 30 min entre tentativas INDEPENDENTE do intervalo configurado no
+     * crontab - sem ele, um cron de 15 min queimaria as 30 tentativas na
+     * metade do tempo previsto.
+     *
+     * LIMIT + ORDER BY data_fim: protege contra rajada (backfill retroativo,
+     * ou cron que ficou fora do ar e voltou com backlog acumulado), drenando
+     * a fila aos poucos e priorizando os mais antigos, que estao mais perto de
+     * vencer os 30 dias de retencao do Google.
+     */
+    public function listarPendentesDePresenca($limite)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT mh.*, u.email AS organizador_email
+             FROM mentoria_horarios mh
+             JOIN usuarios u ON u.id = mh.mentor_usuario_id
+             WHERE mh.integracao_google = 1
+               AND mh.google_conference_id IS NOT NULL
+               AND mh.presenca_status = \'pendente\'
+               AND mh.data_fim <= (NOW() - INTERVAL 2 HOUR)
+               AND (mh.presenca_ultima_tentativa_em IS NULL
+                    OR mh.presenca_ultima_tentativa_em <= (NOW() - INTERVAL 30 MINUTE))
+             ORDER BY mh.data_fim ASC
+             LIMIT :limite'
+        );
+        $stmt->bindValue('limite', (int) $limite, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Fase 32: estado da captura de presenca. Sem Auditoria::registrar -
+     * e' sincronizacao automatica de estado externo (mesma regra de
+     * GooglePresencaRepository), nao acao de usuario. A excecao e' o reset
+     * manual pelo botao "Reprocessar presenca", auditado no controller.
+     */
+    public function atualizarPresenca($id, array $colunas)
+    {
+        $permitidas = ['presenca_status', 'presenca_tentativas', 'presenca_ultima_tentativa_em', 'presenca_capturada_em'];
+        $campos = array_intersect_key($colunas, array_flip($permitidas));
+
+        if (empty($campos)) {
+            return;
+        }
+
+        $sets = [];
+
+        foreach (array_keys($campos) as $coluna) {
+            $sets[] = "$coluna = :$coluna";
+        }
+
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE mentoria_horarios SET ' . implode(', ', $sets) . ' WHERE id = :id');
+        $stmt->execute($campos + ['id' => $id]);
     }
 
     /**

@@ -22,11 +22,16 @@ return [
             'como' => 'Reconsulta o Google Agenda para atualizar o status da integração e o RSVP dos convidados.',
         ],
         [
+            'nome' => 'Presença na sala do Meet',
+            'como' => 'Abre, em popup, quem de fato entrou na sala e por quanto tempo, cruzado com o convite e a resposta de cada um.',
+            'observacao' => 'Só aparece em horários com integração ao Google Agenda e que já terminaram. A captura é automática e começa 2h depois do fim do horário.',
+        ],
+        [
             'nome' => 'Remover',
             'icone' => 'remover',
             'como' => 'Apaga o horário, com confirmação.',
             'observacao' => 'Se já houver equipes inscritas, todas são notificadas automaticamente.',
         ],
     ],
-    'conceitos' => ['integracao_google_agenda'],
+    'conceitos' => ['integracao_google_agenda', 'presenca_meet'],
 ];

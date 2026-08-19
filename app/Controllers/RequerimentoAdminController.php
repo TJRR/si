@@ -297,12 +297,15 @@ class RequerimentoAdminController extends Controller
         return !empty($avisos) ? ('⚠ ATENÇÃO: ' . implode('; ', $avisos) . '.') : null;
     }
 
+    /**
+     * Fase 32: a normalizacao virou helper global (normalizarNomeParaComparacao)
+     * porque a captura de presenca do Meet precisa exatamente da mesma regra -
+     * comparar nome de fonte externa contra participante cadastrado. Mantido
+     * como metodo aqui so' pra nao mexer nos pontos de chamada existentes.
+     */
     private function normalizarNome($nome)
     {
-        $maiusculo = mb_strtoupper(trim($nome), 'UTF-8');
-        $transliterado = iconv('UTF-8', 'ASCII//TRANSLIT', $maiusculo);
-
-        return $transliterado !== false ? $transliterado : $maiusculo;
+        return normalizarNomeParaComparacao($nome);
     }
 
     private function miolosCpfEquivalentes($cpfMascaradoIti, $cpfCadastrado)

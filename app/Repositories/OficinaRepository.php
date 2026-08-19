@@ -98,6 +98,7 @@ class OficinaRepository
             'meet_link' => 'link_meet',
             'meet_link_origem' => 'meet_link_origem',
             'meet_pendente' => 'meet_pendente',
+            'google_conference_id' => 'google_conference_id',
             'google_sincronizado_em' => 'google_sincronizado_em',
         ];
 
@@ -125,6 +126,59 @@ class OficinaRepository
         $stmt->execute($campos + ['id' => $id]);
 
         Auditoria::registrar('atualizar_google', 'oficina_horarios', $id, $antes, $campos);
+    }
+
+    /**
+     * Fase 32: horarios prontos pra ter a presenca capturada pelo cron -
+     * mesma logica de MentoriaRepository::listarPendentesDePresenca(), ver
+     * o comentario completo la' (margem de 2h, cadencia de 30 min
+     * independente do crontab, LIMIT contra rajada).
+     */
+    public function listarPendentesDePresenca($limite)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT oh.*, u.email AS organizador_email
+             FROM oficina_horarios oh
+             JOIN usuarios u ON u.id = oh.criado_por
+             WHERE oh.integracao_google = 1
+               AND oh.google_conference_id IS NOT NULL
+               AND oh.presenca_status = \'pendente\'
+               AND oh.data_fim <= (NOW() - INTERVAL 2 HOUR)
+               AND (oh.presenca_ultima_tentativa_em IS NULL
+                    OR oh.presenca_ultima_tentativa_em <= (NOW() - INTERVAL 30 MINUTE))
+             ORDER BY oh.data_fim ASC
+             LIMIT :limite'
+        );
+        $stmt->bindValue('limite', (int) $limite, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Fase 32: estado da captura de presenca - ver
+     * MentoriaRepository::atualizarPresenca() para a justificativa de nao
+     * registrar em Auditoria.
+     */
+    public function atualizarPresenca($id, array $colunas)
+    {
+        $permitidas = ['presenca_status', 'presenca_tentativas', 'presenca_ultima_tentativa_em', 'presenca_capturada_em'];
+        $campos = array_intersect_key($colunas, array_flip($permitidas));
+
+        if (empty($campos)) {
+            return;
+        }
+
+        $sets = [];
+
+        foreach (array_keys($campos) as $coluna) {
+            $sets[] = "$coluna = :$coluna";
+        }
+
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE oficina_horarios SET ' . implode(', ', $sets) . ' WHERE id = :id');
+        $stmt->execute($campos + ['id' => $id]);
     }
 
     public function remover($id)

@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\Mailer;
@@ -22,6 +23,7 @@ use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Repositories\UsuarioRepository;
 use App\Services\GoogleCalendarSyncService;
+use App\Services\PresencaMeetCapturaService;
 
 /**
  * Fase 19 (#106): qualquer administrador/suporte cria horarios de
@@ -272,6 +274,70 @@ class MentoriaAdminController extends Controller
         }
 
         return $this->equipes->listarClassificadasNaEtapaSemParticipacaoEmEventos($concursoId, $trilhaFiltro, (int) $etapaAnterior['id']);
+    }
+
+    /**
+     * Fase 32: relatorio de presenca real de um horario ja encerrado -
+     * cruza convidado -> RSVP -> presenca no Meet. A captura em si e'
+     * automatica (cron), esta tela so' le' o que ja foi capturado.
+     */
+    public function presenca($id)
+    {
+        $horario = $this->mentorias->buscarPorId($id);
+
+        if ($horario === null) {
+            http_response_code(404);
+            exit('Horário não encontrado.');
+        }
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $horario['concurso_id']);
+
+        $captura = new PresencaMeetCapturaService();
+        $relatorio = $captura->montarRelatorio(
+            'mentoria',
+            $horario,
+            $this->conviteStatus->listarComNomePorHorario('mentoria', $id)
+        );
+
+        $this->renderizar('admin/mentorias/presenca', [
+            'horario' => $horario,
+            'tipo' => 'mentoria',
+            'rotaModulo' => 'mentoriaAdmin',
+            'convidados' => $relatorio['convidados'],
+            'naoIdentificados' => $relatorio['nao_identificados'],
+            'maxTentativas' => PresencaMeetCapturaService::MAX_TENTATIVAS,
+        ]);
+    }
+
+    /**
+     * Fase 32: devolve um horario a fila do cron - ver
+     * OficinaAdminController::reprocessarPresenca() para a justificativa.
+     */
+    public function reprocessarPresenca()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $horario = $this->mentorias->buscarPorId($id);
+
+        if ($horario === null) {
+            http_response_code(404);
+            exit('Horário não encontrado.');
+        }
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $horario['concurso_id']);
+
+        $this->mentorias->atualizarPresenca($id, [
+            'presenca_status' => 'pendente',
+            'presenca_tentativas' => 0,
+            'presenca_ultima_tentativa_em' => null,
+        ]);
+
+        Auditoria::registrar('reprocessar_presenca', 'mentoria_horarios', $id, [
+            'presenca_status' => $horario['presenca_status'],
+            'presenca_tentativas' => $horario['presenca_tentativas'],
+        ], ['presenca_status' => 'pendente', 'presenca_tentativas' => 0]);
+
+        flashSucesso('A presença deste horário voltou para a fila e será buscada na próxima varredura automática.');
+        $this->redirecionar('mentoriaAdmin/index/' . (int) $horario['concurso_id']);
     }
 
     public function remover()

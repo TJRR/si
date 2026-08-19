@@ -173,6 +173,32 @@ function organizadorElegivelGoogle($email)
 }
 
 /**
+ * Normaliza um nome pra comparacao (maiusculas, sem acento, sem espaco
+ * duplicado). Usado sempre que um nome vindo de FORA precisa ser confrontado
+ * com o nome de um participante cadastrado - hoje em dois pontos:
+ * RequerimentoAdminController (nome do assinante devolvido pelo ITI, Fase 30)
+ * e a captura de presenca do Meet (nome da conta Google de quem entrou na
+ * sala, Fase 32, onde a API nao devolve e-mail e o nome e' a unica chave
+ * disponivel).
+ *
+ * Nao e' garantia de acerto: "Joao Silva" no Google e "Joao Batista da Silva"
+ * cadastrado nao casam. Quem chama precisa tratar "nao bateu" como resultado
+ * legitimo, nunca como erro.
+ */
+function normalizarNomeParaComparacao($nome)
+{
+    if (!is_string($nome)) {
+        return '';
+    }
+
+    $maiusculo = mb_strtoupper(trim($nome), 'UTF-8');
+    $transliterado = iconv('UTF-8', 'ASCII//TRANSLIT', $maiusculo);
+    $semAcento = $transliterado !== false ? $transliterado : $maiusculo;
+
+    return preg_replace('/\s+/', ' ', $semAcento);
+}
+
+/**
  * Logo GLOBAL/default do sistema (usado no topbar do painel, paginas
  * convidadas, e como fallback da home publica quando a edicao ativa nao tem
  * logo proprio). Fase 18: fonte de verdade passou de conteudos_site

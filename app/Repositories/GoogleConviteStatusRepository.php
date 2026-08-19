@@ -82,7 +82,7 @@ class GoogleConviteStatusRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT g.email, g.status, g.atualizado_em, p.nome AS participante_nome
+            'SELECT g.email, g.status, g.atualizado_em, g.participante_id, p.nome AS participante_nome
              FROM google_convite_status g
              LEFT JOIN participantes p ON p.id = g.participante_id
              WHERE g.tipo = :tipo AND g.horario_id = :horario_id

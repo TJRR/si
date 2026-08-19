@@ -8,7 +8,7 @@
         <a href="<?php echo url('mentoriaAdmin/novo/' . (int) $concurso['id']); ?>" class="btn-acao">+ Novo horário</a>
     </div>
 </div>
-<p>Qualquer administrador ou suporte pode criar horários de mentoria pra si mesmo — a equipe reserva o horário pelo próprio painel. Você só pode editar/remover os horários que você mesmo criou (Administrador pode remover qualquer um, para moderação).</p>
+<p>Qualquer administrador ou suporte pode criar horários de mentoria pra si mesmo — a equipe reserva o horário pelo próprio painel. Você só pode remover os horários que você mesmo criou (Administrador pode remover qualquer um, para moderação).</p>
 
 <?php if (!empty($_SESSION['flash'])): ?>
     <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
@@ -79,6 +79,18 @@
                     <?php endif; ?>
                 </td>
                 <td>
+                    <?php // Fase 32: presenca real so' existe pra horario integrado ao Google e ja encerrado. ?>
+                    <?php if (!empty($horario['integracao_google']) && strtotime($horario['data_fim']) < time()): ?>
+                        <a href="<?php echo url('mentoriaAdmin/presenca/' . (int) $horario['id']); ?>"
+                           onclick="abrirModalUrl('Presença na sala do Meet', this.href); return false;"
+                           class="btn-icone" title="Ver presença na sala do Meet">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <polyline points="16 11 18 13 22 9"></polyline>
+                            </svg>
+                        </a>
+                    <?php endif; ?>
                     <?php if ((int) $horario['mentor_usuario_id'] === (int) \App\Core\Auth::usuarioId() || \App\Core\Auth::possuiPerfil('administrador')): ?>
                         <form method="post" action="<?php echo url('mentoriaAdmin/remover'); ?>" onsubmit="return confirm('Remover este horário?<?php echo $horario['equipe_id'] !== null ? ' A equipe que reservou sera notificada.' : ''; ?>');"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $horario['id']; ?>">

@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\Mailer;
@@ -21,6 +22,7 @@ use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Repositories\UsuarioRepository;
 use App\Services\GoogleCalendarSyncService;
+use App\Services\PresencaMeetCapturaService;
 
 /**
  * Fase 24: administrador/suporte cria horarios de oficina - encontro
@@ -265,6 +267,73 @@ class OficinaAdminController extends Controller
             'horario' => $horario,
             'inscritos' => $this->oficinas->listarInscritos($id),
         ]);
+    }
+
+    /**
+     * Fase 32: relatorio de presenca real de um horario ja encerrado -
+     * cruza convidado -> RSVP -> presenca no Meet. A captura em si e'
+     * automatica (cron), esta tela so' le' o que ja foi capturado.
+     */
+    public function presenca($id)
+    {
+        $horario = $this->oficinas->buscarPorId($id);
+
+        if ($horario === null) {
+            http_response_code(404);
+            exit('Horário não encontrado.');
+        }
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $horario['concurso_id']);
+
+        $captura = new PresencaMeetCapturaService();
+        $relatorio = $captura->montarRelatorio(
+            'oficina',
+            $horario,
+            $this->conviteStatus->listarComNomePorHorario('oficina', $id)
+        );
+
+        $this->renderizar('admin/oficinas/presenca', [
+            'horario' => $horario,
+            'tipo' => 'oficina',
+            'rotaModulo' => 'oficinaAdmin',
+            'convidados' => $relatorio['convidados'],
+            'naoIdentificados' => $relatorio['nao_identificados'],
+            'maxTentativas' => PresencaMeetCapturaService::MAX_TENTATIVAS,
+        ]);
+    }
+
+    /**
+     * Fase 32: devolve um horario a fila do cron. Unico caminho de recuperacao
+     * quando a captura ficou 'indisponivel' por causa sistemica (escopo nao
+     * autorizado, por exemplo) que depois foi corrigida - sem isto, so'
+     * restaria UPDATE direto no banco. Auditado por ser acao de usuario, ao
+     * contrario da sincronizacao automatica feita pelo cron.
+     */
+    public function reprocessarPresenca()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $horario = $this->oficinas->buscarPorId($id);
+
+        if ($horario === null) {
+            http_response_code(404);
+            exit('Horário não encontrado.');
+        }
+
+        RoleMiddleware::exigir(['administrador', 'suporte'], $horario['concurso_id']);
+
+        $this->oficinas->atualizarPresenca($id, [
+            'presenca_status' => 'pendente',
+            'presenca_tentativas' => 0,
+            'presenca_ultima_tentativa_em' => null,
+        ]);
+
+        Auditoria::registrar('reprocessar_presenca', 'oficina_horarios', $id, [
+            'presenca_status' => $horario['presenca_status'],
+            'presenca_tentativas' => $horario['presenca_tentativas'],
+        ], ['presenca_status' => 'pendente', 'presenca_tentativas' => 0]);
+
+        flashSucesso('A presença deste horário voltou para a fila e será buscada na próxima varredura automática.');
+        $this->redirecionar('oficinaAdmin/index/' . (int) $horario['concurso_id']);
     }
 
     public function remover()

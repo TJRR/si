@@ -14,6 +14,12 @@
  * storage/exports/) - um backup por rodada e' suficiente pra rotina de
  * deploy.
  *
+ * Fase 32: o arquivo passa a ser gravado UM NIVEL ACIMA da raiz do projeto
+ * (em producao, /sites/npi/www/ - a mesma pasta onde ficam os bkp-faseXX.tar.gz).
+ * Motivo: o bloqueio de seguranca do Apache (si-seguranca.conf) barra qualquer
+ * .sql dentro de si/, entao gerar ali obrigava um "sudo mv" manual antes de
+ * baixar. Gerando ja no lugar certo, o passo extra deixa de existir.
+ *
  * ATENCAO - dado sensivel: o arquivo gerado contem TODOS os dados pessoais
  * do sistema (CPF, nome, e-mail, telefone de participantes/avaliadores/
  * usuarios). O servidor de producao nao tem scp funcional (ver memoria de
@@ -24,12 +30,12 @@
  *
  * Por padrao roda em modo consulta (dry-run): so lista as tabelas e a
  * contagem de linhas, sem gravar nada. Para gerar o arquivo de verdade:
- *   php exportar_dump_completo.php --confirmar
- *   php exportar_dump_completo.php --confirmar --nome=dump_completo_pre_faseXX.sql
+ *   php database/exportar_dump_completo.php --fase=32 --confirmar
  *
- * --nome= e opcional - sem ele, o padrao e'
- * dump_completo_AAAAMMDD_XXXXXXXX.sql (Fase 31: sufixo de 4 bytes aleatorios
- * alem da data, pra nao ficar previsivel enquanto fica exposto por HTTP).
+ * --fase= e obrigatorio pra gerar: define o nome do arquivo, sempre
+ * dump_completo_faseXX.sql. Nome previsivel de proposito - o que protege o
+ * arquivo nao e' o nome, e' ele ficar FORA de si/ (nao servido por HTTP) e ser
+ * apagado logo apos o download.
  */
 
 if (php_sapi_name() !== 'cli') {
@@ -45,12 +51,17 @@ use App\Core\Auditoria;
 use App\Core\Database;
 
 $confirmar = in_array('--confirmar', $argv, true);
-$nomeParam = null;
+$fase = null;
 
 foreach ($argv as $arg) {
-    if (strpos($arg, '--nome=') === 0) {
-        $nomeParam = basename(substr($arg, strlen('--nome=')));
+    if (strpos($arg, '--fase=') === 0) {
+        $fase = preg_replace('/[^A-Za-z0-9]/', '', substr($arg, strlen('--fase=')));
     }
+}
+
+if ($confirmar && ($fase === null || $fase === '')) {
+    echo "ERRO: informe a fase. Ex.: php database/exportar_dump_completo.php --fase=32 --confirmar\n";
+    exit(1);
 }
 
 $pdo = Database::conexao();
@@ -73,18 +84,16 @@ echo "\nTotal de linhas em todas as tabelas: {$totalLinhas}\n";
 
 if (!$confirmar) {
     echo "\nModo consulta (dry-run). Nenhum arquivo foi gerado.\n";
-    echo "Para gerar o dump de verdade, rode: php exportar_dump_completo.php --confirmar\n";
+    echo "Para gerar o dump de verdade, rode: php database/exportar_dump_completo.php --fase=XX --confirmar\n";
     exit(0);
 }
 
-$pastaDestino = __DIR__ . '/..';
-// Fase 31 (Auditoria de Seguranca, achado #2): sufixo aleatorio alem da data
-// - o arquivo ainda fica servido publicamente por HTTP enquanto nao for
-// apagado (limitacao de infraestrutura, ver achado #8), mas um nome
-// imprevisivel fecha a janela de "quem sabe o padrao acha na hora".
-$nomeArquivo = ($nomeParam !== null && $nomeParam !== '')
-    ? $nomeParam
-    : 'dump_completo_' . date('Ymd') . '_' . bin2hex(random_bytes(4)) . '.sql';
+// Fase 32: um nivel ACIMA da raiz do projeto - em producao, /sites/npi/www/.
+// Fora de si/, o arquivo nao e' servido por HTTP, o que dispensa tanto o
+// "sudo mv" manual quanto o nome imprevisivel que a Fase 31 usava justamente
+// porque o arquivo ficava exposto enquanto nao fosse apagado.
+$pastaDestino = __DIR__ . '/../..';
+$nomeArquivo = 'dump_completo_fase' . $fase . '.sql';
 $caminhoArquivo = $pastaDestino . '/' . $nomeArquivo;
 $handle = fopen($caminhoArquivo, 'w');
 

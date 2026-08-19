@@ -74,6 +74,7 @@ class GoogleCalendarSyncService
             'meet_link' => $resultado['meet_link'],
             'meet_link_origem' => $resultado['meet_link'] !== null ? 'google_auto' : null,
             'meet_pendente' => $resultado['meet_status'] === 'pending',
+            'google_conference_id' => $resultado['conference_id'],
             'google_sincronizado_em' => date('Y-m-d H:i:s'),
         ];
     }
@@ -161,12 +162,21 @@ class GoogleCalendarSyncService
 
         $this->conviteStatus->sincronizar($tipo, $horario['id'], $resultado['attendees']);
 
-        return [
+        $colunas = [
             'meet_link' => $resultado['meet_link'],
             'meet_link_origem' => $resultado['meet_link'] !== null ? 'google_auto' : $horario['meet_link_origem'],
             'meet_pendente' => $resultado['meet_status'] === 'pending',
             'google_sincronizado_em' => date('Y-m-d H:i:s'),
         ];
+
+        // Fase 32: backfill de graca do conference_id em horarios criados antes
+        // desta fase - nunca sobrescreve com null se o Google (por qualquer
+        // motivo) parar de devolver o campo num evento que ja tem o valor.
+        if ($resultado['conference_id'] !== null) {
+            $colunas['google_conference_id'] = $resultado['conference_id'];
+        }
+
+        return $colunas;
     }
 
     public static function throttleLiberado($ultimaSincronizacaoEm)

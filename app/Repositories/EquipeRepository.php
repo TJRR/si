@@ -281,6 +281,40 @@ class EquipeRepository
         return $porEmail;
     }
 
+    /**
+     * Fase 32: integrantes de uma ou mais equipes PRESERVANDO equipe_id -
+     * listarEmailsPorEquipes() acima nao serve aqui porque devolve um mapa
+     * achatado por e-mail, perdendo de qual equipe cada pessoa veio. Numa
+     * Oficina (N equipes na mesma sala do Meet), a presenca capturada precisa
+     * ser atribuida a equipe certa, entao a origem tem que sobreviver a
+     * consulta.
+     *
+     * Traz tambem o nome, que e' a chave de casamento com quem entrou no Meet
+     * (a Meet API nao devolve e-mail - ver App\Services\GoogleMeetService).
+     * Inclui integrante sem e-mail, ao contrario do metodo acima: quem nao tem
+     * login ainda assim pode ter entrado na sala.
+     */
+    public function listarParticipantesPorEquipes(array $equipeIds)
+    {
+        if (empty($equipeIds)) {
+            return [];
+        }
+
+        $pdo = Database::conexao();
+        $placeholders = implode(',', array_fill(0, count($equipeIds), '?'));
+        $stmt = $pdo->prepare(
+            "SELECT p.id AS participante_id, p.nome, p.email, ep.equipe_id, e.nome_equipe
+             FROM participantes p
+             JOIN equipe_participante ep ON ep.participante_id = p.id
+             JOIN equipes e ON e.id = ep.equipe_id
+             WHERE ep.equipe_id IN ($placeholders)
+             ORDER BY e.nome_equipe, p.nome"
+        );
+        $stmt->execute(array_values($equipeIds));
+
+        return $stmt->fetchAll();
+    }
+
     public function listarParticipantes($equipeId)
     {
         $pdo = Database::conexao();

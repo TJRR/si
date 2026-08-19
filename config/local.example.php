@@ -31,6 +31,15 @@ return [
     // fazem o PHP converter cada \n numa quebra de linha real sozinho, sem
     // precisar reformatar nada na mao. Vazio = integracao com Google
     // Agenda fica indisponivel, sem quebrar o resto da aplicacao (fail-soft).
+    //
+    // Fase 32: a MESMA credencial passou a ser usada tambem pra ler a
+    // presenca real na sala do Meet - nao ha chave nova, nem campo novo
+    // aqui. O que habilita isso e' externo a este arquivo: ativar a "Google
+    // Meet API" no Google Cloud e autorizar o escopo
+    // meetings.space.readonly no MESMO registro de Delegacao em Todo o
+    // Dominio que ja tem os escopos de calendario (ver DeployFase32.md,
+    // secao 1). Se o escopo nao estiver autorizado, so' a presenca fica
+    // indisponivel - a integracao de agenda continua funcionando normal.
     'google_service_account' => [
         'client_email' => '',
         'private_key' => '',
