@@ -10,6 +10,7 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auditoria;
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Repositories\TokenSenhaRepository;
 use App\Repositories\UsuarioRepository;
 use App\Services\ImagemService;
 
@@ -80,14 +81,71 @@ class MeuPerfilController extends Controller
             'usuario' => $usuario,
             'erro' => $erro,
             'destinoPainel' => Auth::destinoPainel(),
-            'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
-            'podeVisualizarComo' => Auth::possuiPerfil('administrador') && !Auth::estaVisualizandoComoOutro(),
-            'usuariosParaVisualizar' => Auth::possuiPerfil('administrador') && !Auth::estaVisualizandoComoOutro()
-                ? $this->usuarios->listarAtivosNaoAdministradores()
-                : [],
-        ], 'Meu perfil');
+        ], 'Meu perfil', ['tipo' => 'perfilDados', 'id' => null]);
+    }
 
-        unset($_SESSION['flash']);
+    /**
+     * Fase 33: troca de senha pelo proprio usuario. So' existe para conta que
+     * JA' tem senha (coluna "Acesso: Senha" da tela de Usuarios) - conta que
+     * entra so' pelo Google nao tem senha atual pra conferir, e o caminho dela
+     * e' o convite/"esqueci minha senha", que define a primeira senha por
+     * token de uso unico.
+     *
+     * O modo "visualizar como outro usuario" nao precisa de checagem aqui: o
+     * Router ja' bloqueia toda requisicao nao-GET durante a visualizacao. A
+     * view esconde o bloco mesmo assim, pra nao exibir um formulario de senha
+     * de outra pessoa a um administrador.
+     *
+     * Erros saem por flash (nunca re-renderizando o formulario): campo de
+     * senha nao se repopula, entao nao ha' nada a preservar.
+     */
+    public function alterarSenha()
+    {
+        $usuario = $this->usuarios->buscarPorId(Auth::usuarioId());
+
+        if ($usuario === null || $usuario['senha_hash'] === null) {
+            flashErro('Esta conta não usa senha para entrar.');
+            $this->redirecionar('meuPerfil/index');
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->renderizar('meuPerfil/senha', [
+                'destinoPainel' => Auth::destinoPainel(),
+            ], 'Alterar senha', ['tipo' => 'perfilSenha', 'id' => null]);
+            return;
+        }
+
+        $atual = isset($_POST['senha_atual']) ? $_POST['senha_atual'] : '';
+        $nova = isset($_POST['senha_nova']) ? $_POST['senha_nova'] : '';
+        $confirmacao = isset($_POST['confirmacao']) ? $_POST['confirmacao'] : '';
+
+        if (!password_verify($atual, $usuario['senha_hash'])) {
+            flashErro('Senha atual incorreta.');
+        } elseif (strlen($nova) < 8) {
+            // Mesmo minimo de AuthController::definirSenha() - a regra da senha
+            // e' uma so' no sistema inteiro.
+            flashErro('A nova senha deve ter ao menos 8 caracteres.');
+        } elseif ($nova !== $confirmacao) {
+            flashErro('As senhas não conferem.');
+        } elseif ($nova === $atual) {
+            flashErro('A nova senha deve ser diferente da atual.');
+        } else {
+            $this->usuarios->definirSenha($usuario['id'], password_hash($nova, PASSWORD_DEFAULT));
+
+            // Link de "definir senha" ainda pendente (convite ou recuperacao)
+            // deixa de valer: quem acabou de provar a senha atual nao pode
+            // ficar com um link antigo de pe' servindo de segunda porta.
+            (new TokenSenhaRepository())->invalidarPendentes($usuario['id'], 'definir');
+
+            // Id de sessao novo depois de trocar credencial, mesmo cuidado que
+            // Auth::login() ja' toma.
+            session_regenerate_id(true);
+
+            flashSucesso('Senha alterada.');
+        }
+
+        $this->redirecionar('meuPerfil/index');
     }
 
     /**
@@ -100,6 +158,14 @@ class MeuPerfilController extends Controller
         if (!Auth::possuiPerfil('administrador') || Auth::estaVisualizandoComoOutro()) {
             http_response_code(403);
             exit('Acesso negado.');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->renderizar('meuPerfil/visualizar', [
+                'destinoPainel' => Auth::destinoPainel(),
+                'usuariosParaVisualizar' => $this->usuarios->listarAtivosNaoAdministradores(),
+            ], 'Visualizar como outro usuário', ['tipo' => 'perfilVisualizar', 'id' => null]);
+            return;
         }
 
         $usuarioAlvoId = (int) (isset($_POST['usuario_id']) ? $_POST['usuario_id'] : 0);

@@ -256,6 +256,13 @@ if ($ehPainelAdmin) {
         <div class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
             <button type="button" class="modal-fechar" onclick="fecharModal()" aria-label="Fechar">&times;</button>
             <h2 id="modal-titulo"></h2>
+            <!-- Fase 33: barra de navegacao entre itens da mesma tabela.
+                 Fica oculta quando o modal nao faz parte de uma sequencia. -->
+            <div id="modal-navegacao" class="modal-navegacao" hidden>
+                <button type="button" id="modal-anterior" class="btn-acao" onclick="navegarModal(-1);">&larr; Anterior</button>
+                <span id="modal-posicao"></span>
+                <button type="button" id="modal-proximo" class="btn-acao" onclick="navegarModal(1);">Próximo &rarr;</button>
+            </div>
             <div id="modal-conteudo"></div>
         </div>
     </div>
@@ -278,6 +285,13 @@ if ($ehPainelAdmin) {
         <div class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
             <button type="button" class="modal-fechar" onclick="fecharModal()" aria-label="Fechar">&times;</button>
             <h2 id="modal-titulo"></h2>
+            <!-- Fase 33: barra de navegacao entre itens da mesma tabela.
+                 Fica oculta quando o modal nao faz parte de uma sequencia. -->
+            <div id="modal-navegacao" class="modal-navegacao" hidden>
+                <button type="button" id="modal-anterior" class="btn-acao" onclick="navegarModal(-1);">&larr; Anterior</button>
+                <span id="modal-posicao"></span>
+                <button type="button" id="modal-proximo" class="btn-acao" onclick="navegarModal(1);">Próximo &rarr;</button>
+            </div>
             <div id="modal-conteudo"></div>
         </div>
     </div>
@@ -292,10 +306,19 @@ if ($ehPainelAdmin) {
     <script src="<?php echo config('base_path'); ?>/assets/js/cabecalho-flutuar.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/cabecalho-flutuar.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/painel-lateral.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/painel-lateral.js'); ?>" defer></script>
     <?php endif; ?>
-    <!-- Fase 19 (#107): acesso direto ao suporte do NPI, numero fixo -->
-    <a href="https://wa.me/559531984194" target="_blank" rel="noopener" class="site-whatsapp-flutuante" aria-label="Falar com o suporte do NPI pelo WhatsApp">
+    <?php
+    // Fase 19 (#107): acesso direto ao suporte pelo WhatsApp. O numero vem de
+    // Configuracoes > Contato (contatos_concurso.whatsapp, singleton global) -
+    // nunca fixo no codigo. Sem numero cadastrado (ou com numero que nao da'
+    // pra transformar em link, ver linkWhatsApp()), o botao nao aparece.
+    $contatoSuporte = (new \App\Repositories\ContatoConcursoRepository())->buscar();
+    $whatsappSuporte = $contatoSuporte !== null ? linkWhatsApp($contatoSuporte['whatsapp']) : null;
+    ?>
+    <?php if ($whatsappSuporte !== null): ?>
+    <a href="<?php echo htmlspecialchars($whatsappSuporte, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener" class="site-whatsapp-flutuante" aria-label="Falar com o suporte do NPI pelo WhatsApp">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38a9.9 9.9 0 0 0 4.76 1.21h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.12-2.9-6.99A9.82 9.82 0 0 0 12.04 2Zm0 1.67c2.19 0 4.25.85 5.79 2.4a8.2 8.2 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.13.82.84-3.05-.2-.31a8.18 8.18 0 0 1-1.26-4.37c0-4.55 3.7-8.23 8.24-8.23h.04Z"></path></svg>
     </a>
+    <?php endif; ?>
 <?php endif; ?>
 </body>
 </html>

@@ -959,6 +959,22 @@ body.admin-page a.btn-icone:focus {
     gap: 0.75rem;
 }
 
+/* Redes sociais sao icone puro (rotulo so' no aria-label/title): o <a>
+   precisa virar caixa do tamanho do glifo, senao o alvo de clique fica
+   menor que o desenho. */
+.site-footer-redes a {
+    display: inline-flex;
+    align-items: center;
+}
+
+.site-footer-redes svg {
+    margin-top: 0;
+}
+
+.site-footer-redes a:hover svg {
+    color: #fff;
+}
+
 .site-footer-barra {
     max-width: 1100px;
     margin: 0 auto;
@@ -2269,6 +2285,32 @@ body.guest-page {
     padding-right: 2rem;
 }
 
+/* Fase 33: barra de navegacao do modal. O [hidden] precisa vencer o
+   display:flex, mesmo motivo de .modal-overlay[hidden] acima. */
+.modal-navegacao {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.modal-navegacao[hidden] {
+    display: none;
+}
+
+.modal-navegacao #modal-posicao {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.modal-navegacao button[disabled] {
+    opacity: 0.45;
+    cursor: default;
+}
+
 /* Fase 31: baseline sem escopo de body class - o modal generico tambem
    passa a ser usado fora do painel admin (paginas convidadas de
    login/cadastro, para a ajuda contextual). Ali nao existe a regra
@@ -3286,6 +3328,155 @@ body.admin-page button[data-toggle-feedback]:focus {
     border: 1px solid var(--cor-borda);
     border-radius: 8px;
     padding: 1rem 1.25rem;
+}
+
+/* Fase 33: "Meu perfil" deixa de empilhar tres blocos numa pagina so' e passa
+   a usar as sub-abas do proprio sistema (.abas-secundarias, via
+   NavegacaoService, grupo "perfil") com um card por aba - mesmo desenho de
+   Configuracoes. Nada aqui inventa componente novo: o card e' .admin-card e os
+   botoes sao os do painel; abaixo so' o arranjo interno das telas de perfil. */
+.perfil-identidade,
+.perfil-card {
+    max-width: 760px;
+    margin-bottom: 1.25rem;
+}
+
+/* Card do avatar: foto em destaque a esquerda, identidade e troca de foto a
+   direita. Empilha sozinho no mobile pelo flex-wrap. */
+.perfil-identidade {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.perfil-avatar {
+    flex: 0 0 auto;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.perfil-avatar-iniciais {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(45deg, var(--cor-primaria-inicio) 15%, var(--cor-primaria-fim) 65%);
+    color: var(--cor-branco);
+    font-weight: 700;
+    font-size: 1.6rem;
+    letter-spacing: 0.05em;
+}
+
+.perfil-identidade-dados {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.perfil-identidade-nome {
+    font-size: 1.05rem;
+    color: var(--cor-escura);
+}
+
+.perfil-identidade-email {
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+}
+
+/* Pill de "Trocar foto": e' um <label> envolvendo o input[type=file], nao um
+   botao - assim abre o seletor de arquivo sem JS nenhum. Nao da' pra reusar
+   .btn-acao (escopado em a.btn-acao), entao repete so' a pilula. */
+.perfil-foto-botao {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 0.25rem;
+    padding: 0.4rem 1.1rem;
+    border: 2px solid var(--cor-primaria-fim);
+    border-radius: 999px;
+    color: var(--cor-primaria-fim);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.perfil-foto-botao:hover {
+    background: var(--cor-primaria-fim);
+    color: var(--cor-branco);
+}
+
+.perfil-foto-botao:focus-within {
+    box-shadow: 0 0 0 3px rgba(255, 153, 85, 0.3);
+}
+
+/* Escondido sem display:none, pra continuar alcancavel pelo teclado. */
+.perfil-foto-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+}
+
+.perfil-dica {
+    font-size: 0.78rem;
+    color: var(--cor-texto-suave);
+}
+
+.perfil-dica-inline {
+    font-weight: 400;
+    color: var(--cor-texto-suave);
+}
+
+.perfil-foto-nome:not(:empty)::before {
+    content: " · ";
+}
+
+/* Mesmo tom ja usado ad-hoc no card de aviso de admin/requerimentos/ver.php. */
+.perfil-aviso {
+    margin: 0 0 1.25rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid var(--cor-primaria-fim);
+    border-radius: 6px;
+    background: #fff8e1;
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+}
+
+/* Rotulo em bloco: com label inline os campos nasciam desalinhados, cada um
+   comecando onde o texto do rotulo terminava. */
+.perfil-card label {
+    display: block;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--cor-texto-suave);
+}
+
+.perfil-card input[type="text"],
+.perfil-card input[type="password"] {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 0.3rem;
+    font-weight: 400;
+}
+
+.perfil-card input[disabled] {
+    background: var(--cor-fundo-alt);
+    color: var(--cor-texto-suave);
+    cursor: not-allowed;
+}
+
+.perfil-card .form-acoes {
+    margin-top: 1.25rem;
+}
 }
 
 .site-trilha-card h3 {

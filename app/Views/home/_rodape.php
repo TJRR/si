@@ -38,19 +38,38 @@
                 <?php if (!empty($contato['endereco'])): ?>
                     <li>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                        <span><?php echo nl2br(htmlspecialchars($contato['endereco'], ENT_QUOTES, 'UTF-8')); ?></span>
+                        <?php
+                        // isset(): a coluna mapa_url e' de migration nova - sem a
+                        // guarda, um banco ainda nao migrado geraria Notice aqui.
+                        $mapaUrl = isset($contato['mapa_url']) ? $contato['mapa_url'] : null;
+                        ?>
+                        <?php if (linkHttpValido($mapaUrl)): ?>
+                            <a href="<?php echo htmlspecialchars($mapaUrl, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener" aria-label="Abrir o endereço no mapa"><?php echo nl2br(htmlspecialchars($contato['endereco'], ENT_QUOTES, 'UTF-8')); ?></a>
+                        <?php else: ?>
+                            <span><?php echo nl2br(htmlspecialchars($contato['endereco'], ENT_QUOTES, 'UTF-8')); ?></span>
+                        <?php endif; ?>
                     </li>
                 <?php endif; ?>
                 <?php if (!empty($contato['telefone'])): ?>
                     <li>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"></path></svg>
-                        <span><?php echo htmlspecialchars($contato['telefone'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <?php $telefoneLink = linkTelefone($contato['telefone']); ?>
+                        <?php if ($telefoneLink !== null): ?>
+                            <a href="<?php echo htmlspecialchars($telefoneLink, ENT_QUOTES, 'UTF-8'); ?>" aria-label="Ligar para <?php echo htmlspecialchars($contato['telefone'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($contato['telefone'], ENT_QUOTES, 'UTF-8'); ?></a>
+                        <?php else: ?>
+                            <span><?php echo htmlspecialchars($contato['telefone'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <?php endif; ?>
                     </li>
                 <?php endif; ?>
                 <?php if (!empty($contato['whatsapp'])): ?>
                     <li>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38a9.9 9.9 0 0 0 4.76 1.21h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.12-2.9-6.99A9.82 9.82 0 0 0 12.04 2Zm0 1.67c2.19 0 4.25.85 5.79 2.4a8.2 8.2 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.13.82.84-3.05-.2-.31a8.18 8.18 0 0 1-1.26-4.37c0-4.55 3.7-8.23 8.24-8.23h.04Z"></path></svg>
-                        <a href="https://wa.me/<?php echo htmlspecialchars(preg_replace('/\D/', '', $contato['whatsapp']), ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars($contato['whatsapp'], ENT_QUOTES, 'UTF-8'); ?></a>
+                        <?php $whatsappLink = linkWhatsApp($contato['whatsapp']); ?>
+                        <?php if ($whatsappLink !== null): ?>
+                            <a href="<?php echo htmlspecialchars($whatsappLink, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars($contato['whatsapp'], ENT_QUOTES, 'UTF-8'); ?></a>
+                        <?php else: ?>
+                            <span><?php echo htmlspecialchars($contato['whatsapp'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <?php endif; ?>
                     </li>
                 <?php endif; ?>
                 <?php if (!empty($contato['email'])): ?>
@@ -59,10 +78,31 @@
                         <a href="mailto:<?php echo htmlspecialchars($contato['email'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($contato['email'], ENT_QUOTES, 'UTF-8'); ?></a>
                     </li>
                 <?php endif; ?>
-                <?php if (!empty($contato['redes_sociais'])): ?>
+                <?php
+                // linkHttpValido() de novo na exibicao (ja validado na gravacao)
+                // - defesa em profundidade, igual link_meet: link gravado antes
+                // desta checagem existir pode estar sem esquema ou ser
+                // "javascript:...". Filtra antes do <li> pra nao sobrar item
+                // vazio no rodape quando nenhum link passar.
+                $redesValidas = [];
+
+                if (!empty($contato['redes_sociais'])) {
+                    foreach ($contato['redes_sociais'] as $rede => $link) {
+                        if (linkHttpValido($link)) {
+                            $redesValidas[$rede] = $link;
+                        }
+                    }
+                }
+                ?>
+                <?php if (!empty($redesValidas)): ?>
                     <li class="site-footer-redes">
-                        <?php foreach ($contato['redes_sociais'] as $rede => $link): ?>
-                            <a href="<?php echo htmlspecialchars($link, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener" aria-label="<?php echo htmlspecialchars(ucfirst($rede), ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars(ucfirst($rede), ENT_QUOTES, 'UTF-8'); ?></a>
+                        <?php foreach ($redesValidas as $rede => $link): ?>
+                            <?php
+                            $rotuloRede = isset(\App\Repositories\ContatoConcursoRepository::REDES_ROTULOS[$rede])
+                                ? \App\Repositories\ContatoConcursoRepository::REDES_ROTULOS[$rede]
+                                : ucfirst($rede);
+                            ?>
+                            <a href="<?php echo htmlspecialchars($link, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener" title="<?php echo htmlspecialchars($rotuloRede, ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars($rotuloRede, ENT_QUOTES, 'UTF-8'); ?>"><?php include __DIR__ . '/../_icone_rede_social.php'; ?></a>
                         <?php endforeach; ?>
                     </li>
                 <?php endif; ?>

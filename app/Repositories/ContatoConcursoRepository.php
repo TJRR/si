@@ -21,6 +21,20 @@ class ContatoConcursoRepository
 {
     public const REDES_SUPORTADAS = ['instagram', 'facebook', 'youtube', 'linkedin', 'x'];
 
+    /**
+     * Nome de marca de cada rede. ucfirst() sobre a chave gerava "Youtube" e
+     * "Linkedin", que nao sao a grafia das marcas - e a chave nao serve de
+     * rotulo pro aria-label dos icones do rodape. Fonte unica pro formulario
+     * do Admin e pro rodape da home.
+     */
+    public const REDES_ROTULOS = [
+        'instagram' => 'Instagram',
+        'facebook' => 'Facebook',
+        'youtube' => 'YouTube',
+        'linkedin' => 'LinkedIn',
+        'x' => 'X',
+    ];
+
     public function buscar()
     {
         $pdo = Database::conexao();
@@ -50,6 +64,8 @@ class ContatoConcursoRepository
             'telefone' => $dados['telefone'],
             'whatsapp' => $dados['whatsapp'],
             'endereco' => $dados['endereco'],
+            'mapa_url' => $dados['mapa_url'],
+            'nome_organizador_assinatura' => $dados['nome_organizador_assinatura'],
             'texto_institucional' => $dados['texto_institucional'],
             'redes_sociais' => json_encode($dados['redes_sociais']),
             'formulario_contato_ativo' => $dados['formulario_contato_ativo'],
@@ -57,8 +73,8 @@ class ContatoConcursoRepository
 
         if ($antes === null) {
             $stmt = $pdo->prepare(
-                'INSERT INTO contatos_concurso (email, telefone, whatsapp, endereco, texto_institucional, redes_sociais, formulario_contato_ativo)
-                 VALUES (:email, :telefone, :whatsapp, :endereco, :texto_institucional, :redes_sociais, :formulario_contato_ativo)'
+                'INSERT INTO contatos_concurso (email, telefone, whatsapp, endereco, mapa_url, nome_organizador_assinatura, texto_institucional, redes_sociais, formulario_contato_ativo)
+                 VALUES (:email, :telefone, :whatsapp, :endereco, :mapa_url, :nome_organizador_assinatura, :texto_institucional, :redes_sociais, :formulario_contato_ativo)'
             );
             $stmt->execute($parametros);
             $id = (int) $pdo->lastInsertId();
@@ -67,6 +83,7 @@ class ContatoConcursoRepository
             $stmt = $pdo->prepare(
                 'UPDATE contatos_concurso SET
                     email = :email, telefone = :telefone, whatsapp = :whatsapp, endereco = :endereco,
+                    mapa_url = :mapa_url, nome_organizador_assinatura = :nome_organizador_assinatura,
                     texto_institucional = :texto_institucional, redes_sociais = :redes_sociais,
                     formulario_contato_ativo = :formulario_contato_ativo
                  WHERE id = :id'

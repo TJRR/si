@@ -108,6 +108,60 @@ function linkHttpValido($link)
 }
 
 /**
+ * Os campos Telefone/WhatsApp de Configuracoes > Contato sao digitados no
+ * formato nacional ("(95) 3198-4194"), mas tanto wa.me quanto tel: exigem
+ * so' digitos e COM o codigo do pais - sem ele o link nasce invalido.
+ * Normaliza uma vez so', pros dois links (ver linkWhatsApp/linkTelefone) e
+ * pros e-mails automaticos, em vez de cada ponto reinventar a conta.
+ *
+ * 10 ou 11 digitos = formato nacional (DDD + numero, com ou sem o 9 do
+ * celular): recebe o 55. De 12 a 15 digitos = ja veio com codigo do pais
+ * (limite do E.164), passa intocado. Qualquer outra quantidade e' entrada
+ * que nao da' pra interpretar com seguranca - devolve null, e quem chama
+ * mostra o numero sem virar link em vez de emitir um href quebrado.
+ */
+function telefoneComCodigoPais($numero)
+{
+    $digitos = preg_replace('/\D/', '', (string) $numero);
+    $tamanho = strlen($digitos);
+
+    if ($tamanho === 10 || $tamanho === 11) {
+        return '55' . $digitos;
+    }
+
+    if ($tamanho >= 12 && $tamanho <= 15) {
+        return $digitos;
+    }
+
+    return null;
+}
+
+/**
+ * Link de conversa no WhatsApp a partir do numero cadastrado em
+ * Configuracoes > Contato. Usado pelo rodape da home, pelo botao flutuante
+ * de suporte e pela assinatura dos e-mails automaticos - antes cada um
+ * montava o seu (dois com o numero fixo no codigo, e com digitos
+ * divergentes entre si).
+ */
+function linkWhatsApp($numero)
+{
+    $digitos = telefoneComCodigoPais($numero);
+
+    return $digitos !== null ? 'https://wa.me/' . $digitos : null;
+}
+
+/**
+ * Link de discagem (tel:) em E.164, com o "+" - e' o que faz o celular ou o
+ * softphone discar direto, sem a pessoa ter que corrigir o numero na mao.
+ */
+function linkTelefone($numero)
+{
+    $digitos = telefoneComCodigoPais($numero);
+
+    return $digitos !== null ? 'tel:+' . $digitos : null;
+}
+
+/**
  * Fase 31 (convencao de UI, ver README "Convencoes de UI"): grava a
  * mensagem pos-redirect (`$_SESSION['flash']`) junto com seu tipo
  * semantico. Chamar so' $_SESSION['flash'] = '...' direto (sem passar por

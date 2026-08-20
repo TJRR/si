@@ -4,48 +4,44 @@
 } ?>
 <h1>Meu perfil</h1>
 
-<?php if (!empty($_SESSION['flash'])): ?>
-    <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
-<?php endif; ?>
-
 <?php if (!empty($erro)): ?>
-    <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
-<?php endif; ?>
-
-<?php if (!empty($usuario['foto_path'])): ?>
-    <p><img src="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $usuario['foto_path'], ENT_QUOTES, 'UTF-8'); ?>" alt="Foto de perfil" width="120" height="120" style="border-radius:50%;object-fit:cover;"></p>
+    <p class="flash-mensagem erro"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
 <form method="post" action="<?php echo url('meuPerfil/index'); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
-    <label>Nome completo:
-        <input type="text" name="nome" value="<?php echo htmlspecialchars($usuario['nome'], ENT_QUOTES, 'UTF-8'); ?>" required>
-    </label><br>
+    <section class="admin-card perfil-identidade">
+        <?php if (!empty($usuario['foto_path'])): ?>
+            <img src="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $usuario['foto_path'], ENT_QUOTES, 'UTF-8'); ?>" alt="Foto de perfil" class="perfil-avatar">
+        <?php else: ?>
+            <span class="perfil-avatar perfil-avatar-iniciais" aria-hidden="true"><?php echo htmlspecialchars(iniciaisAvatar($usuario['nome']), ENT_QUOTES, 'UTF-8'); ?></span>
+        <?php endif; ?>
 
-    <label>Foto de perfil (JPG, PNG, WEBP ou GIF, até 4MB):
-        <input type="file" name="foto" accept="image/*">
-    </label><br>
+        <div class="perfil-identidade-dados">
+            <strong class="perfil-identidade-nome"><?php echo htmlspecialchars($usuario['nome'], ENT_QUOTES, 'UTF-8'); ?></strong>
+            <span class="perfil-identidade-email"><?php echo htmlspecialchars($usuario['email'], ENT_QUOTES, 'UTF-8'); ?></span>
 
-    <p>E-mail: <?php echo htmlspecialchars($usuario['email'], ENT_QUOTES, 'UTF-8'); ?> (não editável)</p>
+            <label class="btn-acao perfil-foto-botao">
+                Trocar foto
+                <input type="file" name="foto" accept="image/*" class="perfil-foto-input" onchange="document.getElementById('perfil-foto-nome').textContent = this.files.length ? this.files[0].name : '';">
+            </label>
 
-    <div class="form-acoes">
-        <a href="<?php echo url($destinoPainel); ?>" class="btn-voltar">Voltar</a>
-        <button type="submit">Salvar</button>
-    </div>
-</form>
+            <span class="perfil-dica">JPG, PNG, WEBP ou GIF · Máx. 4 MB<span id="perfil-foto-nome" class="perfil-foto-nome"></span></span>
+        </div>
+    </section>
 
-<?php if (!empty($podeVisualizarComo)): ?>
-    <h2>Visualizar como outro usuário</h2>
-    <p>Somente leitura: o que você salvar enquanto visualiza como outro usuário não é gravado. Use para dar suporte técnico ou identificar problemas relatados por um usuário.</p>
-
-    <form method="post" action="<?php echo url('meuPerfil/visualizarComo'); ?>"><?= campoCsrf() ?>
-        <label>Usuário:
-            <input type="text" name="usuario_id" list="lista-usuarios-visualizar" placeholder="Digite o nome ou e-mail...">
+    <section class="admin-card perfil-card">
+        <label>Nome completo
+            <input type="text" name="nome" value="<?php echo htmlspecialchars($usuario['nome'], ENT_QUOTES, 'UTF-8'); ?>" required>
         </label>
-        <datalist id="lista-usuarios-visualizar">
-            <?php foreach ($usuariosParaVisualizar as $usuarioOpcao): ?>
-                <option value="<?php echo (int) $usuarioOpcao['id']; ?>"><?php echo htmlspecialchars($usuarioOpcao['nome'] . ' (' . $usuarioOpcao['email'] . ')', ENT_QUOTES, 'UTF-8'); ?></option>
-            <?php endforeach; ?>
-        </datalist>
-        <button type="submit">Visualizar como</button>
-    </form>
-<?php endif; ?>
+
+        <label>E-mail
+            <input type="text" value="<?php echo htmlspecialchars($usuario['email'], ENT_QUOTES, 'UTF-8'); ?>" disabled>
+        </label>
+        <p class="perfil-dica">O e-mail não pode ser alterado.</p>
+
+        <div class="form-acoes">
+            <button type="submit">Salvar</button>
+            <a href="<?php echo url($destinoPainel); ?>" class="btn-voltar">Voltar</a>
+        </div>
+    </section>
+</form>

@@ -10,6 +10,7 @@ if (!defined('SI_BOOT')) {
 use App\Repositories\ConcursoRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\TrilhaRepository;
+use App\Repositories\UsuarioRepository;
 
 /**
  * Unica fonte de verdade da hierarquia Concurso > Trilha > Etapa usada pela
@@ -54,6 +55,17 @@ class NavegacaoService
             ['tipo' => 'configuracaoContato', 'rotulo' => 'Contato', 'rota' => 'contatosConcurso/index'],
             ['tipo' => 'configuracaoOrdenacao', 'rotulo' => 'Ordenação', 'rota' => 'ordenacaoHome/index'],
         ],
+        /**
+         * Fase 33: "Meu perfil" passa a usar as mesmas sub-abas das demais
+         * telas, em vez de empilhar tres blocos numa pagina so'. Sem id, como
+         * o grupo "configuracao". Duas das tres abas sao condicionais - ver a
+         * filtragem em abasPara().
+         */
+        'perfil' => [
+            ['tipo' => 'perfilDados', 'rotulo' => 'Meu perfil', 'rota' => 'meuPerfil/index'],
+            ['tipo' => 'perfilSenha', 'rotulo' => 'Alterar senha', 'rota' => 'meuPerfil/alterarSenha'],
+            ['tipo' => 'perfilVisualizar', 'rotulo' => 'Visualizar como', 'rota' => 'meuPerfil/visualizarComo'],
+        ],
     ];
 
     /**
@@ -88,6 +100,9 @@ class NavegacaoService
         'configuracaoBlocos' => 'configuracao',
         'configuracaoContato' => 'configuracao',
         'configuracaoOrdenacao' => 'configuracao',
+        'perfilDados' => 'perfil',
+        'perfilSenha' => 'perfil',
+        'perfilVisualizar' => 'perfil',
     ];
 
     /**
@@ -109,6 +124,29 @@ class NavegacaoService
             // sem abas somente-avaliadores para reagir a nada client-side.
             $definicoes = array_values(array_filter($definicoes, function ($definicao) {
                 return $definicao['tipo'] === 'etapa';
+            }));
+        }
+
+        if ($grupo === 'perfil') {
+            // "Alterar senha" so' para conta que ja' tem senha (conta que entra
+            // so' pelo Google nao tem senha atual pra conferir), e "Visualizar
+            // como" so' para administrador fora do modo de visualizacao - as
+            // mesmas condicoes que MeuPerfilController aplica nas acoes.
+            $usuario = (new UsuarioRepository())->buscarPorId(\App\Core\Auth::usuarioId());
+            $temSenha = $usuario !== null && $usuario['senha_hash'] !== null;
+            $podeVisualizar = \App\Core\Auth::possuiPerfil('administrador')
+                && !\App\Core\Auth::estaVisualizandoComoOutro();
+
+            $definicoes = array_values(array_filter($definicoes, function ($definicao) use ($temSenha, $podeVisualizar) {
+                if ($definicao['tipo'] === 'perfilSenha') {
+                    return $temSenha;
+                }
+
+                if ($definicao['tipo'] === 'perfilVisualizar') {
+                    return $podeVisualizar;
+                }
+
+                return true;
             }));
         }
 

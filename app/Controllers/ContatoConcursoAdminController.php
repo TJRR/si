@@ -26,6 +26,9 @@ class ContatoConcursoAdminController extends Controller
 
     public function index()
     {
+        $erro = null;
+        $contato = null;
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $redesSociais = [];
 
@@ -37,23 +40,56 @@ class ContatoConcursoAdminController extends Controller
                 }
             }
 
-            $this->contatos->salvar([
+            // Estes dois campos sao texto livre digitado pelo Admin e viram
+            // href no rodape publico: mesma convencao de link_meet (ver
+            // linkHttpValido() em app/helpers.php) - valida na gravacao aqui
+            // e de novo na exibicao, como defesa em profundidade. Sem isso,
+            // "instagram.com/premio" (sem esquema) virava caminho relativo e
+            // o link nascia quebrado, e "javascript:..." virava XSS
+            // armazenado ao ser clicado.
+            $mapaUrl = $this->campoOuNulo('mapa_url');
+
+            foreach ($redesSociais as $rede => $link) {
+                if (!linkHttpValido($link)) {
+                    $rotulo = ContatoConcursoRepository::REDES_ROTULOS[$rede];
+                    $erro = 'O link do ' . $rotulo . ' deve começar com http:// ou https://.';
+                    break;
+                }
+            }
+
+            if ($erro === null && $mapaUrl !== null && !linkHttpValido($mapaUrl)) {
+                $erro = 'O link do mapa deve começar com http:// ou https://.';
+            }
+
+            // Nada de descartar o que foi digitado por causa de um link
+            // errado: o formulario tem editor rico (texto institucional), e
+            // perder isso a cada erro de validacao sairia caro. Devolve os
+            // proprios valores do POST pra view, no mesmo formato que ela
+            // espera do banco.
+            $contato = [
                 'email' => $this->campoOuNulo('email'),
                 'telefone' => $this->campoOuNulo('telefone'),
                 'whatsapp' => $this->campoOuNulo('whatsapp'),
                 'endereco' => $this->campoOuNulo('endereco'),
+                'mapa_url' => $mapaUrl,
+                'nome_organizador_assinatura' => $this->campoOuNulo('nome_organizador_assinatura'),
                 'texto_institucional' => isset($_POST['texto_institucional']) ? $_POST['texto_institucional'] : null,
                 'redes_sociais' => $redesSociais,
                 'formulario_contato_ativo' => isset($_POST['formulario_contato_ativo']) ? 1 : 0,
-            ]);
+            ];
 
-            $_SESSION['flash'] = 'Contato atualizado.';
-            $this->redirecionar('contatosConcurso/index');
-            return;
+            if ($erro === null) {
+                $this->contatos->salvar($contato);
+
+                flashSucesso('Contato atualizado.');
+                $this->redirecionar('contatosConcurso/index');
+                return;
+            }
         }
 
         $this->renderizar('admin/contatos_concurso/form', [
-            'contato' => $this->contatos->buscar(),
+            'contato' => $contato !== null ? $contato : $this->contatos->buscar(),
+            'erro' => $erro,
         ], 'Contato', ['tipo' => 'configuracaoContato', 'id' => null]);
     }
 

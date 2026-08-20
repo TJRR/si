@@ -8,15 +8,18 @@ if (!defined('SI_BOOT')) {
 }
 
 use App\Core\Mailer;
+use App\Repositories\ContatoConcursoRepository;
 use App\Repositories\NotificacaoRepository;
 
 class NotificacaoService
 {
     private $notificacoes;
+    private $contatos;
 
     public function __construct()
     {
         $this->notificacoes = new NotificacaoRepository();
+        $this->contatos = new ContatoConcursoRepository();
     }
 
     public function confirmarSubmissao($destinatarioEmail, array $trilha, array $etapa, $submissaoId)
@@ -151,13 +154,10 @@ class NotificacaoService
             . '<p style="color:#555;font-size:0.9em;">Se você não solicitou essa redefinição, ignore este e-mail — sua senha atual '
             . 'continua válida. Não compartilhe sua senha com terceiros. Em caso de dúvida sobre a autenticidade deste e-mail, '
             . 'entre em contato pelos canais abaixo.</p>'
-            . '<p>Atenciosamente,</p>'
-            . '<p><strong>Organização do Prêmio de Inovação - TJRR</strong><br>'
-            . '✉️ E-mail: npi@tjrr.jus.br<br>'
-            . '💬 Fone: <a href="https://wa.me/5595931984194">(95) 3198-4194</a></p>',
+            . '<p>Atenciosamente,</p>',
             htmlspecialchars($nomeDestinatario, ENT_QUOTES, 'UTF-8'),
             htmlspecialchars($linkDefinirSenha, ENT_QUOTES, 'UTF-8')
-        );
+        ) . $this->assinaturaContato();
     }
 
     /**
@@ -182,14 +182,63 @@ class NotificacaoService
             . '</ul>'
             . '<p style="color:#555;font-size:0.9em;">Este e-mail foi enviado automaticamente. Não compartilhe sua senha '
             . 'com terceiros. Em caso de dúvida sobre a autenticidade deste e-mail, entre em contato pelos canais abaixo.</p>'
-            . '<p>Atenciosamente,</p>'
-            . '<p><strong>Organização do Prêmio de Inovação - TJRR</strong><br>'
-            . '✉️ E-mail: npi@tjrr.jus.br<br>'
-            . '💬 Fone: <a href="https://wa.me/5595931984194">(95) 3198-4194</a></p>',
+            . '<p>Atenciosamente,</p>',
             htmlspecialchars($nomeDestinatario, ENT_QUOTES, 'UTF-8'),
             $abertura,
             htmlspecialchars($linkGoogle, ENT_QUOTES, 'UTF-8'),
             htmlspecialchars($linkDefinirSenha, ENT_QUOTES, 'UTF-8')
-        );
+        ) . $this->assinaturaContato();
+    }
+
+    /**
+     * Bloco de assinatura dos e-mails automaticos, montado inteiro a partir
+     * de Configuracoes > Contato. Nome do organizador, e-mail e telefone
+     * estavam fixos no codigo (em dois metodos, e o href do WhatsApp tinha um
+     * digito a mais que o numero escrito ao lado dele) - agora sao um dado
+     * so', o mesmo que o rodape da home mostra.
+     *
+     * Concatenado DEPOIS do sprintf de proposito: dado vindo do banco dentro
+     * da string de formato faria qualquer "%" digitado pelo Admin virar
+     * especificador e quebrar a montagem do corpo.
+     *
+     * Linha sem dado cadastrado simplesmente nao sai, e nada cadastrado nao
+     * deixa um <p> vazio no rodape do e-mail. O e-mail so' vira mailto se
+     * passar por FILTER_VALIDATE_EMAIL, e o telefone so' vira link se
+     * linkWhatsApp() conseguir normalizar - texto solto nunca vira href.
+     *
+     * isset() em nome_organizador_assinatura: coluna de migration nova - um
+     * banco ainda nao migrado nao pode derrubar o envio de e-mail.
+     */
+    private function assinaturaContato()
+    {
+        $contato = $this->contatos->buscar();
+
+        if ($contato === null) {
+            return '';
+        }
+
+        $linhas = [];
+
+        if (isset($contato['nome_organizador_assinatura']) && $contato['nome_organizador_assinatura'] !== '') {
+            $linhas[] = '<strong>'
+                . htmlspecialchars($contato['nome_organizador_assinatura'], ENT_QUOTES, 'UTF-8')
+                . '</strong>';
+        }
+
+        if (!empty($contato['email']) && filter_var($contato['email'], FILTER_VALIDATE_EMAIL)) {
+            $email = htmlspecialchars($contato['email'], ENT_QUOTES, 'UTF-8');
+            $linhas[] = '✉️ E-mail: <a href="mailto:' . $email . '">' . $email . '</a>';
+        }
+
+        if (!empty($contato['whatsapp'])) {
+            $linkWhats = linkWhatsApp($contato['whatsapp']);
+
+            if ($linkWhats !== null) {
+                $linhas[] = '💬 Fone: <a href="' . htmlspecialchars($linkWhats, ENT_QUOTES, 'UTF-8') . '">'
+                    . htmlspecialchars($contato['whatsapp'], ENT_QUOTES, 'UTF-8') . '</a>';
+            }
+        }
+
+        return $linhas !== [] ? '<p>' . implode('<br>', $linhas) . '</p>' : '';
     }
 }

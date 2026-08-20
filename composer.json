@@ -2,7 +2,7 @@
     "name": "npi/si",
     "description": "Sistema de Gestao da Semana de Inovacao e do Premio de Inovacao do TJRR",
     "type": "project",
-    "license": "proprietary",
+    "license": "MIT",
     "require": {
         "php": ">=7.3",
         "phpmailer/phpmailer": "^7.1",
