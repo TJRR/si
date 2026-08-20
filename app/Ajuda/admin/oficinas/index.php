@@ -10,6 +10,14 @@ return [
     'resumo' => 'Encontros coletivos com tema pré-definido, sem exclusividade — várias equipes podem se inscrever no mesmo horário. Mesmo padrão de Mentorias, sem a etapa de escolher um mentor específico.',
     'operacoes' => [
         [
+            'nome' => 'Coluna "Restrito a"',
+            'como' => '"Aberto a todos" = qualquer equipe do concurso vê o compromisso. Com o nome de uma trilha e etapa, só quem está habilitado àquela etapa vê e se inscreve. Vínculo definido no formulário do horário.',
+        ],
+        [
+            'nome' => 'Editar',
+            'como' => 'Aparece apenas enquanto o horário não começou. Depois da data de início, o botão de editar e o de remover somem — e o servidor recusa a ação mesmo se ela for forçada.',
+        ],
+        [
             'nome' => '+ Novo horário',
             'como' => 'Abre o formulário de um novo horário de oficina.',
         ],

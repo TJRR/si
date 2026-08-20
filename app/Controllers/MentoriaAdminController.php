@@ -22,6 +22,7 @@ use App\Repositories\PerfilRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Repositories\UsuarioRepository;
+use App\Services\EventoEtapaService;
 use App\Services\GoogleCalendarSyncService;
 use App\Services\PresencaMeetCapturaService;
 
@@ -45,6 +46,7 @@ class MentoriaAdminController extends Controller
     private $conviteStatus;
     private $trilhas;
     private $etapas;
+    private $eventoEtapa;
 
     public function __construct()
     {
@@ -63,6 +65,7 @@ class MentoriaAdminController extends Controller
         $this->conviteStatus = new GoogleConviteStatusRepository();
         $this->trilhas = new TrilhaRepository();
         $this->etapas = new EtapaRepository();
+        $this->eventoEtapa = new EventoEtapaService();
     }
 
     public function index($concursoId)
@@ -120,43 +123,42 @@ class MentoriaAdminController extends Controller
 
         $mentores = $this->mentoresDisponiveis($concursoId);
         $erro = null;
+        $entrada = $this->entradaDoPost();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $dataInicio = trim(isset($_POST['data_inicio']) ? $_POST['data_inicio'] : '');
-            $dataFim = trim(isset($_POST['data_fim']) ? $_POST['data_fim'] : '');
-            $linkMeet = trim(isset($_POST['link_meet']) ? $_POST['link_meet'] : '');
-            $observacao = trim(isset($_POST['observacao']) ? $_POST['observacao'] : '');
-            $mentorEscolhido = (int) (isset($_POST['mentor_usuario_id']) ? $_POST['mentor_usuario_id'] : 0);
-            $mentorValido = in_array($mentorEscolhido, array_column($mentores, 'id'), false);
-            $integrarGoogle = !empty($_POST['integracao_google']);
             $mentorUsuario = null;
 
             foreach ($mentores as $mentor) {
-                if ((int) $mentor['id'] === $mentorEscolhido) {
+                if ((int) $mentor['id'] === $entrada['mentor_usuario_id']) {
                     $mentorUsuario = $mentor;
                     break;
                 }
             }
 
-            if ($dataInicio === '' || $dataFim === '') {
-                $erro = 'Informe o início e o fim do horário.';
-            } elseif (strtotime($dataFim) <= strtotime($dataInicio)) {
-                $erro = 'O fim do horário deve ser depois do início.';
-            } elseif (!$mentorValido) {
-                $erro = 'Selecione um mentor válido (administrador ou suporte).';
-            } elseif ($integrarGoogle && !organizadorElegivelGoogle($mentorUsuario['email'])) {
-                $erro = 'A integração com o Google Agenda só está disponível para mentores com e-mail institucional @tjrr.jus.br.';
-            } elseif ($integrarGoogle && $linkMeet !== '') {
-                $erro = 'Com a integração com o Google Agenda ativa, o link do Meet é gerado automaticamente — não informe um link manual.';
-            } elseif (!$integrarGoogle && $linkMeet !== '' && !linkHttpValido($linkMeet)) {
-                $erro = 'O link do Google Meet deve começar com http:// ou https://.';
-            } else {
-                $id = $this->mentorias->criar($concursoId, $mentorEscolhido, $dataInicio, $dataFim, $linkMeet !== '' ? $linkMeet : null, $observacao !== '' ? $observacao : null, $integrarGoogle);
+            $erro = $this->validarEntrada($entrada, $concursoId);
 
-                if ($integrarGoogle) {
+            if ($erro === null && $mentorUsuario === null) {
+                $erro = 'Selecione um mentor válido (administrador ou suporte).';
+            } elseif ($erro === null && $entrada['integrar_google'] && !organizadorElegivelGoogle($mentorUsuario['email'])) {
+                $erro = 'A integração com o Google Agenda só está disponível para mentores com e-mail institucional @tjrr.jus.br.';
+            }
+
+            if ($erro === null) {
+                $id = $this->mentorias->criar(
+                    $concursoId,
+                    $entrada['mentor_usuario_id'],
+                    $entrada['data_inicio'],
+                    $entrada['data_fim'],
+                    $entrada['link_meet'] !== '' ? $entrada['link_meet'] : null,
+                    $entrada['observacao'] !== '' ? $entrada['observacao'] : null,
+                    $entrada['integrar_google'],
+                    $entrada['etapa_id']
+                );
+
+                if ($entrada['integrar_google']) {
                     $resultado = $this->googleSync->criar(
                         $mentorUsuario['email'],
-                        $this->dadosEventoGoogle($concurso, $dataInicio, $dataFim, $observacao),
+                        $this->dadosEventoGoogle($concurso, $entrada['data_inicio'], $entrada['data_fim'], $entrada['observacao']),
                         'Mentorias ' . $concurso['nome']
                     );
 
@@ -167,6 +169,7 @@ class MentoriaAdminController extends Controller
                     }
                 }
 
+                $this->avisarSeEtapaNaoRestringe($entrada['etapa_id']);
                 $this->redirecionar('mentoriaAdmin/index/' . $concursoId);
                 return;
             }
@@ -176,7 +179,218 @@ class MentoriaAdminController extends Controller
             'erro' => $erro,
             'concurso' => $concurso,
             'mentores' => $mentores,
+            'horario' => null,
+            'entrada' => $entrada,
+            'trilhas' => $this->trilhas->listarPorConcurso($concursoId),
+            'etapasPorTrilha' => $this->etapasParaVinculoPorTrilha($concursoId),
         ], 'Novo horário de mentoria', ['tipo' => 'mentorias', 'id' => (int) $concursoId]);
+    }
+
+    /**
+     * Fase 34: edicao de horario. Trava por data (exigirAindaNaoIniciado) e
+     * mesma checagem de dono de remover(). Mentor e integracao com o Google
+     * NAO sao editaveis de proposito: trocar o mentor mudaria a agenda dona
+     * do evento, e alternar a integracao exigiria criar/cancelar evento no
+     * meio do fluxo. Para mudar qualquer um dos dois, remova e recrie o
+     * horario enquanto ele ainda nao comecou.
+     */
+    public function editar($id)
+    {
+        $horario = $this->mentorias->buscarPorId($id);
+
+        if ($horario === null) {
+            http_response_code(404);
+            exit('Horário não encontrado.');
+        }
+
+        $concurso = $this->concursos->buscarPorId($horario['concurso_id']);
+        RoleMiddleware::exigir(['administrador', 'suporte'], $horario['concurso_id']);
+        $this->exigirDonoOuAdministrador($horario);
+        $this->exigirAindaNaoIniciado($horario);
+
+        $erro = null;
+        $entrada = $_SERVER['REQUEST_METHOD'] === 'POST'
+            ? $this->entradaDoPost()
+            : [
+                'data_inicio' => substr($horario['data_inicio'], 0, 16),
+                'data_fim' => substr($horario['data_fim'], 0, 16),
+                'link_meet' => (string) $horario['link_meet'],
+                'observacao' => (string) $horario['observacao'],
+                'etapa_id' => $horario['etapa_id'] !== null ? (int) $horario['etapa_id'] : null,
+                'mentor_usuario_id' => (int) $horario['mentor_usuario_id'],
+                'integrar_google' => !empty($horario['integracao_google']),
+            ];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Mentor e integracao nao sao editaveis: valem sempre os do banco.
+            $entrada['mentor_usuario_id'] = (int) $horario['mentor_usuario_id'];
+            $entrada['integrar_google'] = !empty($horario['integracao_google']);
+
+            if (!empty($horario['integracao_google'])) {
+                $entrada['link_meet'] = (string) $horario['link_meet'];
+            }
+
+            $erro = $this->validarEntrada($entrada, (int) $horario['concurso_id']);
+
+            if ($erro === null) {
+                $this->mentorias->atualizar(
+                    $id,
+                    $entrada['data_inicio'],
+                    $entrada['data_fim'],
+                    $entrada['link_meet'] !== '' ? $entrada['link_meet'] : null,
+                    $entrada['observacao'] !== '' ? $entrada['observacao'] : null,
+                    $entrada['etapa_id']
+                );
+
+                $this->aposEditar($concurso, $horario, $entrada);
+                $this->avisarSeEtapaNaoRestringe($entrada['etapa_id']);
+                $this->redirecionar('mentoriaAdmin/index/' . (int) $horario['concurso_id']);
+                return;
+            }
+        }
+
+        $this->renderizar('admin/mentorias/form', [
+            'erro' => $erro,
+            'concurso' => $concurso,
+            'mentores' => $this->mentoresDisponiveis((int) $horario['concurso_id']),
+            'horario' => $horario,
+            'entrada' => $entrada,
+            'trilhas' => $this->trilhas->listarPorConcurso($horario['concurso_id']),
+            'etapasPorTrilha' => $this->etapasParaVinculoPorTrilha((int) $horario['concurso_id']),
+        ], 'Editar horário de mentoria', ['tipo' => 'mentorias', 'id' => (int) $horario['concurso_id']]);
+    }
+
+    /**
+     * Fase 34: sincroniza o Google e avisa a equipe que ja reservou. Falha
+     * do Google NUNCA desfaz a edicao local (decisao da fase) - vira aviso,
+     * e "Verificar novamente" acerta depois.
+     */
+    private function aposEditar(array $concurso, array $antes, array $entrada)
+    {
+        if (!empty($antes['integracao_google']) && !empty($antes['google_event_id'])) {
+            $mentor = $this->usuarios->buscarPorId($antes['mentor_usuario_id']);
+
+            if ($mentor !== null) {
+                $resultado = $this->googleSync->atualizar(
+                    $mentor['email'],
+                    $antes['google_calendar_id'],
+                    $antes['google_event_id'],
+                    $this->dadosEventoGoogle($concurso, $entrada['data_inicio'], $entrada['data_fim'], $entrada['observacao'])
+                );
+
+                if ($resultado !== null) {
+                    $this->mentorias->atualizarGoogle($antes['id'], $resultado);
+                } else {
+                    flashAlerta('Alterações salvas, mas não foi possível atualizar o evento no Google Agenda agora. Use "Verificar novamente" na listagem para sincronizar.');
+                }
+            }
+        }
+
+        $mudouHorario = substr($antes['data_inicio'], 0, 16) !== $entrada['data_inicio']
+            || substr($antes['data_fim'], 0, 16) !== $entrada['data_fim'];
+
+        if (!$mudouHorario || $antes['equipe_id'] === null) {
+            flashSucesso('Alterações salvas.');
+            return;
+        }
+
+        $this->notificarEquipe(
+            (int) $antes['equipe_id'],
+            'Horário de mentoria alterado',
+            'O horário de mentoria que sua equipe reservou mudou: agora é em ' . formatarDataHora($entrada['data_inicio']) . ' ' . sufixoFusoHorario() . '.'
+        );
+
+        flashSucesso('Alterações salvas e equipe avisada.');
+    }
+
+    private function entradaDoPost()
+    {
+        $etapaId = isset($_POST['etapa_id']) && $_POST['etapa_id'] !== '' ? (int) $_POST['etapa_id'] : null;
+
+        return [
+            'data_inicio' => trim(isset($_POST['data_inicio']) ? $_POST['data_inicio'] : ''),
+            'data_fim' => trim(isset($_POST['data_fim']) ? $_POST['data_fim'] : ''),
+            'link_meet' => trim(isset($_POST['link_meet']) ? $_POST['link_meet'] : ''),
+            'observacao' => trim(isset($_POST['observacao']) ? $_POST['observacao'] : ''),
+            'etapa_id' => $etapaId,
+            'mentor_usuario_id' => (int) (isset($_POST['mentor_usuario_id']) ? $_POST['mentor_usuario_id'] : 0),
+            'integrar_google' => !empty($_POST['integracao_google']),
+        ];
+    }
+
+    private function validarEntrada(array $entrada, $concursoId)
+    {
+        if ($entrada['data_inicio'] === '' || $entrada['data_fim'] === '') {
+            return 'Informe o início e o fim do horário.';
+        }
+
+        if (strtotime($entrada['data_fim']) <= strtotime($entrada['data_inicio'])) {
+            return 'O fim do horário deve ser depois do início.';
+        }
+
+        if ($entrada['integrar_google'] && $entrada['link_meet'] !== '') {
+            return 'Com a integração com o Google Agenda ativa, o link do Meet é gerado automaticamente — não informe um link manual.';
+        }
+
+        if (!$entrada['integrar_google'] && $entrada['link_meet'] !== '' && !linkHttpValido($entrada['link_meet'])) {
+            return 'O link do Google Meet deve começar com http:// ou https://.';
+        }
+
+        return $this->eventoEtapa->erroDeVinculo($entrada['etapa_id'], $concursoId);
+    }
+
+    private function etapasParaVinculoPorTrilha($concursoId)
+    {
+        $mapa = [];
+
+        foreach ($this->trilhas->listarPorConcurso($concursoId) as $trilha) {
+            $mapa[(int) $trilha['id']] = $this->eventoEtapa->etapasParaVinculo((int) $trilha['id']);
+        }
+
+        return $mapa;
+    }
+
+    /**
+     * Fase 34: reforca na gravacao o aviso que a tela ja da' - o admin pode
+     * salvar sem nunca ter tocado no select (edicao), e a escolha e' valida
+     * mas nao restringe ninguem.
+     */
+    private function avisarSeEtapaNaoRestringe($etapaId)
+    {
+        // Um flash sobrescreve o outro. Se ja ha' aviso na fila (falha de
+        // sincronizacao com o Google, por exemplo), aquele e' mais grave e
+        // fica - este aqui e' so' informativo.
+        if ($etapaId === null || !empty($_SESSION['flash'])) {
+            return;
+        }
+
+        $etapa = $this->etapas->buscarPorId($etapaId);
+
+        if ($etapa !== null && !$this->eventoEtapa->restringe($etapa)) {
+            flashAlerta('Salvo, mas a etapa escolhida não restringe ninguém (é a primeira da trilha, ou a etapa anterior não é avaliada por avaliadores) — na prática o compromisso está aberto a todos.');
+        }
+    }
+
+    private function exigirDonoOuAdministrador(array $horario)
+    {
+        $souDono = (int) $horario['mentor_usuario_id'] === (int) Auth::usuarioId();
+
+        if (!$souDono && !Auth::temPerfil('administrador', $horario['concurso_id'])) {
+            http_response_code(403);
+            exit('Acesso negado: este horário pertence a outro mentor.');
+        }
+    }
+
+    /**
+     * Fase 34: depois de comecado, o horario nao pode mais ser alterado nem
+     * removido - ver comentario equivalente em OficinaAdminController.
+     */
+    private function exigirAindaNaoIniciado(array $horario)
+    {
+        if (strtotime($horario['data_inicio']) <= time()) {
+            http_response_code(403);
+            exit('Este horário já começou e não pode mais ser alterado ou removido.');
+        }
     }
 
     /**
@@ -351,15 +565,14 @@ class MentoriaAdminController extends Controller
             return;
         }
 
-        $souDono = (int) $horario['mentor_usuario_id'] === (int) Auth::usuarioId();
-
         // Fase 29 (ajuste pos-push): Auth::possuiPerfil('administrador') era
-        // global - trocado por temPerfil() com o concurso do horario, mesmo
-        // ajuste de OficinaAdminController::remover().
-        if (!$souDono && !Auth::temPerfil('administrador', $horario['concurso_id'])) {
-            http_response_code(403);
-            exit('Acesso negado: este horário pertence a outro mentor.');
-        }
+        // global - exigirDonoOuAdministrador() usa temPerfil() com o concurso
+        // do horario, mesmo ajuste de OficinaAdminController::remover().
+        $this->exigirDonoOuAdministrador($horario);
+
+        // Fase 34: horario ja iniciado nao pode mais ser removido - mesma
+        // trava da edicao.
+        $this->exigirAindaNaoIniciado($horario);
 
         if ($horario['equipe_id'] !== null) {
             $this->notificarEquipe(

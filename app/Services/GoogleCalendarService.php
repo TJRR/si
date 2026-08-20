@@ -115,6 +115,34 @@ class GoogleCalendarService
         return $resposta !== null && isset($resposta['id']) ? self::interpretarEvento($resposta) : null;
     }
 
+    /**
+     * Fase 34: PATCH dos campos editaveis do evento (titulo, descricao,
+     * inicio e fim). Assim como atualizarAttendees(), NUNCA reenvia
+     * conferenceData nem attendees - o hangoutLink ja gerado e a lista de
+     * convidados sao preservados pelo proprio Google, porque PATCH so'
+     * altera o que vem no corpo. sendUpdates=all faz o Google avisar os
+     * convidados da mudanca de horario, que e' o comportamento desejado.
+     */
+    public static function atualizarEvento($accessToken, $calendarId, $eventId, array $dados)
+    {
+        $corpo = [
+            'summary' => $dados['titulo'],
+            'description' => isset($dados['descricao']) ? $dados['descricao'] : '',
+            'start' => ['dateTime' => self::formatarDataHoraIso($dados['data_inicio']), 'timeZone' => self::TIMEZONE],
+            'end' => ['dateTime' => self::formatarDataHoraIso($dados['data_fim']), 'timeZone' => self::TIMEZONE],
+        ];
+
+        $url = self::urlEventos($calendarId) . '/' . rawurlencode($eventId) . '?sendUpdates=all';
+
+        $resposta = self::requisitar($url, $accessToken, [
+            CURLOPT_CUSTOMREQUEST => 'PATCH',
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_POSTFIELDS => json_encode($corpo),
+        ]);
+
+        return $resposta !== null && isset($resposta['id']) ? self::interpretarEvento($resposta) : null;
+    }
+
     public static function cancelarEvento($accessToken, $calendarId, $eventId)
     {
         $ch = curl_init(self::urlEventos($calendarId) . '/' . rawurlencode($eventId) . '?sendUpdates=all');

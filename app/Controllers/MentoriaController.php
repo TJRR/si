@@ -17,6 +17,7 @@ use App\Repositories\NotificacaoPainelRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Repositories\UsuarioRepository;
+use App\Services\EventoEtapaService;
 use App\Services\GoogleCalendarSyncService;
 
 /**
@@ -34,6 +35,7 @@ class MentoriaController extends Controller
     private $usuarios;
     private $notificacoes;
     private $googleSync;
+    private $eventoEtapa;
 
     public function __construct()
     {
@@ -45,12 +47,20 @@ class MentoriaController extends Controller
         $this->usuarios = new UsuarioRepository();
         $this->notificacoes = new NotificacaoPainelRepository();
         $this->googleSync = new GoogleCalendarSyncService();
+        $this->eventoEtapa = new EventoEtapaService();
     }
 
     public function index()
     {
         $contexto = $this->contextoAtual();
-        $reservas = $this->mentorias->listarReservasDaEquipe($contexto['equipe']['id']);
+        // Fase 34: vale tanto pros horarios vagos quanto pra reserva ja
+        // feita - se o horario passou a ser restrito a uma etapa em que a
+        // equipe nao esta' habilitada, ele some da tela dela (a reserva em
+        // si nao e' desfeita, ver decisao de retroatividade da fase).
+        $reservas = $this->eventoEtapa->apenasVisiveis(
+            $this->mentorias->listarReservasDaEquipe($contexto['equipe']['id']),
+            $contexto['equipe']
+        );
 
         // Fase 31: reconciliacao sob demanda (Meet pendente/RSVP) - sempre
         // no maximo 1 reserva de mentoria por equipe, entao nao precisa do
@@ -78,7 +88,10 @@ class MentoriaController extends Controller
 
         $this->renderizar('participante/mentorias', [
             'equipe' => $contexto['equipe'],
-            'vagos' => $this->mentorias->listarVagosPorConcurso($contexto['concursoId']),
+            'vagos' => $this->eventoEtapa->apenasVisiveis(
+                $this->mentorias->listarVagosPorConcurso($contexto['concursoId']),
+                $contexto['equipe']
+            ),
             'reservas' => $reservas,
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
         ], 'Mentorias');
@@ -94,6 +107,15 @@ class MentoriaController extends Controller
         if ($horario === null || (int) $horario['concurso_id'] !== (int) $contexto['concursoId']) {
             http_response_code(404);
             exit('Horário não encontrado.');
+        }
+
+        // Fase 34: trava de servidor - esconder o horario da listagem nao
+        // basta, esta rota aceita o id direto no POST.
+        $motivo = $this->eventoEtapa->motivoBloqueio($horario, $contexto['equipe']);
+
+        if ($motivo !== null) {
+            http_response_code(403);
+            exit('Acesso negado: ' . $motivo);
         }
 
         $sucesso = $this->mentorias->reservar($horarioId, $contexto['equipe']['id']);

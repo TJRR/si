@@ -127,11 +127,18 @@ html {
     opacity: var(--cabecalho-overlay-opacidade, 0.5);
 }
 
+/* Fase 34 (bug do hamburguer fora da tela): sem box-sizing, "width: 100%"
+   somado ao padding lateral de 1rem produz uma caixa 32px MAIS LARGA que a
+   viewport. No mobile o .site-header-inner e' space-between, entao o botao
+   do menu ia parar 32px alem da borda direita da tela. Nao existe reset
+   global de box-sizing nesta folha (so' declaracoes locais, ~10 seletores),
+   por isso a correcao e' aqui e nao num "*". */
 .site-header-com-imagem .site-header-nav {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
+    box-sizing: border-box;
     z-index: 10;
     background: transparent;
     padding: 0.75rem 1rem;
@@ -2829,8 +2836,33 @@ body.admin-page button[data-toggle-feedback]:focus {
         width: 100%;
     }
 
+    /* Fase 34 (bug do menu sem fundo): .site-nav.aberto so' declarava
+       "display: flex", e .site-header-com-imagem .site-header-nav e'
+       "background: transparent" ate' rolar a pagina (.site-header-nav-fixa).
+       Resultado: o menu aberto ficava escrito por cima da foto do hero.
+       Ganha painel proprio, valido nos dois estados de rolagem e nas duas
+       variantes de cabecalho (com e sem imagem). */
     .site-nav.aberto {
         display: flex;
+        box-sizing: border-box;
+        background: var(--cor-branco);
+        border: 1px solid var(--cor-borda);
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+        padding: 0.85rem 1rem;
+        margin-top: 0.5rem;
+        gap: 0.85rem;
+    }
+
+    /* O painel acima e' sempre claro, entao os itens voltam a cor normal de
+       texto. Sem isto a regra de cabecalho-com-imagem (que forca branco pros
+       itens sobre a foto) deixaria links e icones brancos sobre fundo
+       branco - invisiveis. O botao "Entrar" nao entra aqui: .btn ja tem cor
+       propria (--cor-primaria-fim), que funciona sobre o painel claro. */
+    .site-header-com-imagem .site-header-nav .site-nav.aberto a:not(.btn),
+    .site-header-com-imagem .site-header-nav .site-nav.aberto .site-header-icone {
+        color: var(--cor-texto);
+        border-color: var(--cor-borda);
     }
 
     /* Fase 20 (#113): nenhuma regra mobile existia pra essa secao - o

@@ -28,6 +28,7 @@ use App\Repositories\TemaRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Services\AcessoEtapaService;
+use App\Services\EventoEtapaService;
 use App\Services\ResultadoEtapaService;
 use App\Validation\CpfValidador;
 
@@ -135,6 +136,8 @@ class ParticipanteController extends Controller
             unset($etapaDaLista);
         }
 
+        $eventoEtapa = new EventoEtapaService();
+
         $this->renderizar('participante/painel', [
             'equipe' => $equipe,
             'trilha' => $trilha,
@@ -145,8 +148,14 @@ class ParticipanteController extends Controller
             'ehLider' => $vinculoAtual !== null && $vinculoAtual['papel'] === 'lider',
             'homologado' => $homologado,
             'etapas' => $etapas,
-            'mentoriaDisponivel' => $this->mentorias->existeParaConcurso($trilha['concurso_id']),
-            'oficinaDisponivel' => $this->oficinas->existeParaConcurso($trilha['concurso_id']),
+            // Fase 34: nao basta existir horario no concurso - com vinculo de
+            // etapa, o botao levaria a equipe pra uma tela vazia. Consulta so'
+            // as etapas DISTINTAS vinculadas (poucas, e NULL = aberto a todos),
+            // em vez de carregar e filtrar as listagens inteiras aqui.
+            'mentoriaDisponivel' => $this->mentorias->existeParaConcurso($trilha['concurso_id'])
+                && $eventoEtapa->algumHorarioVisivel($this->mentorias->etapasVinculadasNoConcurso($trilha['concurso_id']), $equipe),
+            'oficinaDisponivel' => $this->oficinas->existeParaConcurso($trilha['concurso_id'])
+                && $eventoEtapa->algumHorarioVisivel($this->oficinas->etapasVinculadasNoConcurso($trilha['concurso_id']), $equipe),
         ], 'Minha inscrição');
     }
 

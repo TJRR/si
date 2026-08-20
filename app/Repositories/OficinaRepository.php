@@ -23,10 +23,12 @@ class OficinaRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT oh.*, u.nome AS criado_por_nome,
+            'SELECT oh.*, u.nome AS criado_por_nome, e.nome AS etapa_nome, t.nome AS etapa_trilha_nome,
                     (SELECT COUNT(*) FROM oficina_inscricoes oi WHERE oi.oficina_horario_id = oh.id) AS total_inscritos
              FROM oficina_horarios oh
              JOIN usuarios u ON u.id = oh.criado_por
+             LEFT JOIN etapas e ON e.id = oh.etapa_id
+             LEFT JOIN trilhas t ON t.id = e.trilha_id
              WHERE oh.concurso_id = :concurso_id
              ORDER BY oh.data_inicio ASC'
         );
@@ -61,15 +63,16 @@ class OficinaRepository
         return $horario !== false ? $horario : null;
     }
 
-    public function criar($concursoId, $tema, $dataInicio, $dataFim, $linkMeet, $observacao, $criadoPor, $integracaoGoogle = false)
+    public function criar($concursoId, $tema, $dataInicio, $dataFim, $linkMeet, $observacao, $criadoPor, $integracaoGoogle = false, $etapaId = null)
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'INSERT INTO oficina_horarios (concurso_id, tema, data_inicio, data_fim, link_meet, observacao, criado_por, integracao_google)
-             VALUES (:concurso_id, :tema, :data_inicio, :data_fim, :link_meet, :observacao, :criado_por, :integracao_google)'
+            'INSERT INTO oficina_horarios (concurso_id, etapa_id, tema, data_inicio, data_fim, link_meet, observacao, criado_por, integracao_google)
+             VALUES (:concurso_id, :etapa_id, :tema, :data_inicio, :data_fim, :link_meet, :observacao, :criado_por, :integracao_google)'
         );
         $dados = [
             'concurso_id' => $concursoId,
+            'etapa_id' => $etapaId,
             'tema' => $tema,
             'data_inicio' => $dataInicio,
             'data_fim' => $dataFim,
@@ -84,6 +87,51 @@ class OficinaRepository
         Auditoria::registrar('criar', 'oficina_horarios', $id, null, $dados);
 
         return $id;
+    }
+
+    /**
+     * Fase 34: edicao de um horario ainda nao iniciado. Nao toca em
+     * criado_por nem nas colunas do Google (essas passam por
+     * atualizarGoogle(), que audita com acao propria) e nao mexe nas
+     * inscricoes ja feitas - ver decisao de retroatividade da fase.
+     */
+    public function atualizar($id, $tema, $dataInicio, $dataFim, $linkMeet, $observacao, $etapaId)
+    {
+        $antes = $this->buscarPorId($id);
+        $dados = [
+            'tema' => $tema,
+            'data_inicio' => $dataInicio,
+            'data_fim' => $dataFim,
+            'link_meet' => $linkMeet,
+            'observacao' => $observacao,
+            'etapa_id' => $etapaId,
+        ];
+
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'UPDATE oficina_horarios
+                SET tema = :tema, data_inicio = :data_inicio, data_fim = :data_fim,
+                    link_meet = :link_meet, observacao = :observacao, etapa_id = :etapa_id
+              WHERE id = :id'
+        );
+        $stmt->execute($dados + ['id' => $id]);
+
+        Auditoria::registrar('atualizar', 'oficina_horarios', $id, $antes, $dados);
+    }
+
+    /**
+     * Fase 34: mesma logica de MentoriaRepository::etapasVinculadasNoConcurso()
+     * - ver comentario la'.
+     */
+    public function etapasVinculadasNoConcurso($concursoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT DISTINCT etapa_id FROM oficina_horarios WHERE concurso_id = :concurso_id');
+        $stmt->execute(['concurso_id' => $concursoId]);
+
+        return array_map(function ($valor) {
+            return $valor === null ? null : (int) $valor;
+        }, $stmt->fetchAll(\PDO::FETCH_COLUMN));
     }
 
     /**

@@ -19,12 +19,19 @@
 <?php else: ?>
     <div class="tabela-scroll">
         <table>
-            <tr><th>Mentor</th><th>Início</th><th>Fim <?php echo sufixoFusoHorario(); ?></th><th>Meet</th><th>Google Agenda</th><th>Observação</th><th>Status</th><th>Ações</th></tr>
+            <tr><th>Mentor</th><th>Início</th><th>Fim <?php echo sufixoFusoHorario(); ?></th><th>Restrito a</th><th>Meet</th><th>Google Agenda</th><th>Observação</th><th>Status</th><th>Ações</th></tr>
             <?php foreach ($horarios as $horario): ?>
             <tr>
                 <td><?php echo htmlspecialchars($horario['mentor_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
                 <td><?php echo htmlspecialchars(formatarDataHora($horario['data_inicio']), ENT_QUOTES, 'UTF-8'); ?></td>
                 <td><?php echo htmlspecialchars(formatarDataHora($horario['data_fim']), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td>
+                    <?php if (empty($horario['etapa_nome'])): ?>
+                        <span class="status-pill">Aberto a todos</span>
+                    <?php else: ?>
+                        <span class="status-pill laranja" title="Só enxerga e reserva quem está habilitado a esta etapa"><?php echo htmlspecialchars($horario['etapa_trilha_nome'] . ' — ' . $horario['etapa_nome'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    <?php endif; ?>
+                </td>
                 <td>
                     <?php if (linkHttpValido($horario['link_meet'])): ?>
                         <a href="<?php echo htmlspecialchars($horario['link_meet'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">Abrir</a>
@@ -91,7 +98,18 @@
                             </svg>
                         </a>
                     <?php endif; ?>
-                    <?php if ((int) $horario['mentor_usuario_id'] === (int) \App\Core\Auth::usuarioId() || \App\Core\Auth::possuiPerfil('administrador')): ?>
+                    <?php // Fase 34: horario ja iniciado nao pode mais ser editado nem removido (o servidor tambem barra). ?>
+                    <?php $podeAlterar = strtotime($horario['data_inicio']) > time(); ?>
+                    <?php $souDonoOuAdmin = (int) $horario['mentor_usuario_id'] === (int) \App\Core\Auth::usuarioId() || \App\Core\Auth::possuiPerfil('administrador'); ?>
+                    <?php if ($podeAlterar && $souDonoOuAdmin): ?>
+                        <a href="<?php echo url('mentoriaAdmin/editar/' . (int) $horario['id']); ?>" class="btn-icone" title="Editar">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($podeAlterar && $souDonoOuAdmin): ?>
                         <form method="post" action="<?php echo url('mentoriaAdmin/remover'); ?>" onsubmit="return confirm('Remover este horário?<?php echo $horario['equipe_id'] !== null ? ' A equipe que reservou sera notificada.' : ''; ?>');"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $horario['id']; ?>">
                             <input type="hidden" name="concurso_id" value="<?php echo (int) $concurso['id']; ?>">

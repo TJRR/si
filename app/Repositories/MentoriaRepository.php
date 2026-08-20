@@ -22,10 +22,13 @@ class MentoriaRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT mh.*, u.nome AS mentor_nome, e.nome_equipe
+            'SELECT mh.*, u.nome AS mentor_nome, e.nome_equipe,
+                    et.nome AS etapa_nome, t.nome AS etapa_trilha_nome
              FROM mentoria_horarios mh
              JOIN usuarios u ON u.id = mh.mentor_usuario_id
              LEFT JOIN equipes e ON e.id = mh.equipe_id
+             LEFT JOIN etapas et ON et.id = mh.etapa_id
+             LEFT JOIN trilhas t ON t.id = et.trilha_id
              WHERE mh.concurso_id = :concurso_id
              ORDER BY mh.data_inicio ASC'
         );
@@ -89,15 +92,16 @@ class MentoriaRepository
         return $horario !== false ? $horario : null;
     }
 
-    public function criar($concursoId, $mentorUsuarioId, $dataInicio, $dataFim, $linkMeet, $observacao, $integracaoGoogle = false)
+    public function criar($concursoId, $mentorUsuarioId, $dataInicio, $dataFim, $linkMeet, $observacao, $integracaoGoogle = false, $etapaId = null)
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'INSERT INTO mentoria_horarios (concurso_id, mentor_usuario_id, data_inicio, data_fim, link_meet, observacao, integracao_google)
-             VALUES (:concurso_id, :mentor_usuario_id, :data_inicio, :data_fim, :link_meet, :observacao, :integracao_google)'
+            'INSERT INTO mentoria_horarios (concurso_id, etapa_id, mentor_usuario_id, data_inicio, data_fim, link_meet, observacao, integracao_google)
+             VALUES (:concurso_id, :etapa_id, :mentor_usuario_id, :data_inicio, :data_fim, :link_meet, :observacao, :integracao_google)'
         );
         $dados = [
             'concurso_id' => $concursoId,
+            'etapa_id' => $etapaId,
             'mentor_usuario_id' => $mentorUsuarioId,
             'data_inicio' => $dataInicio,
             'data_fim' => $dataFim,
@@ -121,6 +125,52 @@ class MentoriaRepository
      * GoogleCalendarSyncService (meet_link, nao link_meet) - o mapeamento
      * pro nome real da coluna e' feito aqui dentro.
      */
+    /**
+     * Fase 34: edicao de um horario ainda nao iniciado. Nao toca em
+     * equipe_id/reservado_em (a reserva e' acao do participante) nem nas
+     * colunas do Google (essas passam por atualizarGoogle(), que audita com
+     * acao propria).
+     */
+    public function atualizar($id, $dataInicio, $dataFim, $linkMeet, $observacao, $etapaId)
+    {
+        $antes = $this->buscarPorId($id);
+        $dados = [
+            'data_inicio' => $dataInicio,
+            'data_fim' => $dataFim,
+            'link_meet' => $linkMeet,
+            'observacao' => $observacao,
+            'etapa_id' => $etapaId,
+        ];
+
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'UPDATE mentoria_horarios
+                SET data_inicio = :data_inicio, data_fim = :data_fim, link_meet = :link_meet,
+                    observacao = :observacao, etapa_id = :etapa_id
+              WHERE id = :id'
+        );
+        $stmt->execute($dados + ['id' => $id]);
+
+        Auditoria::registrar('atualizar', 'mentoria_horarios', $id, $antes, $dados);
+    }
+
+    /**
+     * Fase 34: etapas distintas vinculadas aos horarios do concurso, com
+     * NULL preservado (= horario aberto a todos). O painel do participante
+     * usa isso pra decidir se acende o botao sem precisar carregar e
+     * filtrar a listagem inteira.
+     */
+    public function etapasVinculadasNoConcurso($concursoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT DISTINCT etapa_id FROM mentoria_horarios WHERE concurso_id = :concurso_id');
+        $stmt->execute(['concurso_id' => $concursoId]);
+
+        return array_map(function ($valor) {
+            return $valor === null ? null : (int) $valor;
+        }, $stmt->fetchAll(\PDO::FETCH_COLUMN));
+    }
+
     public function atualizarGoogle($id, array $colunas)
     {
         $mapa = [

@@ -11,7 +11,7 @@ return [
     'operacoes' => [
         [
             'nome' => 'Inscrever-se',
-            'como' => 'Disponível em qualquer horário.',
+            'como' => 'Disponível nos horários que aparecem para a sua equipe. Alguns encontros são vinculados a uma etapa: nesse caso só aparecem para quem está habilitado a ela, ou seja, foi classificado na etapa anterior. Se um encontro que você via sumiu da lista, é porque ele passou a ser restrito a uma etapa em que a sua equipe não está habilitada.',
         ],
         [
             'nome' => 'Cancelar',

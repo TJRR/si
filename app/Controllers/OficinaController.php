@@ -15,6 +15,7 @@ use App\Repositories\OficinaRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Repositories\UsuarioRepository;
+use App\Services\EventoEtapaService;
 use App\Services\GoogleCalendarSyncService;
 
 /**
@@ -30,6 +31,7 @@ class OficinaController extends Controller
     private $oficinas;
     private $usuarios;
     private $googleSync;
+    private $eventoEtapa;
 
     // Fase 31: teto de reconciliacao automatica sob demanda no lado do
     // participante (ver plano da Fase 31) - evita que uma equipe inscrita
@@ -45,6 +47,7 @@ class OficinaController extends Controller
         $this->oficinas = new OficinaRepository();
         $this->usuarios = new UsuarioRepository();
         $this->googleSync = new GoogleCalendarSyncService();
+        $this->eventoEtapa = new EventoEtapaService();
     }
 
     public function index()
@@ -52,7 +55,15 @@ class OficinaController extends Controller
         $contexto = $this->contextoAtual();
         $inscricoes = $this->oficinas->listarInscricoesDaEquipe($contexto['equipe']['id']);
         $inscritosIds = array_map('intval', array_column($inscricoes, 'id'));
-        $horarios = $this->oficinas->listarFuturasPorConcurso($contexto['concursoId']);
+        // Fase 34: horario vinculado a uma etapa so' aparece pra quem esta'
+        // habilitado a ela. Filtra ANTES do laco de reconciliacao pra nao
+        // gastar chamada ao Google com horario que a equipe nem enxerga -
+        // inclusive quando ela ja esta' inscrita e perdeu a elegibilidade
+        // depois (o horario some da tela, a inscricao nao e' desfeita).
+        $horarios = $this->eventoEtapa->apenasVisiveis(
+            $this->oficinas->listarFuturasPorConcurso($contexto['concursoId']),
+            $contexto['equipe']
+        );
 
         $reconciliacoesFeitas = 0;
 
@@ -104,6 +115,16 @@ class OficinaController extends Controller
         if ($horario === null || (int) $horario['concurso_id'] !== (int) $contexto['concursoId']) {
             http_response_code(404);
             exit('Horário não encontrado.');
+        }
+
+        // Fase 34: esconder o botao nao protege - esta rota aceita o id
+        // direto no POST. Mesma trava de servidor que
+        // RequerimentoController::modeloDisponivelOuAbortar() (Fase 30).
+        $motivo = $this->eventoEtapa->motivoBloqueio($horario, $contexto['equipe']);
+
+        if ($motivo !== null) {
+            http_response_code(403);
+            exit('Acesso negado: ' . $motivo);
         }
 
         $sucesso = $this->oficinas->inscrever($horarioId, $contexto['equipe']['id']);

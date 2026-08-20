@@ -110,6 +110,36 @@ class GoogleCalendarSyncService
     }
 
     /**
+     * Fase 34: reflete no Google a edicao de um horario (titulo/descricao/
+     * horario). Fail-soft como todo o resto: null significa "nao deu pra
+     * sincronizar agora" e quem chama NUNCA desfaz a edicao local por causa
+     * disso - mostra aviso e deixa a reconciliacao sob demanda
+     * (verificarNovamente/reconciliar) acertar depois. Nao mexe em
+     * attendees: quem esta' inscrito continua inscrito, e a lista e'
+     * recomputada pelo proprio sincronizarAttendees() quando muda.
+     */
+    public function atualizar($organizadorEmail, $calendarId, $eventId, array $dadosEvento)
+    {
+        if ($calendarId === null || $eventId === null) {
+            return null;
+        }
+
+        $token = $this->obterToken($organizadorEmail);
+
+        if ($token === null) {
+            return null;
+        }
+
+        $resultado = GoogleCalendarService::atualizarEvento($token, $calendarId, $eventId, $dadosEvento);
+
+        if ($resultado === null) {
+            return null;
+        }
+
+        return ['google_sincronizado_em' => date('Y-m-d H:i:s')];
+    }
+
+    /**
      * Cancela o evento no Google (chamado antes de excluir o horario).
      * Sem evento pra cancelar (nunca integrado, ou integracao nunca chegou
      * a criar o evento) conta como sucesso - nao ha nada a fazer.

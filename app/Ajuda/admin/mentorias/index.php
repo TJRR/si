@@ -10,6 +10,14 @@ return [
     'resumo' => 'Horários de mentoria 1:1 — encontro individual entre uma equipe e um mentor específico, com exclusividade (a equipe pode ter no máximo 1 reserva ativa).',
     'operacoes' => [
         [
+            'nome' => 'Coluna "Restrito a"',
+            'como' => '"Aberto a todos" = qualquer equipe do concurso vê o compromisso. Com o nome de uma trilha e etapa, só quem está habilitado àquela etapa vê e se reserva. Vínculo definido no formulário do horário.',
+        ],
+        [
+            'nome' => 'Editar',
+            'como' => 'Aparece apenas enquanto o horário não começou. Depois da data de início, o botão de editar e o de remover somem — e o servidor recusa a ação mesmo se ela for forçada.',
+        ],
+        [
             'nome' => '+ Novo horário',
             'como' => 'Abre o formulário de um novo horário de mentoria.',
         ],

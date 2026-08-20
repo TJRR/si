@@ -10,6 +10,10 @@ return [
     'resumo' => 'Horários de mentoria 1:1 disponíveis — sua equipe pode ter no máximo 1 reserva ativa por vez.',
     'operacoes' => [
         [
+            'nome' => 'Quais horários aparecem',
+            'como' => 'Alguns horários são vinculados a uma etapa: nesse caso só aparecem para quem está habilitado a ela, ou seja, foi classificado na etapa anterior. Se um horário que você via sumiu da lista, é porque ele passou a ser restrito a uma etapa em que a sua equipe não está habilitada.',
+        ],
+        [
             'nome' => 'Reservar',
             'como' => 'Disponível em qualquer horário vago.',
             'observacao' => 'A reserva pode falhar se outra equipe reservar o mesmo horário no mesmo instante (corrida) — nesse caso, a tela mostra um aviso e o horário some da lista.',

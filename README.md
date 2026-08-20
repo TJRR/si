@@ -65,7 +65,7 @@ Este sistema foi construído para resolver isso de forma definitiva e reaproveit
   framework, sem serviço pago obrigatório, sem dependência de nuvem para
   funcionar.
 
-O sistema nasceu como fundação de dados e evoluiu ao longo de **32 fases
+O sistema nasceu como fundação de dados e evoluiu ao longo de **fases
 incrementais** até virar uma plataforma completa — cada fase entregue, testada e
 publicada em produção durante uma edição real do Prêmio de Inovação, com equipes
 reais, avaliadores reais e prazos reais.
@@ -193,7 +193,10 @@ automaticamente.
 mentoria é uma equipe por horário (reserva exclusiva); oficina é coletiva
 (inscrição de várias equipes no mesmo horário). O link da sala virtual só aparece
 para quem reservou ou está inscrito — nunca nas páginas públicas de
-transparência. Quando a integração com o Google Agenda está ativa, cada horário
+transparência. Cada horário pode ser **aberto a todos** ou **vinculado a uma
+etapa**: nesse caso só enxerga e se inscreve quem está habilitado a ela, pelo
+mesmo critério que libera a submissão — estar classificado na etapa anterior.
+Horário só pode ser editado ou removido antes da data marcada. Quando a integração com o Google Agenda está ativa, cada horário
 vira um evento real na agenda do organizador, com convite e RSVP dos
 participantes; e, depois do encontro, o sistema busca a **presença real** de quem
 entrou na sala e por quanto tempo.
@@ -291,7 +294,6 @@ integralmente corrigidos e publicados. As defesas atuais:
   estatísticos, sem manter o dado pessoal
 - Política de Privacidade e Termos de Serviço publicados como páginas próprias
 
-
 ---
 
 ## Arquitetura técnica
@@ -333,11 +335,11 @@ si/
 │   ├── Middleware/            # autorização por perfil e por concurso
 │   ├── Repositories/          # 56 repositórios — 1 por entidade, sempre PDO
 │   │                          # preparado + registro de auditoria
-│   ├── Services/              # 27 serviços — regras de negócio (avaliação,
+│   ├── Services/              # 28 serviços — regras de negócio (avaliação,
 │   │                          # inscrição, uploads, Google, PDF, SLA, notificação)
 │   ├── Validation/            # CPF, YouTube, upload de PDF
 │   ├── Ajuda/                 # ajuda contextual: 1 arquivo por tela + conceitos
-│   └── Views/                 # 140 telas (admin, participante, avaliador, público)
+│   └── Views/                 # 141 telas (admin, participante, avaliador, público)
 ├── assets/
 │   ├── css/site.css           # folha de estilo única do projeto
 │   ├── js/                    # JavaScript puro, 1 arquivo por funcionalidade
@@ -346,7 +348,7 @@ si/
 │                              # ficam fora do controle de versão
 ├── database/
 │   ├── migrate.php            # aplicador de migrations
-│   ├── migrations/            # 112 migrations numeradas e idempotentes
+│   ├── migrations/            # 113 migrations numeradas e idempotentes
 │   └── *.php                  # scripts operacionais de linha de comando
 ├── storage/                   # submissões privadas, logs e sessões
 └── docker-compose.yml         # ambiente de desenvolvimento
@@ -375,16 +377,16 @@ si/
 | Linhas de PHP no projeto | ~46.000 |
 | Controllers | 58 |
 | Repositórios | 56 |
-| Serviços de domínio | 27 |
-| Telas (views) | 140 |
+| Serviços de domínio | 28 |
+| Telas (views) | 141 |
 | Tabelas no banco | 63 |
-| Migrations | 112 |
+| Migrations | 113 |
 | Telas com ajuda contextual escrita | ~110 (+ 10 conceitos transversais) |
 | Scripts operacionais de linha de comando | 40 |
 | Folha de estilo | ~3.900 linhas, sem framework CSS |
 | JavaScript | ~1.800 linhas, sem biblioteca externa |
 | Dependências de terceiros | 2 (PHPMailer, Dompdf) |
-| Fases de desenvolvimento entregues | 32 |
+| Fases de desenvolvimento entregues | 34 |
 
 ---
 
@@ -460,7 +462,6 @@ só então repetir com `--confirmar`.
 | Equipes e integrantes | `gerenciar_membro_equipe`, `renomear_equipe`, `migrar_equipe_trilha` | Retificações de composição e de trilha, sem mexer no banco à mão |
 | Submissões | `diagnosticar_submissoes_equipe`, `remover_submissoes`, `reabrir_formulario_edicao`, `importar_submissoes_google_forms` | Diagnóstico, remoção controlada por id explícito e importação de respostas externas |
 | Avaliação | `diagnosticar_notas_avaliador`, `limpar_notas_avaliador`, `limpar_notas_teste`, `limpar_designacoes_etapa`, `limpar_avaliadores_fantasma`, `atribuir_numeros_sigilo_etapa` | Conferência e correção do processo avaliativo |
-| Acesso | `excluir_usuario`, `alterar_email_usuario`, `limpar_acesso_usuario`, `liberar_acesso_retroativo`, `liberar_acesso_auditoria` | Ações sensíveis que **de propósito não existem em tela** |
 | Disponibilidade | `desativar_sistema`, `reativar_sistema` | Modo de manutenção pela linha de comando |
 | Google | `capturar_presenca_google_meet`, `backfill_conference_id`, `testar_google_calendar`, `testar_google_meet_presenca` | Captura de presença, retrofit e diagnóstico das integrações |
 | Privacidade | `expurgar_nomes_presenca` | Aplicação da política de retenção de 30 dias |
@@ -471,11 +472,6 @@ por quê. Vários têm travas deliberadas — remover submissão que já tem not
 lançada, excluir usuário com notas, desfazer designação de sorteio — que só podem
 ser vencidas com uma flag explícita e adicional.
 
-O repositório também guarda alguns scripts de correção pontual, escritos para
-resolver um caso específico numa edição real. Eles são mantidos por
-rastreabilidade — não são ferramentas de uso geral e não devem ser executados sem
-leitura prévia.
-
 ### Modo de manutenção
 
 Uma verificação central no roteador, aplicada a **toda** requisição — autenticada
@@ -485,8 +481,6 @@ ou não — antes de resolver a rota. Com o modo ligado:
   Sessões abertas de outros perfis são encerradas na próxima ação.
 - É exibida uma página de manutenção com HTTP 503, **sem CSS nem JS externo** —
   para nunca depender de algo que possa estar no meio de uma atualização.
-- O módulo de autenticação continua acessível: é o único caminho para um
-  administrador entrar durante a manutenção.
 
 Liga e desliga pelo botão em *Configurações* ou pelos scripts de linha de comando
 equivalentes — que funcionam por acesso direto ao banco, servindo de interruptor
@@ -498,18 +492,14 @@ testar como administrador → reativar.
 
 ### Processo agendado
 
-Até a fase 31 o sistema era **100% requisição-resposta**: sem fila, sem worker,
-sem nada em segundo plano. A fase 32 introduziu o primeiro processo agendado — a
-captura de presença nas salas virtuais, executada periodicamente pelo agendador
-do servidor.
+O agendador do servidor executa periodicamente a captura de presença nas salas virtuais.
 
 Consequências práticas para quem opera:
 
 - **Uma atualização pode interromper um processo em andamento.** O script é
   seguro de interromper: processa um lote limitado por execução, grava de forma
   idempotente (reprocessar nunca duplica) e tem trava contra execuções
-  sobrepostas — trava local ao host, portanto não cobriria dois servidores
-  rodando o mesmo agendamento.
+  sobrepostas.
 - **Falha de processo agendado é silenciosa por natureza** — ninguém está olhando
   na hora em que ele roda. Por isso o próprio script notifica os administradores
   no painel quando esgota as tentativas de um horário, e registra log a cada
@@ -589,7 +579,7 @@ garantias.
 
 ## Histórico de evolução
 
-Trinta e duas fases, cada uma entregue e publicada em produção durante uma edição
+Trinta e quatro fases, cada uma entregue e publicada em produção durante uma edição
 real do prêmio.
 
 | Fase | Entrega |
@@ -623,13 +613,13 @@ real do prêmio.
 | 30 | **Modelos de Documento** com marcações `[[palavra.chave]]` e **Requerimentos** com assinatura gov.br e verificação automática de apoio |
 | 31 | **Integração com Google Agenda** (Service Account + delegação de domínio, RSVP), **ajuda contextual** em toda a plataforma, **auditoria de segurança completa** (CSRF central, limite de tentativas de login, cabeçalhos HTTP, correções de controle de acesso) |
 | 32 | **Relatório de presença real nas salas virtuais** por horário de Mentoria/Oficina (quem entrou, por quanto tempo, quem entrou sem convite), cruzando convidado → RSVP → presença; **primeiro processo agendado do projeto**; política de retenção de 30 dias para os nomes capturados |
+| 33 | Dados do órgão saem do código para Configurações (contato, mapa, assinatura de e-mail), README reescrito sem dados de infraestrutura, validação de link aplicada às redes sociais, Dúvidas e Requerimentos em popup, troca da própria senha |
+| 34 | **Vínculo de compromisso com etapa**: mentoria e oficina restritas a quem está habilitado à etapa, edição de horário com trava por data, correções de layout do cabeçalho em telas pequenas |
 
 ---
 
 <div align="center">
 
 **Núcleo de Projetos e Inovação — Tribunal de Justiça do Estado de Roraima**
-
-*Software público, livre e reaproveitável.*
 
 </div>
