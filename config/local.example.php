@@ -17,6 +17,21 @@ return [
         'base_path' => '',
         'env' => 'local',
     ],
+    // Fase 35 (Parte C): chave-mestra que cifra as credenciais guardadas em
+    // credenciais_sistema (migration 115). Gere uma com bastante entropia:
+    //
+    //     openssl rand -base64 32
+    //
+    // ATENCAO: trocar esta chave torna ILEGIVEL tudo que ja foi guardado no
+    // banco. Nao ha rotacao automatica de proposito - sao tres segredos ao
+    // todo, entao o procedimento e' trocar a chave e recadastra-los pela aba
+    // "Segurança" (ver NotasInternas.md).
+    //
+    // Vazia = a tela de Segurança avisa que nao consegue ler nem gravar, e o
+    // sistema continua usando os blocos abaixo, sem quebrar nada.
+    'cifra' => [
+        'chave_mestra' => '',
+    ],
     'google' => [
         'client_id' => 'SEU_CLIENT_ID.apps.googleusercontent.com',
         'client_secret' => 'SEU_CLIENT_SECRET',

@@ -13,7 +13,13 @@ $disponiveis = array_values(array_filter($faqs, function ($faq) {
 <div class="pagina-titulo-acoes">
     <h1>FAQ de <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
     <div class="pagina-titulo-botoes">
-        <a href="<?php echo url('faq/novo'); ?>" class="btn-acao">+ Nova pergunta no banco</a>
+        <?php // Fase 35: o atalho leva ao banco GERAL, que exige perfil global
+              // (ver FaqAdminController). Suporte/Administrador escopado a um
+              // concurso passou a alcancar ESTA tela, mas nao aquela - sem a
+              // condicao, o botao seria um 403 garantido pra esse perfil. ?>
+        <?php if (\App\Core\Auth::temPerfil('administrador') || \App\Core\Auth::temPerfil('suporte')): ?>
+            <a href="<?php echo url('faq/novo'); ?>" class="btn-acao">+ Nova pergunta no banco</a>
+        <?php endif; ?>
     </div>
 </div>
 <p>Ative perguntas do banco global para esta edição e arraste para definir a ordem de exibição no acordeão da home.</p>

@@ -54,6 +54,11 @@ class NavegacaoService
             ['tipo' => 'configuracaoBlocos', 'rotulo' => 'Blocos de conteúdo', 'rota' => 'blocos/index'],
             ['tipo' => 'configuracaoContato', 'rotulo' => 'Contato', 'rota' => 'contatosConcurso/index'],
             ['tipo' => 'configuracaoOrdenacao', 'rotulo' => 'Ordenação', 'rota' => 'ordenacaoHome/index'],
+            // Fase 35: o emoji entra no proprio rotulo - layout.php passa por
+            // htmlspecialchars(), que nao interfere, entao nao foi preciso
+            // mexer no desenho das abas. O cadeado sinaliza que esta aba e'
+            // diferente das demais: entrar nela avisa os outros administradores.
+            ['tipo' => 'configuracaoSeguranca', 'rotulo' => 'Segurança 🔐', 'rota' => 'seguranca/index'],
         ],
         /**
          * Fase 33: "Meu perfil" passa a usar as mesmas sub-abas das demais
@@ -100,6 +105,7 @@ class NavegacaoService
         'configuracaoBlocos' => 'configuracao',
         'configuracaoContato' => 'configuracao',
         'configuracaoOrdenacao' => 'configuracao',
+        'configuracaoSeguranca' => 'configuracao',
         'perfilDados' => 'perfil',
         'perfilSenha' => 'perfil',
         'perfilVisualizar' => 'perfil',
@@ -124,6 +130,23 @@ class NavegacaoService
             // sem abas somente-avaliadores para reagir a nada client-side.
             $definicoes = array_values(array_filter($definicoes, function ($definicao) {
                 return $definicao['tipo'] === 'etapa';
+            }));
+        }
+
+        if ($grupo === 'configuracao') {
+            // Fase 35: "Segurança 🔐" exige administrador GLOBAL
+            // (SegurancaAdminController usa exigir() sem concurso, que so'
+            // aceita vinculo com concurso_id NULL). A aba "Configurações" de
+            // primeiro nivel, porem, aparece com possuiPerfil() - ou seja,
+            // tambem para administrador escopado a UM concurso. Sem este
+            // filtro, esse perfil enxergaria a sub-aba e levaria 403 ao
+            // clicar. Mesmo defeito ja corrigido nesta fase na aba "FAQ";
+            // aqui e' a versao para as sub-abas, que abasPara() nao filtrava
+            // por perfil em nenhum grupo alem de 'etapa' e 'perfil'.
+            $ehGlobal = \App\Core\Auth::temPerfil('administrador');
+
+            $definicoes = array_values(array_filter($definicoes, function ($definicao) use ($ehGlobal) {
+                return $definicao['tipo'] !== 'configuracaoSeguranca' || $ehGlobal;
             }));
         }
 
@@ -294,7 +317,18 @@ class NavegacaoService
                 }
 
                 if (!\App\Core\Auth::possuiPerfil('administrador')) {
-                    return [self::noTrilhas($concurso), self::noMentorias($concurso), self::noOficinas($concurso)];
+                    // Fase 35: "FAQ desta edição" entra tambem aqui - Suporte
+                    // passa a ativar/reordenar perguntas do banco global na
+                    // edicao dele. A arvore e' so' navegacao (nao filtra por
+                    // concurso de proposito, ver NavegacaoController); quem
+                    // barra de verdade e' FaqConcursoAdminController, que
+                    // agora exige o perfil COM o concurso da URL.
+                    return [
+                        self::noTrilhas($concurso),
+                        self::noFaqConcurso($concurso),
+                        self::noMentorias($concurso),
+                        self::noOficinas($concurso),
+                    ];
                 }
 
                 return [

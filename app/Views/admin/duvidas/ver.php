@@ -54,6 +54,14 @@
     <?php if ($atrasada): ?>
         <span class="status-pill vermelho" title="Mais de 48h sem resposta">Atrasada</span>
     <?php endif; ?>
+    <?php // Fase 35: selo de rastro - a duvida ja rendeu pergunta(s) no banco de FAQ. ?>
+    <?php foreach ($faqsGerados as $gerado): ?>
+        <?php if ($perfilPublicaFaq): ?>
+            <a class="status-pill roxo" href="<?php echo url('faq/editar/' . (int) $gerado['id']); ?>" title="<?php echo htmlspecialchars($gerado['pergunta'], ENT_QUOTES, 'UTF-8'); ?>">Já virou FAQ</a>
+        <?php else: ?>
+            <span class="status-pill roxo" title="<?php echo htmlspecialchars($gerado['pergunta'], ENT_QUOTES, 'UTF-8'); ?>">Já virou FAQ</span>
+        <?php endif; ?>
+    <?php endforeach; ?>
     <?php if ($duvida['status'] === 'escalada'): ?>
         <span class="duvida-responsavel-atual">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -154,6 +162,34 @@
                     <p class="duvida-limite">Visível apenas pro responsável designado.</p>
                 </form>
             <?php endif; ?>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if ($podePromoverFaq): ?>
+    <div class="duvida-acoes-grid">
+        <div class="duvida-acao-card" id="promover-faq">
+            <h2>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                Pergunta frequente
+            </h2>
+            <p>Se esta resposta vale para todo mundo, aproveite-a como pergunta frequente. Você reescreve o texto em termos genéricos antes de publicar — a dúvida e a resposta originais continuam intactas e exclusivas desta equipe.</p>
+            <?php if (!empty($faqsGerados)): ?>
+                <p class="duvida-limite">Esta dúvida já gerou <?php echo count($faqsGerados); ?> pergunta(s). Confira antes de criar outra.</p>
+            <?php endif; ?>
+            <div class="duvida-acao-rodape">
+                <a class="btn-acao" href="<?php echo url('duvidaAdmin/promoverFaq/' . (int) $duvida['id']); ?>">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:0.3rem;">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Transformar em pergunta frequente
+                </a>
+            </div>
         </div>
     </div>
 <?php endif; ?>

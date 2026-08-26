@@ -69,7 +69,7 @@
                 <th>Equipe</th><th>Participante</th><th>Papel</th><th>CPF</th><th>E-mail</th><th>Telefone</th><th>Status</th><th>Ações</th>
             </tr>
             <?php foreach ($inscricoes as $item): ?>
-            <tr>
+            <tr id="linha-vinculo-<?php echo (int) $item['vinculo_id']; ?>"<?php echo $vinculoDestaque !== null && $vinculoDestaque === (int) $item['vinculo_id'] ? ' class="linha-destaque"' : ''; ?>>
                 <td><input type="checkbox" class="marcar-linha" name="vinculo_ids[]" value="<?php echo (int) $item['vinculo_id']; ?>" form="form-acoes-em-massa"></td>
                 <td><?php echo htmlspecialchars($item['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></td>
                 <td><?php echo htmlspecialchars($item['participante_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
@@ -148,4 +148,10 @@
             </button>
         </span>
     </p>
+
+    <?php if ($vinculoDestaque !== null): ?>
+        <script>
+            document.getElementById('linha-vinculo-<?php echo (int) $vinculoDestaque; ?>')?.scrollIntoView({ block: 'center' });
+        </script>
+    <?php endif; ?>
 <?php endif; ?>

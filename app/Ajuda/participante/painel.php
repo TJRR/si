@@ -11,7 +11,7 @@ return [
     'operacoes' => [
         [
             'nome' => 'Mentoria / Oficinas / Dúvidas / Requerimentos',
-            'como' => 'Botões condicionais — só aparecem quando aquele recurso está disponível para a sua trilha/etapa atual.',
+            'como' => 'Botões condicionais — só aparecem quando aquele recurso está disponível para a sua trilha/etapa atual. Os botões de Mentoria e Oficinas levam em conta o vínculo com etapa: se todos os horários do concurso forem restritos a etapas em que a sua equipe não está habilitada, o botão não aparece (em vez de abrir uma tela vazia).',
         ],
         [
             'nome' => 'Editar equipe',

@@ -72,6 +72,8 @@ class NotificacaoPainelController extends Controller
 
         if ($notificacao['tipo'] === 'participante_email_completo') {
             $this->convidarAPartirDaNotificacao($notificacao);
+        } elseif ($notificacao['tipo'] === 'cpf_alterado_pendente') {
+            $this->homologarAPartirDaNotificacao($notificacao);
         } else {
             $this->notificacoes->marcarLida($id);
         }
@@ -126,6 +128,55 @@ class NotificacaoPainelController extends Controller
         }
 
         $this->notificacoes->removerPorTipoEParticipante('participante_email_completo', $participanteId);
+    }
+
+    /**
+     * Fase 35: mesmo espirito de convidarAPartirDaNotificacao() acima - o
+     * check desta notificacao homologa o vinculo de verdade
+     * (EquipeRepository::homologarVinculo(), a mesma rotina usada pela tela
+     * de Homologacao) em vez de so' descartar o aviso. Nao chama
+     * AcessoParticipanteService::liberarAcesso() como a homologacao normal
+     * faz porque aqui o participante ja tem conta ativa havia mais tempo (ja
+     * estava homologado antes do CPF mudar) - chamar de novo geraria um
+     * e-mail de "defina sua senha" indevido pra quem ja acessa o sistema
+     * normalmente. So' homologa se o vinculo ainda estiver pendente - se
+     * outro admin ja resolveu pela tela normal (inclusive rejeitando), so
+     * descarta o aviso.
+     */
+    private function homologarAPartirDaNotificacao(array $notificacao)
+    {
+        $dados = $notificacao['dados'] !== null ? json_decode($notificacao['dados'], true) : null;
+        $vinculoId = isset($dados['vinculo_id']) ? (int) $dados['vinculo_id'] : null;
+        $participanteId = isset($dados['participante_id']) ? (int) $dados['participante_id'] : null;
+
+        if ($vinculoId === null || $participanteId === null) {
+            $this->notificacoes->marcarLida($notificacao['id']);
+            return;
+        }
+
+        $equipes = new EquipeRepository();
+        $vinculo = $equipes->buscarVinculoPorId($vinculoId);
+
+        if ($vinculo === null) {
+            $this->notificacoes->marcarLida($notificacao['id']);
+            return;
+        }
+
+        $equipe = $equipes->buscarPorId($vinculo['equipe_id']);
+        $trilha = $equipe !== null ? (new TrilhaRepository())->buscarPorId($equipe['trilha_id']) : null;
+        $concursoId = $trilha !== null ? $trilha['concurso_id'] : null;
+
+        if (!Auth::temPerfil('administrador', $concursoId) && !Auth::temPerfil('suporte', $concursoId)) {
+            $this->notificacoes->marcarLida($notificacao['id']);
+            return;
+        }
+
+        if ($vinculo['status_homologacao'] === 'pendente') {
+            $equipes->homologarVinculo($vinculoId, Auth::usuarioId());
+            $_SESSION['flash'] = 'Participante homologado.';
+        }
+
+        $this->notificacoes->removerPorTipoEParticipante('cpf_alterado_pendente', $participanteId);
     }
 
     public function marcarTodasLidas()

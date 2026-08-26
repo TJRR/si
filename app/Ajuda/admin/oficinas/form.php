@@ -6,8 +6,8 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Oficina — novo horário',
-    'resumo' => 'Criação de um horário de oficina. O organizador é sempre quem está logado — não há seleção de mentor.',
+    'titulo' => 'Oficina — novo horário / edição',
+    'resumo' => 'Cadastro de um horário de oficina. A mesma tela atende a criação de um horário novo e a edição de um horário já criado; o que muda entre as duas está descrito em "Editar / Remover". O organizador é sempre quem está logado — não há seleção de mentor.',
     'operacoes' => [
         [
             'nome' => 'Tema',
@@ -31,7 +31,7 @@ return [
         ],
         [
             'nome' => 'Editar / Remover',
-            'como' => 'Só antes da data de início. A partir do horário marcado, o compromisso não pode mais ser alterado nem removido. Na edição, o organizador e a integração com o Google Agenda não mudam — para trocar qualquer um dos dois, remova e crie outro. Quem já reservou ou se inscreveu é avisado por notificação e e-mail quando o horário muda.',
+            'como' => 'Só antes da data de início. A partir do horário marcado, o compromisso não pode mais ser alterado nem removido. Na edição, o organizador e a integração com o Google Agenda não mudam — para trocar qualquer um dos dois, remova e crie outro. As equipes inscritas são avisadas por notificação e e-mail apenas quando o início, o fim ou o tema mudam de fato; alterar só o vínculo de etapa, o link ou a observação não dispara aviso nenhum.',
         ],
     ],
     'conceitos' => ['integracao_google_agenda'],

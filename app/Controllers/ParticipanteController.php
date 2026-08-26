@@ -557,7 +557,7 @@ class ParticipanteController extends Controller
                 $this->participantes->atualizarDados($participante['id'], $nome, $telefone, $cpfNormalizado);
 
                 if ($cpfMudou) {
-                    $this->aposMudarCpf($participante);
+                    $this->aposMudarCpf($participante, $cpfNormalizado);
                     $sucesso = 'Dados atualizados. Como o CPF mudou, a inscrição volta para conferência do Suporte.';
                 } else {
                     $sucesso = 'Dados atualizados.';
@@ -581,9 +581,10 @@ class ParticipanteController extends Controller
      * e o alerta de "inscricao rejeitada" e' limpo nas contas de usuario
      * ligadas a ELE (usuariosDoParticipante), nao na de quem esta editando -
      * importante porque o lider pode estar editando o cadastro de outro
-     * integrante (ver editarIntegrante()).
+     * integrante (ver editarIntegrante()). $cpfAntigo vem do array recebido
+     * (ainda nao sobrescrito por atualizarDados() quando chega aqui).
      */
-    private function aposMudarCpf(array $participante)
+    private function aposMudarCpf(array $participante, $cpfNovo)
     {
         $equipe = $this->equipes->buscarPorParticipante($participante['id']);
 
@@ -601,6 +602,48 @@ class ParticipanteController extends Controller
 
         foreach ($this->usuarioParticipante->usuariosDoParticipante($participante['id']) as $usuarioId) {
             $this->notificacoes->removerPorTipo($usuarioId, 'equipe_rejeitada');
+        }
+
+        $this->notificarAdminSuporteCpfAlterado($equipe, $participante, $vinculo['id'], $participante['cpf'], $cpfNovo);
+    }
+
+    /**
+     * Fase 35: avisa administrador e suporte da trilha (sino de
+     * notificacoes) que uma homologacao ja concedida voltou pra pendente
+     * por causa de mudanca de CPF. O check desta notificacao homologa o
+     * vinculo na hora (NotificacaoPainelController::marcarLida(), tipo
+     * 'cpf_alterado_pendente') sem precisar abrir a tela de Homologacao;
+     * clicar no texto/titulo abre a tela normal (NotificacaoPainelController::
+     * abrir(), via 'url' em dados) com a linha do vinculo em destaque, pra
+     * quem preferir conferir os dados completos antes de decidir.
+     */
+    private function notificarAdminSuporteCpfAlterado(array $equipe, array $participante, $vinculoId, $cpfAntigo, $cpfNovo)
+    {
+        $trilha = $this->trilhas->buscarPorId($equipe['trilha_id']);
+        $mensagem = '"' . $participante['nome'] . '" (equipe "' . $equipe['nome_equipe'] . '") alterou o CPF de '
+            . $cpfAntigo . ' para ' . $cpfNovo
+            . ' e a inscrição voltou para pendente de homologação.';
+
+        $destinatarios = [];
+        foreach (['administrador', 'suporte'] as $perfilChave) {
+            foreach ($this->perfis->listarUsuariosPorPerfilConcurso($perfilChave, $trilha['concurso_id']) as $usuario) {
+                $destinatarios[(int) $usuario['id']] = $usuario;
+            }
+        }
+
+        foreach ($destinatarios as $usuario) {
+            $this->notificacoes->criar(
+                $usuario['id'],
+                'cpf_alterado_pendente',
+                'CPF alterado — pendente de homologação',
+                $mensagem,
+                [
+                    'url' => url('homologacao/index/' . (int) $equipe['trilha_id']) . '?status=pendente&destaque=' . (int) $vinculoId,
+                    'vinculo_id' => (int) $vinculoId,
+                    'trilha_id' => (int) $equipe['trilha_id'],
+                    'participante_id' => (int) $participante['id'],
+                ]
+            );
         }
     }
 

@@ -120,6 +120,32 @@ class PerfilRepository
     }
 
     /**
+     * Fase 35 (Parte C): so' quem tem o perfil com vinculo GLOBAL
+     * (concurso_id NULL). Diferente de listarUsuariosPorPerfilConcurso(),
+     * que tambem traz quem esta escopado ao concurso informado.
+     *
+     * Usado pela aba Segurança para avisar os demais administradores
+     * globais - que sao exatamente os que podem entrar la'. Avisar
+     * administrador escopado seria ruido: ele nao tem acesso a essa tela e
+     * nao pode fazer nada com a informacao.
+     */
+    public function listarUsuariosGlobaisPorPerfil($perfilChave)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT DISTINCT u.*
+             FROM usuarios u
+             INNER JOIN usuario_perfil_concurso upc ON upc.usuario_id = u.id
+             INNER JOIN perfis p ON p.id = upc.perfil_id
+             WHERE p.chave = :chave AND upc.concurso_id IS NULL
+             ORDER BY u.nome ASC'
+        );
+        $stmt->execute(['chave' => $perfilChave]);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
      * Fase 29 (Tira-Duvidas): inverso de listarUsuariosPorPerfilConcurso() -
      * a que concurso(s) este usuario tem acesso, num dado perfil. Retorna
      * null quando o usuario tem vinculo GLOBAL (concurso_id NULL) - nesse

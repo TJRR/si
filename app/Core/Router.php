@@ -56,6 +56,7 @@ use App\Controllers\RequerimentoAdminController;
 use App\Controllers\RequerimentoController;
 use App\Controllers\ResultadoAdminController;
 use App\Controllers\ResultadoPublicoController;
+use App\Controllers\SegurancaAdminController;
 use App\Controllers\SessaoController;
 use App\Controllers\SlideAdminController;
 use App\Controllers\SubmissaoController;
@@ -114,6 +115,7 @@ class Router
         'auditoria' => AuditoriaAdminController::class,
         'configuracoes' => ConfiguracaoAdminController::class,
         'meuPerfil' => MeuPerfilController::class,
+        'seguranca' => SegurancaAdminController::class,
         'sessao' => SessaoController::class,
         'editorMidia' => EditorMidiaAdminController::class,
         'slides' => SlideAdminController::class,

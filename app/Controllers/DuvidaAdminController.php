@@ -10,12 +10,15 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
+use App\Repositories\ConcursoRepository;
 use App\Repositories\DuvidaEscalonamentoRepository;
 use App\Repositories\DuvidaRepository;
 use App\Repositories\DuvidaRespostaRepository;
 use App\Repositories\EquipeRepository;
+use App\Repositories\FaqConcursoRepository;
 use App\Repositories\NotificacaoPainelRepository;
 use App\Repositories\PerfilRepository;
+use App\Repositories\PerguntaFrequenteRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Services\ArquivoService;
 
@@ -33,6 +36,9 @@ use App\Services\ArquivoService;
  */
 class DuvidaAdminController extends Controller
 {
+    /** Espelha perguntas_frequentes.pergunta VARCHAR(255) (migration 070). */
+    const LIMITE_PERGUNTA = 255;
+
     private $duvidas;
     private $respostas;
     private $escalonamentos;
@@ -41,6 +47,9 @@ class DuvidaAdminController extends Controller
     private $notificacoes;
     private $perfis;
     private $arquivos;
+    private $faqs;
+    private $faqConcurso;
+    private $concursos;
 
     public function __construct()
     {
@@ -69,6 +78,9 @@ class DuvidaAdminController extends Controller
         $this->notificacoes = new NotificacaoPainelRepository();
         $this->perfis = new PerfilRepository();
         $this->arquivos = new ArquivoService();
+        $this->faqs = new PerguntaFrequenteRepository();
+        $this->faqConcurso = new FaqConcursoRepository();
+        $this->concursos = new ConcursoRepository();
     }
 
     /**
@@ -111,13 +123,23 @@ class DuvidaAdminController extends Controller
             exit('Acesso negado: esta dúvida está com outro responsável.');
         }
 
+        $respostas = $this->respostas->listarPorDuvida((int) $id);
+
         $this->renderizar('admin/duvidas/ver', [
             'duvida' => $duvida,
-            'respostas' => $this->respostas->listarPorDuvida((int) $id),
+            'respostas' => $respostas,
             'escalonamentos' => $this->escalonamentos->listarPorDuvida((int) $id),
             'atendentesDisponiveis' => $this->atendentesDisponiveis((int) $duvida['concurso_id']),
             'limiteMB' => ArquivoService::limiteMaximoMB(),
             'atrasada' => $this->emAtraso($duvida),
+            // Fase 35: dois flags distintos de proposito. O card da acao so'
+            // aparece com resposta ja registrada; o LINK do selo "ja virou
+            // FAQ" depende so' do perfil, porque leva a FaqAdminController,
+            // que exige perfil global - pra quem nao tem, o selo aparece sem
+            // link, em vez de oferecer um caminho que da' 403.
+            'podePromoverFaq' => $this->podePromoverFaq() && !empty($respostas),
+            'perfilPublicaFaq' => $this->podePromoverFaq(),
+            'faqsGerados' => $this->faqs->listarPorDuvida((int) $id),
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
         ], 'Dúvida');
 
@@ -217,6 +239,169 @@ class DuvidaAdminController extends Controller
 
         $_SESSION['flash'] = 'Dúvida retomada — de volta à fila geral.';
         $this->redirecionar('home/administrativo');
+    }
+
+    /**
+     * Fase 35: aproveita uma duvida ja respondida como pergunta/resposta
+     * GENERICA no banco de FAQ. A duvida original e a resposta original
+     * ficam intactas e exclusivas da equipe que perguntou - o que nasce aqui
+     * e' um item NOVO, editavel, sem vinculo de exibicao com a equipe de
+     * origem (perguntas_frequentes.duvida_id e' rastro interno de auditoria,
+     * ver migration 114, e nunca vai pra home).
+     *
+     * NUNCA grava direto: sempre abre o formulario pre-preenchido, com
+     * edicao obrigatoria antes de salvar. O texto de uma duvida foi escrito
+     * por um participante e pode conter nome de equipe, nome de projeto,
+     * dado pessoal e detalhe de submissao sob sigilo - e o destino dele aqui
+     * e' uma pagina publica.
+     *
+     * A duvida nao muda de status nem de conteudo, e a equipe autora NAO e'
+     * notificada (decisao da fase): o item publicado e' generico e reescrito,
+     * avisar so' chamaria atencao pra um vinculo que o desenho apaga.
+     */
+    public function promoverFaq($id)
+    {
+        $duvida = $this->duvidas->buscarPorId((int) $id);
+
+        if ($duvida === null) {
+            http_response_code(404);
+            exit('Dúvida não encontrada.');
+        }
+
+        if (!$this->podeAgir($duvida)) {
+            http_response_code(403);
+            exit('Acesso negado: esta dúvida está com outro responsável.');
+        }
+
+        if (!$this->podePromoverFaq()) {
+            http_response_code(403);
+            exit('Acesso negado: publicar no banco de perguntas frequentes exige perfil global.');
+        }
+
+        $respostas = $this->respostas->listarPorDuvida((int) $id);
+
+        // Nao "status === respondida": uma duvida REABERTA volta pra
+        // 'recebida' mantendo o historico de respostas, e continua sendo
+        // material legitimo pra FAQ. O que importa e' existir resposta.
+        if (empty($respostas)) {
+            flashAlerta('Só é possível transformar em pergunta frequente uma dúvida que já tenha resposta.');
+            $this->redirecionar('duvidaAdmin/ver/' . (int) $id);
+            return;
+        }
+
+        $concursos = $this->concursos->listar();
+        $erro = null;
+        $entrada = $_SERVER['REQUEST_METHOD'] === 'POST'
+            ? $this->entradaFaqDoPost()
+            : $this->sementeFaq($duvida, $respostas);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $erro = $this->validarPromocao($entrada, $concursos);
+
+            if ($erro === null) {
+                $faqId = $this->faqs->criar(
+                    $entrada['pergunta'],
+                    $entrada['resposta'],
+                    $entrada['categoria'] !== '' ? $entrada['categoria'] : null,
+                    (int) $id
+                );
+
+                if ($entrada['ativar']) {
+                    $this->faqConcurso->ativar($faqId, $entrada['concurso_id']);
+                    flashSucesso('Pergunta criada no banco geral e ativada na edição escolhida — já aparece na home.');
+                } else {
+                    flashAlerta('Pergunta criada no banco geral. Ela ainda NÃO aparece em nenhuma home: ative-a em "FAQ desta edição" quando quiser publicar.');
+                }
+
+                $this->redirecionar('duvidaAdmin/ver/' . (int) $id);
+                return;
+            }
+        }
+
+        $this->renderizar('admin/duvidas/promover_faq', [
+            'erro' => $erro,
+            'duvida' => $duvida,
+            'respostas' => $respostas,
+            'entrada' => $entrada,
+            'concursos' => $concursos,
+            'faqsGerados' => $this->faqs->listarPorDuvida((int) $id),
+            'limitePergunta' => self::LIMITE_PERGUNTA,
+        ], 'Transformar dúvida em pergunta frequente');
+    }
+
+    /**
+     * Fase 35: promover ESCREVE no banco global de perguntas
+     * (perguntas_frequentes), que e' acumulativo entre TODAS as edicoes - por
+     * isso o criterio e' o mesmo do construtor de FaqAdminController: perfil
+     * GLOBAL. temPerfil() sem $concursoId so' aceita vinculo com concurso_id
+     * NULL. Quem e' escopado a um concurso atende a duvida normalmente
+     * (responder/escalar), mas nao publica no banco geral - o FAQ que ele
+     * administra e' o da edicao dele, em FaqConcursoAdminController.
+     *
+     * Colaborador fica de fora por consequencia: nao tem nem um nem outro.
+     */
+    private function podePromoverFaq()
+    {
+        return Auth::temPerfil('administrador') || Auth::temPerfil('suporte');
+    }
+
+    /**
+     * Fase 35: semente do formulario de promocao. A resposta usada e' a MAIS
+     * RECENTE - listarPorDuvida() vem ORDER BY criado_em ASC, entao e' a
+     * ULTIMA do array, nao a primeira (duvida reaberta acumula respostas). As
+     * anteriores vao pra tela em somente-leitura, pra copiar trecho.
+     *
+     * perguntas_frequentes.pergunta e' VARCHAR(255) e duvidas.pergunta e'
+     * TEXT: a semente e' cortada pra caber e a tela avisa quando isso
+     * acontece. O admin reescreve de qualquer jeito - o desabafo de uma
+     * duvida raramente e' uma boa pergunta generica.
+     */
+    private function sementeFaq(array $duvida, array $respostas)
+    {
+        $ultima = end($respostas);
+
+        return [
+            'pergunta' => mb_substr(trim($duvida['pergunta']), 0, self::LIMITE_PERGUNTA),
+            'resposta' => trim($ultima['resposta']),
+            'categoria' => '',
+            'ativar' => true,
+            'concurso_id' => (int) $duvida['concurso_id'],
+        ];
+    }
+
+    private function entradaFaqDoPost()
+    {
+        return [
+            'pergunta' => trim(isset($_POST['pergunta']) ? $_POST['pergunta'] : ''),
+            'resposta' => trim(isset($_POST['resposta']) ? $_POST['resposta'] : ''),
+            'categoria' => trim(isset($_POST['categoria']) ? $_POST['categoria'] : ''),
+            'ativar' => isset($_POST['destino']) && $_POST['destino'] === 'ativar',
+            'concurso_id' => (int) (isset($_POST['concurso_id']) ? $_POST['concurso_id'] : 0),
+        ];
+    }
+
+    private function validarPromocao(array $entrada, array $concursos)
+    {
+        if ($entrada['pergunta'] === '') {
+            return 'Escreva a pergunta.';
+        }
+
+        // Espelha perguntas_frequentes.pergunta VARCHAR(255) (migration 070):
+        // sem esta checagem o MySQL trunca em silencio - ou erra, em strict
+        // mode - uma pergunta colada inteira da duvida, que e' TEXT.
+        if (mb_strlen($entrada['pergunta']) > self::LIMITE_PERGUNTA) {
+            return 'A pergunta deve ter no máximo ' . self::LIMITE_PERGUNTA . ' caracteres.';
+        }
+
+        if ($entrada['resposta'] === '') {
+            return 'Escreva a resposta.';
+        }
+
+        if ($entrada['ativar'] && !in_array($entrada['concurso_id'], array_map('intval', array_column($concursos, 'id')), true)) {
+            return 'Selecione a edição em que a pergunta deve ficar ativa.';
+        }
+
+        return null;
     }
 
     /**

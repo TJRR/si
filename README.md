@@ -203,7 +203,15 @@ entrou na sala e por quanto tempo.
 
 **Tira-Dúvidas** é o canal formal do participante: dúvida com anexo, resposta,
 reabertura, prazo de atendimento monitorado e escalonamento para um colaborador
-externo quando a resposta depende de outra área.
+externo quando a resposta depende de outra área. Uma dúvida já respondida
+costuma valer para todo mundo, e não só para quem perguntou: o Administrador
+pode **aproveitá-la como pergunta frequente**, publicando-a no banco de FAQ — só
+no banco geral, ou já ativa na edição em curso. A promoção nunca é um clique de
+cópia: abre um formulário para reescrever pergunta e resposta em termos
+genéricos, porque o texto de origem é privado e pode conter nome de equipe, dado
+pessoal e detalhe de submissão sob sigilo. A dúvida original permanece intacta e
+exclusiva da equipe que perguntou, e o item publicado não guarda vínculo visível
+com ela.
 
 **Modelos de Documento e Requerimentos** cobrem o que antes era feito por e-mail:
 o Administrador escreve um modelo em editor rico usando marcações do tipo
@@ -271,6 +279,17 @@ integralmente corrigidos e publicados. As defesas atuais:
   chegar ao controller, com comparação em tempo constante
 - Cabeçalhos `X-Frame-Options`, `X-Content-Type-Options` e `Referrer-Policy`
 - Autorização por perfil **e** por concurso em middleware, não espalhada nas telas
+
+**Credenciais de integração**
+- Guardadas **cifradas em repouso** (AES-256-GCM, vetor de inicialização por
+  gravação, modo autenticado), não em arquivo de configuração
+- Administráveis por tela, na aba **Segurança** de Configurações, restrita ao
+  Administrador com perfil global
+- A tela **nunca exibe o valor** de um segredo: mostra uma impressão digital
+  (resumo SHA-256) que identifica qual credencial está instalada sem revelá-la
+- Abrir a tela ou gravar uma credencial **registra na auditoria e notifica os
+  demais administradores** — sem incluir nenhum valor
+- A trilha de auditoria descarta valores de campos sensíveis antes de gravar
 
 **Dados e arquivos**
 - Acesso ao banco exclusivamente por PDO com *prepared statements*

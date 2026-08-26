@@ -57,17 +57,26 @@ if ($ehPainelAdmin) {
         $abasAdmin[] = ['rotulo' => 'Painel', 'url' => 'home/administrativo', 'ativo' => $moduloAtual === 'home'];
     }
 
+    // Fase 35: o banco GERAL de FAQ passa a aceitar Suporte, mas so' com
+    // vinculo GLOBAL - temPerfil() sem concurso so' reconhece concurso_id
+    // NULL, que e' o mesmo criterio do construtor de FaqAdminController.
+    // possuiPerfil() aqui mostraria a aba pra quem esta escopado a um
+    // concurso e so' levaria a um 403: esse perfil edita o FAQ da propria
+    // edicao, pela arvore de Concursos ("FAQ desta edição").
+    if (\App\Core\Auth::temPerfil('administrador') || \App\Core\Auth::temPerfil('suporte')) {
+        $abasAdmin[] = ['rotulo' => 'FAQ', 'url' => 'faq/index', 'ativo' => $moduloAtual === 'faq'];
+    }
+
     if (\App\Core\Auth::possuiPerfil('administrador')) {
         // Fase 18: "Páginas" (ConteudoAdminController, conteudos_site) sai do
         // menu - substituida pelas telas novas (Slides, Banners, Blocos de
         // conteudo, Contato). Rota/tabela preservadas (sem DROP), so' o
         // link de navegacao foi retirado.
-        $abasAdmin[] = ['rotulo' => 'FAQ', 'url' => 'faq/index', 'ativo' => $moduloAtual === 'faq'];
         $abasAdmin[] = ['rotulo' => 'Auditoria', 'url' => 'auditoria/index', 'ativo' => $moduloAtual === 'auditoria'];
         // Fase 19 (#84 v2): Tema/Mídia/Slideshow/Banners/Blocos/Contato
         // deixaram de ser abas de nivel 1 - viraram sub-abas de
         // "Configurações" (ver NavegacaoService::$abasPorGrupo['configuracao']).
-        $modulosConfiguracao = ['configuracoes', 'tema', 'midia', 'slides', 'banners', 'blocos', 'contatosConcurso', 'ordenacaoHome'];
+        $modulosConfiguracao = ['configuracoes', 'tema', 'midia', 'slides', 'banners', 'blocos', 'contatosConcurso', 'ordenacaoHome', 'seguranca'];
         $abasAdmin[] = ['rotulo' => 'Configurações', 'url' => 'configuracoes/index', 'ativo' => in_array($moduloAtual, $modulosConfiguracao, true)];
     }
 
@@ -146,8 +155,17 @@ if ($ehPainelAdmin) {
                                     </a>
                                     <?php if (empty($notificacao['lida'])): ?>
                                         <?php $ehConvitePendente = $notificacao['tipo'] === 'participante_email_completo'; ?>
+                                        <?php $ehCpfAlterado = $notificacao['tipo'] === 'cpf_alterado_pendente'; ?>
+                                        <?php
+                                            $tituloIcone = 'Marcar como lida';
+                                            if ($ehConvitePendente) {
+                                                $tituloIcone = 'Convidar acesso agora';
+                                            } elseif ($ehCpfAlterado) {
+                                                $tituloIcone = 'Homologar agora';
+                                            }
+                                        ?>
                                         <form method="post" action="<?php echo url('notificacoesPainel/marcarLida/' . (int) $notificacao['id']); ?>"><?= campoCsrf() ?>
-                                            <button type="submit" class="btn-icone" title="<?php echo $ehConvitePendente ? 'Convidar acesso agora' : 'Marcar como lida'; ?>">
+                                            <button type="submit" class="btn-icone" title="<?php echo $tituloIcone; ?>">
                                                 <?php if ($ehConvitePendente): ?>
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                                         <path d="M22 2 11 13"></path>

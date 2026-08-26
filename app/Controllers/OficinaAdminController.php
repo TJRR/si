@@ -199,8 +199,13 @@ class OficinaAdminController extends Controller
             ? $this->entradaDoPost()
             : [
                 'tema' => $horario['tema'],
-                'data_inicio' => substr($horario['data_inicio'], 0, 16),
-                'data_fim' => substr($horario['data_fim'], 0, 16),
+                // Fase 35: date('Y-m-d\TH:i') no lugar de substr(). O banco
+                // devolve DATETIME com espaco ("2026-08-25 14:00:00") e
+                // <input type="datetime-local"> so' aceita o "T"
+                // ("2026-08-25T14:00") - com o espaco o navegador descarta o
+                // valor e o campo, que e' required, abria vazio na edicao.
+                'data_inicio' => date('Y-m-d\TH:i', strtotime($horario['data_inicio'])),
+                'data_fim' => date('Y-m-d\TH:i', strtotime($horario['data_fim'])),
                 'link_meet' => (string) $horario['link_meet'],
                 'observacao' => (string) $horario['observacao'],
                 'etapa_id' => $horario['etapa_id'] !== null ? (int) $horario['etapa_id'] : null,
@@ -272,8 +277,15 @@ class OficinaAdminController extends Controller
             }
         }
 
-        $mudouHorario = substr($antes['data_inicio'], 0, 16) !== $entrada['data_inicio']
-            || substr($antes['data_fim'], 0, 16) !== $entrada['data_fim'];
+        // Fase 35: comparar por strtotime() dos dois lados, nunca como texto.
+        // $antes vem do banco (com espaco) e $entrada vem do datetime-local
+        // (com "T"): comparadas como string nunca sao iguais, entao
+        // $mudouHorario dava sempre true - toda gravacao caia no laco de
+        // notificacao e disparava Mailer::enviar() sincrono por integrante
+        // (dai o request de ~1 minuto), avisando as equipes de uma alteracao
+        // de horario que nunca houve.
+        $mudouHorario = strtotime($antes['data_inicio']) !== strtotime($entrada['data_inicio'])
+            || strtotime($antes['data_fim']) !== strtotime($entrada['data_fim']);
         $mudouTema = $antes['tema'] !== $entrada['tema'];
 
         if (!$mudouHorario && !$mudouTema) {

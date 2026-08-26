@@ -15,6 +15,9 @@ use App\Repositories\PerguntaFrequenteRepository;
  * Banco GLOBAL de perguntas frequentes (Fase 18) - aba de nível 1 do admin,
  * igual "Páginas"/"Tema", pois não pertence a nenhum concurso específico.
  * Ativação por edição fica em FaqConcursoAdminController (rota faqConcurso).
+ *
+ * Fase 35: como o banco é global, o acesso aqui exige perfil GLOBAL
+ * (administrador ou suporte sem concurso). Ver o construtor.
  */
 class FaqAdminController extends Controller
 {
@@ -22,7 +25,16 @@ class FaqAdminController extends Controller
 
     public function __construct()
     {
-        RoleMiddleware::exigir(['administrador']);
+        // Fase 35: Suporte tambem edita o banco GERAL, mas so' com vinculo
+        // GLOBAL. exigir() SEM $concursoId e' exatamente esse criterio:
+        // Auth::temPerfil() so' devolve true pra vinculo com concurso_id
+        // NULL quando nao ha concurso pra comparar. Nao trocar por
+        // exigirEmQualquerConcurso() - isso deixaria entrar quem esta
+        // escopado a UM concurso, e este banco e' global e acumulativo
+        // entre TODAS as edicoes (mexer aqui altera a home de edicoes que
+        // essa pessoa nao administra). Quem e' escopado edita o FAQ da
+        // propria edicao, em FaqConcursoAdminController.
+        RoleMiddleware::exigir(['administrador', 'suporte']);
         $this->faqs = new PerguntaFrequenteRepository();
     }
 

@@ -572,6 +572,24 @@ body.admin-page a.btn-icone:focus {
     display: inline-flex;
 }
 
+/* Realca a linha de uma tabela quando a pagina chega por um link com o
+   vinculo em destaque (ex.: notificacao de CPF alterado apontando pra tela
+   de Homologacao) - fundo laranja claro que esmaece sozinho apos alguns
+   segundos, sem exigir clique do usuario pra sumir. */
+@keyframes linha-destaque-esmaecer {
+    0%, 60% {
+        background: #fff4ec;
+    }
+    100% {
+        background: transparent;
+    }
+}
+
+.linha-destaque {
+    animation: linha-destaque-esmaecer 4s ease-out forwards;
+    box-shadow: inset 3px 0 0 #a0630d;
+}
+
 /* Hero */
 .hero {
     position: relative;
@@ -4108,4 +4126,200 @@ body.admin-page button.campo-cor-limpar::after {
     gap: 0.25rem;
     color: var(--cor-texto-suave);
     white-space: nowrap;
+}
+
+/* Fase 35: tela "Transformar dúvida em pergunta frequente"
+   (admin/duvidas/promover_faq). Cores seguem a convenção do projeto:
+   laranja = alerta/atenção, sem verde nem vermelho aqui porque nada nesta
+   tela é sucesso nem erro — são avisos que o admin precisa ler ANTES de
+   publicar texto de origem privada numa página pública. */
+.promover-faq-aviso {
+    border: 1px solid var(--cor-borda);
+    border-left-width: 4px;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    background: var(--cor-fundo-alt);
+    font-size: 0.9rem;
+}
+
+.promover-faq-aviso.atencao,
+.promover-faq-aviso.alerta {
+    border-left-color: #a0630d;
+}
+
+.promover-faq-aviso ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+}
+
+.promover-faq-dica {
+    font-size: 0.8rem;
+    color: var(--cor-texto-suave);
+    margin: 0.35rem 0 0.9rem;
+}
+
+.promover-faq-destino {
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+}
+
+.promover-faq-destino legend {
+    font-weight: 600;
+    padding: 0 0.35rem;
+}
+
+.promover-faq-anterior {
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    padding: 0.6rem 0.9rem;
+    margin-bottom: 0.6rem;
+    background: var(--cor-fundo-alt);
+    font-size: 0.9rem;
+}
+
+/* Fase 35: o selo "Já virou FAQ" na tela da dúvida é um link (leva ao item
+   no banco de FAQ), enquanto todos os outros selos são <span> — sem isto
+   ele herdaria o sublinhado padrão de <a> e destoaria da fileira. */
+a.status-pill {
+    text-decoration: none;
+}
+
+/* Fase 35 (Parte C): aba "Segurança 🔐" — antessala e tela de credenciais.
+   A camada branca da antessala é intencionalmente sóbria e sem cor de
+   alerta: ela não comunica erro, comunica consequência. */
+.seguranca-antessala {
+    display: flex;
+    justify-content: center;
+    padding: 2.5rem 1rem;
+}
+
+.seguranca-antessala-cartao {
+    background: #fff;
+    border: 1px solid var(--cor-borda);
+    border-radius: 10px;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+    max-width: 560px;
+    text-align: center;
+}
+
+.seguranca-antessala-icone {
+    font-size: 2.5rem;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.seguranca-antessala-cartao h1 {
+    margin: 0 0 1rem;
+}
+
+.seguranca-antessala-aviso {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0 0 1rem;
+}
+
+.seguranca-antessala-detalhe {
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+    line-height: 1.5;
+    margin: 1rem 0 0;
+}
+
+.seguranca-aviso {
+    border: 1px solid var(--cor-borda);
+    border-left: 4px solid #a0630d;
+    border-radius: 6px;
+    background: var(--cor-fundo-alt);
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+.seguranca-aviso.critico {
+    border-left-color: #a3242c;
+}
+
+.seguranca-grupo {
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 1rem 1.25rem 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.seguranca-grupo h2 {
+    margin-top: 0;
+    font-size: 1.05rem;
+}
+
+.seguranca-campo {
+    margin-bottom: 1.1rem;
+}
+
+.seguranca-campo label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.2rem;
+}
+
+.seguranca-campo input[type="text"],
+.seguranca-campo input[type="email"],
+.seguranca-campo textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85rem;
+}
+
+.seguranca-etiqueta {
+    display: inline-block;
+    background: #ede4fb;
+    color: #6b3fa0;
+    border-radius: 10px;
+    padding: 0.05rem 0.45rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 0.35rem;
+    vertical-align: 1px;
+}
+
+.seguranca-estado {
+    font-size: 0.8rem;
+    color: var(--cor-texto-suave);
+    margin: 0.15rem 0 0.4rem;
+}
+
+.seguranca-autoria {
+    margin-left: 0.4rem;
+}
+
+.seguranca-vazio {
+    font-style: italic;
+}
+
+.seguranca-ilegivel {
+    color: #a3242c;
+}
+
+.seguranca-teste {
+    border-top: 1px dashed var(--cor-borda);
+    padding-top: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.seguranca-teste label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.seguranca-teste input[type="email"] {
+    max-width: 320px;
+    margin-right: 0.5rem;
 }
