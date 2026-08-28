@@ -16,6 +16,7 @@ use App\Repositories\SubmissaoRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Services\AcessoEtapaService;
 use App\Services\CampoDinamicoService;
+use App\Services\PermissaoParticipanteService;
 use App\Services\SubmissaoService;
 
 class SubmissaoController extends Controller
@@ -154,9 +155,7 @@ class SubmissaoController extends Controller
             return null;
         }
 
-        $vinculo = $equipes->buscarVinculo($equipe['id'], $participantes[0]['id']);
-
-        if ($vinculo === null || $vinculo['status_homologacao'] !== 'homologado') {
+        if (!(new PermissaoParticipanteService())->podeExecutar($participantes[0]['id'], 'submeter')) {
             return null;
         }
 

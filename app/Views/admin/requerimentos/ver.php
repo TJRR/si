@@ -38,7 +38,11 @@
     </p>
     <p><strong>Modelo:</strong> <?php echo htmlspecialchars($requerimento['modelo_nome'], ENT_QUOTES, 'UTF-8'); ?></p>
     <p><strong>Equipe:</strong> <?php echo htmlspecialchars($requerimento['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></p>
-    <p><strong>Líder:</strong> <?php echo htmlspecialchars($requerimento['participante_nome'], ENT_QUOTES, 'UTF-8'); ?></p>
+    <p><strong>Líder:</strong> <?php echo htmlspecialchars($requerimento['participante_nome'], ENT_QUOTES, 'UTF-8'); ?>
+        <?php if ($estadoParticipante !== null): ?>
+            <span class="status-pill <?php echo \App\Services\PermissaoParticipanteService::corDoEstado($estadoParticipante); ?>"><?php echo \App\Services\PermissaoParticipanteService::rotuloDoEstado($estadoParticipante); ?></span>
+        <?php endif; ?>
+    </p>
     <p><strong>Trilha:</strong> <?php echo htmlspecialchars($requerimento['trilha_nome'], ENT_QUOTES, 'UTF-8'); ?></p>
     <p><strong>Necessidade:</strong><br><?php echo nl2br(htmlspecialchars($requerimento['necessidade'], ENT_QUOTES, 'UTF-8')); ?></p>
     <p><strong>Responsável atual:</strong> <?php echo $requerimento['responsavel_nome'] !== null ? htmlspecialchars($requerimento['responsavel_nome'], ENT_QUOTES, 'UTF-8') : 'Fila geral'; ?></p>

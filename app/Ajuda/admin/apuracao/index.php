@@ -28,6 +28,11 @@ return [
             'icone' => 'despublicar',
             'como' => 'Apaga o resultado publicado e volta a mostrar a prévia recalculada.',
         ],
+        [
+            'nome' => 'Destaque público',
+            'icone' => 'ver',
+            'como' => 'Coluna que aparece só depois de publicado — o lápis abre a tela de resumo/imagem de destaque de cada colocação (mesma tela usada em Edições Anteriores).',
+        ],
     ],
     'conceitos' => ['publicar_trava', 'permissao_suporte_admin'],
 ];

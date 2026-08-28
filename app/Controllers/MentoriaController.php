@@ -19,12 +19,16 @@ use App\Repositories\UsuarioParticipanteRepository;
 use App\Repositories\UsuarioRepository;
 use App\Services\EventoEtapaService;
 use App\Services\GoogleCalendarSyncService;
+use App\Services\PermissaoParticipanteService;
 
 /**
  * Fase 19 (#106): lado do participante - ve horarios vagos do concurso da
- * propria equipe e reserva/cancela. So' equipes homologadas fazem sentido
- * aqui, mas nao bloqueamos por homologacao (mentoria e' apoio, nao
- * depende do resultado da inscricao).
+ * propria equipe e reserva/cancela.
+ *
+ * Fase 36: reservar() passou a exigir participante homologado
+ * (PermissaoParticipanteService::podeExecutar()) - o comentario antigo
+ * dizia "so' equipes homologadas fazem sentido aqui" mas nunca chegou a
+ * checar nada; foi exatamente essa lacuna que abriu a Fase 36.
  */
 class MentoriaController extends Controller
 {
@@ -102,6 +106,12 @@ class MentoriaController extends Controller
     public function reservar($horarioId)
     {
         $contexto = $this->contextoAtual();
+
+        if (!(new PermissaoParticipanteService())->podeExecutar($contexto['participante']['id'], 'reservar_mentoria')) {
+            http_response_code(403);
+            exit('Acesso negado: sua inscrição não está homologada.');
+        }
+
         $horario = $this->mentorias->buscarPorId($horarioId);
 
         if ($horario === null || (int) $horario['concurso_id'] !== (int) $contexto['concursoId']) {

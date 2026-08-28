@@ -24,6 +24,7 @@ use App\Services\AcessoEtapaService;
 use App\Services\ArquivoPrivadoService;
 use App\Services\ModeloDocumentoService;
 use App\Services\PdfService;
+use App\Services\PermissaoParticipanteService;
 use App\Validation\UploadPdfValidador;
 
 /**
@@ -103,6 +104,12 @@ class RequerimentoController extends Controller
     {
         $equipe = $this->equipeDoLiderAtual();
         $modelo = $this->modeloDisponivelOuAbortar($modeloDocumentoId, $equipe);
+
+        if (!(new PermissaoParticipanteService())->podeExecutar($this->participanteAtual()['id'], 'gerar_requerimento')) {
+            flashErro('Não é possível gerar requerimento: sua inscrição não está homologada.');
+            $this->redirecionar('requerimento/index');
+            return;
+        }
 
         if ($this->requerimentos->buscarEmAndamentoPorEquipeEModelo($equipe['id'], $modeloDocumentoId) !== null) {
             flashErro('Já existe um pedido em andamento para este modelo.');

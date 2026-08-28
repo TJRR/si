@@ -29,6 +29,7 @@ use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Services\AcessoEtapaService;
 use App\Services\EventoEtapaService;
+use App\Services\PermissaoParticipanteService;
 use App\Services\ResultadoEtapaService;
 use App\Validation\CpfValidador;
 
@@ -99,7 +100,7 @@ class ParticipanteController extends Controller
         $tema = $desafio !== null ? $this->temas->buscarPorId($desafio['tema_id']) : null;
         $colegas = $this->equipes->listarParticipantes($equipe['id']);
         $vinculoAtual = $this->equipes->buscarVinculo($equipe['id'], $participante['id']);
-        $homologado = $vinculoAtual !== null && $vinculoAtual['status_homologacao'] === 'homologado';
+        $homologado = (new PermissaoParticipanteService())->estadoDoParticipante($participante['id']) === PermissaoParticipanteService::HOMOLOGADO;
 
         $etapas = [];
         if ($homologado) {
@@ -437,11 +438,51 @@ class ParticipanteController extends Controller
             return;
         }
 
+        $liderAtual = $this->participanteAtual();
+
+        // Fase 36 (Parte A.2): lider homologado remove qualquer integrante
+        // (sem mudanca); lider rejeitado ou pendente-pos-correcao so' pode
+        // remover integrante que tambem esta rejeitado.
+        if (!(new PermissaoParticipanteService())->podeRemoverIntegrante($liderAtual['id'], $participanteId)) {
+            flashErro('Sua inscrição não está homologada — você só pode remover integrantes rejeitados.');
+            $this->redirecionar('participante/index');
+            return;
+        }
+
         $alvo = $this->participantes->buscarPorId($participanteId);
         $this->equipes->desvincularParticipante($equipe['id'], $participanteId);
+        $this->notificarAdminSuporteIntegranteRemovido($equipe, $alvo, $liderAtual);
 
         $_SESSION['flash'] = 'Integrante "' . $alvo['nome'] . '" removido da equipe.';
         $this->redirecionar('participante/index');
+    }
+
+    /**
+     * Fase 36 (Parte A.4): remocao atinge um terceiro e hoje passava
+     * despercebida - mesmo padrao de notificarAdminEmailCompleto() (Fase
+     * 27) logo abaixo, sem e-mail (so' notificacao no painel).
+     */
+    private function notificarAdminSuporteIntegranteRemovido(array $equipe, array $alvo, array $liderQueRemoveu)
+    {
+        $trilha = $this->trilhas->buscarPorId($equipe['trilha_id']);
+        $mensagem = '"' . $alvo['nome'] . '" (equipe "' . $equipe['nome_equipe'] . '") foi removido da equipe por "' . $liderQueRemoveu['nome'] . '".';
+
+        $destinatarios = [];
+        foreach (['administrador', 'suporte'] as $perfilChave) {
+            foreach ($this->perfis->listarUsuariosPorPerfilConcurso($perfilChave, $trilha['concurso_id']) as $usuario) {
+                $destinatarios[(int) $usuario['id']] = $usuario;
+            }
+        }
+
+        foreach ($destinatarios as $usuario) {
+            $this->notificacoes->criar(
+                $usuario['id'],
+                'integrante_removido',
+                'Integrante removido da equipe',
+                $mensagem,
+                ['url' => url('homologacao/index/' . (int) $equipe['trilha_id'])]
+            );
+        }
     }
 
     public function editarEquipe()

@@ -99,7 +99,7 @@ class ResultadoAdminController extends Controller
             if ($erro === null) {
                 $this->resultadosTrilha->atualizarDestaque(
                     $resultadoTrilhaId,
-                    trim(isset($_POST['resumo_destaque']) ? $_POST['resumo_destaque'] : '') ?: null,
+                    trim(isset($_POST['resumo_destaque']) ? sanitizarHtmlRico($_POST['resumo_destaque']) : '') ?: null,
                     $imagemPath,
                     $imagemAlt
                 );

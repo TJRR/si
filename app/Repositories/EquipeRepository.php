@@ -488,7 +488,8 @@ class EquipeRepository
         $pdo = Database::conexao();
 
         $sql = "SELECT ep.id AS vinculo_id, ep.equipe_id, ep.participante_id, ep.papel, ep.status_homologacao,
-                       ep.motivo_rejeicao, e.nome_equipe, p.nome AS participante_nome, p.cpf, p.email, p.telefone
+                       ep.motivo_rejeicao, e.nome_equipe, p.nome AS participante_nome, p.cpf, p.email, p.telefone,
+                       EXISTS(SELECT 1 FROM equipe_participante_historico eph WHERE eph.vinculo_id = ep.id) AS tem_historico
                 FROM equipe_participante ep
                 INNER JOIN equipes e ON e.id = ep.equipe_id
                 INNER JOIN participantes p ON p.id = ep.participante_id
@@ -548,6 +549,8 @@ class EquipeRepository
             'usuario_id' => $usuarioId,
             'status_homologacao' => 'homologado',
         ]);
+
+        $this->registrarHistorico($vinculoId, $antes['status_homologacao'], 'homologado', null, $usuarioId, 'homologacao');
     }
 
     public function rejeitarVinculo($vinculoId, $usuarioId, $motivo)
@@ -566,9 +569,17 @@ class EquipeRepository
             'motivo' => $motivo,
             'status_homologacao' => 'rejeitado',
         ]);
+
+        $this->registrarHistorico($vinculoId, $antes['status_homologacao'], 'rejeitado', $motivo, $usuarioId, 'rejeicao');
     }
 
-    public function voltarParaPendente($vinculoId)
+    /**
+     * Fase 36: $origem tem default porque hoje o unico chamador e'
+     * ParticipanteController::aposMudarCpf() (Fase 35) - motivo gravado no
+     * historico e' $antes['motivo_rejeicao'], que o UPDATE abaixo esta
+     * prestes a apagar da propria linha (ver Parte B do plano da Fase 36).
+     */
+    public function voltarParaPendente($vinculoId, $origem = 'correcao_cpf')
     {
         $antes = $this->buscarVinculoPorId($vinculoId);
         $pdo = Database::conexao();
@@ -580,5 +591,64 @@ class EquipeRepository
         $stmt->execute(['id' => $vinculoId]);
 
         Auditoria::registrar('voltar_para_pendente', 'equipes', $vinculoId, $antes, ['status_homologacao' => 'pendente']);
+
+        $this->registrarHistorico($vinculoId, $antes['status_homologacao'], 'pendente', $antes['motivo_rejeicao'], null, $origem);
+    }
+
+    private function registrarHistorico($vinculoId, $statusAnterior, $statusNovo, $motivo, $usuarioId, $origem)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'INSERT INTO equipe_participante_historico (vinculo_id, status_anterior, status_novo, motivo, usuario_id, origem)
+             VALUES (:vinculo_id, :status_anterior, :status_novo, :motivo, :usuario_id, :origem)'
+        );
+        $stmt->execute([
+            'vinculo_id' => $vinculoId,
+            'status_anterior' => $statusAnterior,
+            'status_novo' => $statusNovo,
+            'motivo' => $motivo,
+            'usuario_id' => $usuarioId,
+            'origem' => $origem,
+        ]);
+    }
+
+    /**
+     * Fase 36 (Parte E): todas as transicoes ja ocorridas de um vinculo,
+     * mais antiga primeiro - usada pelo modal de historico da tela de
+     * Inscritos. LEFT JOIN porque usuario_id e' NULL em transicoes
+     * automaticas (correcao de CPF).
+     */
+    public function listarHistoricoDoVinculo($vinculoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT eph.*, u.nome AS usuario_nome
+             FROM equipe_participante_historico eph
+             LEFT JOIN usuarios u ON u.id = eph.usuario_id
+             WHERE eph.vinculo_id = :vinculo_id
+             ORDER BY eph.criado_em ASC'
+        );
+        $stmt->execute(['vinculo_id' => $vinculoId]);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Fase 36 (Parte D): ultima transicao registrada para o vinculo, usada
+     * pra saber "de onde veio" ao homologar um vinculo pendente-pos-
+     * correcao (ex.: motivo da rejeicao anterior, que a propria linha de
+     * equipe_participante ja nao carrega mais).
+     */
+    public function buscarUltimaTransicao($vinculoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT * FROM equipe_participante_historico WHERE vinculo_id = :vinculo_id ORDER BY criado_em DESC LIMIT 1'
+        );
+        $stmt->execute(['vinculo_id' => $vinculoId]);
+
+        $registro = $stmt->fetch();
+
+        return $registro !== false ? $registro : null;
     }
 }

@@ -64,10 +64,22 @@ class NotificacaoService
         );
     }
 
-    public function acessoLiberado($destinatarioEmail, $nomeParticipante, $nomeEquipe, $linkDefinirSenha)
+    /**
+     * Fase 36 (Parte D): $contextoAnterior (HTML ja escapado, opcional) e'
+     * concatenado a abertura quando o participante ja tinha sido
+     * homologado/rejeitado antes (vinculo pendente-pos-correcao) - montado
+     * por quem chama (HomologacaoController::homologarUmVinculo()), que e'
+     * quem conhece o historico.
+     */
+    public function acessoLiberado($destinatarioEmail, $nomeParticipante, $nomeEquipe, $linkDefinirSenha, $contextoAnterior = null)
     {
         $assunto = 'Inscrição homologada — acesso liberado ao sistema';
         $abertura = 'A inscrição da equipe <strong>' . htmlspecialchars($nomeEquipe, ENT_QUOTES, 'UTF-8') . '</strong> foi homologada.';
+
+        if ($contextoAnterior !== null) {
+            $abertura .= ' ' . $contextoAnterior;
+        }
+
         $corpo = $this->montarCorpoAcesso($nomeParticipante, $abertura, $linkDefinirSenha);
 
         $id = $this->notificacoes->criar(

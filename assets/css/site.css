@@ -3242,6 +3242,16 @@ body.admin-page button[data-toggle-feedback]:focus {
     margin-bottom: 0.35rem;
 }
 
+.site-premio-resumo {
+    text-align: left;
+    color: var(--cor-texto-suave);
+    margin-top: 0.5rem;
+}
+
+.site-premio-resumo p:first-child {
+    margin-top: 0;
+}
+
 /* Fase 24: subtitulo de cada trilha quando a premiacao esta' no modo
    'por_trilha' (uma grade separada por trilha, em vez de uma unica). */
 .site-premios-trilha-titulo {
@@ -3329,6 +3339,57 @@ body.admin-page button[data-toggle-feedback]:focus {
 }
 
 /* Edicoes anteriores (3.11) */
+
+/* Hero simples para paginas de arquivo publico (nao usa o cabecalho
+   configuravel da home, que e' amarrado ao concurso ATIVO - menu por
+   ancora, scrollspy, imagem de fundo configuravel). So' uma faixa colorida
+   com o mesmo gradiente ja usado no resto do site (--cor-primaria-*). */
+.site-hero-simples {
+    background: linear-gradient(135deg, var(--cor-primaria-inicio), var(--cor-primaria-fim));
+    color: #fff;
+    padding: 2.5rem 1.25rem;
+    text-align: center;
+}
+
+.site-hero-simples .site-breadcrumb {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.site-hero-simples .site-breadcrumb a {
+    color: #fff;
+}
+
+.site-hero-simples h1 {
+    font-size: 2.1rem;
+    margin: 0.5rem 0 0;
+}
+
+.site-hero-simples p {
+    max-width: 700px;
+    margin: 0.75rem auto 0;
+    opacity: 0.95;
+}
+
+/* Secoes das paginas de arquivo publico - deliberadamente separadas de
+   .site-section/.site-section-alt (que ja tem max-width:900px proprio e e'
+   usada pela home): aqui quem controla a largura e' sempre o filho
+   .site-secao-larga, entao o pai nunca define max-width, so' o espacamento
+   vertical e a cor de fundo alternada. */
+.site-secao-publica {
+    padding: 2.75rem 0;
+}
+
+.site-secao-publica-alt {
+    background: var(--cor-fundo-alt);
+}
+
+/* Mesma largura maxima ja usada em .site-header-inner. */
+.site-secao-larga {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
+}
+
 .site-edicoes-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -3339,9 +3400,78 @@ body.admin-page button[data-toggle-feedback]:focus {
     text-decoration: none;
     color: inherit;
     display: block;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-borda);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.site-edicao-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
 }
 
 .site-edicao-card:hover .section-title {
+    color: var(--cor-primaria-fim);
+}
+
+.site-edicao-capa {
+    height: 170px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--cor-fundo-alt);
+}
+
+.site-edicao-capa-vazia {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--cor-primaria-inicio), var(--cor-primaria-fim));
+}
+
+.site-edicao-capa-vazia span {
+    font-family: var(--fonte-titulo);
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.site-edicao-card-corpo {
+    padding: 1.1rem 1.25rem 1.25rem;
+}
+
+.site-edicao-card-corpo .section-title {
+    margin-bottom: 0.35rem;
+}
+
+.site-edicao-periodo {
+    font-size: 0.85rem;
+    color: var(--cor-texto-suave);
+    margin: 0;
+}
+
+.site-documentos-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.6rem;
+}
+
+.site-documentos-lista a {
+    display: block;
+    background: var(--cor-branco);
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+.site-documentos-lista a:hover {
+    border-color: var(--cor-primaria-fim);
     color: var(--cor-primaria-fim);
 }
 
@@ -3363,11 +3493,131 @@ body.admin-page button[data-toggle-feedback]:focus {
     gap: 0.75rem;
 }
 
-.site-galeria-grid img {
+.site-galeria-item {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+}
+
+.site-galeria-item img {
     width: 100%;
     height: 140px;
     object-fit: cover;
     border-radius: 6px;
+    display: block;
+    transition: opacity 0.15s ease;
+}
+
+.site-galeria-item:hover img,
+.site-galeria-item:focus-visible img {
+    opacity: 0.85;
+}
+
+/* Lightbox de galeria - JS vanilla proprio (assets/js/galeria-lightbox.js),
+   nao reaproveita o #modal-generico porque aquele navega por linhas de
+   tabela via fetch (pensado pra HTML/formulario) e nao tem CSS de imagem
+   full-screen; aqui a fonte de dados e' local (atributos data-* dos itens
+   da propria grade), sem ida ao servidor. */
+.lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.lightbox-overlay[hidden] {
+    display: none;
+}
+
+.lightbox-figura {
+    margin: 0;
+    max-width: 90vw;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.lightbox-figura img {
+    max-width: 90vw;
+    max-height: 75vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.lightbox-legenda {
+    color: #fff;
+    text-align: center;
+    font-size: 0.95rem;
+    max-width: 60ch;
+}
+
+.lightbox-legenda:empty {
+    display: none;
+}
+
+.lightbox-fechar,
+.lightbox-seta {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.12);
+    border: 0;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-fechar:hover,
+.lightbox-seta:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.lightbox-fechar {
+    top: 1.25rem;
+    right: 1.25rem;
+}
+
+.lightbox-anterior {
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.lightbox-proxima {
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+@media (max-width: 640px) {
+    .lightbox-anterior {
+        left: 0.5rem;
+    }
+
+    .lightbox-proxima {
+        right: 0.5rem;
+    }
+
+    .lightbox-fechar {
+        top: 0.5rem;
+        right: 0.5rem;
+    }
 }
 
 /* Cartao generico de proposito geral (Fase 18) - reaproveitavel em qualquer

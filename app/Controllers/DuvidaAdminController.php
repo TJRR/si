@@ -21,6 +21,7 @@ use App\Repositories\PerfilRepository;
 use App\Repositories\PerguntaFrequenteRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Services\ArquivoService;
+use App\Services\PermissaoParticipanteService;
 
 /**
  * Fase 29 (Tira-Duvidas): atendimento (administrador/suporte) - responder,
@@ -127,6 +128,7 @@ class DuvidaAdminController extends Controller
 
         $this->renderizar('admin/duvidas/ver', [
             'duvida' => $duvida,
+            'estadoParticipante' => (new PermissaoParticipanteService())->estadoDoParticipante((int) $duvida['participante_id']),
             'respostas' => $respostas,
             'escalonamentos' => $this->escalonamentos->listarPorDuvida((int) $id),
             'atendentesDisponiveis' => $this->atendentesDisponiveis((int) $duvida['concurso_id']),

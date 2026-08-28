@@ -2,6 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
+<p class="ficha-submissao-enviada-em">Enviada em <?php echo htmlspecialchars(formatarDataHora($submissao['criado_em']), ENT_QUOTES, 'UTF-8'); ?></p>
 <?php if (empty($conteudoSubmissao)): ?>
     <p><em>Esta submissão não tem um formulário associado.</em></p>
 <?php else: ?>

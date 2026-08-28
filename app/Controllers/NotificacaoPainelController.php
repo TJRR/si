@@ -15,6 +15,7 @@ use App\Repositories\ParticipanteRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Services\AcessoParticipanteService;
+use App\Services\PermissaoParticipanteService;
 
 class NotificacaoPainelController extends Controller
 {
@@ -172,8 +173,13 @@ class NotificacaoPainelController extends Controller
         }
 
         if ($vinculo['status_homologacao'] === 'pendente') {
+            // Fase 36 (Parte D): "de onde veio" resolvido ANTES de
+            // homologar, senao' a ultima transicao passa a ser esta
+            // homologacao que esta prestes a acontecer.
+            $contextoAnterior = PermissaoParticipanteService::contextoDeCorrecao($equipes->buscarUltimaTransicao($vinculoId));
+
             $equipes->homologarVinculo($vinculoId, Auth::usuarioId());
-            $_SESSION['flash'] = 'Participante homologado.';
+            $_SESSION['flash'] = 'Participante homologado.' . ($contextoAnterior !== null ? ' ' . $contextoAnterior : '');
         }
 
         $this->notificacoes->removerPorTipoEParticipante('cpf_alterado_pendente', $participanteId);

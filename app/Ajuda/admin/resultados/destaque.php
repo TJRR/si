@@ -11,8 +11,8 @@ return [
     'operacoes' => [
         [
             'nome' => 'Resumo de destaque / Imagem',
-            'como' => 'Texto livre + imagem (alt obrigatório) → Salvar.',
-            'observacao' => 'Só edita o que é exibido publicamente — não recalcula nota nem posição no ranking.',
+            'como' => 'Texto rico (editor com formatação, cor, imagem, link) + imagem (alt obrigatório) → Salvar.',
+            'observacao' => 'Só edita o que é exibido publicamente — não recalcula nota nem posição no ranking. O HTML digitado passa por uma limpeza de segurança ao salvar (remove script/handlers), sem afetar formatação normal.',
         ],
     ],
     'conceitos' => [],

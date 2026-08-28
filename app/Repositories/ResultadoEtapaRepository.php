@@ -16,7 +16,7 @@ class ResultadoEtapaRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT re.*, s.equipe_id, eq.nome_equipe
+            'SELECT re.*, s.equipe_id, s.criado_em, eq.nome_equipe
              FROM resultados_etapa re
              INNER JOIN submissoes s ON s.id = re.submissao_id
              LEFT JOIN equipes eq ON eq.id = s.equipe_id

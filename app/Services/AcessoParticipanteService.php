@@ -38,7 +38,11 @@ class AcessoParticipanteService
         $this->trilhas = new TrilhaRepository();
     }
 
-    public function liberarAcesso(array $participante, $trilhaId, $nomeEquipe)
+    /**
+     * Fase 36 (Parte D): $contextoAnterior repassado direto pra
+     * NotificacaoService::acessoLiberado() - ver doc la'.
+     */
+    public function liberarAcesso(array $participante, $trilhaId, $nomeEquipe, $contextoAnterior = null)
     {
         if (empty($participante['email'])) {
             return;
@@ -60,7 +64,7 @@ class AcessoParticipanteService
         $link = urlAbsoluta('auth/definirSenha/' . $token);
 
         try {
-            (new NotificacaoService())->acessoLiberado($participante['email'], $participante['nome'], $nomeEquipe, $link);
+            (new NotificacaoService())->acessoLiberado($participante['email'], $participante['nome'], $nomeEquipe, $link, $contextoAnterior);
         } catch (\Exception $e) {
             // Falha de notificacao nunca deve quebrar a homologacao ja gravada.
         }

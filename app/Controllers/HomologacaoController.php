@@ -17,6 +17,7 @@ use App\Repositories\ParticipanteRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioParticipanteRepository;
 use App\Services\AcessoParticipanteService;
+use App\Services\PermissaoParticipanteService;
 
 class HomologacaoController extends Controller
 {
@@ -108,13 +109,39 @@ class HomologacaoController extends Controller
         $this->redirecionar('homologacao/index/' . $trilhaId);
     }
 
+    /**
+     * Fase 36 (Parte E): historico de transicoes do vinculo, aberto em
+     * modal a partir da tela de Inscritos (assets/js/modal.js::
+     * abrirModalUrl() - Controller::renderizar() ja' devolve so' o
+     * conteudo quando a requisicao vem com o cabecalho X-Requisicao:
+     * parcial, sem precisar de view parcial dedicada).
+     */
+    public function historico($vinculoId)
+    {
+        $vinculo = $this->equipes->buscarVinculoPorId($vinculoId);
+
+        if ($vinculo === null) {
+            http_response_code(404);
+            exit('Vínculo não encontrado.');
+        }
+
+        $equipe = $this->equipes->buscarPorId($vinculo['equipe_id']);
+        $trilhaReal = $equipe !== null ? $this->trilhas->buscarPorId($equipe['trilha_id']) : null;
+        RoleMiddleware::exigir(['administrador', 'suporte'], $trilhaReal !== null ? $trilhaReal['concurso_id'] : null);
+
+        $this->renderizar('admin/homologacao/historico', [
+            'transicoes' => $this->equipes->listarHistoricoDoVinculo($vinculoId),
+        ], 'Histórico de homologação');
+    }
+
     public function homologar()
     {
         $vinculoId = (int) (isset($_POST['vinculo_id']) ? $_POST['vinculo_id'] : 0);
         $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
 
-        $this->homologarUmVinculo($vinculoId, $trilhaId);
-        $_SESSION['flash'] = 'Participante homologado e acesso liberado.';
+        $contextoAnterior = $this->homologarUmVinculo($vinculoId, $trilhaId);
+        $_SESSION['flash'] = 'Participante homologado e acesso liberado.'
+            . ($contextoAnterior !== null ? ' ' . $contextoAnterior : '');
 
         $this->redirecionar('homologacao/index/' . $trilhaId);
     }
@@ -207,13 +234,19 @@ class HomologacaoController extends Controller
      * (usada por homologar()/homologarEmMassa()) - resolve a partir da
      * equipe de verdade do vinculo, nunca do trilha_id cru do POST (so'
      * usado pro redirect no metodo publico).
+     *
+     * Fase 36 (Parte D): retorna o texto de contexto ("de onde veio") em
+     * texto puro, ou null quando o vinculo nunca tinha sido homologado/
+     * rejeitado antes - usado tanto no flash do Admin/Suporte quanto
+     * (escapado) no e-mail que AcessoParticipanteService::liberarAcesso()
+     * dispara.
      */
     private function homologarUmVinculo($vinculoId, $trilhaId)
     {
         $vinculo = $this->equipes->buscarVinculoPorId($vinculoId);
 
         if ($vinculo === null) {
-            return;
+            return null;
         }
 
         $equipe = $this->equipes->buscarPorId($vinculo['equipe_id']);
@@ -221,10 +254,23 @@ class HomologacaoController extends Controller
         RoleMiddleware::exigir(['administrador', 'suporte'], $trilhaReal !== null ? $trilhaReal['concurso_id'] : null);
 
         $participante = $this->participantes->buscarPorId($vinculo['participante_id']);
+        $contextoAnterior = $this->contextoDeCorrecao($vinculo);
 
         $this->equipes->homologarVinculo($vinculoId, Auth::usuarioId());
         $this->limparNotificacaoRejeicao($vinculo['participante_id']);
-        (new AcessoParticipanteService())->liberarAcesso($participante, $trilhaId, $equipe['nome_equipe']);
+        (new AcessoParticipanteService())->liberarAcesso(
+            $participante,
+            $trilhaId,
+            $equipe['nome_equipe'],
+            $contextoAnterior !== null ? htmlspecialchars($contextoAnterior, ENT_QUOTES, 'UTF-8') : null
+        );
+
+        return $contextoAnterior;
+    }
+
+    private function contextoDeCorrecao(array $vinculo)
+    {
+        return PermissaoParticipanteService::contextoDeCorrecao($this->equipes->buscarUltimaTransicao($vinculo['id']));
     }
 
     private function rejeitarUmVinculo($vinculoId, $motivo)

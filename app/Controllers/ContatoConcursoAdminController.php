@@ -73,7 +73,7 @@ class ContatoConcursoAdminController extends Controller
                 'endereco' => $this->campoOuNulo('endereco'),
                 'mapa_url' => $mapaUrl,
                 'nome_organizador_assinatura' => $this->campoOuNulo('nome_organizador_assinatura'),
-                'texto_institucional' => isset($_POST['texto_institucional']) ? $_POST['texto_institucional'] : null,
+                'texto_institucional' => isset($_POST['texto_institucional']) ? sanitizarHtmlRico($_POST['texto_institucional']) : null,
                 'redes_sociais' => $redesSociais,
                 'formulario_contato_ativo' => isset($_POST['formulario_contato_ativo']) ? 1 : 0,
             ];

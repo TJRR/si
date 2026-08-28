@@ -49,8 +49,26 @@ class EdicaoPublicaController extends Controller
 
     public function index()
     {
+        $edicoes = $this->concursos->listarEncerrados();
+
+        foreach ($edicoes as &$edicao) {
+            $edicao['imagem_capa'] = null;
+            $edicao['imagem_capa_alt'] = null;
+
+            foreach ($this->trilhas->listarPorConcurso($edicao['id']) as $trilha) {
+                foreach ($this->resultadosTrilha->listarPorTrilha($trilha['id']) as $resultado) {
+                    if ((int) $resultado['colocacao'] === 1 && !empty($resultado['imagem_destaque_path'])) {
+                        $edicao['imagem_capa'] = $resultado['imagem_destaque_path'];
+                        $edicao['imagem_capa_alt'] = $resultado['imagem_destaque_alt'];
+                        break 2;
+                    }
+                }
+            }
+        }
+        unset($edicao);
+
         $this->renderizar('publico/edicoes/index', [
-            'edicoes' => $this->concursos->listarEncerrados(),
+            'edicoes' => $edicoes,
         ], 'Edições Anteriores');
     }
 

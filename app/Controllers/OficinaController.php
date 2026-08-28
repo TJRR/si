@@ -17,11 +17,15 @@ use App\Repositories\UsuarioParticipanteRepository;
 use App\Repositories\UsuarioRepository;
 use App\Services\EventoEtapaService;
 use App\Services\GoogleCalendarSyncService;
+use App\Services\PermissaoParticipanteService;
 
 /**
  * Fase 24: lado do participante - qualquer equipe do concurso pode ver os
  * horarios de oficina e se inscrever/cancelar, sem exclusividade (varias
  * equipes no mesmo horario, diferente de MentoriaController).
+ *
+ * Fase 36: inscrever() passou a exigir participante homologado
+ * (PermissaoParticipanteService::podeExecutar()).
  */
 class OficinaController extends Controller
 {
@@ -110,6 +114,12 @@ class OficinaController extends Controller
     public function inscrever($horarioId)
     {
         $contexto = $this->contextoAtual();
+
+        if (!(new PermissaoParticipanteService())->podeExecutar($contexto['participante']['id'], 'inscrever_oficina')) {
+            http_response_code(403);
+            exit('Acesso negado: sua inscrição não está homologada.');
+        }
+
         $horario = $this->oficinas->buscarPorId($horarioId);
 
         if ($horario === null || (int) $horario['concurso_id'] !== (int) $contexto['concursoId']) {

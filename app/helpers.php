@@ -302,3 +302,131 @@ function categoriaAcaoAuditoria($acao)
 
     return 'verde';
 }
+
+/**
+ * Sanitiza o HTML gravado pelo editor rico (Fase 18) por blocklist: remove
+ * so' vetores de execucao de JavaScript (tags de script/embed/svg, atributos
+ * on*, URLs fora da allowlist de esquemas seguros), preservando tudo o
+ * resto (estilo inline de cor/fonte/tamanho/alinhamento, imagens, links,
+ * barra decorativa) - decisao de 28/08/2026, ver discussao de seguranca
+ * sobre XSS armazenado no campo resumo_destaque (resultados_trilha).
+ * Chamada no momento de SALVAR (nunca na exibicao, que continua echo
+ * direto).
+ *
+ * Revisao de seguranca (mesmo dia) apontou duas lacunas do blocklist
+ * original, corrigidas aqui: (1) 'href'/'src' sozinhos nao pegam atributos
+ * namespaced tipo 'xlink:href' dentro de <svg> - agora compara pelo nome
+ * LOCAL (depois do ':'), alem de remover <svg>/<math>/<style>/<template>
+ * inteiras (nenhuma e' usada pelo editor, entao remover nao quebra nada
+ * real). (2) blacklist de esquema (javascript:/vbscript:) trocada por
+ * ALLOWLIST (http/https/mailto/tel/relativo) - fecha qualquer esquema
+ * perigoso que uma blacklist pudesse deixar passar (data:, etc.), sem
+ * depender de prever cada variante.
+ *
+ * Usa DOMDocument (extensao 'dom', ja garantida no ambiente porque
+ * dompdf/dompdf a exige) - sem lib nova, sem build step, mesma filosofia
+ * do editor-rico.js.
+ */
+function sanitizarHtmlRico($html)
+{
+    $html = (string) $html;
+
+    if (trim($html) === '') {
+        return $html;
+    }
+
+    $tagsRemovidas = ['script', 'iframe', 'object', 'embed', 'applet', 'link', 'meta', 'base', 'form', 'svg', 'math', 'style', 'template'];
+    $atributosUrl = ['href', 'src', 'action', 'formaction', 'background', 'poster'];
+
+    $documento = new DOMDocument();
+    $usoInternoAnterior = libxml_use_internal_errors(true);
+    $documento->loadHTML('<?xml encoding="utf-8"?><div>' . $html . '</div>', LIBXML_NOERROR | LIBXML_NOWARNING);
+    libxml_clear_errors();
+    libxml_use_internal_errors($usoInternoAnterior);
+
+    $raiz = $documento->getElementsByTagName('div')->item(0);
+
+    if ($raiz === null) {
+        return $html;
+    }
+
+    foreach ($tagsRemovidas as $tag) {
+        $elementos = $documento->getElementsByTagName($tag);
+        while ($elementos->length > 0) {
+            $elemento = $elementos->item(0);
+            if ($elemento->parentNode !== null) {
+                $elemento->parentNode->removeChild($elemento);
+            } else {
+                break;
+            }
+        }
+    }
+
+    $xpath = new DOMXPath($documento);
+
+    foreach ($xpath->query('//*') as $elemento) {
+        if (!($elemento instanceof DOMElement) || !$elemento->hasAttributes()) {
+            continue;
+        }
+
+        $atributosParaRemover = [];
+
+        foreach ($elemento->attributes as $atributo) {
+            // Nome LOCAL (sem prefixo de namespace) - cobre 'xlink:href',
+            // 'xml:href' etc. tratados como se fossem 'href' puro.
+            $partesNome = explode(':', $atributo->name);
+            $nomeLocal = strtolower(end($partesNome));
+            $valorAtributo = $atributo->value;
+
+            if (strpos($nomeLocal, 'on') === 0) {
+                $atributosParaRemover[] = $atributo->name;
+                continue;
+            }
+
+            if (in_array($nomeLocal, $atributosUrl, true) && !urlComEsquemaPermitido($valorAtributo)) {
+                $atributosParaRemover[] = $atributo->name;
+                continue;
+            }
+
+            if ($nomeLocal === 'style' && preg_match('/expression\s*\(|url\s*\(\s*[\'"]?\s*(javascript|vbscript|data):/i', $valorAtributo)) {
+                $atributosParaRemover[] = $atributo->name;
+            }
+        }
+
+        foreach ($atributosParaRemover as $nomeAtributo) {
+            $elemento->removeAttribute($nomeAtributo);
+        }
+    }
+
+    $htmlSanitizado = '';
+    foreach ($raiz->childNodes as $no) {
+        $htmlSanitizado .= $documento->saveHTML($no);
+    }
+
+    return $htmlSanitizado;
+}
+
+/**
+ * Allowlist de esquemas de URL (em vez de blacklist): mais seguro porque
+ * nao depende de prever cada variante perigosa (javascript:, vbscript:,
+ * data:, e o que mais surgir) - so' passa o que reconhecemos como seguro.
+ * URL relativa (sem esquema, ex.: '/assets/x.png', 'pagina.html', '#ancora')
+ * tambem e' permitida.
+ */
+function urlComEsquemaPermitido($valor)
+{
+    $normalizado = trim(preg_replace('/[\s\x00-\x1F]+/', '', (string) $valor));
+
+    if ($normalizado === '') {
+        return true;
+    }
+
+    if (!preg_match('/^([a-z][a-z0-9+.-]*):/i', $normalizado, $correspondencia)) {
+        // Sem "esquema:" no inicio - relativo, ancora, etc. Seguro.
+        return true;
+    }
+
+    $esquemasPermitidos = ['http', 'https', 'mailto', 'tel'];
+
+    return in_array(strtolower($correspondencia[1]), $esquemasPermitidos, true);
+}

@@ -27,31 +27,42 @@ $rotulosTipoDocumento = [
         </div>
     </header>
 
-    <div class="site-form-page">
-        <nav class="site-breadcrumb" aria-label="Navegação estrutural">
-            <a href="<?php echo url('home/index'); ?>">Início</a> &gt;
-            <a href="<?php echo url('edicoes/index'); ?>">Edições Anteriores</a> &gt;
-            <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?>
-        </nav>
+    <div class="site-hero-simples">
+        <div class="site-secao-larga">
+            <nav class="site-breadcrumb" aria-label="Navegação estrutural">
+                <a href="<?php echo url('home/index'); ?>">Início</a> &gt;
+                <a href="<?php echo url('edicoes/index'); ?>">Edições Anteriores</a> &gt;
+                <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?>
+            </nav>
+            <h1><?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+            <p>
+                <?php if ($concurso['data_inicio'] !== null || $concurso['data_fim'] !== null): ?>
+                    Período: <?php echo htmlspecialchars(formatarData($concurso['data_inicio']), ENT_QUOTES, 'UTF-8'); ?> a <?php echo htmlspecialchars(formatarData($concurso['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
+                    &nbsp;|&nbsp;
+                <?php endif; ?>
+                <?php echo (int) $totalEquipes; ?> equipe(s) inscrita(s), <?php echo (int) $totalParticipantes; ?> participante(s)
+            </p>
+        </div>
+    </div>
 
-        <h1><?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+    <?php if (!empty($concurso['descricao'])): ?>
+    <div class="site-secao-publica">
+        <div class="site-secao-larga">
+            <p class="section-text"><?php echo nl2br(htmlspecialchars($concurso['descricao'], ENT_QUOTES, 'UTF-8')); ?></p>
+        </div>
+    </div>
+    <?php endif; ?>
 
-        <?php if (!empty($concurso['descricao'])): ?>
-            <p><?php echo nl2br(htmlspecialchars($concurso['descricao'], ENT_QUOTES, 'UTF-8')); ?></p>
-        <?php endif; ?>
-
-        <p>
-            <?php if ($concurso['data_inicio'] !== null || $concurso['data_fim'] !== null): ?>
-                Período: <?php echo htmlspecialchars(formatarData($concurso['data_inicio']), ENT_QUOTES, 'UTF-8'); ?> a <?php echo htmlspecialchars(formatarData($concurso['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
-                &nbsp;|&nbsp;
-            <?php endif; ?>
-            <?php echo (int) $totalEquipes; ?> equipe(s) inscrita(s), <?php echo (int) $totalParticipantes; ?> participante(s)
-        </p>
-
-        <?php if (empty($vencedoresPorTrilha)): ?>
+    <?php if (empty($vencedoresPorTrilha)): ?>
+    <div class="site-secao-publica site-secao-publica-alt">
+        <div class="site-secao-larga">
             <p><em>Resultados finais não publicados para esta edição.</em></p>
-        <?php else: ?>
-            <?php foreach ($vencedoresPorTrilha as $grupo): ?>
+        </div>
+    </div>
+    <?php else: ?>
+        <?php foreach ($vencedoresPorTrilha as $indiceGrupo => $grupo): ?>
+        <div class="site-secao-publica <?php echo $indiceGrupo % 2 === 0 ? 'site-secao-publica-alt' : ''; ?>">
+            <div class="site-secao-larga">
                 <h2 class="section-title"><?php echo htmlspecialchars($grupo['trilha']['nome'], ENT_QUOTES, 'UTF-8'); ?> — Vencedores</h2>
                 <div class="site-vencedores-grid">
                     <?php foreach ($grupo['vencedores'] as $vencedor): ?>
@@ -62,7 +73,7 @@ $rotulosTipoDocumento = [
                                 <img src="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $vencedor['imagem_destaque_path'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars((string) $vencedor['imagem_destaque_alt'], ENT_QUOTES, 'UTF-8'); ?>" style="width:100%;border-radius:6px;margin-bottom:.5rem;">
                             <?php endif; ?>
                             <?php if (!empty($vencedor['resumo_destaque'])): ?>
-                                <p><?php echo nl2br(htmlspecialchars($vencedor['resumo_destaque'], ENT_QUOTES, 'UTF-8')); ?></p>
+                                <div class="site-premio-resumo"><?php echo $vencedor['resumo_destaque']; ?></div>
                             <?php endif; ?>
                             <?php if ($vencedor['youtube_id'] !== null): ?>
                                 <div style="position:relative;width:100%;padding-top:56.25%;">
@@ -75,12 +86,16 @@ $rotulosTipoDocumento = [
                         </div>
                     <?php endforeach; ?>
                 </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
 
-        <?php if (!empty($documentos)): ?>
+    <?php if (!empty($documentos)): ?>
+    <div class="site-secao-publica">
+        <div class="site-secao-larga">
             <h2 class="section-title">Documentos</h2>
-            <ul>
+            <ul class="site-documentos-lista">
                 <?php foreach ($documentos as $documento): ?>
                     <li>
                         <a href="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $documento['arquivo_path'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">
@@ -89,15 +104,39 @@ $rotulosTipoDocumento = [
                     </li>
                 <?php endforeach; ?>
             </ul>
-        <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 
-        <?php if (!empty($galeria)): ?>
+    <?php if (!empty($galeria)): ?>
+    <div class="site-secao-publica site-secao-publica-alt">
+        <div class="site-secao-larga">
             <h2 class="section-title">Galeria</h2>
             <div class="site-galeria-grid">
                 <?php foreach ($galeria as $midia): ?>
-                    <img src="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $midia['arquivo_path'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars((string) $midia['alt_text'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <?php
+                    $urlMidia = config('base_path') . '/assets/' . $midia['arquivo_path'];
+                    $legendaMidia = !empty($midia['titulo']) ? $midia['titulo'] : (!empty($midia['descricao']) ? $midia['descricao'] : '');
+                    ?>
+                    <button type="button" class="site-galeria-item"
+                            data-lightbox-src="<?php echo htmlspecialchars($urlMidia, ENT_QUOTES, 'UTF-8'); ?>"
+                            data-lightbox-alt="<?php echo htmlspecialchars((string) $midia['alt_text'], ENT_QUOTES, 'UTF-8'); ?>"
+                            data-lightbox-legenda="<?php echo htmlspecialchars($legendaMidia, ENT_QUOTES, 'UTF-8'); ?>">
+                        <img src="<?php echo htmlspecialchars($urlMidia, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars((string) $midia['alt_text'], ENT_QUOTES, 'UTF-8'); ?>">
+                    </button>
                 <?php endforeach; ?>
             </div>
-        <?php endif; ?>
+        </div>
     </div>
+
+    <div id="lightbox-galeria" class="lightbox-overlay" hidden>
+        <button type="button" class="lightbox-fechar" aria-label="Fechar">&times;</button>
+        <button type="button" class="lightbox-seta lightbox-anterior" aria-label="Foto anterior">&lsaquo;</button>
+        <figure class="lightbox-figura">
+            <img id="lightbox-imagem" src="" alt="">
+            <figcaption id="lightbox-legenda" class="lightbox-legenda"></figcaption>
+        </figure>
+        <button type="button" class="lightbox-seta lightbox-proxima" aria-label="Próxima foto">&rsaquo;</button>
+    </div>
+    <?php endif; ?>
 </div>

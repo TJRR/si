@@ -81,6 +81,9 @@
     <?php duvida_renderizar_avatar($duvida['participante_nome'], $duvida['participante_foto_path']); ?>
     <div class="duvida-mensagem-corpo">
         <strong><?php echo htmlspecialchars($duvida['participante_nome'], ENT_QUOTES, 'UTF-8'); ?></strong>
+        <?php if ($estadoParticipante !== null): ?>
+            <span class="status-pill <?php echo \App\Services\PermissaoParticipanteService::corDoEstado($estadoParticipante); ?>"><?php echo \App\Services\PermissaoParticipanteService::rotuloDoEstado($estadoParticipante); ?></span>
+        <?php endif; ?>
         <p class="duvida-mensagem-meta">Equipe <?php echo htmlspecialchars($duvida['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?> ·
             <?php echo htmlspecialchars($duvida['trilha_nome'], ENT_QUOTES, 'UTF-8'); ?> ·
             <?php echo htmlspecialchars(formatarDataHora($duvida['criado_em']), ENT_QUOTES, 'UTF-8'); ?></p>

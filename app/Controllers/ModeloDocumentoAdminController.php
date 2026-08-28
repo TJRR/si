@@ -244,7 +244,7 @@ class ModeloDocumentoAdminController extends Controller
         return [
             'nome' => trim(isset($_POST['nome']) ? $_POST['nome'] : ''),
             'finalidade' => trim(isset($_POST['finalidade']) ? $_POST['finalidade'] : ''),
-            'corpo_html' => isset($_POST['corpo_html']) ? $_POST['corpo_html'] : '',
+            'corpo_html' => isset($_POST['corpo_html']) ? sanitizarHtmlRico($_POST['corpo_html']) : '',
             'ativo' => isset($_POST['ativo']) ? 1 : 0,
         ];
     }

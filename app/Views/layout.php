@@ -38,6 +38,19 @@ if ($ehPainelInterno && \App\Core\Auth::autenticado()) {
     $repoNotificacoes = new \App\Repositories\NotificacaoPainelRepository();
     $notificacoesRecentes = $repoNotificacoes->listarRecentes(\App\Core\Auth::usuarioId());
     $notificacoesNaoLidas = $repoNotificacoes->contarNaoLidas(\App\Core\Auth::usuarioId());
+
+    // Fase 36 (Parte C.2): selo de estado na notificacao de CPF alterado -
+    // participante_id vem dentro do JSON de `dados`, nao como coluna solta.
+    $permissaoParticipante = new \App\Services\PermissaoParticipanteService();
+    foreach ($notificacoesRecentes as &$notificacaoRecente) {
+        if ($notificacaoRecente['tipo'] === 'cpf_alterado_pendente') {
+            $dadosNotificacao = $notificacaoRecente['dados'] !== null ? json_decode($notificacaoRecente['dados'], true) : null;
+            $notificacaoRecente['estado_participante'] = isset($dadosNotificacao['participante_id'])
+                ? $permissaoParticipante->estadoDoParticipante((int) $dadosNotificacao['participante_id'])
+                : null;
+        }
+    }
+    unset($notificacaoRecente);
 }
 
 if ($ehPainelAdmin) {
@@ -151,7 +164,12 @@ if ($ehPainelAdmin) {
                                 <div class="notificacoes-sino-linha<?php echo empty($notificacao['lida']) ? ' nao-lida' : ''; ?>">
                                     <a class="notificacoes-sino-item" href="<?php echo url('notificacoesPainel/abrir/' . (int) $notificacao['id']); ?>">
                                         <span class="notificacoes-sino-titulo"><?php echo htmlspecialchars($notificacao['titulo'], ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <span class="notificacoes-sino-mensagem"><?php echo htmlspecialchars($notificacao['mensagem'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <span class="notificacoes-sino-mensagem">
+                                            <?php echo htmlspecialchars($notificacao['mensagem'], ENT_QUOTES, 'UTF-8'); ?>
+                                            <?php if (!empty($notificacao['estado_participante'])): ?>
+                                                <span class="status-pill <?php echo \App\Services\PermissaoParticipanteService::corDoEstado($notificacao['estado_participante']); ?>"><?php echo \App\Services\PermissaoParticipanteService::rotuloDoEstado($notificacao['estado_participante']); ?></span>
+                                            <?php endif; ?>
+                                        </span>
                                     </a>
                                     <?php if (empty($notificacao['lida'])): ?>
                                         <?php $ehConvitePendente = $notificacao['tipo'] === 'participante_email_completo'; ?>
@@ -317,6 +335,9 @@ if ($ehPainelAdmin) {
 <?php endif; ?>
 <?php if (isset($view) && ($view === 'home/index' || strpos($view, 'publico/') === 0)): ?>
     <script src="<?php echo config('base_path'); ?>/assets/js/scrollspy.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/scrollspy.js'); ?>" defer></script>
+    <?php if ($view === 'publico/edicoes/detalhe'): ?>
+    <script src="<?php echo config('base_path'); ?>/assets/js/galeria-lightbox.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/galeria-lightbox.js'); ?>" defer></script>
+    <?php endif; ?>
     <?php if ($view === 'home/index'): ?>
     <script src="<?php echo config('base_path'); ?>/assets/js/slideshow.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/slideshow.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/temas-desafios.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/temas-desafios.js'); ?>" defer></script>

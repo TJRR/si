@@ -72,7 +72,13 @@
             <tr id="linha-vinculo-<?php echo (int) $item['vinculo_id']; ?>"<?php echo $vinculoDestaque !== null && $vinculoDestaque === (int) $item['vinculo_id'] ? ' class="linha-destaque"' : ''; ?>>
                 <td><input type="checkbox" class="marcar-linha" name="vinculo_ids[]" value="<?php echo (int) $item['vinculo_id']; ?>" form="form-acoes-em-massa"></td>
                 <td><?php echo htmlspecialchars($item['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?php echo htmlspecialchars($item['participante_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
+                <td>
+                    <?php echo htmlspecialchars($item['participante_nome'], ENT_QUOTES, 'UTF-8'); ?>
+                    <?php
+                        $estadoSelo = \App\Services\PermissaoParticipanteService::estadoDoStatusETemHistorico($item['status_homologacao'], $item['tem_historico']);
+                    ?>
+                    <span class="status-pill <?php echo \App\Services\PermissaoParticipanteService::corDoEstado($estadoSelo); ?>"><?php echo \App\Services\PermissaoParticipanteService::rotuloDoEstado($estadoSelo); ?></span>
+                </td>
                 <td><?php echo $item['papel'] === 'lider' ? 'Líder' : 'Integrante'; ?></td>
                 <td><?php echo htmlspecialchars((string) $item['cpf'], ENT_QUOTES, 'UTF-8'); ?></td>
                 <td><?php echo htmlspecialchars((string) $item['email'], ENT_QUOTES, 'UTF-8'); ?></td>
@@ -88,6 +94,13 @@
                 </td>
                 <td>
                     <div class="acoes-icones">
+                        <a href="<?php echo url('homologacao/historico/' . (int) $item['vinculo_id']); ?>" class="btn-icone" title="Histórico de homologação"
+                           onclick="abrirModalUrl(<?php echo htmlspecialchars(json_encode('Histórico — ' . $item['participante_nome'], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8'); ?>, this.href); return false;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </a>
                         <?php if ($item['status_homologacao'] !== 'homologado'): ?>
                             <form method="post" action="<?php echo url('homologacao/homologar'); ?>"><?= campoCsrf() ?>
                                 <input type="hidden" name="vinculo_id" value="<?php echo (int) $item['vinculo_id']; ?>">

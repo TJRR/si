@@ -19,6 +19,7 @@ use App\Repositories\UsuarioParticipanteRepository;
 use App\Services\ArquivoPrivadoService;
 use App\Services\CertificadoExtratorService;
 use App\Services\ItiValidadorService;
+use App\Services\PermissaoParticipanteService;
 use App\Services\SlaService;
 use App\Validation\UploadPdfValidador;
 
@@ -99,6 +100,7 @@ class RequerimentoAdminController extends Controller
 
         $this->renderizar('admin/requerimentos/ver', [
             'requerimento' => $requerimento,
+            'estadoParticipante' => (new PermissaoParticipanteService())->estadoDoParticipante((int) $requerimento['participante_id']),
             'respostas' => $this->respostas->listarPorRequerimento((int) $id),
             'escalonamentos' => $this->escalonamentos->listarPorRequerimento((int) $id),
             'atendentesDisponiveis' => $this->atendentesDisponiveis((int) $requerimento['concurso_id']),

@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Resultado da Etapa',
-    'resumo' => 'Prévia (ou resultado publicado) do ranking desta etapa, calculado a partir das notas lançadas e da Fórmula da Etapa. Se a fórmula ou os critérios estiverem incompletos, a tela mostra um erro no lugar do ranking.',
+    'resumo' => 'Prévia (ou resultado publicado) do ranking desta etapa, calculado a partir das notas lançadas e da Fórmula da Etapa. Se a fórmula ou os critérios estiverem incompletos, a tela mostra um erro no lugar do ranking. A coluna "Enviada em" mostra a data e hora exatas do envio da submissão.',
     'operacoes' => [
         [
             'nome' => 'Confirmar e publicar',

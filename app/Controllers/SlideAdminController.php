@@ -116,7 +116,7 @@ class SlideAdminController extends Controller
             'overlay_efeito' => $this->valorPermitido('overlay_efeito', SlideRepository::OVERLAY_EFEITOS, 'nenhum'),
             'overlay_cor' => $this->campoOuNulo('overlay_cor'),
             'overlay_opacidade' => $this->overlayOpacidade(),
-            'titulo_html' => isset($_POST['titulo_html']) ? $_POST['titulo_html'] : '',
+            'titulo_html' => isset($_POST['titulo_html']) ? sanitizarHtmlRico($_POST['titulo_html']) : '',
             'separador_cor' => $this->campoOuNulo('separador_cor'),
             'cta_titulo' => $this->campoOuNulo('cta_titulo'),
             'cta_link' => $this->campoOuNulo('cta_link'),

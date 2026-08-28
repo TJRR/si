@@ -119,7 +119,7 @@ class BlocoConteudoAdminController extends Controller
 
         return [
             'titulo' => trim(isset($_POST['titulo']) ? $_POST['titulo'] : ''),
-            'conteudo_html' => isset($_POST['conteudo_html']) ? $_POST['conteudo_html'] : '',
+            'conteudo_html' => isset($_POST['conteudo_html']) ? sanitizarHtmlRico($_POST['conteudo_html']) : '',
             'imagem_posicao' => $this->valorPermitido('imagem_posicao', BlocoConteudoRepository::IMAGEM_POSICOES, 'esquerda'),
             'cta_titulo' => $this->campoOuNulo('cta_titulo'),
             'cta_link' => $this->campoOuNulo('cta_link'),

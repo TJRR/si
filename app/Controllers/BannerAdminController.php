@@ -107,7 +107,7 @@ class BannerAdminController extends Controller
     private function dadosComuns()
     {
         return [
-            'conteudo_html' => isset($_POST['conteudo_html']) ? $_POST['conteudo_html'] : '',
+            'conteudo_html' => isset($_POST['conteudo_html']) ? sanitizarHtmlRico($_POST['conteudo_html']) : '',
             'conteudo_alinhamento' => $this->valorPermitido('conteudo_alinhamento', BannerRepository::CONTEUDO_ALINHAMENTOS, 'centro'),
             'cor_fundo' => $this->campoOuNulo('cor_fundo'),
             'cta_titulo' => $this->campoOuNulo('cta_titulo'),

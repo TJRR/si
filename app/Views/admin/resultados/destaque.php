@@ -10,9 +10,15 @@
 <?php endif; ?>
 
 <form method="post" action="<?php echo url('resultados/editarDestaque/' . (int) $resultado['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
-    <label>Resumo de destaque (texto curto, pensado para leitura pública — ex.: "Edições Anteriores"):<br>
-        <textarea name="resumo_destaque" rows="5" cols="60"><?php echo htmlspecialchars((string) $resultado['resumo_destaque'], ENT_QUOTES, 'UTF-8'); ?></textarea>
-    </label><br>
+    <fieldset>
+        <legend>Resumo de destaque (texto curto, pensado para leitura pública — ex.: "Edições Anteriores")</legend>
+        <?php
+        $nome = 'resumo_destaque';
+        $valor = (string) $resultado['resumo_destaque'];
+        $rotulo = null;
+        include __DIR__ . '/../_editor_rico.php';
+        ?>
+    </fieldset>
 
     <label>Imagem de destaque (opcional):
         <input type="file" name="imagem_destaque" accept="image/*">

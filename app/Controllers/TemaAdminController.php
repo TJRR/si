@@ -143,7 +143,7 @@ class TemaAdminController extends Controller
             }
         }
 
-        $cabecalhoTituloHtml = isset($_POST['cabecalho_titulo_html']) ? $_POST['cabecalho_titulo_html'] : '';
+        $cabecalhoTituloHtml = isset($_POST['cabecalho_titulo_html']) ? sanitizarHtmlRico($_POST['cabecalho_titulo_html']) : '';
 
         $efeitoTransicao = isset($_POST['cabecalho_efeito_transicao']) ? $_POST['cabecalho_efeito_transicao'] : 'onda';
         $efeitoTransicao = in_array($efeitoTransicao, ConfiguracaoVisualRepository::CABECALHO_EFEITOS_TRANSICAO, true) ? $efeitoTransicao : 'onda';
