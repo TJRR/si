@@ -572,6 +572,16 @@ body.admin-page a.btn-icone:focus {
     display: inline-flex;
 }
 
+/* Fase 37: titulo do criterio (tela do avaliador) com os icones de
+   comparacao com etapa anterior na mesma linha, em vez de empurrarem o
+   conteudo pra baixo do titulo. */
+.criterio-titulo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
 /* Realca a linha de uma tabela quando a pagina chega por um link com o
    vinculo em destaque (ex.: notificacao de CPF alterado apontando pra tela
    de Homologacao) - fundo laranja claro que esmaece sozinho apos alguns

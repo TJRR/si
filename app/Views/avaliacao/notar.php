@@ -18,7 +18,25 @@
     <form method="post" action="<?php echo url('avaliacao/notar/' . (int) $submissao['id']); ?>" id="form-notas"><?= campoCsrf() ?>
         <?php foreach ($criterios as $indice => $criterio): ?>
             <section class="criterio-bloco criterio-painel<?php echo $indice === 0 ? ' ativo' : ''; ?>" data-criterio-nome="<?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>" data-criterio-painel="<?php echo $indice; ?>">
-                <h3><?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                <h3 class="criterio-titulo">
+                    <span><?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    <?php if (!empty($etapasComparacaoPorCriterio[$criterio['id']])): ?>
+                        <span class="acoes-icones">
+                            <?php foreach ($etapasComparacaoPorCriterio[$criterio['id']] as $etapaComparacao): ?>
+                                <?php $tituloModal = 'Ver submissão de ' . $etapaComparacao['nome']; ?>
+                                <a href="<?php echo url('avaliacao/popupComparacaoEtapa/' . (int) $submissao['id'] . '/' . (int) $criterio['id'] . '/' . (int) $etapaComparacao['id']); ?>"
+                                   class="btn-icone"
+                                   title="<?php echo htmlspecialchars($tituloModal, ENT_QUOTES, 'UTF-8'); ?>"
+                                   onclick="abrirModalUrl(<?php echo htmlspecialchars(json_encode($tituloModal), ENT_QUOTES, 'UTF-8'); ?>, this.href); return false;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </a>
+                            <?php endforeach; ?>
+                        </span>
+                    <?php endif; ?>
+                </h3>
                 <?php if (!empty($criterio['descricao'])): ?>
                     <p><?php echo nl2br(htmlspecialchars($criterio['descricao'], ENT_QUOTES, 'UTF-8')); ?></p>
                 <?php endif; ?>

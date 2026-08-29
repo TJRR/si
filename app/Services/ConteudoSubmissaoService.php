@@ -19,6 +19,22 @@ use App\Repositories\TemaRepository;
  */
 class ConteudoSubmissaoService
 {
+    /**
+     * Tipos de campo nunca expostos fora do contexto "dono" da submissao (o
+     * proprio participante/equipe, ou um avaliador/admin ja autorizado PARA
+     * AQUELA submissao especifica): grupo_participantes/cpf/email/telefone
+     * sao dado pessoal; upload_pdf fica de fora porque o download
+     * (AvaliacaoController::baixarArquivo) exige autorizacao pontual daquela
+     * submissao - um link pra ele apontando pra OUTRA submissao (ex.: popup
+     * de comparacao com etapa anterior) simplesmente nao teria autorizacao
+     * e quebraria com 403.
+     *
+     * Movida de ResultadoPublicoController (Fase 23) pra ca' na Fase 37, pra
+     * ser reaproveitada tambem por AvaliacaoController::popupComparacaoEtapa()
+     * sem acoplar os dois controllers entre si.
+     */
+    const TIPOS_CAMPO_SENSIVEIS = ['grupo_participantes', 'cpf', 'email', 'telefone', 'upload_pdf'];
+
     private $camposDinamicos;
     private $temas;
     private $desafios;

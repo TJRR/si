@@ -12,6 +12,7 @@ use App\Middleware\RoleMiddleware;
 use App\Repositories\CampoDinamicoRepository;
 use App\Repositories\CriterioAvaliacaoRepository;
 use App\Repositories\CriterioCampoRepository;
+use App\Repositories\CriterioEtapaComparacaoRepository;
 use App\Repositories\EtapaRepository;
 
 class CriterioAvaliacaoAdminController extends Controller
@@ -20,6 +21,7 @@ class CriterioAvaliacaoAdminController extends Controller
     private $etapas;
     private $campos;
     private $criterioCampo;
+    private $criterioEtapaComparacao;
 
     public function __construct()
     {
@@ -28,6 +30,30 @@ class CriterioAvaliacaoAdminController extends Controller
         $this->etapas = new EtapaRepository();
         $this->campos = new CampoDinamicoRepository();
         $this->criterioCampo = new CriterioCampoRepository();
+        $this->criterioEtapaComparacao = new CriterioEtapaComparacaoRepository();
+    }
+
+    private function etapasAnterioresDisponiveis($trilhaId, $ordemAtual)
+    {
+        return array_values(array_filter(
+            $this->etapas->listarPorTrilha($trilhaId),
+            function ($etapa) use ($ordemAtual) {
+                return (int) $etapa['ordem'] < (int) $ordemAtual;
+            }
+        ));
+    }
+
+    private function lerEtapasComparacaoSelecionadas(array $etapasDisponiveis)
+    {
+        $idsDisponiveis = array_map(function ($etapa) {
+            return (int) $etapa['id'];
+        }, $etapasDisponiveis);
+
+        $selecionados = isset($_POST['etapas_comparacao']) && is_array($_POST['etapas_comparacao'])
+            ? array_map('intval', $_POST['etapas_comparacao'])
+            : [];
+
+        return array_values(array_intersect($selecionados, $idsDisponiveis));
     }
 
     public function index($etapaId)
@@ -59,11 +85,13 @@ class CriterioAvaliacaoAdminController extends Controller
         $camposDoFormulario = $etapa['formulario_dinamico_id'] !== null
             ? $this->campos->listarPorFormulario($etapa['formulario_dinamico_id'])
             : [];
+        $etapasAnterioresDisponiveis = $this->etapasAnterioresDisponiveis($etapa['trilha_id'], $etapa['ordem']);
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dados = $this->lerDadosFormulario();
             $camposSelecionados = isset($_POST['campos']) && is_array($_POST['campos']) ? array_map('intval', $_POST['campos']) : [];
+            $etapasComparacaoSelecionadas = $this->lerEtapasComparacaoSelecionadas($etapasAnterioresDisponiveis);
 
             if ($dados['nome'] === '') {
                 $erro = 'Informe o nome do critério.';
@@ -82,6 +110,7 @@ class CriterioAvaliacaoAdminController extends Controller
                     $dados['escala_max']
                 );
                 $this->criterioCampo->salvarVinculos($novoId, $camposSelecionados);
+                $this->criterioEtapaComparacao->salvarVinculos($novoId, $etapasComparacaoSelecionadas);
                 $this->redirecionar('criterios/index/' . $etapaId);
                 return;
             }
@@ -96,6 +125,8 @@ class CriterioAvaliacaoAdminController extends Controller
             'codigoSugerido' => $codigoSugerido,
             'camposDoFormulario' => $camposDoFormulario,
             'campoIdsVinculados' => [],
+            'etapasAnterioresDisponiveis' => $etapasAnterioresDisponiveis,
+            'etapaIdsComparacaoVinculadas' => [],
         ], 'Novo critério', ['tipo' => 'criterios', 'id' => (int) $etapaId]);
     }
 
@@ -112,11 +143,13 @@ class CriterioAvaliacaoAdminController extends Controller
         $camposDoFormulario = $etapa['formulario_dinamico_id'] !== null
             ? $this->campos->listarPorFormulario($etapa['formulario_dinamico_id'])
             : [];
+        $etapasAnterioresDisponiveis = $this->etapasAnterioresDisponiveis($etapa['trilha_id'], $etapa['ordem']);
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $dados = $this->lerDadosFormulario();
             $camposSelecionados = isset($_POST['campos']) && is_array($_POST['campos']) ? array_map('intval', $_POST['campos']) : [];
+            $etapasComparacaoSelecionadas = $this->lerEtapasComparacaoSelecionadas($etapasAnterioresDisponiveis);
 
             if ($dados['nome'] === '') {
                 $erro = 'Informe o nome do critério.';
@@ -135,6 +168,7 @@ class CriterioAvaliacaoAdminController extends Controller
                     $dados['escala_max']
                 );
                 $this->criterioCampo->salvarVinculos($id, $camposSelecionados);
+                $this->criterioEtapaComparacao->salvarVinculos($id, $etapasComparacaoSelecionadas);
                 $criterio = $this->criterios->buscarPorId($id);
             }
         }
@@ -145,6 +179,8 @@ class CriterioAvaliacaoAdminController extends Controller
             'criterio' => $criterio,
             'camposDoFormulario' => $camposDoFormulario,
             'campoIdsVinculados' => $this->criterioCampo->listarCampoIdsPorCriterio($id),
+            'etapasAnterioresDisponiveis' => $etapasAnterioresDisponiveis,
+            'etapaIdsComparacaoVinculadas' => $this->criterioEtapaComparacao->listarEtapaIdsPorCriterio($id),
         ], 'Editar critério', ['tipo' => 'criterios', 'id' => (int) $etapa['id']]);
     }
 

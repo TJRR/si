@@ -24,17 +24,6 @@ use App\Services\ResultadoEtapaService;
  */
 class ResultadoPublicoController extends Controller
 {
-    /**
-     * Tipos de campo nunca expostos na pagina publica, mesmo em
-     * 'ranking_e_material': grupo_participantes/cpf/email/telefone sao dado
-     * pessoal do participante (o material publico e' a ideia submetida, nao
-     * a lista de integrantes); upload_pdf fica de fora porque o download
-     * (AvaliacaoController::baixarArquivo) exige autorizacao de
-     * avaliador/admin - decidir se um anexo pode ser baixado sem login e'
-     * uma decisao a parte, nao assumida aqui.
-     */
-    const TIPOS_CAMPO_SENSIVEIS = ['grupo_participantes', 'cpf', 'email', 'telefone', 'upload_pdf'];
-
     private $etapas;
     private $resultados;
     private $submissoes;
@@ -104,7 +93,7 @@ class ResultadoPublicoController extends Controller
         return array_values(array_filter(
             $this->conteudoSubmissao->montar($submissao),
             function ($item) {
-                return !in_array($item['campo']['tipo'], self::TIPOS_CAMPO_SENSIVEIS, true);
+                return !in_array($item['campo']['tipo'], ConteudoSubmissaoService::TIPOS_CAMPO_SENSIVEIS, true);
             }
         ));
     }

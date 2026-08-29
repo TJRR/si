@@ -48,6 +48,20 @@
         <?php endif; ?>
     </fieldset>
 
+    <fieldset>
+        <legend>Etapas anteriores que o avaliador pode consultar neste critério</legend>
+        <?php if (empty($etapasAnterioresDisponiveis)): ?>
+            <p><small>Esta é a primeira etapa da trilha — não há etapa anterior para comparar.</small></p>
+        <?php else: ?>
+            <?php foreach ($etapasAnterioresDisponiveis as $etapaAnterior): ?>
+                <label>
+                    <input type="checkbox" name="etapas_comparacao[]" value="<?php echo (int) $etapaAnterior['id']; ?>" <?php echo in_array((int) $etapaAnterior['id'], $etapaIdsComparacaoVinculadas, true) ? 'checked' : ''; ?>>
+                    <?php echo htmlspecialchars($etapaAnterior['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                </label><br>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </fieldset>
+
     <div class="form-acoes">
         <a href="<?php echo url('criterios/index/' . (int) $etapa['id']); ?>" class="btn-voltar">Voltar</a>
         <button type="submit">Salvar</button>

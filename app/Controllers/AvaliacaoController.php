@@ -14,6 +14,7 @@ use App\Repositories\AvaliadorDesignacaoRepository;
 use App\Repositories\ConcursoRepository;
 use App\Repositories\CriterioAvaliacaoRepository;
 use App\Repositories\CriterioCampoRepository;
+use App\Repositories\CriterioEtapaComparacaoRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\NotaLancadaRepository;
 use App\Repositories\ResultadoEtapaRepository;
@@ -37,6 +38,7 @@ class AvaliacaoController extends Controller
     private $feedbackSubmissao;
     private $servicoResultado;
     private $criterioCampo;
+    private $criterioEtapaComparacao;
 
     public function __construct()
     {
@@ -53,6 +55,7 @@ class AvaliacaoController extends Controller
         $this->feedbackSubmissao = new FeedbackSubmissaoRepository();
         $this->servicoResultado = new ResultadoEtapaService();
         $this->criterioCampo = new CriterioCampoRepository();
+        $this->criterioEtapaComparacao = new CriterioEtapaComparacaoRepository();
     }
 
     public function index()
@@ -248,6 +251,7 @@ class AvaliacaoController extends Controller
         $conteudoSubmissao = $this->conteudoSubmissao->montar($submissao);
         $conteudoPorCriterio = $this->montarConteudoPorCriterio($criteriosDaEtapa, $conteudoSubmissao);
         $layoutCompartilhado = $this->possuiConteudoCompartilhado($criteriosDaEtapa);
+        $etapasComparacaoPorCriterio = $this->montarEtapasComparacaoPorCriterio($criteriosDaEtapa);
 
         $this->renderizar($layoutCompartilhado ? 'avaliacao/notar_compartilhado' : 'avaliacao/notar', [
             'submissao' => $submissao,
@@ -262,7 +266,28 @@ class AvaliacaoController extends Controller
             'sigiloCego' => $etapa['modo_sigilo'] === 'cego',
             'erro' => $erro,
             'conteudoPorCriterio' => $conteudoPorCriterio,
+            'etapasComparacaoPorCriterio' => $etapasComparacaoPorCriterio,
         ], 'Lançar notas — Submissão #' . (int) $submissaoId);
+    }
+
+    /**
+     * Fase 37: para cada criterio, resolve as etapas anteriores que o Admin
+     * vinculou (CriterioEtapaComparacaoRepository) - a tela do avaliador usa
+     * isso pra mostrar um botao "Ver submissão de {etapa}" por vinculo.
+     */
+    private function montarEtapasComparacaoPorCriterio(array $criteriosDaEtapa)
+    {
+        $porCriterio = [];
+
+        foreach ($criteriosDaEtapa as $criterio) {
+            $etapaIds = $this->criterioEtapaComparacao->listarEtapaIdsPorCriterio($criterio['id']);
+
+            $porCriterio[$criterio['id']] = array_values(array_filter(array_map(function ($etapaId) {
+                return $this->etapas->buscarPorId($etapaId);
+            }, $etapaIds)));
+        }
+
+        return $porCriterio;
     }
 
     /**
@@ -382,6 +407,70 @@ class AvaliacaoController extends Controller
         header('Content-Length: ' . filesize($caminho));
         readfile($caminho);
         exit;
+    }
+
+    /**
+     * Fase 37: popup "Ver submissão de {etapa}" - fragmento para o modal
+     * (abrirModalUrl) de um criterio com etapa(s) de comparacao vinculadas.
+     * Resolve a submissao de comparacao EXCLUSIVAMENTE via equipe_id da
+     * submissao atual + a etapa pedida, e so' se essa etapa estiver de fato
+     * vinculada aquele criterio no banco - nunca aceita um id de submissao
+     * vindo da URL (superficie de IDOR = zero). $criterioId/$etapaComparacaoId
+     * chegam pela URL so' para serem REVALIDADOS aqui, nunca para decidir o
+     * que buscar - os botoes podem estar escondidos no HTML, mas o servidor
+     * nunca confia nisso.
+     */
+    public function popupComparacaoEtapa($submissaoId, $criterioId, $etapaComparacaoId)
+    {
+        $contexto = $this->carregarSubmissaoAutorizada($submissaoId);
+        $submissaoAtual = $contexto['submissao'];
+        $etapaAtual = $contexto['etapa'];
+
+        $criterio = $this->criterios->buscarPorId($criterioId);
+
+        if ($criterio === null || (int) $criterio['etapa_id'] !== (int) $etapaAtual['id']) {
+            http_response_code(403);
+            exit('Acesso negado.');
+        }
+
+        $etapaIdsVinculadas = $this->criterioEtapaComparacao->listarEtapaIdsPorCriterio($criterioId);
+
+        if (!in_array((int) $etapaComparacaoId, $etapaIdsVinculadas, true)) {
+            http_response_code(403);
+            exit('Acesso negado: este critério não permite comparação com essa etapa.');
+        }
+
+        $etapaComparacao = $this->etapas->buscarPorId($etapaComparacaoId);
+
+        // Defensivo minimo (nao ha' UI para o caso "equipe sem submissao na
+        // etapa de comparacao", mas nunca deixa a pagina quebrar por causa
+        // disso - a view trata $submissaoAnterior === null com uma mensagem
+        // simples).
+        $submissaoAnterior = null;
+
+        if ($etapaComparacao !== null && $submissaoAtual['equipe_id'] !== null) {
+            $submissaoAnterior = $this->submissoes->buscarPorEquipeEEtapa(
+                $submissaoAtual['equipe_id'],
+                $etapaComparacao['id']
+            );
+        }
+
+        $conteudoAnterior = [];
+
+        if ($submissaoAnterior !== null) {
+            $conteudoAnterior = array_values(array_filter(
+                $this->conteudoSubmissao->montar($submissaoAnterior),
+                function ($item) {
+                    return !in_array($item['campo']['tipo'], ConteudoSubmissaoService::TIPOS_CAMPO_SENSIVEIS, true);
+                }
+            ));
+        }
+
+        $this->renderizar('avaliacao/popup_comparacao_etapa', [
+            'etapaComparacao' => $etapaComparacao,
+            'submissaoAnterior' => $submissaoAnterior,
+            'conteudoAnterior' => $conteudoAnterior,
+        ]);
     }
 
     private function carregarSubmissaoAutorizada($submissaoId)
