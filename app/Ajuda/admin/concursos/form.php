@@ -14,6 +14,10 @@ return [
             'como' => 'Obrigatório — ex.: "5º Prêmio de Inovação".',
         ],
         [
+            'nome' => 'Descrição',
+            'como' => 'Editor rico — texto de apresentação da edição, exibido na página pública "Edições Anteriores" depois que o concurso é encerrado.',
+        ],
+        [
             'nome' => 'Data de início / fim',
             'como' => 'Período de referência da edição — não trava por si só nenhuma outra tela (os prazos que realmente bloqueiam ficam nas Etapas).',
         ],

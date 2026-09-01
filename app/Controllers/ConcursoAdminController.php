@@ -45,7 +45,7 @@ class ConcursoAdminController extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
-            $descricao = trim(isset($_POST['descricao']) ? $_POST['descricao'] : '');
+            $descricao = sanitizarHtmlRico(isset($_POST['descricao']) ? $_POST['descricao'] : '');
             $dataInicio = isset($_POST['data_inicio']) ? $_POST['data_inicio'] : '';
             $dataFim = isset($_POST['data_fim']) ? $_POST['data_fim'] : '';
             $status = isset($_POST['status']) ? $_POST['status'] : 'rascunho';
@@ -81,7 +81,7 @@ class ConcursoAdminController extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             RoleMiddleware::exigir(['administrador'], $concurso['id']);
             $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
-            $descricao = trim(isset($_POST['descricao']) ? $_POST['descricao'] : '');
+            $descricao = sanitizarHtmlRico(isset($_POST['descricao']) ? $_POST['descricao'] : '');
             $dataInicio = isset($_POST['data_inicio']) ? $_POST['data_inicio'] : '';
             $dataFim = isset($_POST['data_fim']) ? $_POST['data_fim'] : '';
             $status = isset($_POST['status']) ? $_POST['status'] : 'rascunho';

@@ -48,7 +48,7 @@ $rotulosTipoDocumento = [
     <?php if (!empty($concurso['descricao'])): ?>
     <div class="site-secao-publica">
         <div class="site-secao-larga">
-            <p class="section-text"><?php echo nl2br(htmlspecialchars($concurso['descricao'], ENT_QUOTES, 'UTF-8')); ?></p>
+            <div class="section-text"><?php echo $concurso['descricao']; ?></div>
         </div>
     </div>
     <?php endif; ?>
@@ -137,6 +137,17 @@ $rotulosTipoDocumento = [
             <figcaption id="lightbox-legenda" class="lightbox-legenda"></figcaption>
         </figure>
         <button type="button" class="lightbox-seta lightbox-proxima" aria-label="Próxima foto">&rsaquo;</button>
+    </div>
+    <?php endif; ?>
+
+    <?php if (!empty($blocoConcurso) && !empty($blocoConcurso['ativo']) && !empty($blocoConcurso['conteudo_html'])): ?>
+    <div class="site-secao-publica">
+        <div class="site-secao-larga">
+            <?php if (!empty($blocoConcurso['titulo'])): ?>
+            <h2 class="section-title"><?php echo htmlspecialchars($blocoConcurso['titulo'], ENT_QUOTES, 'UTF-8'); ?></h2>
+            <?php endif; ?>
+            <div class="section-text"><?php echo $blocoConcurso['conteudo_html']; ?></div>
+        </div>
     </div>
     <?php endif; ?>
 </div>

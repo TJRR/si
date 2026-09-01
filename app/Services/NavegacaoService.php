@@ -216,7 +216,7 @@ class NavegacaoService
         $trilhas = new TrilhaRepository();
         $etapas = new EtapaRepository();
 
-        if (in_array($tipo, ['concurso', 'formularios', 'trilhas', 'categorias_avaliador', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma', 'mentorias', 'oficinas'], true)) {
+        if (in_array($tipo, ['concurso', 'formularios', 'trilhas', 'categorias_avaliador', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma', 'mentorias', 'oficinas', 'blocoConcurso'], true)) {
             $concurso = $concursos->buscarPorId($id);
 
             if ($concurso === null) {
@@ -243,6 +243,8 @@ class NavegacaoService
                 $caminho[] = self::noMentorias($concurso);
             } elseif ($tipo === 'oficinas') {
                 $caminho[] = self::noOficinas($concurso);
+            } elseif ($tipo === 'blocoConcurso') {
+                $caminho[] = self::noBlocoConcurso($concurso);
             }
 
             return $caminho;
@@ -328,6 +330,7 @@ class NavegacaoService
                         self::noFaqConcurso($concurso),
                         self::noMentorias($concurso),
                         self::noOficinas($concurso),
+                        self::noBlocoConcurso($concurso),
                     ];
                 }
 
@@ -340,6 +343,7 @@ class NavegacaoService
                     self::noEventosCronograma($concurso),
                     self::noMentorias($concurso),
                     self::noOficinas($concurso),
+                    self::noBlocoConcurso($concurso),
                     self::noTrilhas($concurso),
                 ];
 
@@ -433,6 +437,22 @@ class NavegacaoService
             'rotulo' => 'Oficinas',
             'folha' => true,
             'url' => 'oficinaAdmin/index/' . (int) $concurso['id'],
+        ];
+    }
+
+    /**
+     * Fase 38 (#247): visivel pra Administrador e Suporte (podem ver e o
+     * Suporte tambem pode chegar na tela), so' Administrador grava - mesma
+     * checagem em BlocoConcursoAdminController::index() no POST.
+     */
+    private static function noBlocoConcurso(array $concurso)
+    {
+        return [
+            'tipo' => 'blocoConcurso',
+            'id' => (int) $concurso['id'],
+            'rotulo' => 'Bloco da edição',
+            'folha' => true,
+            'url' => 'blocoConcurso/index/' . (int) $concurso['id'],
         ];
     }
 

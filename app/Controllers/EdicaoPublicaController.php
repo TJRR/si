@@ -8,6 +8,7 @@ if (!defined('SI_BOOT')) {
 }
 
 use App\Core\Controller;
+use App\Repositories\BlocoConcursoRepository;
 use App\Repositories\ConcursoRepository;
 use App\Repositories\DocumentoRepository;
 use App\Repositories\EquipeRepository;
@@ -34,6 +35,7 @@ class EdicaoPublicaController extends Controller
     private $submissoes;
     private $documentos;
     private $midias;
+    private $blocosConcurso;
 
     public function __construct()
     {
@@ -45,6 +47,7 @@ class EdicaoPublicaController extends Controller
         $this->submissoes = new SubmissaoRepository();
         $this->documentos = new DocumentoRepository();
         $this->midias = new MidiaRepository();
+        $this->blocosConcurso = new BlocoConcursoRepository();
     }
 
     public function index()
@@ -140,6 +143,7 @@ class EdicaoPublicaController extends Controller
             'vencedoresPorTrilha' => $vencedoresPorTrilha,
             'documentos' => $this->documentos->listarAtivosPorConcurso($concurso['id']),
             'galeria' => $galeria,
+            'blocoConcurso' => $this->blocosConcurso->buscarPorConcurso($concurso['id']),
         ], $concurso['nome']);
     }
 }

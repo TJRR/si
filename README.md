@@ -8,7 +8,7 @@ regras de desempate, mentorias e oficinas com agenda integrada, requerimentos
 assinados digitalmente, portal institucional editável e transparência pública —
 tudo pela própria interface, sem depender de programador a cada edição.
 
-`Licença MIT` · `PHP 7.3+` · `MySQL 8` · `sem framework` · `sem bibliotecas JavaScript de terceiros` · `em produção`
+`Licença MIT` · `PHP` · `MySQL` · `em produção`
 
 Desenvolvido pelo **Núcleo de Projetos e Inovação (NPI) do Tribunal de Justiça do
 Estado de Roraima (TJRR)** e disponibilizado sob licença MIT para que qualquer
@@ -30,11 +30,6 @@ Instância pública em operação: <https://npi.tjrr.jus.br>
 - [Portal institucional e transparência](#portal-institucional-e-transparência)
 - [Integrações](#integrações)
 - [Segurança e proteção de dados](#segurança-e-proteção-de-dados)
-- [Arquitetura técnica](#arquitetura-técnica)
-- [O sistema em números](#o-sistema-em-números)
-- [Rodando localmente](#rodando-localmente)
-- [Operação e manutenção](#operação-e-manutenção)
-- [Convenções de interface](#convenções-de-interface)
 - [Adotando o sistema no seu órgão](#adotando-o-sistema-no-seu-órgão)
 - [Licença](#licença)
 - [Histórico de evolução](#histórico-de-evolução)
@@ -62,8 +57,7 @@ Este sistema foi construído para resolver isso de forma definitiva e reaproveit
   prazos, notas por avaliador anonimizado, canal de dúvidas com prazo de
   resposta, agenda de mentorias e oficinas.
 - **A instituição não fica refém de fornecedor.** Código aberto sob MIT, sem
-  framework, sem serviço pago obrigatório, sem dependência de nuvem para
-  funcionar.
+  serviço pago obrigatório, sem dependência de nuvem para funcionar.
 
 O sistema nasceu como fundação de dados e evoluiu ao longo de **fases
 incrementais** até virar uma plataforma completa — cada fase entregue, testada e
@@ -103,14 +97,15 @@ reais, avaliadores reais e prazos reais.
 | Recurso | O que faz |
 |---|---|
 | Construtor de formulários | Cria e ordena campos, define obrigatoriedade, tipos e validação — sem código, com ciclo rascunho → publicado → despublicado |
-| Homologação de equipes | Fila de análise com aprovação, rejeição com motivo, mínimo de integrantes configurável, confirmação pública de participação e histórico completo de cada vínculo (data, estado anterior/novo, quem executou, motivo) |
+| Homologação de equipes | Fila de análise com aprovação, rejeição com motivo, mínimo de integrantes configurável, confirmação pública de participação e histórico completo de cada vínculo |
 | Critérios, pesos e fórmula | Critérios por etapa, pesos, fórmula de pontuação escrita livremente e regras de desempate ordenadas |
 | Designação de avaliadores | Modo aberto, manual, automático ou sorteio aleatório restrito a categorias compatíveis |
 | Apuração e resultado | Cálculo, ranking, classificação para a etapa seguinte, publicação controlada e reabertura de etapa |
-| Auditoria | Registro de toda escrita (quem, quando, o quê, antes e depois), com busca e relatório em PDF anonimizado |
+| Auditoria | Registro de toda escrita (quem, quando, o quê), com busca e relatório em PDF anonimizado |
 | Notificações e e-mail | Avisos no painel e por e-mail nos marcos do processo |
 | Ajuda contextual | Texto de ajuda escrito para a tela em que a pessoa está, mais um glossário de conceitos transversais |
 | Modo de manutenção | Tira o sistema do ar para todos, menos administradores, durante uma atualização |
+| Conteúdo institucional | Home, edições anteriores, prêmios, FAQ, documentos, cronograma e identidade visual editáveis pela própria interface, sem depender de programador |
 
 ---
 
@@ -157,8 +152,7 @@ Cada Etapa carrega duas configurações independentes, sempre por etapa:
 
 - `cego` — o avaliador nunca vê equipe nem participante. Vê um número estável
   atribuído **uma única vez por etapa**, sorteado antes da numeração, e nunca
-  recalculado a partir da ordem de submissão (justamente para não vazar quem
-  enviou primeiro).
+  recalculado a partir da ordem de submissão.
 - `aberto` — sem restrição de identificação.
 
 **Modo de designação**
@@ -174,9 +168,8 @@ Cada Etapa carrega duas configurações independentes, sempre por etapa:
 **Pontuação**
 
 A fórmula é escrita livremente pelo Administrador (expressão aritmética sobre os
-critérios, avaliada por um interpretador próprio — sem `eval`), com fallback para
-média ponderada pelos pesos. As regras de desempate são ordenadas e configuradas
-por etapa.
+critérios), com fallback para média ponderada pelos pesos. As regras de
+desempate são ordenadas e configuradas por etapa.
 
 **Comparação entre etapas**
 
@@ -184,18 +177,15 @@ Um critério pode exigir mais do que o conteúdo da etapa atual — por exemplo,
 julgar a "evolução do conceito" de uma equipe exige ver o que ela submeteu numa
 etapa anterior. O Administrador vincula, por critério, uma ou mais etapas já
 realizadas da mesma trilha; o avaliador vê um ícone por etapa vinculada, que
-abre a submissão correspondente da mesma equipe num popup. O sigilo cego não
-é afetado — nem nome de equipe nem dado de participante aparece nesse popup —
-e o vínculo é revalidado no servidor a cada consulta, nunca só escondido na
-tela.
+abre a submissão correspondente da mesma equipe num popup, sem quebrar o
+sigilo cego.
 
 **Publicação**
 
-Cada etapa define seu próprio `mecanismo_avaliacao` e sua própria
-`visibilidade_publica`: dá para ter uma etapa avaliada e não divulgada, uma etapa
-divulgada integralmente e uma etapa em que só a lista de classificados aparece.
-Depois do prazo ou da publicação, a submissão passa a somente-leitura
-automaticamente.
+Cada etapa define sua própria visibilidade pública: dá para ter uma etapa
+avaliada e não divulgada, uma etapa divulgada integralmente e uma etapa em que
+só a lista de classificados aparece. Depois do prazo ou da publicação, a
+submissão passa a somente-leitura automaticamente.
 
 ---
 
@@ -204,35 +194,28 @@ automaticamente.
 **Mentoria e Oficina** vivem fora da árvore Trilha/Etapa, com agenda própria:
 mentoria é uma equipe por horário (reserva exclusiva); oficina é coletiva
 (inscrição de várias equipes no mesmo horário). O link da sala virtual só aparece
-para quem reservou ou está inscrito — nunca nas páginas públicas de
-transparência. Cada horário pode ser **aberto a todos** ou **vinculado a uma
-etapa**: nesse caso só enxerga e se inscreve quem está habilitado a ela, pelo
-mesmo critério que libera a submissão — estar classificado na etapa anterior.
-Horário só pode ser editado ou removido antes da data marcada. Quando a integração com o Google Agenda está ativa, cada horário
-vira um evento real na agenda do organizador, com convite e RSVP dos
-participantes; e, depois do encontro, o sistema busca a **presença real** de quem
-entrou na sala e por quanto tempo.
+para quem reservou ou está inscrito. Cada horário pode ser **aberto a todos**
+ou **vinculado a uma etapa**, restringindo quem enxerga e se inscreve. Quando a
+integração com o Google Agenda está ativa, cada horário vira um evento real na
+agenda do organizador, com convite e confirmação dos participantes; e, depois
+do encontro, o sistema busca a **presença real** de quem entrou na sala e por
+quanto tempo.
 
 **Tira-Dúvidas** é o canal formal do participante: dúvida com anexo, resposta,
 reabertura, prazo de atendimento monitorado e escalonamento para um colaborador
 externo quando a resposta depende de outra área. Uma dúvida já respondida
-costuma valer para todo mundo, e não só para quem perguntou: Administrador e
-Suporte podem **aproveitá-la como pergunta frequente**, publicando-a no banco de FAQ — só
-no banco geral, ou já ativa na edição em curso. A promoção nunca é um clique de
-cópia: abre um formulário para reescrever pergunta e resposta em termos
-genéricos, porque o texto de origem é privado e pode conter nome de equipe, dado
-pessoal e detalhe de submissão sob sigilo. A dúvida original permanece intacta e
-exclusiva da equipe que perguntou, e o item publicado não guarda vínculo visível
-com ela.
+costuma valer para todo mundo: Administrador e Suporte podem **aproveitá-la
+como pergunta frequente**, publicando-a no banco de FAQ com o texto reescrito
+em termos genéricos — a dúvida original permanece intacta e exclusiva da equipe
+que perguntou.
 
 **Modelos de Documento e Requerimentos** cobrem o que antes era feito por e-mail:
 o Administrador escreve um modelo em editor rico usando marcações do tipo
 `[[lider.nome]]`, `[[equipe.nome]]`, `[[desafio.titulo]]`; o líder da equipe gera
 o PDF já preenchido, assina digitalmente fora do sistema (gov.br) e devolve o
-arquivo assinado. O sistema então extrai do próprio PDF o titular declarado no
-certificado e oferece uma verificação automática de apoio — sem jamais substituir
-a conferência manual no site oficial, que continua obrigatória e registrada por
-confirmação explícita do Administrador.
+arquivo assinado. O sistema oferece uma verificação automática de apoio — sem
+jamais substituir a conferência manual, que continua obrigatória e registrada
+por confirmação explícita do Administrador.
 
 ---
 
@@ -247,14 +230,14 @@ sistema, escopado por edição:
 - **Documentos e editais versionados**, com controle de publicação
 - **Biblioteca de mídia** compartilhada
 - **Ordenação das seções da home** definida pelo Administrador
-- **Edições anteriores** — repositório público das edições passadas
+- **Edições anteriores** — repositório público das edições passadas, com bloco de conteúdo rico opcional específico de cada edição
 - **Identidade visual** (cores, logo, favicon) global ou por edição
 - **Páginas públicas de transparência**: equipes homologadas, resultados
   publicados, agenda de mentorias e oficinas
 
-Editor rico, reordenação por arrastar-e-soltar, máscaras, abas e árvore de
-navegação são **JavaScript puro escrito no projeto** — nenhuma biblioteca de
-terceiros, nenhum CDN, nenhum rastreador.
+Editor rico, reordenação por arrastar-e-soltar e árvore de navegação foram
+escritos no próprio projeto — sem dependência de biblioteca externa nem de
+serviço de terceiros para funcionar.
 
 ---
 
@@ -262,300 +245,37 @@ terceiros, nenhum CDN, nenhum rastreador.
 
 Todas são **opcionais**: o sistema funciona por completo sem nenhuma delas.
 
-| Integração | Para quê | Como |
-|---|---|---|
-| **Login Google (OAuth2)** | Entrar com a conta institucional, sem senha nova | Fluxo *Authorization Code* implementado em cURL puro, sem SDK. Vínculo por e-mail exato, `state` aleatório de uso único contra CSRF, recusa de e-mail não verificado, **nenhum token armazenado** |
-| **Google Agenda** | Cada mentoria/oficina vira evento real, com convite e RSVP | Service Account com delegação de domínio, impersonando o organizador; agenda secundária por edição; falha-suave (o sistema nunca trava se o Google estiver fora) |
-| **Google Meet** | Relatório de presença real: quem entrou, por quanto tempo, quem entrou sem ser convidado | Leitura do registro da conferência após o encerramento, cruzando convidado → RSVP → presença |
-| **Assinatura gov.br / ITI** | Conferência de requerimentos assinados digitalmente | Leitura do certificado embutido no PDF (parser DER/X.509 mínimo, escrito no projeto) + verificação automática de apoio |
-| **SMTP** | Notificações por e-mail nos marcos do processo | PHPMailer |
+| Integração | Para quê |
+|---|---|
+| **Login Google** | Entrar com a conta institucional, sem senha nova |
+| **Google Agenda** | Cada mentoria/oficina vira evento real, com convite e confirmação |
+| **Google Meet** | Relatório de presença real: quem entrou, por quanto tempo |
+| **Assinatura gov.br / ITI** | Conferência automática de apoio para requerimentos assinados digitalmente |
+| **SMTP** | Notificações por e-mail nos marcos do processo |
 
 ---
 
 ## Segurança e proteção de dados
 
-O sistema passou por uma **auditoria de segurança completa**, cujos achados foram
-integralmente corrigidos e publicados. As defesas atuais:
+O sistema passou por uma auditoria de segurança completa, com os achados
+integralmente corrigidos e publicados. Alguns pilares:
 
-**Autenticação e sessão**
-- Senhas com `password_hash`/`password_verify` (bcrypt)
-- Cookie de sessão `HttpOnly`, `Secure` sob HTTPS e `SameSite=Lax`
-- Regeneração do identificador de sessão no login
-- **Limite de tentativas de login** por janela de tempo
-- **Mensagem de erro única** para e-mail inexistente, senha errada e conta
-  pendente/rejeitada/suspensa — sem dar pista de qual é o caso real
-- Recuperação de senha por token de uso único e prazo de validade
+- Autenticação com limite de tentativas, sessão protegida e recuperação de
+  senha por link de uso único.
+- Proteção contra falsificação de requisição em toda ação de escrita.
+- Autorização por perfil **e** por concurso, verificada a cada ação — não só
+  no momento do login.
+- Credenciais de integração (Google, e-mail) guardadas cifradas, nunca
+  visíveis na tela mesmo para quem administra, com aviso automático aos demais
+  administradores sempre que alguém acessa ou altera uma.
+- Upload de arquivo validado pelo conteúdo real, não pela extensão informada
+  pelo navegador.
+- Auditoria completa de toda escrita relevante, com relatórios anonimizados
+  quando o dado é sensível.
+- Política de retenção de dados pessoais (ex.: nomes capturados em relatório
+  de presença são anonimizados após 30 dias).
 
-**Requisições**
-- **Proteção CSRF centralizada no roteador**: todo `POST` é verificado antes de
-  chegar ao controller, com comparação em tempo constante
-- Cabeçalhos `X-Frame-Options`, `X-Content-Type-Options` e `Referrer-Policy`
-- Autorização por perfil **e** por concurso em middleware, não espalhada nas telas
-- **Perda de acesso é revalidada em cada ação, não só na submissão**: um
-  participante rejeitado após já ter sido homologado deixa de reservar
-  mentoria, se inscrever em oficina e gerar requerimento — checado por um
-  ponto único que todos os controllers do participante consultam
-
-**Credenciais de integração**
-- Guardadas **cifradas em repouso** (AES-256-GCM, vetor de inicialização por
-  gravação, modo autenticado), não em arquivo de configuração
-- Administráveis por tela, na aba **Segurança** de Configurações, restrita ao
-  Administrador com perfil global
-- A tela **nunca exibe o valor** de um segredo: mostra uma impressão digital
-  (resumo SHA-256) que identifica qual credencial está instalada sem revelá-la
-- Abrir a tela ou gravar uma credencial **registra na auditoria e notifica os
-  demais administradores** — sem incluir nenhum valor
-- A trilha de auditoria descarta valores de campos sensíveis antes de gravar
-
-**Dados e arquivos**
-- Acesso ao banco exclusivamente por PDO com *prepared statements*
-- Upload valida o **tipo real do arquivo** (`finfo`), nunca o cabeçalho enviado
-  pelo navegador, e bloqueia *path traversal* por caminho canônico
-- Arquivos de submissão ficam em área privada, fora da árvore servida pela web
-- Credenciais moram em arquivo PHP executável (nunca em texto plano), fora do
-  controle de versão
-- Guarda de inicialização: todo arquivo PHP que não seja o ponto de entrada
-  recusa execução direta
-- Scripts de linha de comando recusam ser chamados por HTTP
-
-**Rastreabilidade e privacidade**
-- **Auditoria de toda escrita**: ação, entidade, autor, data e conteúdo antes e
-  depois, com busca e relatório em PDF
-- Relatórios de conferência **anonimizados por linha** — impedem tanto a
-  identificação da equipe quanto a reconstrução do conjunto de notas de uma
-  pessoa
-- **Política de retenção**: nomes capturados em relatórios de presença são
-  anonimizados após 30 dias, preservando a contagem e a permanência para fins
-  estatísticos, sem manter o dado pessoal
-- Política de Privacidade e Termos de Serviço publicados como páginas próprias
-
----
-
-## Arquitetura técnica
-
-### Stack
-
-PHP 7.3+ e MySQL 8, **sem framework**. Duas dependências de terceiros no total —
-PHPMailer (e-mail) e Dompdf (relatórios em PDF). No navegador: **zero
-bibliotecas**, zero CDN, zero build. Não há Node, npm, webpack, transpilação ou
-etapa de compilação: o que está no repositório é o que roda.
-
-A escolha é deliberada. Um sistema de tribunal precisa continuar funcionando
-daqui a cinco anos, em servidor institucional, sem que a atualização de um
-ecossistema de terceiros quebre a edição do prêmio no meio da avaliação.
-
-### Roteamento sem dependência do servidor
-
-O roteamento é por *query string* — `index.php?r=modulo/acao/parametro` — e não
-exige `mod_rewrite`, `.htaccess`, `AllowOverride` nem `DocumentRoot` próprio.
-Isso permite instalar o sistema como **subpasta de um portal institucional já
-existente**, cenário comum no setor público, sem tocar na configuração do
-servidor nem negociar acesso de infraestrutura.
-
-O prefixo de instalação é centralizado numa única configuração e num helper de
-URL: mudar de `/si` para qualquer outro caminho é alterar um valor.
-
-### Camadas
-
-```
-si/
-├── index.php                  # ponto de entrada único
-├── politica.php / termos.php  # páginas legais (fora do roteador)
-├── app/
-│   ├── Core/                  # Router, Database (PDO), Auth, Auditoria, View,
-│   │                          # Controller, GoogleOAuth, GoogleServiceAccountAuth,
-│   │                          # ExpressaoAritmetica, Mailer, Texto
-│   ├── Controllers/           # 59 controllers (administrativos, do participante,
-│   │                          # do avaliador e públicos)
-│   ├── Middleware/            # autorização por perfil e por concurso
-│   ├── Repositories/          # 59 repositórios — 1 por entidade, sempre PDO
-│   │                          # preparado + registro de auditoria
-│   ├── Services/              # 29 serviços — regras de negócio (avaliação,
-│   │                          # inscrição, uploads, Google, PDF, SLA, notificação)
-│   ├── Validation/            # CPF, YouTube, upload de PDF
-│   ├── Ajuda/                 # ajuda contextual: 1 arquivo por tela + conceitos
-│   └── Views/                 # 149 telas (admin, participante, avaliador, público)
-├── assets/
-│   ├── css/site.css           # folha de estilo única do projeto
-│   ├── js/                    # JavaScript puro, 1 arquivo por funcionalidade
-│   └── uploads/               # mídia pública enviada pelo admin
-├── config/                    # configuração da aplicação; credenciais locais
-│                              # ficam fora do controle de versão
-├── database/
-│   ├── migrate.php            # aplicador de migrations
-│   ├── migrations/            # 117 migrations numeradas e idempotentes
-│   └── *.php                  # scripts operacionais de linha de comando
-├── storage/                   # submissões privadas, logs e sessões
-└── docker-compose.yml         # ambiente de desenvolvimento
-```
-
-### Padrões que valem para o projeto inteiro
-
-- **Um repositório por entidade.** Nenhum SQL solto em controller ou view.
-- **Auditoria na origem.** O registro de auditoria acontece dentro do
-  repositório, não no controller — não há caminho de escrita que escape dele.
-- **Serviços para regra compartilhada.** Quando uma regra passa a ser usada em
-  dois lugares, ela vira serviço; não se duplica lógica de negócio.
-- **Migrations numeradas e idempotentes.** Rodar de novo é seguro; o controle é
-  por tabela própria.
-- **Comentário explica *por quê*, não *o quê*.** O código carrega o histórico das
-  decisões — inclusive as recusadas e o motivo — em português.
-- **Todo script de manutenção é *dry-run* por padrão.** Nada escreve sem
-  `--confirmar` explícito.
-
----
-
-## O sistema em números
-
-| | |
-|---|---|
-| Linhas de PHP no projeto | ~51.000 |
-| Controllers | 59 |
-| Repositórios | 59 |
-| Serviços de domínio | 29 |
-| Telas (views) | 149 |
-| Tabelas no banco | 64 |
-| Migrations | 117 |
-| Telas com ajuda contextual escrita | 114 (+ 10 conceitos transversais) |
-| Scripts operacionais de linha de comando | 40 |
-| Folha de estilo | ~4.600 linhas, sem framework CSS |
-| JavaScript | ~2.000 linhas, sem biblioteca externa |
-| Dependências de terceiros | 2 (PHPMailer, Dompdf) |
-| Fases de desenvolvimento entregues | 37 |
-
----
-
-## Rodando localmente
-
-Requisitos: Docker e Docker Compose.
-
-```bash
-docker compose up -d --build
-```
-
-Sobe dois contêineres:
-
-- `app` — PHP 7.3 + Apache em <http://localhost:8090>
-- `db` — MySQL 8
-
-Na primeira execução, crie o arquivo de credenciais locais a partir do exemplo:
-
-```bash
-cp config/local.example.php config/local.php
-```
-
-Os valores padrão já correspondem ao `docker-compose.yml`. Esse arquivo nunca é
-versionado.
-
-Aplique as migrations:
-
-```bash
-docker compose exec app php database/migrate.php
-```
-
-Crie o primeiro Administrador (prompt interativo — é o único caminho para criar
-um administrador, já que todo outro cadastro nasce pendente):
-
-```bash
-docker compose exec app php database/seed_admin.php
-```
-
-Pronto: acesse <http://localhost:8090>, entre com a conta criada e cadastre o
-primeiro Concurso.
-
-### Habilitando as integrações Google (opcional)
-
-Preencha a seção `google` de `config/local.php` com o Client ID e o Client Secret
-de um projeto do Google Cloud Console e registre a URI de retorno no formato:
-
-```
-https://SEU-DOMINIO/CAMINHO-DA-INSTALACAO/index.php?r=auth/googleCallback
-```
-
-Para Agenda e Meet, configure adicionalmente uma Service Account com delegação de
-domínio no Google Workspace do órgão. Sem isso, os módulos continuam funcionando
-— apenas sem evento na agenda e sem relatório de presença.
-
----
-
-## Operação e manutenção
-
-### Scripts de linha de comando
-
-Todos os scripts em `database/` seguem o mesmo contrato:
-
-1. **Só rodam por linha de comando** — chamadas HTTP são recusadas.
-2. **São *dry-run* por padrão** — mostram o que fariam, sem gravar nada.
-3. **Só gravam com `--confirmar`.**
-
-O procedimento correto é sempre executar primeiro sem a flag, conferir a saída, e
-só então repetir com `--confirmar`.
-
-| Grupo | Scripts | Para quê |
-|---|---|---|
-| Infraestrutura | `migrate`, `seed_admin`, `seed_formularios_inscricao` | Preparar o ambiente e a primeira edição |
-| Equipes e integrantes | `gerenciar_membro_equipe`, `renomear_equipe`, `migrar_equipe_trilha` | Retificações de composição e de trilha, sem mexer no banco à mão |
-| Submissões | `diagnosticar_submissoes_equipe`, `remover_submissoes`, `reabrir_formulario_edicao`, `importar_submissoes_google_forms` | Diagnóstico, remoção controlada por id explícito e importação de respostas externas |
-| Avaliação | `diagnosticar_notas_avaliador`, `limpar_notas_avaliador`, `limpar_notas_teste`, `limpar_designacoes_etapa`, `limpar_avaliadores_fantasma`, `atribuir_numeros_sigilo_etapa` | Conferência e correção do processo avaliativo |
-| Disponibilidade | `desativar_sistema`, `reativar_sistema` | Modo de manutenção pela linha de comando |
-| Google | `capturar_presenca_google_meet`, `backfill_conference_id`, `testar_google_calendar`, `testar_google_meet_presenca` | Captura de presença, retrofit e diagnóstico das integrações |
-| Privacidade | `expurgar_nomes_presenca` | Aplicação da política de retenção de 30 dias |
-| Conteúdo | `migrar_conteudo_home`, `atualizar_icones_temas_desafios`, `carregar_edicoes_anteriores` | Migração de conteúdo legado, enriquecimento visual e carga de edições históricas do prêmio |
-| Contas e credenciais | `excluir_usuario`, `alterar_email_usuario`, `migrar_credenciais` | Exclusão completa de conta, correção de e-mail e migração de credenciais para o armazenamento cifrado |
-
-Cada script documenta no próprio cabeçalho o que faz, o que se recusa a fazer e
-por quê. Vários têm travas deliberadas — remover submissão que já tem nota
-lançada, excluir usuário com notas, desfazer designação de sorteio — que só podem
-ser vencidas com uma flag explícita e adicional.
-
-### Modo de manutenção
-
-Uma verificação central no roteador, aplicada a **toda** requisição — autenticada
-ou não — antes de resolver a rota. Com o modo ligado:
-
-- Todos são bloqueados, exceto quem já está autenticado como **administrador**.
-  Sessões abertas de outros perfis são encerradas na próxima ação.
-- É exibida uma página de manutenção com HTTP 503, **sem CSS nem JS externo** —
-  para nunca depender de algo que possa estar no meio de uma atualização.
-
-Liga e desliga pelo botão em *Configurações* ou pelos scripts de linha de comando
-equivalentes — que funcionam por acesso direto ao banco, servindo de interruptor
-de emergência mesmo que a interface administrativa esteja inacessível.
-
-O procedimento recomendado para atualizações que mexem em esquema ou em
-comportamento de avaliação: desativar → atualizar código → rodar migrations →
-testar como administrador → reativar.
-
-### Processo agendado
-
-O agendador do servidor executa periodicamente a captura de presença nas salas virtuais.
-
-Consequências práticas para quem opera:
-
-- **Uma atualização pode interromper um processo em andamento.** O script é
-  seguro de interromper: processa um lote limitado por execução, grava de forma
-  idempotente (reprocessar nunca duplica) e tem trava contra execuções
-  sobrepostas.
-- **Falha de processo agendado é silenciosa por natureza** — ninguém está olhando
-  na hora em que ele roda. Por isso o próprio script notifica os administradores
-  no painel quando esgota as tentativas de um horário, e registra log a cada
-  execução.
-
----
-
-## Convenções de interface
-
-**Cor de mensagem é semântica em todo o sistema, sem exceção:**
-
-| Cor | Significado | Quando usar |
-|---|---|---|
-| **Verde** | Sucesso | A ação foi concluída (*"Horário removido."*, *"Perfil atualizado."*) |
-| **Laranja** | Alerta | Aviso ou estado intermediário — não é erro nem confirmação plena (*"Nenhuma submissão encontrada ainda."*, status pendente) |
-| **Vermelho** | Erro | Falha real, ação não realizada, algo que impede o fluxo (validação rejeitada, exceção capturada) |
-
-Vale tanto para texto quanto para os selos de status. Ao criar uma tela ou uma
-mensagem nova, classifique pelo **significado real da mensagem** — nunca pela
-"cor padrão" do bloco onde ela aparece.
+Detalhes de implementação dessas defesas não são divulgados por aqui.
 
 ---
 
@@ -568,30 +288,25 @@ ciclo inteiro.
 
 **O que você precisa**
 
-- PHP 7.3 ou superior com PDO/MySQL, cURL, `finfo`, `mbstring` e GD
-- MySQL 8
+- Um servidor web com PHP e MySQL
 - Um servidor SMTP para notificações
-- *Opcional:* projeto no Google Cloud (login, agenda, presença) e agendador de
-  tarefas do sistema operacional
+- *Opcional:* um projeto no Google Cloud, para login/agenda/presença
 
 **O que você não precisa**
 
-- Domínio dedicado, `DocumentRoot` próprio ou `mod_rewrite` — o sistema roda como
+- Domínio dedicado nem estrutura própria de servidor — o sistema roda como
   subpasta de um portal já existente
-- Node.js, npm ou qualquer etapa de build
 - Licença, contrato, autorização prévia ou aviso ao TJRR
-- Fornecedor: não há componente proprietário, serviço pago obrigatório nem
-  dependência de nuvem para o funcionamento básico
+- Fornecedor: não há componente proprietário nem serviço pago obrigatório
 
 **Como começar**
 
-1. Clone o repositório e suba o ambiente local (seção acima).
-2. Rode as migrations e crie o primeiro Administrador.
-3. Cadastre um **Concurso**, suas **Trilhas**, **Temas/Desafios** e **Etapas**.
-4. Monte os **Formulários** de inscrição e de cada etapa pelo construtor.
-5. Defina **Critérios**, pesos, **Fórmula** e **Desempate** por etapa.
-6. Ajuste a **Identidade Visual** e monte a home pelo painel de conteúdo.
-7. Publique.
+1. Suba o sistema no seu ambiente e crie o primeiro Administrador.
+2. Cadastre um **Concurso**, suas **Trilhas**, **Temas/Desafios** e **Etapas**.
+3. Monte os **Formulários** de inscrição e de cada etapa pelo construtor.
+4. Defina **Critérios**, pesos, **Fórmula** e **Desempate** por etapa.
+5. Ajuste a **Identidade Visual** e monte a home pelo painel de conteúdo.
+6. Publique.
 
 Nada disso exige tocar no código. Se algo no seu edital não couber na
 configuração existente, esse é exatamente o tipo de contribuição que o projeto
@@ -615,7 +330,7 @@ garantias.
 
 ## Histórico de evolução
 
-Trinta e sete fases, cada uma entregue e publicada em produção durante uma edição
+Trinta e oito fases, cada uma entregue e publicada em produção durante uma edição
 real do prêmio.
 
 | Fase | Entrega |
@@ -634,26 +349,27 @@ real do prêmio.
 | 14 | **Publicação em produção**, auditoria, Configurações, Meu Perfil |
 | 15–16 | Correções pós-publicação, gestão de convites |
 | 17 | Correções amplas, retificação de dados reais |
-| 18 | **Painel de conteúdo institucional completo**: home dinâmica por edição (slideshow, banners, blocos ricos, prêmios, FAQ, documentos versionados, biblioteca de mídia, cronograma, contato), repositório de Edições Anteriores, editor rico e reordenação por arrastar-e-soltar 100% próprios |
+| 18 | **Painel de conteúdo institucional completo**: home dinâmica por edição, repositório de Edições Anteriores, editor rico e reordenação por arrastar-e-soltar |
 | 19 | Configuração global do site, cabeçalho configurável, ordenação da home, homologação pública, primeira versão das Mentorias |
-| 20 | Cabeçalho com imagem, grade de posicionamento, etapas pendentes do avaliador, desempate por etapa |
-| 21 | **Categorias de Avaliador**: seleção prévia ao sorteio, convite retroativo, diagnóstico de submissão duplicada |
+| 20 | Cabeçalho com imagem, etapas pendentes do avaliador, desempate por etapa |
+| 21 | **Categorias de Avaliador**: seleção prévia ao sorteio, convite retroativo |
 | 22 | Recuperação de senha ("Esqueci minha senha"), correções de suporte |
-| 23 | **Divulgação pública configurável por etapa**, relatório de auditoria em PDF anonimizado por linha |
+| 23 | **Divulgação pública configurável por etapa**, relatório de auditoria em PDF anonimizado |
 | 24 | Progresso de avaliação por avaliador, **Mentoria e Oficina** com agenda e sala virtual, premiação geral vs. por trilha |
 | 25 | **Modo de manutenção**, numeração de equipe estável sob sigilo cego, campo de link externo |
 | 26 | Busca da auditoria estendida, relatório de notas por equipe em PDF |
-| 27 | Correção de duas vulnerabilidades reais, visualização somente-leitura pós-prazo, notas por avaliador anonimizado no painel do participante, prazos com hora |
-| 28 | Layout compartilhado do avaliador, correções de acesso do perfil Suporte, filtros de status |
-| 29 | **Tira-Dúvidas** com prazo de atendimento e escalonamento, perfil Colaborador, convite de acesso por notificação |
-| 30 | **Modelos de Documento** com marcações `[[palavra.chave]]` e **Requerimentos** com assinatura gov.br e verificação automática de apoio |
-| 31 | **Integração com Google Agenda** (Service Account + delegação de domínio, RSVP), **ajuda contextual** em toda a plataforma, **auditoria de segurança completa** (CSRF central, limite de tentativas de login, cabeçalhos HTTP, correções de controle de acesso) |
-| 32 | **Relatório de presença real nas salas virtuais** por horário de Mentoria/Oficina (quem entrou, por quanto tempo, quem entrou sem convite), cruzando convidado → RSVP → presença; **primeiro processo agendado do projeto**; política de retenção de 30 dias para os nomes capturados |
-| 33 | Dados do órgão saem do código para Configurações (contato, mapa, assinatura de e-mail), README reescrito sem dados de infraestrutura, validação de link aplicada às redes sociais, Dúvidas e Requerimentos em popup, troca da própria senha |
-| 34 | **Vínculo de compromisso com etapa**: mentoria e oficina restritas a quem está habilitado à etapa, edição de horário com trava por data, correções de layout do cabeçalho em telas pequenas |
-| 35 | Dúvida frequente vira pergunta publicável (FAQ) direto do canal de atendimento, **credenciais de integração cifradas em repouso** com aba própria de Segurança, correções pós-Fase 34 |
-| 36 | **Correção de controle de acesso**: participante rejeitado após já ter sido homologado perde acesso a mentoria, oficina e requerimento (antes só a submissão era bloqueada), **histórico de homologação** por vínculo (data, estado anterior/novo, motivo), selo de estado nas telas de Inscritos/Dúvida/Requerimento, carga das 4 edições anteriores do prêmio (2022–2025) |
-| 37 | **Comparação entre etapas na avaliação**: um critério pode vincular uma ou mais etapas já realizadas da mesma trilha; o avaliador consulta a submissão correspondente da mesma equipe num popup, mantendo sigilo cego completo e revalidação de acesso a cada consulta |
+| 27 | Correção de vulnerabilidades, visualização somente-leitura pós-prazo, notas por avaliador anonimizado no painel do participante |
+| 28 | Layout compartilhado do avaliador, correções de acesso do perfil Suporte |
+| 29 | **Tira-Dúvidas** com prazo de atendimento e escalonamento, perfil Colaborador |
+| 30 | **Modelos de Documento** com marcações `[[palavra.chave]]` e **Requerimentos** com assinatura gov.br |
+| 31 | **Integração com Google Agenda**, **ajuda contextual** em toda a plataforma, **auditoria de segurança completa** |
+| 32 | **Relatório de presença real nas salas virtuais**, primeiro processo agendado do projeto, retenção de dados de 30 dias |
+| 33 | Dados do órgão saem do código para Configurações, validação de link nas redes sociais |
+| 34 | **Vínculo de compromisso com etapa**: mentoria e oficina restritas a quem está habilitado à etapa |
+| 35 | Dúvida frequente vira pergunta publicável (FAQ) direto do canal de atendimento, **credenciais de integração cifradas em repouso** |
+| 36 | **Correção de controle de acesso**: participante rejeitado após já ter sido homologado perde acesso a mentoria, oficina e requerimento, **histórico de homologação** por vínculo |
+| 37 | **Comparação entre etapas na avaliação**: um critério pode vincular uma ou mais etapas já realizadas da mesma trilha |
+| 38 | **Bloco de conteúdo opcional por edição** na página pública de Edições Anteriores, **descrição do concurso em texto rico** |
 
 ---
 

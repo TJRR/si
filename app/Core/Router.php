@@ -12,6 +12,7 @@ use App\Controllers\AuditoriaAdminController;
 use App\Controllers\AuthController;
 use App\Controllers\AvaliacaoController;
 use App\Controllers\BannerAdminController;
+use App\Controllers\BlocoConcursoAdminController;
 use App\Controllers\BlocoConteudoAdminController;
 use App\Controllers\CadastroController;
 use App\Controllers\CampoAdminController;
@@ -121,6 +122,7 @@ class Router
         'slides' => SlideAdminController::class,
         'banners' => BannerAdminController::class,
         'blocos' => BlocoConteudoAdminController::class,
+        'blocoConcurso' => BlocoConcursoAdminController::class,
         'contatosConcurso' => ContatoConcursoAdminController::class,
         'ordenacaoHome' => HomeSecaoOrdemAdminController::class,
         'premios' => PremioAdminController::class,

@@ -14,9 +14,15 @@
         <input type="text" name="nome" required value="<?php echo htmlspecialchars($concurso !== null ? $concurso['nome'] : '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $desabilitado; ?>>
     </label><br>
 
-    <label>Descrição:<br>
-        <textarea name="descricao" rows="4" cols="50" <?php echo $desabilitado; ?>><?php echo htmlspecialchars($concurso !== null ? (string) $concurso['descricao'] : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
-    </label><br>
+    <fieldset>
+        <legend>Descrição</legend>
+        <?php
+        $nome = 'descricao';
+        $valor = $concurso !== null ? (string) $concurso['descricao'] : '';
+        $rotulo = null;
+        include __DIR__ . '/../_editor_rico.php';
+        ?>
+    </fieldset>
 
     <label>Data de início:
         <input type="date" name="data_inicio" value="<?php echo htmlspecialchars($concurso !== null ? (string) $concurso['data_inicio'] : '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $desabilitado; ?>>

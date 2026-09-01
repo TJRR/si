@@ -32,7 +32,7 @@ if ($ehPaginaPublicaComLogo) {
     $logoAdminSrc = logoAtual();
 }
 
-$modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'vagasAvaliador', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao', 'categoriasAvaliador', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma', 'mentoriaAdmin', 'oficinaAdmin'];
+$modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'vagasAvaliador', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao', 'categoriasAvaliador', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma', 'mentoriaAdmin', 'oficinaAdmin', 'blocoConcurso'];
 
 if ($ehPainelInterno && \App\Core\Auth::autenticado()) {
     $repoNotificacoes = new \App\Repositories\NotificacaoPainelRepository();
