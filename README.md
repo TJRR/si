@@ -138,9 +138,13 @@ trilha — tudo é dado, cadastrado pela interface.
 | **Avaliador** | Somente o que lhe foi designado, dentro do concurso em que atua |
 | **Participante** | Sua equipe, suas submissões, suas dúvidas e requerimentos |
 | **Colaborador** | Pessoa externa que só enxerga dúvidas escaladas para ela — nenhum outro acesso administrativo |
+| **Inscrito** | Quem se inscreveu num Evento (ex.: Semana de Inovação) — só o próprio painel do evento, auto-aprovado, sem depender de aprovação manual |
 
 Toda conta — criada manualmente ou via Google — nasce **pendente** e só consegue
-entrar depois de aprovada por um Administrador. Não há exceção nesse caminho.
+entrar depois de aprovada por um Administrador, com uma única exceção: quem se
+inscreve num Evento (perfil Inscrito) já nasce aprovada automaticamente, pensado
+para um evento aberto ao público em escala, onde aprovação manual não seria
+viável — sem interferir na fila de aprovação de quem busca os demais perfis.
 
 ---
 
@@ -216,6 +220,23 @@ o PDF já preenchido, assina digitalmente fora do sistema (gov.br) e devolve o
 arquivo assinado. O sistema oferece uma verificação automática de apoio — sem
 jamais substituir a conferência manual, que continua obrigatória e registrada
 por confirmação explícita do Administrador.
+
+**Semana de Inovação** é uma entidade nova, com o mesmo status estrutural do
+Concurso (cadastro próprio, sem nenhum vínculo com a edição em andamento do
+Prêmio de Inovação), divulgação em destaque na home e inscrição pública com
+acesso próprio — quem ainda não tem conta entra com Google ou cria um
+cadastro dedicado, ambos com liberação imediata, sem espera por aprovação
+manual (adequado ao volume de um evento aberto ao público). Quem se inscreve
+passa a acessar o evento por um **aplicativo web instalável** — mesmo link,
+mesma experiência no celular e no computador; "instalar" (adicionar à tela
+inicial/área de trabalho) é sempre um atalho opcional, nunca obrigatório.
+Cada inscrição gera um **crachá digital de credenciamento**, com código
+único pronto para impressão, disponível assim que a pessoa se inscreve. O
+próprio aplicativo lê esse código pela câmera do celular (quando o
+navegador suportar) ou por digitação manual, sempre pelo próprio
+participante — não existe leitura feita pela equipe organizadora. A
+confirmação de inscrição chega por e-mail e também como notificação dentro
+do próprio aplicativo.
 
 ---
 
@@ -330,8 +351,8 @@ garantias.
 
 ## Histórico de evolução
 
-Trinta e oito fases, cada uma entregue e publicada em produção durante uma edição
-real do prêmio.
+Quarenta e uma fases, cada uma entregue e publicada em produção durante uma
+edição real do prêmio.
 
 | Fase | Entrega |
 |---|---|
@@ -370,6 +391,15 @@ real do prêmio.
 | 36 | **Correção de controle de acesso**: participante rejeitado após já ter sido homologado perde acesso a mentoria, oficina e requerimento, **histórico de homologação** por vínculo |
 | 37 | **Comparação entre etapas na avaliação**: um critério pode vincular uma ou mais etapas já realizadas da mesma trilha |
 | 38 | **Bloco de conteúdo opcional por edição** na página pública de Edições Anteriores, **descrição do concurso em texto rico** |
+| 38A | Casas decimais configuráveis na exibição de notas, correção do cálculo da Nota Final da trilha e do desempate em caso de empate |
+| 38B | **Agendamento de apresentação de pitch**: equipes finalistas escolhem data, horário e modalidade (presencial ou online), com integração automática à Google Agenda/Meet |
+| 39 | **Eventos**: nova entidade de primeiro nível (ex.: Semana de Inovação), independente do concurso, com inscrição pública e perfil auto-aprovado |
+| 40 | Divulgação de Evento na home pública, cadastro dedicado e login com Google no fluxo de inscrição |
+| 41 | **Aplicativo web instalável** para quem participa de um Evento — mesmo link no celular e no computador, instalação sempre opcional |
+| 42 | **Crachá digital de credenciamento** por inscrição, com QR e código de 6 caracteres, pronto para impressão |
+| 43 | **Leitura de código pelo próprio participante** — câmera (quando o navegador suportar) ou digitação manual, nunca pela equipe organizadora |
+| 44 | **Confirmação de inscrição também dentro do aplicativo**, além do e-mail já existente |
+| 45 | **Aviso em massa aos inscritos de um Evento**, por e-mail e pelo aplicativo, enviado em lotes para não sobrecarregar o e-mail institucional |
 
 ---
 

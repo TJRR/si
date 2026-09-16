@@ -9,6 +9,7 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Controller;
 use App\Repositories\EtapaRepository;
+use App\Repositories\FormulaPontuacaoRepository;
 use App\Repositories\ResultadoEtapaRepository;
 use App\Repositories\SubmissaoRepository;
 use App\Services\ConteudoSubmissaoService;
@@ -29,6 +30,7 @@ class ResultadoPublicoController extends Controller
     private $submissoes;
     private $servicoEtapa;
     private $conteudoSubmissao;
+    private $formulas;
 
     public function __construct()
     {
@@ -37,6 +39,7 @@ class ResultadoPublicoController extends Controller
         $this->submissoes = new SubmissaoRepository();
         $this->servicoEtapa = new ResultadoEtapaService();
         $this->conteudoSubmissao = new ConteudoSubmissaoService();
+        $this->formulas = new FormulaPontuacaoRepository();
     }
 
     public function etapa($etapaId)
@@ -79,6 +82,7 @@ class ResultadoPublicoController extends Controller
             'etapa' => $etapa,
             'modo' => $modo,
             'equipes' => $equipes,
+            'casasDecimais' => FormulaPontuacaoRepository::casasDecimais($this->formulas->buscarPorEtapa($etapaId)),
         ], 'Resultado — ' . $etapa['nome']);
     }
 

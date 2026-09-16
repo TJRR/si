@@ -35,7 +35,7 @@
                 <td>
                     <strong>
                         <?php echo isset($mediaPorCriterioId[$criterioId])
-                            ? number_format($mediaPorCriterioId[$criterioId], 2, ',', '')
+                            ? number_format($mediaPorCriterioId[$criterioId], $casasDecimais, ',', '')
                             : '—'; ?>
                     </strong>
                 </td>
@@ -44,7 +44,7 @@
     </table>
 
     <?php if ($notaFinal !== null): ?>
-        <p style="margin-top:1em;"><strong>Nota final da equipe nesta etapa: <?php echo number_format($notaFinal, 2, ',', ''); ?></strong></p>
+        <p style="margin-top:1em;"><strong>Nota final da equipe nesta etapa: <?php echo number_format($notaFinal, $casasDecimais, ',', ''); ?></strong></p>
     <?php endif; ?>
 <?php endif; ?>
 

@@ -139,6 +139,21 @@ class ParticipanteController extends Controller
 
         $eventoEtapa = new EventoEtapaService();
 
+        // Fase 38B (correcao pos-teste de fumaca): faltava qualquer link de
+        // navegacao ate' a tela de apresentacao de pitch - o botao so'
+        // acende quando existe uma etapa da trilha marcada com
+        // permite_apresentacao_pitch (Dados Gerais da Etapa) E a equipe
+        // esta' habilitada nela, mesmo criterio (motivoBloqueio) ja usado
+        // por Mentoria/Oficina vinculadas a etapa.
+        $apresentacaoPitchEtapaId = null;
+
+        foreach ($this->etapas->listarPorTrilha($equipe['trilha_id']) as $etapaCandidata) {
+            if (!empty($etapaCandidata['permite_apresentacao_pitch'])) {
+                $apresentacaoPitchEtapaId = (int) $etapaCandidata['id'];
+                break;
+            }
+        }
+
         $this->renderizar('participante/painel', [
             'equipe' => $equipe,
             'trilha' => $trilha,
@@ -157,6 +172,9 @@ class ParticipanteController extends Controller
                 && $eventoEtapa->algumHorarioVisivel($this->mentorias->etapasVinculadasNoConcurso($trilha['concurso_id']), $equipe),
             'oficinaDisponivel' => $this->oficinas->existeParaConcurso($trilha['concurso_id'])
                 && $eventoEtapa->algumHorarioVisivel($this->oficinas->etapasVinculadasNoConcurso($trilha['concurso_id']), $equipe),
+            'apresentacaoPitchEtapaId' => $apresentacaoPitchEtapaId,
+            'apresentacaoPitchDisponivel' => $apresentacaoPitchEtapaId !== null
+                && $eventoEtapa->podeParticipar(['etapa_id' => $apresentacaoPitchEtapaId], $equipe),
         ], 'Minha inscrição');
     }
 
@@ -249,6 +267,7 @@ class ParticipanteController extends Controller
             'totalAvaliadores' => count($avaliadorOrdinal),
             'mediaPorCriterioId' => $mediaPorCriterioId,
             'notaFinal' => $notaFinal,
+            'casasDecimais' => FormulaPontuacaoRepository::casasDecimais($formula),
         ], 'Notas e Feedback — ' . $etapa['nome']);
     }
 

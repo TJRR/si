@@ -15,6 +15,7 @@ use App\Repositories\CriterioAvaliacaoRepository;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\FeedbackSubmissaoRepository;
+use App\Repositories\FormulaPontuacaoRepository;
 use App\Repositories\NotaLancadaRepository;
 use App\Repositories\ResultadoEtapaRepository;
 use App\Repositories\ResultadoTrilhaRepository;
@@ -40,6 +41,7 @@ class ResultadoAdminController extends Controller
     private $servicoEtapa;
     private $servicoTrilha;
     private $imagens;
+    private $formulas;
 
     public function __construct()
     {
@@ -57,6 +59,7 @@ class ResultadoAdminController extends Controller
         $this->servicoEtapa = new ResultadoEtapaService();
         $this->servicoTrilha = new ResultadoTrilhaService();
         $this->imagens = new ImagemService();
+        $this->formulas = new FormulaPontuacaoRepository();
     }
 
     /**
@@ -192,6 +195,7 @@ class ResultadoAdminController extends Controller
             'ranking' => $ranking,
             'publicado' => $publicado,
             'erro' => $erro,
+            'casasDecimais' => FormulaPontuacaoRepository::casasDecimais($this->formulas->buscarPorEtapa($etapaId)),
         ], 'Resultado — ' . $etapa['nome'], ['tipo' => 'resultado_etapa', 'id' => (int) $etapaId]);
     }
 
@@ -304,6 +308,7 @@ class ResultadoAdminController extends Controller
             'submissoesDetalhe' => $submissoesDetalhe,
             'letrasColunas' => $letrasColunas,
             'geradoEm' => date('d/m/Y H:i') . ' ' . sufixoFusoHorario(),
+            'casasDecimais' => FormulaPontuacaoRepository::casasDecimais($this->formulas->buscarPorEtapa($etapaId)),
         ]);
 
         ini_set('memory_limit', '256M');
@@ -381,6 +386,7 @@ class ResultadoAdminController extends Controller
             'avaliadores' => $avaliadores,
             'notaPorSubmissaoUsuarioCriterio' => $notaPorSubmissaoUsuarioCriterio,
             'geradoEm' => date('d/m/Y H:i') . ' ' . sufixoFusoHorario(),
+            'casasDecimais' => FormulaPontuacaoRepository::casasDecimais($this->formulas->buscarPorEtapa($etapaId)),
         ]);
 
         ini_set('memory_limit', '256M');
@@ -487,6 +493,7 @@ class ResultadoAdminController extends Controller
             'ranking' => $ranking,
             'publicado' => $publicado,
             'erro' => $erro,
+            'casasDecimais' => FormulaPontuacaoRepository::casasDecimais($this->formulas->buscarPorTrilha($trilhaId)),
         ], 'Resultado final — ' . $trilha['nome'], ['tipo' => 'apuracao', 'id' => (int) $trilhaId]);
     }
 

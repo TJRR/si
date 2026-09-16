@@ -71,7 +71,7 @@
                     <?php endif; ?>
                 <?php endforeach; ?>
             <?php endforeach; ?>
-            <td class="col-final"><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], 2, ',', '.') : '—'; ?></td>
+            <td class="col-final"><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], $casasDecimais, ',', '.') : '—'; ?></td>
             <td><?php echo $classificado ? 'Sim' : 'Não'; ?></td>
         </tr>
     <?php endforeach; ?>

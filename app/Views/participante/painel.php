@@ -11,6 +11,9 @@
         <?php if (!empty($oficinaDisponivel)): ?>
             <a href="<?php echo url('oficina/index'); ?>" class="btn-acao">Oficinas</a>
         <?php endif; ?>
+        <?php if (!empty($apresentacaoPitchDisponivel)): ?>
+            <a href="<?php echo url('apresentacaoPitch/index/' . (int) $apresentacaoPitchEtapaId); ?>" class="btn-acao">Apresentação de Pitch</a>
+        <?php endif; ?>
         <a href="<?php echo url('duvida/index'); ?>" class="btn-acao">Dúvidas</a>
         <?php if ($ehLider): ?>
             <a href="<?php echo url('requerimento/index'); ?>" class="btn-acao">Requerimentos</a>

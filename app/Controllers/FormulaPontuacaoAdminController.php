@@ -46,9 +46,11 @@ class FormulaPontuacaoAdminController extends Controller
         $erro = null;
         $resultadoTeste = null;
         $expressaoAtual = null;
+        $casasDecimaisAtual = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $expressaoAtual = trim(isset($_POST['expressao']) ? $_POST['expressao'] : '');
+            $casasDecimaisAtual = isset($_POST['casas_decimais']) ? (int) $_POST['casas_decimais'] : 2;
             $acao = isset($_POST['acao']) ? $_POST['acao'] : 'salvar';
 
             if ($acao === 'testar') {
@@ -58,23 +60,31 @@ class FormulaPontuacaoAdminController extends Controller
 
                 if (!$validacao['valido']) {
                     $erro = $validacao['mensagem'];
+                } elseif ($casasDecimaisAtual < 0 || $casasDecimaisAtual > 4) {
+                    $erro = 'Casas decimais precisa ser um número entre 0 e 4.';
                 } else {
-                    $this->formulas->salvarParaEtapa($etapaId, $expressaoAtual);
+                    $this->formulas->salvarParaEtapa($etapaId, $expressaoAtual, $casasDecimaisAtual);
                     $this->redirecionar('formulas/etapa/' . (int) $etapaId);
                     return;
                 }
             }
         }
 
+        $formula = $this->formulas->buscarPorEtapa($etapaId);
+
         if ($expressaoAtual === null) {
-            $formula = $this->formulas->buscarPorEtapa($etapaId);
             $expressaoAtual = $formula !== null ? $formula['expressao'] : '';
+        }
+
+        if ($casasDecimaisAtual === null) {
+            $casasDecimaisAtual = FormulaPontuacaoRepository::casasDecimais($formula);
         }
 
         $this->renderizar('admin/formulas/etapa', [
             'erro' => $erro,
             'etapa' => $etapa,
             'expressaoAtual' => $expressaoAtual,
+            'casasDecimaisAtual' => $casasDecimaisAtual,
             'criteriosDaEtapa' => $criteriosDaEtapa,
             'resultadoTeste' => $resultadoTeste,
         ], 'Fórmula de pontuação — ' . $etapa['nome'], ['tipo' => 'formula_etapa', 'id' => (int) $etapaId]);
@@ -97,9 +107,11 @@ class FormulaPontuacaoAdminController extends Controller
         $erro = null;
         $resultadoTeste = null;
         $expressaoAtual = null;
+        $casasDecimaisAtual = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $expressaoAtual = trim(isset($_POST['expressao']) ? $_POST['expressao'] : '');
+            $casasDecimaisAtual = isset($_POST['casas_decimais']) ? (int) $_POST['casas_decimais'] : 2;
             $acao = isset($_POST['acao']) ? $_POST['acao'] : 'salvar';
 
             if ($acao === 'testar') {
@@ -109,23 +121,31 @@ class FormulaPontuacaoAdminController extends Controller
 
                 if (!$validacao['valido']) {
                     $erro = $validacao['mensagem'];
+                } elseif ($casasDecimaisAtual < 0 || $casasDecimaisAtual > 4) {
+                    $erro = 'Casas decimais precisa ser um número entre 0 e 4.';
                 } else {
-                    $this->formulas->salvarParaTrilha($trilhaId, $expressaoAtual);
+                    $this->formulas->salvarParaTrilha($trilhaId, $expressaoAtual, $casasDecimaisAtual);
                     $this->redirecionar('apuracao/index/' . (int) $trilhaId);
                     return;
                 }
             }
         }
 
+        $formula = $this->formulas->buscarPorTrilha($trilhaId);
+
         if ($expressaoAtual === null) {
-            $formula = $this->formulas->buscarPorTrilha($trilhaId);
             $expressaoAtual = $formula !== null ? $formula['expressao'] : '';
+        }
+
+        if ($casasDecimaisAtual === null) {
+            $casasDecimaisAtual = FormulaPontuacaoRepository::casasDecimais($formula);
         }
 
         $this->renderizar('admin/formulas/trilha', [
             'erro' => $erro,
             'trilha' => $trilha,
             'expressaoAtual' => $expressaoAtual,
+            'casasDecimaisAtual' => $casasDecimaisAtual,
             'etapasDaTrilha' => $etapasDaTrilha,
             'resultadoTeste' => $resultadoTeste,
         ], 'Fórmula da nota final — ' . $trilha['nome'], ['tipo' => 'apuracao', 'id' => (int) $trilhaId]);

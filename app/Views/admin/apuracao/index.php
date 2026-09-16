@@ -24,6 +24,15 @@
         <label>Expressão (ex.: NE2*0.4 + NE3*0.6):<br>
             <textarea name="expressao" rows="3" cols="70" required><?php echo htmlspecialchars((string) $expressaoAtual, ENT_QUOTES, 'UTF-8'); ?></textarea>
         </label><br>
+
+        <label>Casas decimais ao exibir a Nota Final (NF) desta trilha:<br>
+            <select name="casas_decimais">
+                <?php for ($c = 0; $c <= 4; $c++): ?>
+                    <option value="<?php echo $c; ?>"<?php echo $c === (int) $casasDecimais ? ' selected' : ''; ?>><?php echo $c; ?></option>
+                <?php endfor; ?>
+            </select>
+        </label><br><br>
+
         <button type="submit" name="acao" value="salvar">Salvar fórmula</button>
     </form>
     <?php else: ?>
@@ -139,7 +148,7 @@
         <tr>
             <td><?php echo (int) $linha['colocacao']; ?></td>
             <td><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : '—', ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo number_format((float) $linha['nf'], 2, ',', '.'); ?></td>
+            <td><?php echo number_format((float) $linha['nf'], $casasDecimais, ',', '.'); ?></td>
             <?php if ($publicado && \App\Core\Auth::possuiPerfil('administrador')): ?>
             <td>
                 <a href="<?php echo url('resultados/editarDestaque/' . (int) $linha['id']); ?>" class="btn-icone" title="Editar resumo/imagem de destaque">

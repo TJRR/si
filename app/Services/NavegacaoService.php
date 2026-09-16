@@ -37,6 +37,10 @@ class NavegacaoService
             ['tipo' => 'resultado_etapa', 'rotulo' => 'Resultado', 'rota' => 'resultados/etapa'],
             ['tipo' => 'formulario_vinculado', 'rotulo' => 'Formulário vinculado', 'rota' => 'etapas/formularioVinculado'],
             ['tipo' => 'modelos_documento', 'rotulo' => 'Modelos de Documento', 'rota' => 'modelosDocumento/index'],
+            // Fase 38B: agendamento das apresentacoes de pitch (Edital NPI
+            // n.9/2026, item 2.3) - sub-aba nova, sem relacao com as abas
+            // "somente avaliadores" (nao entra em $tiposSomenteAvaliadores).
+            ['tipo' => 'apresentacao_pitch', 'rotulo' => 'Apresentação', 'rota' => 'apresentacaoPitchAdmin/index'],
         ],
         /**
          * Fase 19 (#84 v2): Tema/Slideshow/Banners/Blocos/Contato deixaram
@@ -95,6 +99,7 @@ class NavegacaoService
         'resultado_etapa' => 'etapa',
         'formulario_vinculado' => 'etapa',
         'modelos_documento' => 'etapa',
+        'apresentacao_pitch' => 'etapa',
         'configuracaoGeral' => 'configuracao',
         'configuracaoTema' => 'configuracao',
         'configuracaoMidia' => 'configuracao',
@@ -130,6 +135,19 @@ class NavegacaoService
             // sem abas somente-avaliadores para reagir a nada client-side.
             $definicoes = array_values(array_filter($definicoes, function ($definicao) {
                 return $definicao['tipo'] === 'etapa';
+            }));
+        }
+
+        if ($grupo === 'etapa' && $id !== null) {
+            // Fase 38B (correcao pos-teste de fumaca): "Apresentação" só
+            // aparece na(s) etapa(s) que o Admin marcou explicitamente em
+            // Dados Gerais - sem isso, a sub-aba aparecia em toda etapa do
+            // sistema, mesmo sem nenhuma relação com apresentação de pitch.
+            $etapaAtual = (new \App\Repositories\EtapaRepository())->buscarPorId($id);
+            $permitePitch = $etapaAtual !== null && !empty($etapaAtual['permite_apresentacao_pitch']);
+
+            $definicoes = array_values(array_filter($definicoes, function ($definicao) use ($permitePitch) {
+                return $definicao['tipo'] !== 'apresentacao_pitch' || $permitePitch;
             }));
         }
 

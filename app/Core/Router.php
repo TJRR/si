@@ -7,6 +7,8 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Controllers\ApresentacaoPitchAdminController;
+use App\Controllers\ApresentacaoPitchController;
 use App\Controllers\ApuracaoAdminController;
 use App\Controllers\AuditoriaAdminController;
 use App\Controllers\AuthController;
@@ -89,6 +91,8 @@ class Router
         'participante' => ParticipanteController::class,
         'mentoriaAdmin' => MentoriaAdminController::class,
         'mentoria' => MentoriaController::class,
+        'apresentacaoPitchAdmin' => ApresentacaoPitchAdminController::class,
+        'apresentacaoPitch' => ApresentacaoPitchController::class,
         'mentoriaPublica' => MentoriaPublicaController::class,
         'oficinaAdmin' => OficinaAdminController::class,
         'oficina' => OficinaController::class,

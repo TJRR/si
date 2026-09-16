@@ -11,7 +11,7 @@ return [
     'operacoes' => [
         [
             'nome' => 'Fórmula NF',
-            'como' => 'Mesmo campo da tela "Fórmula da Trilha" — editar aqui ou lá grava o mesmo dado.',
+            'como' => 'Mesmo campo da tela "Fórmula da Trilha" — editar aqui ou lá grava o mesmo dado. Inclui também as casas decimais de exibição da NF (padrão 2).',
         ],
         [
             'nome' => 'Gerenciar desempate',
@@ -21,7 +21,7 @@ return [
             'nome' => 'Confirmar e publicar',
             'icone' => 'publicar',
             'como' => 'Publica o ranking final da trilha numa página pública.',
-            'observacao' => 'A prévia mostrada nesta tela é recalculada a cada acesso, até você publicar — depois de publicado, o que ficou registrado não muda sozinho mesmo que dados mudem depois. O ranking só fica disponível para publicar quando todas as etapas da trilha já tiverem seu próprio resultado publicado individualmente.',
+            'observacao' => 'A prévia mostrada nesta tela é recalculada a cada acesso, até você publicar — depois de publicado, o que ficou registrado não muda sozinho mesmo que dados mudem depois. O ranking só fica disponível para publicar quando as etapas que a fórmula da NF realmente usa (as variáveis NE que aparecem na expressão) já tiverem resultado publicado — uma etapa fora da fórmula, como "Cadastro das Equipes", nunca é exigida.',
         ],
         [
             'nome' => 'Reabrir',

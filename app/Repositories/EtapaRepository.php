@@ -84,6 +84,17 @@ class EtapaRepository
     }
 
     /**
+     * Fase 38B: setter dedicado (nao entra na assinatura ja grande de
+     * atualizar()), mesmo padrao de UsuarioRepository::definirPrecisaRevisarConcurso().
+     */
+    public function definirPermiteApresentacaoPitch($id, $valor)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE etapas SET permite_apresentacao_pitch = :valor WHERE id = :id');
+        $stmt->execute(['valor' => $valor ? 1 : 0, 'id' => $id]);
+    }
+
+    /**
      * Etapa imediatamente anterior na trilha, pela ordem (nao assume ordem-1
      * contiguo, ja que etapas podem ter sido removidas no meio) - usada para
      * a trava de classificacao antes de liberar a submissao da proxima etapa.

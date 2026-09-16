@@ -37,6 +37,14 @@
             <textarea name="expressao" rows="3" cols="70" required><?php echo htmlspecialchars((string) $expressaoAtual, ENT_QUOTES, 'UTF-8'); ?></textarea>
         </label><br>
 
+        <label>Casas decimais ao exibir a Nota Final (NF) desta trilha:<br>
+            <select name="casas_decimais">
+                <?php for ($c = 0; $c <= 4; $c++): ?>
+                    <option value="<?php echo $c; ?>"<?php echo $c === (int) $casasDecimaisAtual ? ' selected' : ''; ?>><?php echo $c; ?></option>
+                <?php endfor; ?>
+            </select>
+        </label><br><br>
+
         <p>Testar com valores de exemplo (nota que cada etapa teria):</p>
         <?php foreach ($etapasDaTrilha as $etapaDaTrilha): ?>
             <?php $variavel = 'NE' . (int) $etapaDaTrilha['ordem']; ?>

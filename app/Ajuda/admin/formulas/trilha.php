@@ -18,6 +18,10 @@ return [
             'como' => 'Grava a expressão.',
             'observacao' => 'O mesmo campo também aparece embutido dentro da tela Apuração — os dois pontos de entrada editam o mesmo dado, não são cópias independentes.',
         ],
+        [
+            'nome' => 'Casas decimais',
+            'como' => 'Quantas casas decimais a Nota Final (NF) desta trilha mostra em toda tela/relatório onde aparece — padrão 2.',
+        ],
     ],
     'conceitos' => [],
 ];

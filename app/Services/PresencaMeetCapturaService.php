@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Repositories\ApresentacaoPitchRepository;
 use App\Repositories\EquipeRepository;
 use App\Repositories\GooglePresencaRepository;
 use App\Repositories\MentoriaRepository;
@@ -46,6 +47,7 @@ class PresencaMeetCapturaService
     private $equipes;
     private $mentorias;
     private $oficinas;
+    private $apresentacoesPitch;
     private $notificacoes;
     private $perfis;
     private $meet;
@@ -56,6 +58,7 @@ class PresencaMeetCapturaService
         $this->equipes = new EquipeRepository();
         $this->mentorias = new MentoriaRepository();
         $this->oficinas = new OficinaRepository();
+        $this->apresentacoesPitch = new ApresentacaoPitchRepository();
         $this->notificacoes = new NotificacaoPainelRepository();
         $this->perfis = new PerfilRepository();
         $this->meet = new GoogleMeetPresencaService();
@@ -168,7 +171,15 @@ class PresencaMeetCapturaService
      */
     public function listarConvidados($tipo, array $horario)
     {
-        if ($tipo === 'mentoria') {
+        if ($tipo === 'mentoria' || $tipo === 'apresentacao_pitch') {
+            // Fase 38B: a banca (avaliadores designados) tambem e' attendee
+            // formal do evento Google desta apresentacao, mas o mecanismo de
+            // presenca so' casa por participante_id (tabela `participantes`)
+            // - avaliadores sao `usuarios`, sem registro em `participantes`,
+            // entao nao entram aqui como "convidado esperado". Se um
+            // avaliador entrar na sala, aparece em "Entraram sem
+            // identificacao", como qualquer pessoa de fora - limitacao do
+            // desenho herdado da Fase 32, nao um bug desta fase.
             if (empty($horario['equipe_id'])) {
                 return [];
             }
@@ -325,9 +336,9 @@ class PresencaMeetCapturaService
 
     private function notificarAdministradores(array $horario, $tipoNotificacao, $titulo, $mensagem, $tipo)
     {
-        $rota = ($tipo === 'mentoria' ? 'mentoriaAdmin' : 'oficinaAdmin') . '/presenca/' . (int) $horario['id'];
+        $rota = $this->rotaModulo($tipo) . '/presenca/' . (int) $horario['id'];
 
-        foreach ($this->perfis->listarUsuariosPorPerfilConcurso('administrador', (int) $horario['concurso_id']) as $admin) {
+        foreach ($this->perfis->listarUsuariosPorPerfilConcurso('administrador', $this->concursoIdDoHorario($tipo, $horario)) as $admin) {
             $this->notificacoes->criar(
                 (int) $admin['id'],
                 $tipoNotificacao,
@@ -340,11 +351,57 @@ class PresencaMeetCapturaService
 
     private function rotulo($tipo)
     {
-        return $tipo === 'mentoria' ? 'mentoria' : 'oficina';
+        if ($tipo === 'mentoria') {
+            return 'mentoria';
+        }
+
+        if ($tipo === 'apresentacao_pitch') {
+            return 'apresentação de pitch';
+        }
+
+        return 'oficina';
+    }
+
+    private function rotaModulo($tipo)
+    {
+        if ($tipo === 'mentoria') {
+            return 'mentoriaAdmin';
+        }
+
+        if ($tipo === 'apresentacao_pitch') {
+            return 'apresentacaoPitchAdmin';
+        }
+
+        return 'oficinaAdmin';
     }
 
     private function repositorio($tipo)
     {
-        return $tipo === 'mentoria' ? $this->mentorias : $this->oficinas;
+        if ($tipo === 'mentoria') {
+            return $this->mentorias;
+        }
+
+        if ($tipo === 'apresentacao_pitch') {
+            return $this->apresentacoesPitch;
+        }
+
+        return $this->oficinas;
+    }
+
+    /**
+     * apresentacoes_pitch nao tem concurso_id direto (so' etapa_id,
+     * NOT NULL) - resolve via etapa -> trilha -> concurso. Mentoria/Oficina
+     * continuam usando a coluna direta, sem consulta extra.
+     */
+    private function concursoIdDoHorario($tipo, array $horario)
+    {
+        if ($tipo !== 'apresentacao_pitch') {
+            return (int) $horario['concurso_id'];
+        }
+
+        $etapa = (new \App\Repositories\EtapaRepository())->buscarPorId($horario['etapa_id']);
+        $trilha = (new \App\Repositories\TrilhaRepository())->buscarPorId($etapa['trilha_id']);
+
+        return (int) $trilha['concurso_id'];
     }
 }

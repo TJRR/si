@@ -54,7 +54,7 @@
                                 <span class="status-pill laranja">Não classificada</span>
                             <?php endif; ?>
                         </td>
-                        <td><?php echo $equipe['ne'] !== null ? number_format((float) $equipe['ne'], 2, ',', '.') : '—'; ?></td>
+                        <td><?php echo $equipe['ne'] !== null ? number_format((float) $equipe['ne'], $casasDecimais, ',', '.') : '—'; ?></td>
                     </tr>
                 <?php endforeach; ?>
             </table>

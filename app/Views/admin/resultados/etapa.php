@@ -67,7 +67,7 @@
             <td>#<?php echo (int) $linha['submissao_id']; ?></td>
             <td><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : '—', ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars(formatarDataHora($linha['criado_em']), ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], 2, ',', '.') : 'sem notas ainda'; ?></td>
+            <td><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], $casasDecimais, ',', '.') : 'sem notas ainda'; ?></td>
             <td><?php echo !empty($linha['classificado']) ? 'Sim' : 'Não'; ?></td>
             <td>
                 <div class="acoes-icones">

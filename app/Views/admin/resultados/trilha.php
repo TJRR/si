@@ -47,7 +47,7 @@
         <tr>
             <td><?php echo (int) $linha['colocacao']; ?></td>
             <td><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : '—', ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo number_format((float) $linha['nf'], 2, ',', '.'); ?></td>
+            <td><?php echo number_format((float) $linha['nf'], $casasDecimais, ',', '.'); ?></td>
             <?php if ($publicado): ?>
             <td>
                 <a href="<?php echo url('resultados/editarDestaque/' . (int) $linha['id']); ?>" class="btn-icone" title="Editar resumo/imagem de destaque">

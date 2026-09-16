@@ -28,6 +28,7 @@ define('SI_BOOT', true);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use App\Repositories\ApresentacaoPitchRepository;
 use App\Repositories\MentoriaRepository;
 use App\Repositories\OficinaRepository;
 use App\Services\PresencaMeetCapturaService;
@@ -78,6 +79,7 @@ if (!flock($trava, LOCK_EX | LOCK_NB)) {
 $captura = new PresencaMeetCapturaService();
 $mentorias = new MentoriaRepository();
 $oficinas = new OficinaRepository();
+$apresentacoesPitch = new ApresentacaoPitchRepository();
 
 $pendentes = [];
 
@@ -87,6 +89,10 @@ foreach ($mentorias->listarPendentesDePresenca($limite) as $horario) {
 
 foreach ($oficinas->listarPendentesDePresenca($limite) as $horario) {
     $pendentes[] = ['tipo' => 'oficina', 'horario' => $horario];
+}
+
+foreach ($apresentacoesPitch->listarPendentesDePresenca($limite) as $horario) {
+    $pendentes[] = ['tipo' => 'apresentacao_pitch', 'horario' => $horario];
 }
 
 fwrite(STDOUT, registrar('Inicio - ' . count($pendentes) . ' horario(s) elegivel(is), limite ' . $limite . ' por tipo.'));

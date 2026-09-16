@@ -34,6 +34,13 @@
         <input type="datetime-local" name="data_fim" value="<?php echo htmlspecialchars($etapa !== null && $etapa['data_fim'] !== null ? str_replace(' ', 'T', substr((string) $etapa['data_fim'], 0, 16)) : '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $desabilitado; ?>>
     </label><br>
 
+    <?php if ($etapa !== null): ?>
+        <label>
+            <input type="checkbox" name="permite_apresentacao_pitch" value="1" <?php echo !empty($etapa['permite_apresentacao_pitch']) ? 'checked' : ''; ?> <?php echo $desabilitado; ?>>
+            Esta etapa tem apresentação de pitch — adiciona a sub-aba "Apresentação"
+        </label><br>
+    <?php endif; ?>
+
     <label>Regra de transição para a próxima etapa:
         <select name="regra_transicao_tipo" <?php echo $desabilitado; ?>>
             <option value="">Nenhuma (etapa final ou sem corte)</option>

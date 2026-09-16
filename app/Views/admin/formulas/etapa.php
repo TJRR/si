@@ -52,6 +52,14 @@
         </label><br>
         <button type="button" onclick="gerarFormulaPonderada()">Gerar fórmula a partir dos pesos</button><br><br>
 
+        <label>Casas decimais ao exibir a Nota da Etapa (NE) desta etapa:<br>
+            <select name="casas_decimais">
+                <?php for ($c = 0; $c <= 4; $c++): ?>
+                    <option value="<?php echo $c; ?>"<?php echo $c === (int) $casasDecimaisAtual ? ' selected' : ''; ?>><?php echo $c; ?></option>
+                <?php endfor; ?>
+            </select>
+        </label><br><br>
+
         <p>Testar com valores de exemplo (nota que cada criterio teria):</p>
         <?php foreach ($criteriosDaEtapa as $criterio): ?>
             <label><?php echo htmlspecialchars($criterio['codigo'], ENT_QUOTES, 'UTF-8'); ?>:

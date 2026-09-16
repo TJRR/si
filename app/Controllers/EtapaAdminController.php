@@ -149,6 +149,8 @@ class EtapaAdminController extends Controller
                     $dados['config_avaliacao'],
                     $dados['prazo_final_submissao']
                 );
+                // Fase 38B: setter dedicado, fora da assinatura de atualizar().
+                $this->etapas->definirPermiteApresentacaoPitch($id, !empty($_POST['permite_apresentacao_pitch']));
                 $etapa = $this->etapas->buscarPorId($id);
             }
         }

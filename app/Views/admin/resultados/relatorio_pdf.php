@@ -112,7 +112,7 @@
         <tr<?php echo !$classificado ? ' class="nao-classificada"' : ''; ?>>
             <td><?php echo $posicao; ?>º</td>
             <td class="col-equipe"><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : ('Equipe #' . $linha['equipe_id']), ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], 2, ',', '.') : '—'; ?></td>
+            <td><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], $casasDecimais, ',', '.') : '—'; ?></td>
             <td><?php echo $classificado ? 'Classificada' : 'Não classificada'; ?></td>
         </tr>
     <?php endforeach; ?>

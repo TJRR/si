@@ -24,6 +24,27 @@ class ExpressaoAritmetica
         return $instancia->executar($expressao, $variaveis);
     }
 
+    /**
+     * Lista (unica, na ordem de aparicao) as variaveis que a expressao
+     * realmente referencia - usado por ResultadoTrilhaService::calcularRanking()
+     * para exigir resultado publicado so' das etapas que a formula usa de
+     * fato, nao de toda etapa da trilha (ex.: "Cadastro das Equipes" pode
+     * ter uma NE1 tecnica sem nunca ser exigida se a formula so' usa NE3/NE4).
+     */
+    public static function variaveisUsadas($expressao)
+    {
+        $tokens = (new self())->tokenizar($expressao);
+        $variaveis = [];
+
+        foreach ($tokens as $token) {
+            if ($token['tipo'] === 'variavel' && !in_array($token['valor'], $variaveis, true)) {
+                $variaveis[] = $token['valor'];
+            }
+        }
+
+        return $variaveis;
+    }
+
     public static function validar($expressao, array $variaveisPermitidas)
     {
         $valoresFicticios = array_fill_keys($variaveisPermitidas, 1.0);

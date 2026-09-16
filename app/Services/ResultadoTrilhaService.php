@@ -28,6 +28,17 @@ use App\Repositories\TrilhaRepository;
  */
 class ResultadoTrilhaService
 {
+    /**
+     * Duas NF/notas de desempate "iguais" na fórmula (ex.: 9.08*0.4+8.56*0.6
+     * vs 9.02*0.4+8.6*0.6, ambas 8,768 exibidas) podem chegar como floats
+     * infinitesimalmente diferentes (8.768 vs 8.767999999999999) por erro de
+     * arredondamento binário do PHP - comparar com != /=== sem tolerância
+     * faz o sistema nunca considerar o empate e nunca aplicar o desempate
+     * oficial do edital, decidindo a colocação por ruído de ponto flutuante.
+     * Achado real em 16/09/2026 simulando um empate proposital para teste.
+     */
+    const EPSILON = 0.000001;
+
     private $trilhas;
     private $etapas;
     private $criterios;
@@ -61,12 +72,20 @@ class ResultadoTrilhaService
             throw new \RuntimeException('Nenhuma fórmula de nota final cadastrada para esta trilha.');
         }
 
+        $variaveisUsadas = ExpressaoAritmetica::variaveisUsadas($formula['expressao']);
         $etapasDaTrilha = $this->etapas->listarPorTrilha($trilhaId);
         $neParaEquipePorEtapa = [];
         $equipeIds = [];
 
         foreach ($etapasDaTrilha as $etapa) {
             $variavel = 'NE' . (int) $etapa['ordem'];
+
+            if (!in_array($variavel, $variaveisUsadas, true)) {
+                // Etapa fora da formula (ex.: "Cadastro das Equipes") - nunca
+                // exigida como pre-requisito pra equipe entrar na Nota Final.
+                continue;
+            }
+
             $neParaEquipePorEtapa[$variavel] = [];
 
             foreach ($this->resultadosEtapa->listarPorEtapa($etapa['id']) as $resultado) {
@@ -166,7 +185,7 @@ class ResultadoTrilhaService
 
     private function compararLinhas(array $a, array $b, array $regrasDaTrilha)
     {
-        if ($a['nf'] != $b['nf']) {
+        if (abs($a['nf'] - $b['nf']) > self::EPSILON) {
             return $a['nf'] < $b['nf'] ? 1 : -1;
         }
 
@@ -174,7 +193,7 @@ class ResultadoTrilhaService
             $valorA = $this->valorDesempatePorEquipe($a['equipe_id'], $regra['criterio_avaliacao_id']);
             $valorB = $this->valorDesempatePorEquipe($b['equipe_id'], $regra['criterio_avaliacao_id']);
 
-            if ($valorA === $valorB) {
+            if ($valorA === null && $valorB === null) {
                 continue;
             }
 
@@ -184,6 +203,10 @@ class ResultadoTrilhaService
 
             if ($valorB === null) {
                 return -1;
+            }
+
+            if (abs($valorA - $valorB) <= self::EPSILON) {
+                continue;
             }
 
             $comparacao = $valorA < $valorB ? -1 : 1;

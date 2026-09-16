@@ -22,6 +22,10 @@ return [
             'como' => 'Grava a expressão.',
             'observacao' => 'Os pesos ficam embutidos como números na expressão salva — se um peso de critério mudar depois em Critérios, a fórmula aqui não se atualiza sozinha; é preciso gerar/editar de novo.',
         ],
+        [
+            'nome' => 'Casas decimais',
+            'como' => 'Quantas casas decimais a Nota da Etapa (NE) desta etapa mostra em toda tela/relatório onde aparece — padrão 2. Não afeta a nota individual por critério/avaliador, sempre exibida com 1 casa.',
+        ],
     ],
     'conceitos' => [],
 ];

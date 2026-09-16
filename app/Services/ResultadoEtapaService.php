@@ -26,6 +26,14 @@ use App\Repositories\SubmissaoRepository;
  */
 class ResultadoEtapaService
 {
+    /**
+     * Mesmo motivo do ResultadoTrilhaService::EPSILON - duas NE "iguais"
+     * calculadas por caminhos aritméticos diferentes podem chegar como
+     * floats infinitesimalmente diferentes; comparar sem tolerância faz o
+     * desempate nunca ser aplicado quando deveria.
+     */
+    const EPSILON = 0.000001;
+
     private $etapas;
     private $criterios;
     private $formulas;
@@ -270,7 +278,7 @@ class ResultadoEtapaService
             return -1;
         }
 
-        if ($a['ne'] != $b['ne']) {
+        if (abs($a['ne'] - $b['ne']) > self::EPSILON) {
             return $a['ne'] < $b['ne'] ? 1 : -1;
         }
 
@@ -278,13 +286,21 @@ class ResultadoEtapaService
             if ($regra['tipo'] === 'data_submissao') {
                 $valorA = $a['criado_em'];
                 $valorB = $b['criado_em'];
+
+                if ($valorA === $valorB) {
+                    continue;
+                }
             } else {
                 $valorA = $this->valorDesempatePorSubmissao($a['submissao_id'], $regra['criterio_avaliacao_id']);
                 $valorB = $this->valorDesempatePorSubmissao($b['submissao_id'], $regra['criterio_avaliacao_id']);
-            }
 
-            if ($valorA === $valorB) {
-                continue;
+                if ($valorA === null && $valorB === null) {
+                    continue;
+                }
+
+                if ($valorA !== null && $valorB !== null && abs($valorA - $valorB) <= self::EPSILON) {
+                    continue;
+                }
             }
 
             if ($valorA === null) {
