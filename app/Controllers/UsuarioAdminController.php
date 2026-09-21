@@ -13,6 +13,7 @@ use App\Middleware\RoleMiddleware;
 use App\Repositories\AvaliadorCategoriaRepository;
 use App\Repositories\CategoriaAvaliadorRepository;
 use App\Repositories\ConcursoRepository;
+use App\Repositories\EventoInscricaoRepository;
 use App\Repositories\PerfilRepository;
 use App\Repositories\TentativaLoginRepository;
 use App\Repositories\TokenSenhaRepository;
@@ -62,9 +63,30 @@ class UsuarioAdminController extends Controller
         foreach ($lista as &$usuario) {
             $usuario['perfis'] = $this->usuarios->perfisDoUsuario($usuario['id']);
 
+            // Fase 40 (correcao pos-teste de fumaca): em quais eventos esta
+            // conta esta inscrita (evento_inscricoes) - independente do
+            // perfil ATUAL. Uma conta pode ter sido promovida a um perfil
+            // do Concurso (ex.: Participante) e continuar com um historico
+            // de inscricao em evento que nao pode sumir da listagem so'
+            // porque o perfil "inscrito" foi substituido (o usuario apontou
+            // esse caso real no teste de fumaca).
+            $eventosDoUsuario = (new EventoInscricaoRepository())->listarPorUsuario($usuario['id']);
+            $usuario['eventosNomes'] = array_map(function ($inscricao) {
+                return $inscricao['evento_nome'];
+            }, $eventosDoUsuario);
+
             foreach ($usuario['perfis'] as &$vinculo) {
                 if ($vinculo['perfil'] === 'avaliador' && $vinculo['concurso_id'] !== null) {
                     $vinculo['categoria_atual'] = $this->avaliadorCategorias->categoriaDoUsuario($usuario['id'], $vinculo['concurso_id']);
+                }
+
+                // Perfil "inscrito" e' global por desenho (nao tem
+                // concurso_id/evento_id em usuario_perfil_concurso), entao
+                // mostrar "(Global)" pra ele e' enganoso - sugere acesso a
+                // "todos os concursos". Mostra o(s) evento(s) reais no lugar,
+                // direto no vinculo (perfil principal desta conta).
+                if ($vinculo['perfil'] === 'inscrito') {
+                    $vinculo['eventos_nomes'] = $usuario['eventosNomes'];
                 }
             }
             unset($vinculo);
@@ -93,6 +115,7 @@ class UsuarioAdminController extends Controller
                     $usuario['convite_expirado_em'] = $ultimoConvite['expira_em'];
                 }
             }
+
         }
         unset($usuario);
 
@@ -244,6 +267,7 @@ class UsuarioAdminController extends Controller
         }
 
         $this->usuarios->atualizarStatus($id, 'aprovado');
+        $this->usuarios->definirPrecisaRevisarConcurso($id, false);
         $this->perfis->atribuir($id, $perfil['id'], $concursoId);
 
         if ($perfil['chave'] === 'avaliador' && $categoriaAvaliadorId !== null && $concursoId !== null
@@ -282,7 +306,7 @@ class UsuarioAdminController extends Controller
             'concursos' => $this->concursos->listar(),
             'categoriasPorConcurso' => $categoriasPorConcurso,
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
-        ], 'Editar usuário — ' . $usuario['nome']);
+        ], 'Editar usuário: ' . $usuario['nome']);
 
         unset($_SESSION['flash']);
     }
@@ -310,6 +334,7 @@ class UsuarioAdminController extends Controller
 
         if ($perfil !== null) {
             $this->perfis->substituirPerfil($id, $perfil['id'], $concursoId);
+            $this->usuarios->definirPrecisaRevisarConcurso($id, false);
 
             if ($perfil['chave'] === 'avaliador' && $categoriaAvaliadorId !== null && $concursoId !== null
                 && $this->categoriaPertenceAoConcurso($categoriaAvaliadorId, $concursoId)) {

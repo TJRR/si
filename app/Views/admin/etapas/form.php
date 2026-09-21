@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1><?php echo $etapa === null ? 'Nova etapa' : 'Editar etapa'; ?> — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1><?php echo $etapa === null ? 'Nova etapa' : 'Editar etapa'; ?>: <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -37,7 +37,7 @@
     <?php if ($etapa !== null): ?>
         <label>
             <input type="checkbox" name="permite_apresentacao_pitch" value="1" <?php echo !empty($etapa['permite_apresentacao_pitch']) ? 'checked' : ''; ?> <?php echo $desabilitado; ?>>
-            Esta etapa tem apresentação de pitch — adiciona a sub-aba "Apresentação"
+            Esta etapa tem apresentação de pitch: adiciona a sub-aba "Apresentação"
         </label><br>
     <?php endif; ?>
 
@@ -81,7 +81,7 @@
         </select>
     </label><br>
 
-    <label>Divulgação pública do resultado (o que aparece em "Ver resultado", sem login, depois de publicado — vale para qualquer mecanismo de avaliação, não só "Por Avaliadores"):
+    <label>Divulgação pública do resultado (o que aparece em "Ver resultado", sem login, depois de publicado; vale para qualquer mecanismo de avaliação, não só "Por Avaliadores"):
         <select name="visibilidade_publica" <?php echo $desabilitado; ?>>
             <?php foreach ([
                 'oculto' => 'Nada é publicado (uso interno)',
@@ -148,7 +148,7 @@
             </select>
         </label><br>
 
-        <label>Feedback qualitativo do avaliador:
+        <label>Comentário qualitativo do avaliador:
             <select name="modo_feedback_avaliador" <?php echo $desabilitado; ?>>
                 <?php foreach (['nenhum' => 'Nenhum', 'submissao' => 'Um texto por submissão inteira', 'criterio' => 'Um texto por critério avaliado'] as $valor => $rotulo): ?>
                     <?php $selecionado = ($etapa !== null && $etapa['modo_feedback_avaliador'] === $valor); ?>

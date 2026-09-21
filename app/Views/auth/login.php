@@ -3,14 +3,30 @@
     exit('Acesso negado');
 } ?>
 <?php
-$logoConteudo = (new \App\Repositories\ConteudoSiteRepository())->buscarPorChave('logo_site');
-$logoSrc = $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
-    ? config('base_path') . '/assets/' . $logoConteudo['arquivo_path']
-    : config('base_path') . '/assets/img/logo-padrao.png';
+/**
+ * Fase 48B: mesmo formulario de login, duas portas de entrada distintas -
+ * $contextoEvento (definido por AuthController::loginEvento()/googleCallback())
+ * troca titulo/subtitulo/logo para a identidade do app de Evento e faz o
+ * link do Google carregar '?contexto=evento'. O destino apos autenticar
+ * (nao tratado aqui) e' quem muda de verdade: AuthController::entrarComResultado().
+ */
+$contextoEvento = !empty($contextoEvento);
+
+if ($contextoEvento) {
+    $temaAtivo = (new \App\Repositories\TemaVisualRepository())->resolverAtivo(\App\Core\Auth::autenticado() ? \App\Core\Auth::usuarioId() : null);
+    $logoSrc = !empty($temaAtivo['logo_evento_path'])
+        ? config('base_path') . '/assets/' . $temaAtivo['logo_evento_path']
+        : iconeAppUrl('icon-192.png');
+    $nomeApp = 'Eventos ' . nomeInstituicao() . ' ' . nomeUnidadeResponsavel();
+} else {
+    $logoSrc = logoAtual();
+}
+
+$urlGoogle = url('auth/google') . ($contextoEvento ? '&contexto=evento' : '');
 ?>
 <div class="guest-card">
     <?php if (isset($ajudaHtml) && $ajudaHtml !== null): ?>
-    <button type="button" class="guest-ajuda-botao" title="Ajuda desta tela" aria-label="Ajuda desta tela" data-ajuda-titulo="<?php echo htmlspecialchars('Ajuda — ' . (string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?>" onclick="abrirModal(this.dataset.ajudaTitulo, document.getElementById('ajuda-painel-fonte').innerHTML)">
+    <button type="button" class="guest-ajuda-botao" title="Ajuda desta tela" aria-label="Ajuda desta tela" data-ajuda-titulo="<?php echo htmlspecialchars('Ajuda sobre ' . (string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?>" onclick="abrirModal(this.dataset.ajudaTitulo, document.getElementById('ajuda-painel-fonte').innerHTML)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10"></circle>
             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
@@ -18,10 +34,15 @@ $logoSrc = $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
         </svg>
     </button>
     <?php endif; ?>
-    <img src="<?php echo htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR" class="guest-logo">
+    <img src="<?php echo htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($contextoEvento ? $nomeApp : ('Prêmio de Inovação ' . nomeInstituicao()), ENT_QUOTES, 'UTF-8'); ?>" class="guest-logo">
 
-    <h1 class="guest-titulo">Bem-vindo de volta</h1>
-    <p class="guest-subtitulo">Acesse o painel do Prêmio de Inovação do TJRR.</p>
+    <?php if ($contextoEvento): ?>
+        <h1 class="guest-titulo">Acessar o aplicativo do Evento</h1>
+        <p class="guest-subtitulo">Entre para acompanhar o evento em <?php echo htmlspecialchars($nomeApp, ENT_QUOTES, 'UTF-8'); ?>.</p>
+    <?php else: ?>
+        <h1 class="guest-titulo">Bem-vindo de volta</h1>
+        <p class="guest-subtitulo">Acesse o painel do Prêmio de Inovação do <?php echo nomeInstituicao(); ?>.</p>
+    <?php endif; ?>
 
     <?php if (!empty($erro)): ?>
         <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -31,7 +52,7 @@ $logoSrc = $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
         <p style="color:red;">Sua sessão expirou por inatividade. Entre novamente.</p>
     <?php endif; ?>
 
-    <a href="<?php echo url('auth/google'); ?>" class="guest-google">
+    <a href="<?php echo htmlspecialchars($urlGoogle, ENT_QUOTES, 'UTF-8'); ?>" class="guest-google">
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -43,7 +64,7 @@ $logoSrc = $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
 
     <div class="guest-divisor">ou acesse com e-mail</div>
 
-    <form method="post" action="<?php echo url('auth/login'); ?>"><?= campoCsrf() ?>
+    <form method="post" action="<?php echo url($contextoEvento ? 'auth/loginEvento' : 'auth/login'); ?>"><?= campoCsrf() ?>
         <label>
             E-mail
             <input type="email" name="email" required autocomplete="username">
@@ -59,5 +80,5 @@ $logoSrc = $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
     <p class="guest-cadastro">Ainda não tem cadastro? <a href="<?php echo url('cadastro/index'); ?>">Cadastre-se</a></p>
 </div>
 
-<a href="<?php echo config('base_path'); ?>/" class="guest-voltar">&larr; Voltar ao site</a>
+<a href="<?php echo config('base_path'); ?>/" class="guest-voltar">&larr; Voltar ao portal</a>
 <p class="guest-copyright">&copy; <?php echo date('Y'); ?> Poder Judiciário de Roraima</p>

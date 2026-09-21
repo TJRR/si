@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Inscritos — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Inscritos: <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <?php if (!empty($_SESSION['flash'])): ?>
     <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
@@ -36,7 +36,7 @@
 
 <form method="get" action="<?php echo config('base_path'); ?>/index.php">
     <input type="hidden" name="r" value="homologacao/index/<?php echo (int) $trilha['id']; ?>">
-    <label>Status:
+    <label>Situação:
         <select name="status" onchange="this.form.submit()">
             <option value="" <?php echo $statusFiltro === '' ? 'selected' : ''; ?>>Todos</option>
             <option value="pendente" <?php echo $statusFiltro === 'pendente' ? 'selected' : ''; ?>>Pendentes</option>
@@ -66,7 +66,7 @@
     <table border="1" cellpadding="6">
             <tr>
                 <th><input type="checkbox" onclick="document.querySelectorAll('.marcar-linha').forEach(function(c){c.checked=this.checked;}, this)"></th>
-                <th>Equipe</th><th>Participante</th><th>Papel</th><th>CPF</th><th>E-mail</th><th>Telefone</th><th>Status</th><th>Ações</th>
+                <th>Equipe</th><th>Participante</th><th>Papel</th><th>CPF</th><th>E-mail</th><th>Telefone</th><th>Situação</th><th>Ações</th>
             </tr>
             <?php foreach ($inscricoes as $item): ?>
             <tr id="linha-vinculo-<?php echo (int) $item['vinculo_id']; ?>"<?php echo $vinculoDestaque !== null && $vinculoDestaque === (int) $item['vinculo_id'] ? ' class="linha-destaque"' : ''; ?>>
@@ -95,7 +95,7 @@
                 <td>
                     <div class="acoes-icones">
                         <a href="<?php echo url('homologacao/historico/' . (int) $item['vinculo_id']); ?>" class="btn-icone" title="Histórico de homologação"
-                           onclick="abrirModalUrl(<?php echo htmlspecialchars(json_encode('Histórico — ' . $item['participante_nome'], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8'); ?>, this.href); return false;">
+                           onclick="abrirModalUrl(<?php echo htmlspecialchars(json_encode('Histórico: ' . $item['participante_nome'], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8'); ?>, this.href); return false;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <polyline points="12 6 12 12 16 14"></polyline>
@@ -130,7 +130,7 @@
                             <form method="post" action="<?php echo url('homologacao/convidarAcesso'); ?>"><?= campoCsrf() ?>
                                 <input type="hidden" name="participante_id" value="<?php echo (int) $item['participante_id']; ?>">
                                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                                <button type="submit" class="btn-icone" title="Convidar acesso — e-mail cadastrado, conta ainda não criada">
+                                <button type="submit" class="btn-icone" title="Convidar acesso: e-mail cadastrado, conta ainda não criada">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                         <path d="M2 6h20v12H2z"></path>
                                         <path d="M22 6l-10 7L2 6"></path>

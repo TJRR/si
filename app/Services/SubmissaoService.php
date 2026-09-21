@@ -430,14 +430,14 @@ class SubmissaoService
 
             case 'link_youtube':
                 if (!YoutubeValidador::valido($valor)) {
-                    return ['valido' => false, 'mensagem' => 'Link do YouTube inválido.'];
+                    return ['valido' => false, 'mensagem' => 'Hiperlink do YouTube inválido.'];
                 }
 
                 return ['valido' => true, 'valor' => $valor, 'cpfs' => []];
 
             case 'link_externo':
                 if (!linkHttpValido($valor)) {
-                    return ['valido' => false, 'mensagem' => 'Informe um link válido, começando com http:// ou https://.'];
+                    return ['valido' => false, 'mensagem' => 'Informe um hiperlink válido, começando com http:// ou https://.'];
                 }
 
                 return ['valido' => true, 'valor' => $valor, 'cpfs' => []];

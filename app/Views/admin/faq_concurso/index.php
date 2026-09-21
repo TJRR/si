@@ -11,7 +11,7 @@ $disponiveis = array_values(array_filter($faqs, function ($faq) {
 }));
 ?>
 <div class="pagina-titulo-acoes">
-    <h1>FAQ de <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+    <h1>Perguntas frequentes de <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
     <div class="pagina-titulo-botoes">
         <?php // Fase 35: o atalho leva ao banco GERAL, que exige perfil global
               // (ver FaqAdminController). Suporte/Administrador escopado a um

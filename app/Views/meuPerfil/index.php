@@ -38,6 +38,45 @@
             <input type="text" value="<?php echo htmlspecialchars($usuario['email'], ENT_QUOTES, 'UTF-8'); ?>" disabled>
         </label>
         <p class="perfil-dica">O e-mail não pode ser alterado.</p>
+    </section>
+
+    <section class="admin-card perfil-card">
+        <h2>Dados complementares</h2>
+        <p class="perfil-dica">Usados quando você é designado facilitador de uma atividade (instrutor, professor, palestrante), para não precisar redigitar a cada nova designação.</p>
+
+        <label>Tipo de documento
+            <select name="tipo_documento">
+                <?php foreach (\App\Repositories\UsuarioPerfilRepository::TIPOS_DOCUMENTO as $tipo): ?>
+                    <option value="<?php echo htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($perfil !== null && $perfil['tipo_documento'] === $tipo) ? 'selected' : ''; ?>><?php echo htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8'); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+
+        <label>Documento
+            <input type="text" name="documento" value="<?php echo htmlspecialchars($perfil !== null ? (string) $perfil['documento'] : '', ENT_QUOTES, 'UTF-8'); ?>" size="20">
+        </label>
+
+        <label>Cargo
+            <input type="text" name="cargo" maxlength="150" value="<?php echo htmlspecialchars($perfil !== null ? (string) $perfil['cargo'] : '', ENT_QUOTES, 'UTF-8'); ?>">
+        </label>
+
+        <label>Categoria profissional
+            <select name="categoria_profissional">
+                <option value="">Selecione</option>
+                <?php foreach (\App\Repositories\UsuarioPerfilRepository::CATEGORIAS_PROFISSIONAIS as $categoria): ?>
+                    <option value="<?php echo htmlspecialchars($categoria, ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($perfil !== null && $perfil['categoria_profissional'] === $categoria) ? 'selected' : ''; ?>><?php echo htmlspecialchars($categoria, ENT_QUOTES, 'UTF-8'); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+
+        <label>Tribunal ou outro órgão de origem
+            <input type="text" name="orgao_origem" maxlength="150" value="<?php echo htmlspecialchars($perfil !== null ? (string) $perfil['orgao_origem'] : '', ENT_QUOTES, 'UTF-8'); ?>">
+        </label>
+
+        <fieldset>
+            <legend>Minicurrículo</legend>
+            <textarea name="minicurriculo" rows="4" cols="60"><?php echo htmlspecialchars($perfil !== null ? (string) $perfil['minicurriculo'] : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
+        </fieldset>
 
         <div class="form-acoes">
             <button type="submit">Salvar</button>

@@ -12,7 +12,7 @@ return [
         [
             'nome' => 'Perfil / Concurso / Categoria',
             'como' => 'Categoria só aparece quando o perfil escolhido é avaliador.',
-            'observacao' => 'E-mail não é editável por aqui — é a identidade da conta.',
+            'observacao' => 'E-mail não é editável por aqui: é a identidade da conta.',
         ],
     ],
     'conceitos' => [],

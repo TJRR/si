@@ -7,7 +7,7 @@
     <a href="<?php echo url('duvida/index'); ?>" class="btn-voltar">Voltar</a>
 </div>
 
-<p>Descreva uma única dúvida por registro — isso ajuda a direcionar sua pergunta pra quem
+<p>Descreva uma única dúvida por registro. Isso ajuda a direcionar sua pergunta para quem
 pode responder mais rápido.</p>
 
 <?php if ($erro !== null): ?>
@@ -19,7 +19,7 @@ pode responder mais rápido.</p>
         <textarea name="pergunta" rows="6" style="width:100%;max-width:640px;" required><?php echo htmlspecialchars(isset($_POST['pergunta']) ? $_POST['pergunta'] : '', ENT_QUOTES, 'UTF-8'); ?></textarea>
     </label><br><br>
 
-    <label>Anexo (opcional — PDF, WEBP, JPG, JPEG ou PNG, até <?php echo $limiteMB; ?>MB):
+    <label>Anexo opcional (PDF, WEBP, JPG, JPEG ou PNG, até <?php echo $limiteMB; ?>MB):
         <input type="file" name="anexo" accept="application/pdf,image/webp,image/jpeg,image/png">
     </label>
 

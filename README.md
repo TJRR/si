@@ -236,7 +236,28 @@ próprio aplicativo lê esse código pela câmera do celular (quando o
 navegador suportar) ou por digitação manual, sempre pelo próprio
 participante — não existe leitura feita pela equipe organizadora. A
 confirmação de inscrição chega por e-mail e também como notificação dentro
-do próprio aplicativo.
+do próprio aplicativo. O evento tem sua própria **agenda de atividades**
+(cursos, palestras, seminários), cada uma com inscrição e vagas opcionais —
+limitadas ou não, com ou sem lista de espera, à escolha de quem organiza —
+e emissão de certificado configurável por atividade. Cada atividade tem
+também um código fixo próprio, impresso e afixado no espaço onde ela
+acontece: o participante confirma presença apontando a câmera para esse
+código, sempre por conta própria. Uma atividade pode ser presencial, online
+ou híbrida: quando aceita participação online, ganha um segundo código,
+próprio para essa forma de participação. Cada atividade também pode ter um
+ou mais **Facilitadores** (instrutor, professor, palestrante) vinculados,
+sempre alguém já cadastrado no sistema. A lista de inscritos, do evento
+inteiro ou de uma atividade específica, pode ser exportada no formato
+exigido por sistemas parceiros de certificação.
+
+Dentro da Semana de Inovação, **Trabalhos** organiza a submissão e a
+avaliação de artigos e resumos expandidos, com motor próprio (sem nenhuma
+relação com o Concurso): o autor envia o texto pelo próprio aplicativo do
+evento, com autor principal e coautores; a organização define os critérios
+de nota e convida avaliadores avulsos, que analisam cada trabalho às cegas
+(sem saber quem é o autor) e lançam a nota por critério; o sistema calcula
+o resultado final, aplica desempate quando necessário e seleciona os
+trabalhos aprovados.
 
 ---
 
@@ -245,7 +266,7 @@ do próprio aplicativo.
 O site público não é uma página estática mantida por programador. É um módulo do
 sistema, escopado por edição:
 
-- **Slideshow, banners e blocos de texto rico**, com editor próprio e reordenação
+- **Apresentação de slides, faixas e blocos de texto rico**, com editor próprio e reordenação
   por arrastar-e-soltar
 - **Prêmios, FAQ, cronograma com eventos avulsos e contato**
 - **Documentos e editais versionados**, com controle de publicação
@@ -326,7 +347,8 @@ ciclo inteiro.
 2. Cadastre um **Concurso**, suas **Trilhas**, **Temas/Desafios** e **Etapas**.
 3. Monte os **Formulários** de inscrição e de cada etapa pelo construtor.
 4. Defina **Critérios**, pesos, **Fórmula** e **Desempate** por etapa.
-5. Ajuste a **Identidade Visual** e monte a home pelo painel de conteúdo.
+5. Ajuste a **Identidade Institucional** (nome e sigla do seu órgão) e a
+   **Identidade Visual**, e monte a home pelo painel de conteúdo.
 6. Publique.
 
 Nada disso exige tocar no código. Se algo no seu edital não couber na
@@ -351,8 +373,10 @@ garantias.
 
 ## Histórico de evolução
 
-Quarenta e uma fases, cada uma entregue e publicada em produção durante uma
-edição real do prêmio.
+Quase cinquenta fases, a maioria já publicada em produção durante uma edição
+real do prêmio; o bloco de Eventos/Trabalhos (Fases 39 a 49) foi desenvolvido
+e testado localmente ao longo do caminho, com o primeiro deploy de tudo esse
+bloco de uma vez, junto com a Fase 49.
 
 | Fase | Entrega |
 |---|---|
@@ -400,6 +424,10 @@ edição real do prêmio.
 | 43 | **Leitura de código pelo próprio participante** — câmera (quando o navegador suportar) ou digitação manual, nunca pela equipe organizadora |
 | 44 | **Confirmação de inscrição também dentro do aplicativo**, além do e-mail já existente |
 | 45 | **Aviso em massa aos inscritos de um Evento**, por e-mail e pelo aplicativo, enviado em lotes para não sobrecarregar o e-mail institucional |
+| 46 | **Agenda de atividades do Evento** (cursos, palestras, seminários), com inscrição pelo próprio participante, vagas e lista de espera opcionais por atividade |
+| 47 | **Confirmação de presença por atividade**, com código fixo próprio para o espaço físico, lido sempre pelo próprio participante |
+| 48 | **Atividades também em modalidade online e híbrida**, com código próprio de confirmação de presença online; **exportação de inscritos no formato exigido por sistemas parceiros**; cadastro de **Facilitadores** (instrutor, professor, palestrante) por atividade; **acesso próprio ao aplicativo de Evento**, separado do painel do Concurso; **temas de cor personalizáveis**, escolhidos por cada usuário |
+| 49 | **Trabalhos**: submissão e avaliação de artigos e resumos expandidos de um Evento, com motor próprio (sem relação com o Concurso), avaliação às cegas por avaliadores avulsos, cálculo de resultado com desempate configurável |
 
 ---
 

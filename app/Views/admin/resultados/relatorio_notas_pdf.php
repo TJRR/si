@@ -22,7 +22,7 @@
 </head>
 <body>
 
-<h1>Relatório de notas — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Relatório de notas: <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 <p class="meta">
     <?php echo htmlspecialchars($trilha !== null ? $trilha['nome'] : '', ENT_QUOTES, 'UTF-8'); ?>
     &middot; Gerado em <?php echo htmlspecialchars($geradoEm, ENT_QUOTES, 'UTF-8'); ?>
@@ -41,7 +41,7 @@
     <tr>
         <?php foreach ($avaliadores as $avaliador): ?>
             <?php foreach ($criterios as $criterio): ?>
-                <th title="<?php echo htmlspecialchars($avaliador['nome'] . ' — ' . $criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($criterio['codigo'], ENT_QUOTES, 'UTF-8'); ?></th>
+                <th title="<?php echo htmlspecialchars($avaliador['nome'] . ': ' . $criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($criterio['codigo'], ENT_QUOTES, 'UTF-8'); ?></th>
             <?php endforeach; ?>
         <?php endforeach; ?>
     </tr>
@@ -67,11 +67,11 @@
                         ?>
                         <td style="background: hsl(<?php echo $matiz; ?>, 65%, 82%);"><?php echo number_format((float) $nota, 1, ',', '.'); ?></td>
                     <?php else: ?>
-                        <td>—</td>
+                        <td>Não informado</td>
                     <?php endif; ?>
                 <?php endforeach; ?>
             <?php endforeach; ?>
-            <td class="col-final"><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], $casasDecimais, ',', '.') : '—'; ?></td>
+            <td class="col-final"><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], $casasDecimais, ',', '.') : 'Não informado'; ?></td>
             <td><?php echo $classificado ? 'Sim' : 'Não'; ?></td>
         </tr>
     <?php endforeach; ?>

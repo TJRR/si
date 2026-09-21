@@ -83,6 +83,6 @@ class ApuracaoAdminController extends Controller
             'publicado' => $publicado,
             'erroResultado' => $erroResultado,
             'casasDecimais' => FormulaPontuacaoRepository::casasDecimais($formula),
-        ], 'Apuração — ' . $trilha['nome'], ['tipo' => 'apuracao', 'id' => (int) $trilhaId]);
+        ], 'Apuração: ' . $trilha['nome'], ['tipo' => 'apuracao', 'id' => (int) $trilhaId]);
     }
 }

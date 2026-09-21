@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Bloco da edição — <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Bloco da edição: <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p style="color:#555;font-size:0.9em;">
     Conteúdo opcional exibido na página pública desta edição (Edições Anteriores),

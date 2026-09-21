@@ -88,6 +88,17 @@ class Auth
             return 'duvidaAdmin/minhasEscaladas';
         }
 
+        // Fase 40/41: perfil mais "fraco" (auto-aprovado, sem curadoria
+        // humana), checado por ultimo. Manda pro shell do aplicativo
+        // (EventoAppController::index()), que resolve pra qual evento levar
+        // a pessoa - painel direto (1 inscricao), tela de escolha (mais de
+        // 1) ou tela de inscricao (nenhuma ainda). Antes da Fase 41 mandava
+        // direto pra eventoInscricao/index (tela de inscricao), o que fazia
+        // quem ja estava inscrito ver esse formulario de novo a cada login.
+        if (self::possuiPerfil('inscrito')) {
+            return 'eventoApp/index';
+        }
+
         return 'home/administrativo';
     }
 

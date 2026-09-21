@@ -6,8 +6,8 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Distribuição automática — prévia',
-    'resumo' => 'Prévia de quem seria designado para cada submissão, antes de gravar de fato — nada é salvo até você confirmar.',
+    'titulo' => 'Distribuição automática: prévia',
+    'resumo' => 'Prévia de quem seria designado para cada submissão, antes de gravar de fato. Nada é salvo até você confirmar.',
     'operacoes' => [
         [
             'nome' => 'Trocar avaliador sugerido',
@@ -16,7 +16,7 @@ return [
         [
             'nome' => 'Confirmar distribuição',
             'como' => 'Grava as designações mostradas na prévia (já com as trocas manuais que você tiver feito).',
-            'observacao' => '"Distribuição automática balanceada" não trava contra remoção depois — diferente do sorteio por categoria, uma designação feita assim pode ser removida normalmente na tela de Designações.',
+            'observacao' => '"Distribuição automática balanceada" não trava contra remoção depois: diferente do sorteio por categoria, uma designação feita assim pode ser removida normalmente na tela de Designações.',
         ],
     ],
     'conceitos' => [],

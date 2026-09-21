@@ -3,14 +3,14 @@
     exit('Acesso negado');
 } ?>
 <div class="pagina-titulo-acoes">
-    <h1>Slideshow</h1>
+    <h1>Apresentação de slides</h1>
     <div class="pagina-titulo-botoes">
-        <a href="<?php echo url('slides/novo'); ?>" class="btn-acao">+ Novo slide</a>
+        <a href="<?php echo url('slides/novo'); ?>" class="btn-acao">+ Novo quadro</a>
     </div>
 </div>
 
 <?php if (empty($slides)): ?>
-    <p>Nenhum slide cadastrado ainda.</p>
+    <p>Nenhum quadro cadastrado ainda.</p>
 <?php else: ?>
     <ul class="reordenar-lista" data-reordenar-rota="slides/reordenar">
         <?php foreach ($slides as $indice => $slide): ?>
@@ -29,7 +29,7 @@
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
                 </a>
-                <form method="post" action="<?php echo url('slides/remover'); ?>" onsubmit="return confirm('Remover este slide?');"><?= campoCsrf() ?>
+                <form method="post" action="<?php echo url('slides/remover'); ?>" onsubmit="return confirm('Remover este quadro?');"><?= campoCsrf() ?>
                     <input type="hidden" name="id" value="<?php echo (int) $slide['id']; ?>">
                     <button type="submit" class="btn-icone" title="Remover">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

@@ -57,9 +57,9 @@
     <?php // Fase 35: selo de rastro - a duvida ja rendeu pergunta(s) no banco de FAQ. ?>
     <?php foreach ($faqsGerados as $gerado): ?>
         <?php if ($perfilPublicaFaq): ?>
-            <a class="status-pill roxo" href="<?php echo url('faq/editar/' . (int) $gerado['id']); ?>" title="<?php echo htmlspecialchars($gerado['pergunta'], ENT_QUOTES, 'UTF-8'); ?>">Já virou FAQ</a>
+            <a class="status-pill roxo" href="<?php echo url('faq/editar/' . (int) $gerado['id']); ?>" title="<?php echo htmlspecialchars($gerado['pergunta'], ENT_QUOTES, 'UTF-8'); ?>">Já virou pergunta frequente</a>
         <?php else: ?>
-            <span class="status-pill roxo" title="<?php echo htmlspecialchars($gerado['pergunta'], ENT_QUOTES, 'UTF-8'); ?>">Já virou FAQ</span>
+            <span class="status-pill roxo" title="<?php echo htmlspecialchars($gerado['pergunta'], ENT_QUOTES, 'UTF-8'); ?>">Já virou pergunta frequente</span>
         <?php endif; ?>
     <?php endforeach; ?>
     <?php if ($duvida['status'] === 'escalada'): ?>
@@ -162,7 +162,7 @@
                             Escalar dúvida
                         </button>
                     </div>
-                    <p class="duvida-limite">Visível apenas pro responsável designado.</p>
+                    <p class="duvida-limite">Visível apenas para o responsável designado.</p>
                 </form>
             <?php endif; ?>
         </div>
@@ -180,7 +180,7 @@
                 </svg>
                 Pergunta frequente
             </h2>
-            <p>Se esta resposta vale para todo mundo, aproveite-a como pergunta frequente. Você reescreve o texto em termos genéricos antes de publicar — a dúvida e a resposta originais continuam intactas e exclusivas desta equipe.</p>
+            <p>Se esta resposta vale para todo mundo, aproveite-a como pergunta frequente. Você reescreve o texto em termos genéricos antes de publicar: a dúvida e a resposta originais continuam intactas e exclusivas desta equipe.</p>
             <?php if (!empty($faqsGerados)): ?>
                 <p class="duvida-limite">Esta dúvida já gerou <?php echo count($faqsGerados); ?> pergunta(s). Confira antes de criar outra.</p>
             <?php endif; ?>

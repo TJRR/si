@@ -87,7 +87,7 @@ class FormulaPontuacaoAdminController extends Controller
             'casasDecimaisAtual' => $casasDecimaisAtual,
             'criteriosDaEtapa' => $criteriosDaEtapa,
             'resultadoTeste' => $resultadoTeste,
-        ], 'Fórmula de pontuação — ' . $etapa['nome'], ['tipo' => 'formula_etapa', 'id' => (int) $etapaId]);
+        ], 'Fórmula de pontuação: ' . $etapa['nome'], ['tipo' => 'formula_etapa', 'id' => (int) $etapaId]);
     }
 
     public function trilha($trilhaId)
@@ -148,7 +148,7 @@ class FormulaPontuacaoAdminController extends Controller
             'casasDecimaisAtual' => $casasDecimaisAtual,
             'etapasDaTrilha' => $etapasDaTrilha,
             'resultadoTeste' => $resultadoTeste,
-        ], 'Fórmula da nota final — ' . $trilha['nome'], ['tipo' => 'apuracao', 'id' => (int) $trilhaId]);
+        ], 'Fórmula da nota final: ' . $trilha['nome'], ['tipo' => 'apuracao', 'id' => (int) $trilhaId]);
     }
 
     private function testar($expressao, array $variaveisPermitidas)

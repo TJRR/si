@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Novo documento — <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Novo documento: <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -18,9 +18,9 @@
         </select>
     </label><br>
 
-    <label>Trilha (opcional — deixe em branco se o documento vale para todo o concurso):
+    <label>Trilha (opcional; deixe em branco se o documento vale para todo o concurso):
         <select name="trilha_id">
-            <option value="">— Todo o concurso —</option>
+            <option value="">Todo o concurso</option>
             <?php foreach ($trilhas as $trilha): ?>
                 <option value="<?php echo (int) $trilha['id']; ?>"><?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></option>
             <?php endforeach; ?>
@@ -28,9 +28,9 @@
     </label><br>
 
     <label>Título:
-        <input type="text" name="titulo" required placeholder="Ex.: Edital de Inscrição — Trilha Interna">
+        <input type="text" name="titulo" required placeholder="Ex.: Edital de Inscrição, Trilha Interna">
     </label><br>
-    <p style="color:var(--cor-texto-suave);font-size:.85rem;">Se já existir um documento com o mesmo tipo + título, este upload vira uma nova versão dele automaticamente.</p>
+    <p style="color:var(--cor-texto-suave);font-size:.85rem;">Se já existir um documento com o mesmo tipo + título, este envio vira uma nova versão dele automaticamente.</p>
 
     <label>Arquivo (PDF, até <?php echo \App\Services\ArquivoService::limiteMaximoMB(); ?>MB):
         <input type="file" name="arquivo" accept="application/pdf" required>

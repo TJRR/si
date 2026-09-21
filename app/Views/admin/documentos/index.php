@@ -14,8 +14,8 @@ $rotulosTipo = [
         <a href="<?php echo url('documentos/novo/' . (int) $concurso['id']); ?>" class="btn-acao">+ Novo documento</a>
     </div>
 </div>
-<p>Um novo upload com o mesmo tipo e título vira uma nova versão — o arquivo anterior nunca é apagado, só deixa de ser o "atual". Veja o histórico completo pelo ícone de relógio.</p>
-<p>Arraste pela alça (⠿) para reordenar — a ordem é aplicada na home. Documentos despublicados continuam salvos e listados aqui, só somem da home.</p>
+<p>Um novo envio com o mesmo tipo e título vira uma nova versão: o arquivo anterior nunca é apagado, só deixa de ser o "atual". Veja o histórico completo pelo ícone de relógio.</p>
+<p>Arraste pela alça (⠿) para reordenar: a ordem é aplicada na home. Documentos despublicados continuam salvos e listados aqui, só somem da home.</p>
 
 <?php if (empty($documentos)): ?>
     <p>Nenhum documento cadastrado ainda.</p>
@@ -25,8 +25,8 @@ $rotulosTipo = [
         <li class="reordenar-item" draggable="true" data-id="<?php echo (int) $documento['id']; ?>">
             <span class="reordenar-alca" aria-hidden="true" title="Arraste para reordenar">⠿</span>
             <div class="reordenar-conteudo">
-                <strong><?php echo htmlspecialchars(isset($rotulosTipo[$documento['tipo']]) ? $rotulosTipo[$documento['tipo']] : $documento['tipo'], ENT_QUOTES, 'UTF-8'); ?></strong>
-                — <?php echo htmlspecialchars($documento['titulo'], ENT_QUOTES, 'UTF-8'); ?>
+                <strong><?php echo htmlspecialchars(isset($rotulosTipo[$documento['tipo']]) ? $rotulosTipo[$documento['tipo']] : $documento['tipo'], ENT_QUOTES, 'UTF-8'); ?>:</strong>
+                <?php echo htmlspecialchars($documento['titulo'], ENT_QUOTES, 'UTF-8'); ?>
                 <span class="status-pill">v<?php echo (int) $documento['versao']; ?></span>
                 <?php if ((int) $documento['publicado'] === 1): ?>
                     <span class="status-pill verde">Publicado</span>

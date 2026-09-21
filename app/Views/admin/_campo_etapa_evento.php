@@ -49,8 +49,8 @@ foreach ($etapasPorTrilha as $etapasDaTrilha) {
     </select>
 </label>
 <p style="color:#666;">
-    Com uma etapa escolhida, só enxerga e se inscreve neste compromisso a equipe habilitada àquela etapa —
-    o mesmo critério que libera a submissão: estar classificada na etapa anterior. Como etapa pertence a uma
+    Com uma etapa escolhida, só enxerga e se inscreve neste compromisso a equipe habilitada àquela etapa,
+    pelo mesmo critério que libera a submissão: estar classificada na etapa anterior. Como etapa pertence a uma
     trilha, escolher uma etapa restringe o compromisso àquela trilha.
     <strong>Enquanto o resultado da etapa anterior não for publicado, ninguém verá este compromisso.</strong>
 </p>

@@ -25,7 +25,7 @@
         <input type="text" name="telefone" value="<?php echo htmlspecialchars((string) $participante['telefone'], ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>
 
-    <label>E-mail (login — não editável aqui):
+    <label>E-mail (usado como login, não pode ser editado aqui):
         <input type="email" value="<?php echo htmlspecialchars((string) $participante['email'], ENT_QUOTES, 'UTF-8'); ?>" disabled>
     </label><br>
 

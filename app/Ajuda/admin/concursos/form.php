@@ -6,23 +6,23 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Concurso — novo/editar',
+    'titulo' => 'Concurso: novo/editar',
     'resumo' => 'Dados gerais de uma edição do Prêmio de Inovação.',
     'operacoes' => [
         [
             'nome' => 'Nome',
-            'como' => 'Obrigatório — ex.: "5º Prêmio de Inovação".',
+            'como' => 'Obrigatório: ex.: "5º Prêmio de Inovação".',
         ],
         [
             'nome' => 'Descrição',
-            'como' => 'Editor rico — texto de apresentação da edição, exibido na página pública "Edições Anteriores" depois que o concurso é encerrado.',
+            'como' => 'Editor rico: texto de apresentação da edição, exibido na página pública "Edições Anteriores" depois que o concurso é encerrado.',
         ],
         [
             'nome' => 'Data de início / fim',
-            'como' => 'Período de referência da edição — não trava por si só nenhuma outra tela (os prazos que realmente bloqueiam ficam nas Etapas).',
+            'como' => 'Período de referência da edição. Não trava por si só nenhuma outra tela (os prazos que realmente bloqueiam ficam nas Etapas).',
         ],
         [
-            'nome' => 'Status',
+            'nome' => 'Situação',
             'como' => 'Rascunho, Ativo ou Encerrado.',
         ],
         [

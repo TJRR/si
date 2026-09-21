@@ -62,7 +62,7 @@
                     <br><small><?php echo htmlspecialchars($colega['motivo_rejeicao'], ENT_QUOTES, 'UTF-8'); ?></small>
                 <?php endif; ?>
                 <?php if ($colega['status_homologacao'] === 'homologado' && empty($colega['email'])): ?>
-                    <br><small style="color:#b00;">⚠ Sem e-mail cadastrado — sem acesso ao sistema</small>
+                    <br><small style="color:#b00;">⚠ Sem e-mail cadastrado, portanto sem acesso ao sistema</small>
                 <?php endif; ?>
             </td>
             <td>
@@ -118,7 +118,7 @@
 
 <h2>Etapas da submissão</h2>
 <?php if (!$homologado): ?>
-    <p>Sua inscrição ainda não foi homologada — assim que for, as etapas de submissão aparecerão aqui.</p>
+    <p>Assim que sua inscrição for homologada, as etapas de submissão aparecerão aqui.</p>
 <?php elseif (empty($etapas)): ?>
     <p>Nenhuma etapa de submissão disponível no momento para a sua trilha.</p>
 <?php else: ?>
@@ -167,7 +167,7 @@
                             </a>
                         <?php endif; ?>
                         <?php if (!empty($etapa['feedback_disponivel'])): ?>
-                            <a href="<?php echo url('participante/verFeedback/' . (int) $etapa['submissao_id_feedback']); ?>" class="btn-icone" title="Ver notas e feedback">
+                            <a href="<?php echo url('participante/verFeedback/' . (int) $etapa['submissao_id_feedback']); ?>" class="btn-icone" title="Ver notas e comentários">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path>
                                     <circle cx="12" cy="12" r="3"></circle>

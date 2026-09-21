@@ -6,7 +6,7 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Inscrição enviada — sucesso',
+    'titulo' => 'Inscrição enviada com sucesso',
     'resumo' => 'Confirmação de que a equipe foi cadastrada.',
     'operacoes' => [],
     'conceitos' => ['cadastro_pendente_aprovacao'],

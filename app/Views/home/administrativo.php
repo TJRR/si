@@ -65,8 +65,8 @@
                 </a>
             <?php endif; ?>
             <?php if ($mostrarRetomar && $duvida['status'] === 'escalada'): ?>
-                <form method="post" action="<?php echo url('duvidaAdmin/retomar/' . (int) $duvida['id']); ?>" onsubmit="return confirm('Retomar esta dúvida pra fila geral?');"><?= campoCsrf() ?>
-                    <button type="submit" class="btn-icone" title="Retomar pra fila geral">
+                <form method="post" action="<?php echo url('duvidaAdmin/retomar/' . (int) $duvida['id']); ?>" onsubmit="return confirm('Retomar esta dúvida para fila geral?');"><?= campoCsrf() ?>
+                    <button type="submit" class="btn-icone" title="Retomar para fila geral">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
                             <path d="M3 3v5h5"></path>
@@ -119,8 +119,8 @@
 <details class="painel-secao-colapsavel"<?php echo $duvidasFoiFiltrada ? ' open' : ''; ?>>
     <summary>
         Dúvidas
-        <?php if ($pendentesDuvidas > 0): ?> — <?php echo $pendentesDuvidas; ?> pendente(s)<?php endif; ?>
-        <?php if (!empty($minhasEscaladasDuvidas)): ?>, <?php echo count($minhasEscaladasDuvidas); ?> escalada(s) pra você<?php endif; ?>
+        <?php if ($pendentesDuvidas > 0): ?>: <?php echo $pendentesDuvidas; ?> pendente(s)<?php endif; ?>
+        <?php if (!empty($minhasEscaladasDuvidas)): ?>, <?php echo count($minhasEscaladasDuvidas); ?> escalada(s) para você<?php endif; ?>
     </summary>
     <div class="painel-secao-colapsavel-corpo">
 
@@ -157,13 +157,13 @@
             <p>Nenhuma dúvida neste filtro.</p>
         <?php else: ?>
             <table border="1" cellpadding="6">
-                <tr><th>Pergunta</th><th>Equipe</th><th>Status</th><th>Responsável</th><th>Registrada em</th><th>SLA</th><th>Ações</th></tr>
+                <tr><th>Pergunta</th><th>Equipe</th><th>Situação</th><th>Responsável</th><th>Registrada em</th><th>Prazo</th><th>Ações</th></tr>
                 <?php foreach ($todasDuvidas as $duvida): ?>
                 <tr>
                     <td><?php echo htmlspecialchars(mb_substr($duvida['pergunta'], 0, 60) . (mb_strlen($duvida['pergunta']) > 60 ? '…' : ''), ENT_QUOTES, 'UTF-8'); ?></td>
                     <td><?php echo htmlspecialchars($duvida['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></td>
                     <td><span class="status-pill <?php echo $coresStatusDuvida[$duvida['status']]; ?>"><?php echo $rotulosStatusDuvida[$duvida['status']]; ?></span></td>
-                    <td><?php echo $duvida['responsavel_nome'] !== null ? htmlspecialchars($duvida['responsavel_nome'], ENT_QUOTES, 'UTF-8') : '—'; ?></td>
+                    <td><?php echo $duvida['responsavel_nome'] !== null ? htmlspecialchars($duvida['responsavel_nome'], ENT_QUOTES, 'UTF-8') : 'Sem responsável'; ?></td>
                     <td><?php echo htmlspecialchars(formatarDataHora($duvida['criado_em']), ENT_QUOTES, 'UTF-8'); ?></td>
                     <td>
                         <?php if (!empty($duvida['atrasada'])): ?>
@@ -181,10 +181,10 @@
 
     <h3 style="margin-top:1.5rem;">Escaladas para mim</h3>
     <?php if (empty($minhasEscaladasDuvidas)): ?>
-        <p>Nenhuma dúvida escalada pra você no momento.</p>
+        <p>Nenhuma dúvida escalada para você no momento.</p>
     <?php else: ?>
         <table border="1" cellpadding="6">
-            <tr><th>Pergunta</th><th>Equipe</th><th>Trilha</th><th>Registrada em</th><th>SLA</th><th>Ações</th></tr>
+            <tr><th>Pergunta</th><th>Equipe</th><th>Trilha</th><th>Registrada em</th><th>Prazo</th><th>Ações</th></tr>
             <?php foreach ($minhasEscaladasDuvidas as $duvida): ?>
             <tr>
                 <td><?php echo htmlspecialchars(mb_substr($duvida['pergunta'], 0, 60) . (mb_strlen($duvida['pergunta']) > 60 ? '…' : ''), ENT_QUOTES, 'UTF-8'); ?></td>
@@ -210,8 +210,8 @@
 <details class="painel-secao-colapsavel"<?php echo $requerimentosFoiFiltrada ? ' open' : ''; ?>>
     <summary>
         Requerimentos
-        <?php if ($pendentesRequerimentos > 0): ?> — <?php echo $pendentesRequerimentos; ?> pendente(s)<?php endif; ?>
-        <?php if (!empty($minhasEscaladasRequerimentos)): ?>, <?php echo count($minhasEscaladasRequerimentos); ?> escalado(s) pra você<?php endif; ?>
+        <?php if ($pendentesRequerimentos > 0): ?>: <?php echo $pendentesRequerimentos; ?> pendente(s)<?php endif; ?>
+        <?php if (!empty($minhasEscaladasRequerimentos)): ?>, <?php echo count($minhasEscaladasRequerimentos); ?> escalado(s) para você<?php endif; ?>
     </summary>
     <div class="painel-secao-colapsavel-corpo">
 
@@ -256,13 +256,13 @@
             <p>Nenhum requerimento neste filtro.</p>
         <?php else: ?>
             <table border="1" cellpadding="6">
-                <tr><th>Equipe</th><th>Modelo</th><th>Status</th><th>Responsável</th><th>Protocolado em</th><th>SLA</th><th>Ações</th></tr>
+                <tr><th>Equipe</th><th>Modelo</th><th>Situação</th><th>Responsável</th><th>Protocolado em</th><th>Prazo</th><th>Ações</th></tr>
                 <?php foreach ($todosRequerimentos as $requerimento): ?>
                 <tr>
                     <td><?php echo htmlspecialchars($requerimento['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></td>
                     <td><?php echo htmlspecialchars($requerimento['modelo_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
                     <td><span class="status-pill <?php echo $coresStatusRequerimento[$requerimento['status']]; ?>"><?php echo $rotulosStatusRequerimento[$requerimento['status']]; ?></span></td>
-                    <td><?php echo $requerimento['responsavel_nome'] !== null ? htmlspecialchars($requerimento['responsavel_nome'], ENT_QUOTES, 'UTF-8') : '—'; ?></td>
+                    <td><?php echo $requerimento['responsavel_nome'] !== null ? htmlspecialchars($requerimento['responsavel_nome'], ENT_QUOTES, 'UTF-8') : 'Sem responsável'; ?></td>
                     <td><?php echo htmlspecialchars(formatarDataHora($requerimento['criado_em']), ENT_QUOTES, 'UTF-8'); ?></td>
                     <td>
                         <?php if (!empty($requerimento['atrasado'])): ?>
@@ -270,7 +270,7 @@
                         <?php elseif (in_array($requerimento['status'], ['recebido', 'escalado'], true)): ?>
                             <span class="status-pill verde">Em dia</span>
                         <?php else: ?>
-                            —
+                            Não se aplica
                         <?php endif; ?>
                     </td>
                     <td><?php $renderizarAcoesRequerimento($requerimento); ?></td>
@@ -282,10 +282,10 @@
 
     <h3 style="margin-top:1.5rem;">Requerimentos escalados para mim</h3>
     <?php if (empty($minhasEscaladasRequerimentos)): ?>
-        <p>Nenhum requerimento escalado pra você no momento.</p>
+        <p>Nenhum requerimento escalado para você no momento.</p>
     <?php else: ?>
         <table border="1" cellpadding="6">
-            <tr><th>Equipe</th><th>Modelo</th><th>Protocolado em</th><th>SLA</th><th>Ações</th></tr>
+            <tr><th>Equipe</th><th>Modelo</th><th>Protocolado em</th><th>Prazo</th><th>Ações</th></tr>
             <?php foreach ($minhasEscaladasRequerimentos as $requerimento): ?>
             <tr>
                 <td><?php echo htmlspecialchars($requerimento['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></td>
@@ -310,7 +310,7 @@
 <details class="painel-secao-colapsavel">
     <summary>
         Progresso da avaliação
-        <?php if (!empty($etapasAvaliacaoVigentes)): ?> — <?php echo count($etapasAvaliacaoVigentes); ?> etapa(s) em andamento<?php endif; ?>
+        <?php if (!empty($etapasAvaliacaoVigentes)): ?>: <?php echo count($etapasAvaliacaoVigentes); ?> etapa(s) em andamento<?php endif; ?>
     </summary>
     <div class="painel-secao-colapsavel-corpo">
 
@@ -320,7 +320,7 @@
         <?php foreach ($etapasAvaliacaoVigentes as $item): ?>
             <a class="admin-progresso-item admin-progresso-link" href="<?php echo url('designacoes/progresso/' . (int) $item['etapa_id']); ?>" title="Ver progresso por avaliador">
                 <div class="admin-progresso-cabecalho">
-                    <span><?php echo htmlspecialchars($item['trilha_nome'] . ' — ' . $item['etapa_nome'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    <span><?php echo htmlspecialchars($item['trilha_nome'] . ': ' . $item['etapa_nome'], ENT_QUOTES, 'UTF-8'); ?></span>
                     <span><?php echo (int) $item['percentual']; ?>% (<?php echo (int) $item['completas']; ?> de <?php echo (int) $item['total']; ?>)</span>
                 </div>
                 <div class="admin-progresso-barra-fundo">

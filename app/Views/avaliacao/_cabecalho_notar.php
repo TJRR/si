@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Lançar notas —
+<h1>Lançar notas da
     <?php if ($sigiloCego && $submissao['numero_sigilo_etapa'] !== null): ?>
         Equipe <?php echo (int) $submissao['numero_sigilo_etapa']; ?>
     <?php else: ?>
@@ -21,9 +21,9 @@
 <?php endif; ?>
 
 <?php if ($resultadoPublicado): ?>
-    <p><strong>O resultado desta etapa já foi publicado — as notas abaixo são apenas para consulta.</strong></p>
+    <p><strong>Como o resultado desta etapa já foi publicado, as notas abaixo são apenas para consulta.</strong></p>
 <?php elseif ($avaliacaoTravada): ?>
-    <p><strong>Sua avaliação desta submissão já foi concluída — as notas abaixo são apenas para consulta.</strong></p>
+    <p><strong>Como sua avaliação desta submissão já foi concluída, as notas abaixo são apenas para consulta.</strong></p>
 <?php else: ?>
     <p id="progresso-avaliacao"><?php echo (int) $criteriosJaNotados; ?> de <?php echo (int) $totalCriterios; ?> critérios avaliados</p>
 <?php endif; ?>

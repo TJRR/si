@@ -10,7 +10,7 @@
     $rotulos = [
         'client_email' => 'E-mail da Conta de Serviço',
         'private_key' => 'Chave privada (PEM)',
-        'token_uri' => 'Endereço do token (opcional)',
+        'token_uri' => 'Endereço do código de acesso (token) (opcional)',
         'client_id' => 'ID do cliente',
         'client_secret' => 'Segredo do cliente',
         'redirect_uri' => 'Endereço de retorno',
@@ -23,7 +23,7 @@
     ];
 ?>
 <div class="pagina-titulo-acoes">
-    <h1>Segurança 🔐 — credenciais</h1>
+    <h1>Segurança 🔐: credenciais</h1>
 </div>
 
 <?php if (!empty($_SESSION['flash'])): ?>
@@ -38,7 +38,7 @@
 <?php if (!$chaveMestraConfigurada): ?>
     <div class="seguranca-aviso critico">
         <strong>Não há chave-mestra configurada.</strong>
-        Sem ela o sistema não consegue ler nem gravar credencial nenhuma nesta tela — as integrações
+        Sem ela o sistema não consegue ler nem gravar credencial nenhuma nesta tela: as integrações
         seguem funcionando pelos valores de <code>config/local.php</code>.
         Preencha <code>['cifra']['chave_mestra']</code> nesse arquivo para habilitar esta tela.
     </div>
@@ -80,7 +80,7 @@
                             <?php if ($sigiloso): ?>
                                 <?php if ($item['ilegivel']): ?>
                                     <strong class="seguranca-ilegivel">Não foi possível ler este valor.</strong>
-                                    A chave-mestra provavelmente foi trocada — recadastre o segredo abaixo.
+                                    A chave-mestra provavelmente foi trocada: recadastre o segredo abaixo.
                                 <?php else: ?>
                                     <code><?php echo htmlspecialchars($item['impressao_digital'], ENT_QUOTES, 'UTF-8'); ?></code>
                                 <?php endif; ?>
@@ -102,7 +102,7 @@
                         <textarea id="campo-<?php echo htmlspecialchars($grupo['chave'] . '-' . $campo, ENT_QUOTES, 'UTF-8'); ?>"
                                   name="<?php echo htmlspecialchars($campo, ENT_QUOTES, 'UTF-8'); ?>"
                                   rows="6" autocomplete="off" spellcheck="false"
-                                  placeholder="Cole aqui o conteúdo do campo &quot;private_key&quot; do arquivo .json — deixe em branco para manter"></textarea>
+                                  placeholder="Cole aqui o conteúdo do campo &quot;private_key&quot; do arquivo .json; deixe em branco para manter"></textarea>
                     <?php else: ?>
                         <input type="text"
                                id="campo-<?php echo htmlspecialchars($grupo['chave'] . '-' . $campo, ENT_QUOTES, 'UTF-8'); ?>"
@@ -124,7 +124,7 @@
                 <label for="email-teste">Testar a conexão consultando a agenda de:</label>
                 <input type="email" id="email-teste" name="email_teste" placeholder="seu-email@tjrr.jus.br" required>
                 <button type="submit" class="btn-acao">Testar conexão com o Google</button>
-                <p class="seguranca-estado">Só leitura — lista as agendas visíveis, não cria nem altera nada.</p>
+                <p class="seguranca-estado">Só leitura: lista as agendas visíveis, não cria nem altera nada.</p>
             </form>
         <?php endif; ?>
     </section>

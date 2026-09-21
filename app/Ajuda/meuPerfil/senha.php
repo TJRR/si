@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Alterar senha',
-    'resumo' => 'Troca a senha da sua própria conta. Só se aplica a contas com login por senha — quem acessa só pelo Google não tem senha cadastrada.',
+    'resumo' => 'Troca a senha da sua própria conta. Só se aplica a contas com login por senha; quem acessa só pelo Google não tem senha cadastrada.',
     'operacoes' => [
         [
             'nome' => 'Senha atual',

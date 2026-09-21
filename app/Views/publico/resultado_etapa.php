@@ -6,10 +6,10 @@
 <div class="site-page">
     <header class="site-header">
         <div class="site-header-inner">
-            <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR" class="site-logo">
+            <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars('Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="site-logo">
             <nav class="site-nav">
                 <?php if (isset($ajudaHtml) && $ajudaHtml !== null): ?>
-                <button type="button" class="site-header-icone" title="Ajuda desta página" aria-label="Ajuda desta página" data-ajuda-titulo="<?php echo htmlspecialchars('Ajuda — ' . (string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?>" onclick="abrirModal(this.dataset.ajudaTitulo, document.getElementById('ajuda-painel-fonte').innerHTML)">
+                <button type="button" class="site-header-icone" title="Ajuda desta página" aria-label="Ajuda desta página" data-ajuda-titulo="<?php echo htmlspecialchars('Ajuda: ' . (string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?>" onclick="abrirModal(this.dataset.ajudaTitulo, document.getElementById('ajuda-painel-fonte').innerHTML)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <circle cx="12" cy="12" r="10"></circle>
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
@@ -23,7 +23,7 @@
     </header>
 
     <div class="site-form-page">
-        <h1>Resultado — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+        <h1>Resultado: <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
         <?php if (empty($equipes)): ?>
             <p><em>Nenhuma equipe classificada nesta etapa.</em></p>
@@ -43,7 +43,7 @@
                 <?php $ultimoEraClassificado = null; ?>
                 <?php foreach ($equipes as $equipe): ?>
                     <?php if ($ultimoEraClassificado === true && $equipe['classificado'] === false): ?>
-                        <tr><td colspan="3" style="text-align:center; font-style:italic; border-top:2px dashed var(--cor-borda);">Linha de corte — abaixo, equipes não classificadas</td></tr>
+                        <tr><td colspan="3" style="text-align:center; font-style:italic; border-top:2px dashed var(--cor-borda);">Linha de corte: abaixo, equipes não classificadas</td></tr>
                     <?php endif; ?>
                     <?php $ultimoEraClassificado = $equipe['classificado']; ?>
                     <tr>
@@ -54,7 +54,7 @@
                                 <span class="status-pill laranja">Não classificada</span>
                             <?php endif; ?>
                         </td>
-                        <td><?php echo $equipe['ne'] !== null ? number_format((float) $equipe['ne'], $casasDecimais, ',', '.') : '—'; ?></td>
+                        <td><?php echo $equipe['ne'] !== null ? number_format((float) $equipe['ne'], $casasDecimais, ',', '.') : 'Sem nota'; ?></td>
                     </tr>
                 <?php endforeach; ?>
             </table>

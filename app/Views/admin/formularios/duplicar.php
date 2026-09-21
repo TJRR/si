@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Duplicar formulário — <?php echo htmlspecialchars($formulario['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Duplicar formulário: <?php echo htmlspecialchars($formulario['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('formularios/index/' . (int) $formulario['concurso_id']); ?>">Voltar aos formulários</a></p>
 

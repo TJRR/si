@@ -219,6 +219,12 @@
                 renderizarAbas(dados.abas, dados.mecanismoAvaliacaoEtapa, rota);
                 sincronizarFieldsetAvaliacao();
                 sincronizarAbasAvaliacao();
+                // Troca de conteudo via AJAX nunca reexecuta os <script> de
+                // layout.php (so' o carregamento direto da URL faz isso) -
+                // este evento avisa qualquer componente que precise
+                // reinicializar sobre elementos do conteudo novo (ex.:
+                // assets/js/busca-usuario.js).
+                document.dispatchEvent(new CustomEvent('conteudo-admin-atualizado'));
 
                 if (dados.titulo) {
                     document.title = dados.titulo;

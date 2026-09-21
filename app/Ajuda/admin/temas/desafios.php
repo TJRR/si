@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Desafios (de um tema)',
-    'resumo' => 'Perguntas específicas dentro de um Tema — é o que a equipe efetivamente escolhe ao se inscrever.',
+    'resumo' => 'Perguntas específicas dentro de um Tema: é o que a equipe efetivamente escolhe ao se inscrever.',
     'operacoes' => [
         [
             'nome' => '+ Novo desafio',

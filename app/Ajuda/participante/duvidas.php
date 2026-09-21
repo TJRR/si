@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Minhas dúvidas',
-    'resumo' => 'Lista de dúvidas registradas pela sua equipe — qualquer integrante (não só o líder) pode registrar e ver.',
+    'resumo' => 'Lista de dúvidas registradas pela sua equipe: qualquer integrante (não só o líder) pode registrar e ver.',
     'operacoes' => [
         [
             'nome' => 'Registrar dúvida',
@@ -16,7 +16,7 @@ return [
         [
             'nome' => 'Ver',
             'icone' => 'ver',
-            'como' => 'Abre a thread completa da dúvida.',
+            'como' => 'Abre a conversa completa da dúvida.',
             'pills' => [
                 ['cor' => 'azul', 'rotulo' => 'Recebida'],
                 ['cor' => 'laranja', 'rotulo' => 'Em análise'],

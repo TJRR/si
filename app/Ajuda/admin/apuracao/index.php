@@ -11,17 +11,17 @@ return [
     'operacoes' => [
         [
             'nome' => 'Fórmula NF',
-            'como' => 'Mesmo campo da tela "Fórmula da Trilha" — editar aqui ou lá grava o mesmo dado. Inclui também as casas decimais de exibição da NF (padrão 2).',
+            'como' => 'Mesmo campo da tela "Fórmula da Trilha": editar aqui ou lá grava o mesmo dado. Inclui também as casas decimais de exibição da NF (padrão 2).',
         ],
         [
             'nome' => 'Gerenciar desempate',
-            'como' => 'Link para a tela de Desempate.',
+            'como' => 'Hiperlink para a tela de Desempate.',
         ],
         [
             'nome' => 'Confirmar e publicar',
             'icone' => 'publicar',
             'como' => 'Publica o ranking final da trilha numa página pública.',
-            'observacao' => 'A prévia mostrada nesta tela é recalculada a cada acesso, até você publicar — depois de publicado, o que ficou registrado não muda sozinho mesmo que dados mudem depois. O ranking só fica disponível para publicar quando as etapas que a fórmula da NF realmente usa (as variáveis NE que aparecem na expressão) já tiverem resultado publicado — uma etapa fora da fórmula, como "Cadastro das Equipes", nunca é exigida.',
+            'observacao' => 'A prévia mostrada nesta tela é recalculada a cada acesso, até você publicar. Depois de publicado, o que ficou registrado não muda sozinho mesmo que dados mudem depois. O ranking só fica disponível para publicar quando as etapas que a fórmula da NF realmente usa (as variáveis de Nota da Etapa (NE) que aparecem na expressão) já tiverem resultado publicado; uma etapa fora da fórmula, como "Cadastro das Equipes", nunca é exigida.',
         ],
         [
             'nome' => 'Reabrir',
@@ -31,7 +31,7 @@ return [
         [
             'nome' => 'Destaque público',
             'icone' => 'ver',
-            'como' => 'Coluna que aparece só depois de publicado — o lápis abre a tela de resumo/imagem de destaque de cada colocação (mesma tela usada em Edições Anteriores).',
+            'como' => 'Coluna que aparece só depois de publicado: o lápis abre a tela de resumo/imagem de destaque de cada colocação (mesma tela usada em Edições Anteriores).',
         ],
     ],
     'conceitos' => ['publicar_trava', 'permissao_suporte_admin'],

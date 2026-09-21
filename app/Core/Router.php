@@ -10,6 +10,7 @@ if (!defined('SI_BOOT')) {
 use App\Controllers\ApresentacaoPitchAdminController;
 use App\Controllers\ApresentacaoPitchController;
 use App\Controllers\ApuracaoAdminController;
+use App\Controllers\AtividadeAdminController;
 use App\Controllers\AuditoriaAdminController;
 use App\Controllers\AuthController;
 use App\Controllers\AvaliacaoController;
@@ -31,7 +32,10 @@ use App\Controllers\DuvidaController;
 use App\Controllers\EdicaoPublicaController;
 use App\Controllers\EditorMidiaAdminController;
 use App\Controllers\EtapaAdminController;
+use App\Controllers\EventoAdminController;
+use App\Controllers\EventoAppController;
 use App\Controllers\EventoCronogramaAdminController;
+use App\Controllers\EventoFormularioAdminController;
 use App\Controllers\FaqAdminController;
 use App\Controllers\FaqConcursoAdminController;
 use App\Controllers\FormulaPontuacaoAdminController;
@@ -60,11 +64,15 @@ use App\Controllers\RequerimentoController;
 use App\Controllers\ResultadoAdminController;
 use App\Controllers\ResultadoPublicoController;
 use App\Controllers\SegurancaAdminController;
+use App\Controllers\EventoInscricaoPublicaController;
 use App\Controllers\SessaoController;
 use App\Controllers\SlideAdminController;
 use App\Controllers\SubmissaoController;
 use App\Controllers\TemaAdminController;
 use App\Controllers\TemaDesafioAdminController;
+use App\Controllers\TrabalhoAdminController;
+use App\Controllers\TrabalhoAvaliacaoController;
+use App\Controllers\TrabalhoController;
 use App\Controllers\TrilhaAdminController;
 use App\Controllers\UsuarioAdminController;
 use App\Controllers\ValidacaoPublicaController;
@@ -136,6 +144,14 @@ class Router
         'midia' => MidiaAdminController::class,
         'eventosCronograma' => EventoCronogramaAdminController::class,
         'edicoes' => EdicaoPublicaController::class,
+        'eventoInscricao' => EventoInscricaoPublicaController::class,
+        'eventoApp' => EventoAppController::class,
+        'eventos' => EventoAdminController::class,
+        'atividades' => AtividadeAdminController::class,
+        'eventoFormulario' => EventoFormularioAdminController::class,
+        'trabalhos' => TrabalhoAdminController::class,
+        'trabalho' => TrabalhoController::class,
+        'avaliacaoTrabalhos' => TrabalhoAvaliacaoController::class,
     ];
 
     public function despachar($r)
@@ -144,6 +160,17 @@ class Router
         $modulo = $partes[0] !== '' ? $partes[0] : 'home';
         $acao = isset($partes[1]) && $partes[1] !== '' ? $partes[1] : 'index';
         $parametros = array_slice($partes, 2);
+
+        // Fase 41 (correcao pos-teste de fumaca): captura '?modo=app' (marca
+        // de start_url do manifesto, ver EventoAppController::manifesto())
+        // aqui no topo do despacho, ANTES de qualquer redirect de controller
+        // - EventoAppController::index() redireciona visitante sem conta
+        // para eventoInscricao/index sem propagar a querystring original,
+        // entao chamar ehContextoApp() so' dentro da view de destino nunca
+        // veria o parametro. Chamando aqui, a marca e' gravada na sessao
+        // (efeito colateral da propria funcao) antes de qualquer redirect
+        // acontecer.
+        ehContextoApp();
 
         try {
             $configuracao = (new ConfiguracaoSistemaRepository())->buscar();

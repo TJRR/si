@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Blocos de Conteúdo',
-    'resumo' => 'Seções de texto + imagem da home — os blocos padrão ("Sobre o Prêmio", "Premiação") sempre existem; blocos livres são criados pelo Administrador.',
+    'resumo' => 'Seções de texto + imagem da página inicial: os blocos padrão ("Sobre o Prêmio", "Premiação") sempre existem; blocos livres são criados pelo Administrador.',
     'operacoes' => [
         [
             'nome' => '+ Novo (livre)',
@@ -17,13 +17,13 @@ return [
             'nome' => 'Editar',
             'icone' => 'editar',
             'como' => 'Título, âncora, conteúdo (editor rico), imagem, botão opcional, Ativo, "Adicionar no menu superior" e "Mostrar no rodapé".',
-            'observacao' => 'Nos blocos padrão, a âncora vem travada (não pode ser editada) e "Adicionar no menu superior" não está disponível — só nos blocos livres.',
+            'observacao' => 'Nos blocos padrão, a âncora vem travada (não pode ser editada) e "Adicionar no menu superior" não está disponível, só nos blocos livres.',
         ],
         [
             'nome' => 'Remover',
             'icone' => 'remover',
             'como' => 'Apaga o bloco.',
-            'observacao' => 'Só disponível para blocos livres — os padrão não podem ser removidos, só (des)ativados.',
+            'observacao' => 'Só disponível para blocos livres: os padrão não podem ser removidos, só (des)ativados.',
         ],
         [
             'nome' => 'Reordenar',

@@ -6,8 +6,8 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Documento — editar metadados',
-    'resumo' => 'Altera tipo, trilha e título de um documento já cadastrado — não é possível trocar o arquivo aqui.',
+    'titulo' => 'Documento: editar metadados',
+    'resumo' => 'Altera tipo, trilha e título de um documento já cadastrado. Não é possível trocar o arquivo aqui.',
     'operacoes' => [],
     'conceitos' => ['nunca_apaga_so_versiona'],
 ];

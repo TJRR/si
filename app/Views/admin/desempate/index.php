@@ -2,11 +2,11 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Regras de desempate — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Regras de desempate: <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('trilhas/index/' . (int) $trilha['concurso_id']); ?>">Voltar às trilhas</a></p>
 
-<p>Ordem de aplicação em caso de empate na Nota Final (1ª linha de cada etapa tem prioridade). As regras são configuradas por etapa — o desempate de uma etapa nunca usa critérios de outra.</p>
+<p>Ordem de aplicação em caso de empate na Nota Final (1ª linha de cada etapa tem prioridade). As regras são configuradas por etapa: o desempate de uma etapa nunca usa critérios de outra.</p>
 
 <?php if (empty($etapas)): ?>
     <p>Esta trilha ainda não tem etapas cadastradas.</p>

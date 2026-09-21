@@ -8,7 +8,7 @@ $acao = $edicao
     ? url('oficinaAdmin/editar/' . (int) $horario['id'])
     : url('oficinaAdmin/novo/' . (int) $concurso['id']);
 ?>
-<h1><?php echo $edicao ? 'Editar horário de oficina' : 'Novo horário de oficina'; ?> — <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1><?php echo $edicao ? 'Editar horário de oficina' : 'Novo horário de oficina'; ?>: <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <?php if (!empty($erro)): ?>
     <p class="flash-mensagem vermelho"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -31,7 +31,7 @@ $acao = $edicao
 
     <?php if ($edicao): ?>
         <input type="hidden" name="integracao_google" value="<?php echo !empty($horario['integracao_google']) ? '1' : ''; ?>">
-        <p><strong>Google Agenda:</strong> <?php echo !empty($horario['integracao_google']) ? 'integrado — o evento e a sala do Meet são atualizados automaticamente ao salvar.' : 'não integrado.'; ?>
+        <p><strong>Google Agenda:</strong> <?php echo !empty($horario['integracao_google']) ? 'integrado: o evento e a sala do Meet são atualizados automaticamente ao salvar.' : 'não integrado.'; ?>
            A integração não muda na edição; para trocar, remova o horário e crie outro.</p>
     <?php else: ?>
         <label>
@@ -45,12 +45,12 @@ $acao = $edicao
     <?php endif; ?>
 
     <?php if (!$edicao || empty($horario['integracao_google'])): ?>
-        <label>Link do Google Meet (opcional — sala criada previamente; ignorado se a integração acima estiver marcada):
+        <label>Hiperlink do Google Meet (opcional: sala criada previamente; ignorado se a integração acima estiver marcada):
             <input type="url" name="link_meet" id="link_meet" maxlength="255" placeholder="https://meet.google.com/xxx-xxxx-xxx" value="<?php echo htmlspecialchars($entrada['link_meet'], ENT_QUOTES, 'UTF-8'); ?>">
         </label><br>
     <?php endif; ?>
 
-    <label>Observação (opcional — foco/tema deste horário):
+    <label>Observação (opcional: foco/tema deste horário):
         <input type="text" name="observacao" maxlength="255" placeholder="Ex.: Aberto a todas as trilhas" value="<?php echo htmlspecialchars($entrada['observacao'], ENT_QUOTES, 'UTF-8'); ?>">
     </label>
 

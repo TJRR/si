@@ -334,7 +334,7 @@ class OficinaAdminController extends Controller
         }
 
         if ($entrada['integrar_google'] && $entrada['link_meet'] !== '') {
-            return 'Com a integração com o Google Agenda ativa, o link do Meet é gerado automaticamente — não informe um link manual.';
+            return 'Com a integração com o Google Agenda ativa, o link do Meet é gerado automaticamente. Não informe um link manual.';
         }
 
         if (!$entrada['integrar_google'] && $entrada['link_meet'] !== '' && !linkHttpValido($entrada['link_meet'])) {
@@ -372,7 +372,7 @@ class OficinaAdminController extends Controller
         $etapa = $this->etapas->buscarPorId($etapaId);
 
         if ($etapa !== null && !$this->eventoEtapa->restringe($etapa)) {
-            flashAlerta('Salvo, mas a etapa escolhida não restringe ninguém (é a primeira da trilha, ou a etapa anterior não é avaliada por avaliadores) — na prática o compromisso está aberto a todos.');
+            flashAlerta('Salvo, mas a etapa escolhida não restringe ninguém (é a primeira da trilha, ou a etapa anterior não é avaliada por avaliadores). Na prática, o compromisso está aberto a todos.');
         }
     }
 
@@ -410,7 +410,7 @@ class OficinaAdminController extends Controller
         $descricao .= "\n\nDetalhes no sistema: " . urlAbsoluta('oficina/index');
 
         return [
-            'titulo' => 'Oficina: ' . $tema . ' — ' . $concurso['nome'],
+            'titulo' => 'Oficina: ' . $tema . ', ' . $concurso['nome'],
             'descricao' => $descricao,
             'data_inicio' => $dataInicio,
             'data_fim' => $dataFim,

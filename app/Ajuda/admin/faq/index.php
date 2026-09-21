@@ -7,12 +7,12 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'FAQ (banco global)',
-    'resumo' => 'Banco global de perguntas frequentes, reaproveitável entre todas as edições do Prêmio — cadastrar aqui não faz a pergunta aparecer em nenhuma home sozinha, é preciso ativá-la em "FAQ desta edição". Aberto a Administrador e Suporte, mas só com perfil global: como o banco vale para todas as edições, quem está vinculado a um concurso específico administra o FAQ da própria edição, não este.',
+    'resumo' => 'Banco global de perguntas frequentes, reaproveitável entre todas as edições do Prêmio. Cadastrar aqui não faz a pergunta aparecer em nenhuma página inicial sozinha, é preciso ativá-la em "FAQ desta edição". Aberto a Administrador e Suporte, mas só com perfil global: como o banco vale para todas as edições, quem está vinculado a um concurso específico administra o FAQ da própria edição, não este.',
     'operacoes' => [
         [
             'nome' => '+ Nova / Editar / Remover',
             'icone' => 'editar',
-            'como' => 'CRUD da pergunta/resposta.',
+            'como' => 'Criar, editar e remover a pergunta/resposta.',
             'observacao' => 'Remover só funciona se a pergunta não estiver ativa em nenhuma edição no momento.',
         ],
         [

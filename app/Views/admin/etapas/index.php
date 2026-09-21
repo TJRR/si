@@ -35,8 +35,8 @@
                     <small style="color:#b00;">⚠ sem prazo de submissão definido</small>
                 <?php endif; ?>
             </td>
-            <td><?php echo $etapa['regra_transicao_tipo'] !== null ? htmlspecialchars($etapa['regra_transicao_tipo'] . ': ' . $etapa['regra_transicao_valor'], ENT_QUOTES, 'UTF-8') : '—'; ?></td>
-            <td><?php echo $etapa['formulario_dinamico_id'] ? '#' . (int) $etapa['formulario_dinamico_id'] : '—'; ?></td>
+            <td><?php echo $etapa['regra_transicao_tipo'] !== null ? htmlspecialchars($etapa['regra_transicao_tipo'] . ': ' . $etapa['regra_transicao_valor'], ENT_QUOTES, 'UTF-8') : 'Não informado'; ?></td>
+            <td><?php echo $etapa['formulario_dinamico_id'] ? '#' . (int) $etapa['formulario_dinamico_id'] : 'Não informado'; ?></td>
             <td>
                 <div class="acoes-icones">
                     <a href="<?php echo url('etapas/editar/' . (int) $etapa['id']); ?>" class="btn-icone" title="Editar">

@@ -10,7 +10,7 @@
 <?php else: ?>
     <div class="tabela-scroll">
         <table>
-            <tr><th>Versão</th><th>Título</th><th>Enviado em</th><th>Status</th><th>Ações</th></tr>
+            <tr><th>Versão</th><th>Título</th><th>Enviado em</th><th>Situação</th><th>Ações</th></tr>
             <?php foreach ($versoes as $versao): ?>
             <tr>
                 <td>v<?php echo (int) $versao['versao']; ?></td>

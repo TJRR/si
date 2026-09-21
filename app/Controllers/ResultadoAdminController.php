@@ -116,7 +116,7 @@ class ResultadoAdminController extends Controller
             'erro' => $erro,
             'trilha' => $trilha,
             'resultado' => $resultado,
-        ], 'Destaque do case — ' . $resultado['nome_equipe'], ['tipo' => 'apuracao', 'id' => (int) $resultado['trilha_id']]);
+        ], 'Destaque do case: ' . $resultado['nome_equipe'], ['tipo' => 'apuracao', 'id' => (int) $resultado['trilha_id']]);
     }
 
     /**
@@ -196,7 +196,7 @@ class ResultadoAdminController extends Controller
             'publicado' => $publicado,
             'erro' => $erro,
             'casasDecimais' => FormulaPontuacaoRepository::casasDecimais($this->formulas->buscarPorEtapa($etapaId)),
-        ], 'Resultado — ' . $etapa['nome'], ['tipo' => 'resultado_etapa', 'id' => (int) $etapaId]);
+        ], 'Resultado: ' . $etapa['nome'], ['tipo' => 'resultado_etapa', 'id' => (int) $etapaId]);
     }
 
     public function publicarEtapa()
@@ -494,7 +494,7 @@ class ResultadoAdminController extends Controller
             'publicado' => $publicado,
             'erro' => $erro,
             'casasDecimais' => FormulaPontuacaoRepository::casasDecimais($this->formulas->buscarPorTrilha($trilhaId)),
-        ], 'Resultado final — ' . $trilha['nome'], ['tipo' => 'apuracao', 'id' => (int) $trilhaId]);
+        ], 'Resultado final: ' . $trilha['nome'], ['tipo' => 'apuracao', 'id' => (int) $trilhaId]);
     }
 
     public function publicarTrilha()

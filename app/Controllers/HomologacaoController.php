@@ -78,7 +78,7 @@ class HomologacaoController extends Controller
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
             'homologacaoPublicada' => $this->homologacaoPublica->jaPublicado($trilhaId),
             'vinculoDestaque' => isset($_GET['destaque']) ? (int) $_GET['destaque'] : null,
-        ], 'Inscritos — ' . $trilha['nome'], ['tipo' => 'inscritos', 'id' => (int) $trilhaId]);
+        ], 'Inscritos: ' . $trilha['nome'], ['tipo' => 'inscritos', 'id' => (int) $trilhaId]);
 
         unset($_SESSION['flash']);
     }

@@ -4,12 +4,18 @@
 } ?>
 <?php
 /**
- * Parcial da arvore lateral do painel "Concursos". So roda no primeiro
+ * Parcial da arvore lateral do painel administrativo. So roda no primeiro
  * carregamento de uma pagina (nunca em requisicao parcial — ver
  * View::renderizarParcial()), pre-expandindo os ancestrais do no atual
  * ($caminhoArvore, vindo de NavegacaoService::caminhoAte()) diretamente em
  * HTML. Os demais irmaos ficam fechados e so carregam via
  * assets/js/navegacao-arvore.js quando o usuario clica na seta.
+ *
+ * Fase 39 (revisada): generalizado para suportar mais de uma raiz -
+ * $arvoreRaizTipo ('raiz' para Concursos, 'raizEvento' para Eventos, ambas
+ * arvores independentes) e $arvoreRotulo/$arvoreVazia sao calculados em
+ * app/Views/layout.php conforme o modulo atual da rota, com fallback pros
+ * valores de sempre (Concursos) quando nao vierem definidos.
  */
 
 function admin_arvore_no(array $no, $ativo, $expandido, $filhosHtml)
@@ -60,13 +66,17 @@ function admin_arvore_renderizar_nivel(array $nos, array $caminhoRestante, $tipo
     return $html;
 }
 
-$arvoreRaiz = \App\Services\NavegacaoService::filhosDe('raiz', null);
+$arvoreRaizTipo = isset($arvoreRaizTipo) ? $arvoreRaizTipo : 'raiz';
+$arvoreRotulo = isset($arvoreRotulo) ? $arvoreRotulo : 'Navegação de concursos';
+$arvoreVazia = isset($arvoreVazia) ? $arvoreVazia : 'Nenhum concurso cadastrado ainda.';
+
+$arvoreRaiz = \App\Services\NavegacaoService::filhosDe($arvoreRaizTipo, null);
 $noDestacado = !empty($caminhoArvore) ? end($caminhoArvore) : null;
 ?>
-<nav id="arvore-admin" aria-label="Navegação de concursos">
+<nav id="arvore-admin" aria-label="<?php echo htmlspecialchars($arvoreRotulo, ENT_QUOTES, 'UTF-8'); ?>">
     <ul class="arvore-raiz">
         <?php if (empty($arvoreRaiz)): ?>
-            <li class="arvore-vazio">Nenhum concurso cadastrado ainda.</li>
+            <li class="arvore-vazio"><?php echo htmlspecialchars($arvoreVazia, ENT_QUOTES, 'UTF-8'); ?></li>
         <?php else: ?>
             <?php echo admin_arvore_renderizar_nivel(
                 $arvoreRaiz,

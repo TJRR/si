@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Formulário vinculado (resumo)',
-    'resumo' => 'Atalho, dentro da aba da etapa, para nome, versão e status do formulário dinâmico vinculado — sem precisar sair da árvore de navegação para a tela de Formulários.',
+    'resumo' => 'Atalho, dentro da aba da etapa, para nome, versão e situação do formulário dinâmico vinculado, sem precisar sair da árvore de navegação para a tela de Formulários.',
     'operacoes' => [
         [
             'nome' => 'Ver formulário público',
@@ -26,7 +26,7 @@ return [
         [
             'nome' => 'Publicar / Despublicar / Arquivar / Desarquivar',
             'icone' => 'publicar',
-            'como' => 'Mesmas ações e mesmo ciclo de vida da tela Formulários — ver o conceito abaixo.',
+            'como' => 'Mesmas ações e mesmo ciclo de vida da tela Formulários. Ver o conceito abaixo.',
         ],
     ],
     'conceitos' => ['nunca_apaga_so_versiona'],

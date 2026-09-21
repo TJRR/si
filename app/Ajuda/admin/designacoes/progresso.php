@@ -11,7 +11,7 @@ return [
     'operacoes' => [
         [
             'nome' => 'Coluna "Pendentes"',
-            'como' => 'Sem pendências, mostra a pill verde "Nenhuma". Com pendências, mostra em laranja a quantidade — a lista de submissões (número + equipe) aparece na última coluna.',
+            'como' => 'Sem pendências, mostra o selo verde "Nenhuma". Com pendências, mostra em laranja a quantidade: a lista de submissões (número + equipe) aparece na última coluna.',
             'pills' => [
                 ['cor' => 'verde', 'rotulo' => 'Nenhuma'],
             ],

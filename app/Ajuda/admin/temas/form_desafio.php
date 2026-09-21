@@ -6,12 +6,12 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Desafio — novo/editar',
+    'titulo' => 'Desafio (novo/editar)',
     'resumo' => 'Dados de um Desafio (pergunta) dentro de um Tema.',
     'operacoes' => [
         [
             'nome' => 'Pergunta',
-            'como' => 'Textarea obrigatória — é o texto que a equipe vê ao escolher o desafio na inscrição.',
+            'como' => 'Textarea obrigatória: é o texto que a equipe vê ao escolher o desafio na inscrição.',
         ],
         [
             'nome' => 'Ícone / Ordem / Ativo',

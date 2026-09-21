@@ -6,8 +6,8 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Documento — novo',
-    'resumo' => 'Upload de um documento novo (ou de uma nova versão de um já existente).',
+    'titulo' => 'Documento: novo',
+    'resumo' => 'Envio de um documento novo (ou de uma nova versão de um já existente).',
     'operacoes' => [
         [
             'nome' => 'Tipo / Trilha / Título / PDF',

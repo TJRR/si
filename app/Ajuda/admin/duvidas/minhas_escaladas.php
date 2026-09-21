@@ -6,11 +6,11 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Dúvidas — minhas escaladas',
-    'resumo' => 'Fila pessoal de dúvidas sob sua responsabilidade agora — é a tela principal de quem tem o perfil Colaborador (que não acessa o Painel completo).',
+    'titulo' => 'Dúvidas: minhas escaladas',
+    'resumo' => 'Fila pessoal de dúvidas sob sua responsabilidade agora. É a tela principal de quem tem o perfil Colaborador (que não acessa o Painel completo).',
     'operacoes' => [
         [
-            'nome' => 'Filtro de status',
+            'nome' => 'Filtro de situação',
             'como' => 'Reduz a lista por situação da dúvida.',
         ],
         [

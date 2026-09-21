@@ -6,7 +6,7 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Evento avulso — novo/editar',
+    'titulo' => 'Evento avulso: novo/editar',
     'resumo' => 'Dados de um evento avulso do cronograma.',
     'operacoes' => [
         [
@@ -19,7 +19,7 @@ return [
         ],
         [
             'nome' => 'Vínculo com Etapa',
-            'como' => 'Opcional — só para referência interna, não altera o comportamento da Etapa vinculada.',
+            'como' => 'Opcional. Só para referência interna, não altera o comportamento da Etapa vinculada.',
         ],
     ],
     'conceitos' => [],

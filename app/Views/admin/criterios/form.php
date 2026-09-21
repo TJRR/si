@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1><?php echo $criterio === null ? 'Novo critério' : 'Editar critério'; ?> — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1><?php echo $criterio === null ? 'Novo critério' : 'Editar critério'; ?>: <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -36,7 +36,7 @@
     <fieldset>
         <legend>Campos do formulário visíveis na aba deste critério</legend>
         <?php if (empty($camposDoFormulario)): ?>
-            <p><small>Esta etapa não tem formulário associado — a aba deste critério, na tela do avaliador, sempre mostra a ficha inteira da submissão.</small></p>
+            <p><small>Esta etapa não tem formulário associado: a aba deste critério, na tela do avaliador, sempre mostra a ficha inteira da submissão.</small></p>
         <?php else: ?>
             <p><small>Deixe tudo desmarcado para a aba deste critério mostrar a ficha inteira da submissão (comportamento padrão).</small></p>
             <?php foreach ($camposDoFormulario as $campo): ?>
@@ -51,7 +51,7 @@
     <fieldset>
         <legend>Etapas anteriores que o avaliador pode consultar neste critério</legend>
         <?php if (empty($etapasAnterioresDisponiveis)): ?>
-            <p><small>Esta é a primeira etapa da trilha — não há etapa anterior para comparar.</small></p>
+            <p><small>Esta é a primeira etapa da trilha: não há etapa anterior para comparar.</small></p>
         <?php else: ?>
             <?php foreach ($etapasAnterioresDisponiveis as $etapaAnterior): ?>
                 <label>

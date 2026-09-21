@@ -2,8 +2,8 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Destaque do case — <?php echo htmlspecialchars($resultado['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></h1>
-<p><?php echo (int) $resultado['colocacao']; ?>º lugar — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></p>
+<h1>Destaque do caso de sucesso: <?php echo htmlspecialchars($resultado['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<p><?php echo (int) $resultado['colocacao']; ?>º lugar: <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></p>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -11,7 +11,7 @@
 
 <form method="post" action="<?php echo url('resultados/editarDestaque/' . (int) $resultado['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
     <fieldset>
-        <legend>Resumo de destaque (texto curto, pensado para leitura pública — ex.: "Edições Anteriores")</legend>
+        <legend>Resumo de destaque (texto curto, pensado para leitura pública; ex.: "Edições Anteriores")</legend>
         <?php
         $nome = 'resumo_destaque';
         $valor = (string) $resultado['resumo_destaque'];

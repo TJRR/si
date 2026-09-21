@@ -6,7 +6,7 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Trilha — novo/editar',
+    'titulo' => 'Trilha (novo/editar)',
     'resumo' => 'Dados gerais de uma trilha (categoria) dentro de um concurso.',
     'operacoes' => [
         [
@@ -15,7 +15,7 @@ return [
         ],
         [
             'nome' => 'Mínimo de integrantes homologados',
-            'como' => 'Usado na página pública de equipes homologadas dessa trilha — não bloqueia nada por si só na homologação.',
+            'como' => 'Usado na página pública de equipes homologadas dessa trilha; não bloqueia nada por si só na homologação.',
         ],
         [
             'nome' => 'Ativa',

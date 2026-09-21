@@ -44,7 +44,7 @@ $renderizarLista = function (array $premios, $concursoId) {
                 <img src="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $premio['imagem_path'], ENT_QUOTES, 'UTF-8'); ?>" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:4px;">
             <?php endif; ?>
             <div class="reordenar-conteudo">
-                <strong><?php echo (int) $premio['posicao']; ?>º lugar</strong> — <?php echo htmlspecialchars($premio['descricao'], ENT_QUOTES, 'UTF-8'); ?>
+                <strong><?php echo (int) $premio['posicao']; ?>º lugar:</strong> <?php echo htmlspecialchars($premio['descricao'], ENT_QUOTES, 'UTF-8'); ?>
             </div>
             <div class="acoes-icones">
                 <a href="<?php echo url('premios/editar/' . (int) $premio['id']); ?>" class="btn-icone" title="Editar">

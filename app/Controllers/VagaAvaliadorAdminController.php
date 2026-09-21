@@ -63,7 +63,7 @@ class VagaAvaliadorAdminController extends Controller
             'categorias' => $categoriasDoConcurso,
             'quantidadesAtuais' => $quantidadesAtuais,
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
-        ], 'Vagas por categoria — ' . $etapa['nome'], ['tipo' => 'vagas_avaliador', 'id' => (int) $etapaId]);
+        ], 'Vagas por categoria: ' . $etapa['nome'], ['tipo' => 'vagas_avaliador', 'id' => (int) $etapaId]);
 
         unset($_SESSION['flash']);
     }

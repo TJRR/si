@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Edições Anteriores',
-    'resumo' => 'Repositório histórico de concursos já encerrados — período, totais e link para o detalhe de cada edição.',
+    'resumo' => 'Repositório histórico de concursos já encerrados: período, totais e hiperlink para o detalhe de cada edição.',
     'operacoes' => [],
     'conceitos' => [],
 ];

@@ -12,7 +12,7 @@ return [
         [
             'nome' => '+ Novo campo',
             'como' => 'Abre o formulário de um campo novo.',
-            'observacao' => 'Só disponível enquanto o formulário estiver em status rascunho.',
+            'observacao' => 'Só disponível enquanto o formulário estiver em situação rascunho.',
         ],
         [
             'nome' => 'Editar',

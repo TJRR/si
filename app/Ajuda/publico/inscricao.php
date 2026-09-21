@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Formulário de Inscrição (nova equipe)',
-    'resumo' => 'Ponto de entrada público, sem login — é o único jeito de cadastrar uma equipe nova no sistema. Todos os integrantes são enviados de uma vez, via um campo de grupo de participantes — não existe um fluxo de "adicionar integrante depois" nesta tela.',
+    'resumo' => 'Ponto de entrada público, sem login: é o único jeito de cadastrar uma equipe nova no sistema. Todos os integrantes são enviados de uma vez, via um campo de grupo de participantes; não existe um fluxo de "adicionar integrante depois" nesta tela.',
     'operacoes' => [
         [
             'nome' => 'Enviar inscrição',

@@ -26,7 +26,7 @@ return [
         ],
         [
             'nome' => 'Ver formulário público',
-            'como' => 'Só aparece quando o formulário vinculado está publicado — abre a mesma tela que a equipe vê.',
+            'como' => 'Só aparece quando o formulário vinculado está publicado. Abre a mesma tela que a equipe vê.',
         ],
     ],
     'conceitos' => ['permissao_suporte_admin'],

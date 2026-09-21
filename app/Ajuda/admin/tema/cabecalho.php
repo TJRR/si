@@ -6,13 +6,9 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Tema — Cabeçalho',
-    'resumo' => 'Aparência do cabeçalho da home — cadastrar uma imagem de fundo muda o cabeçalho de "barra fina sólida" para "alto e transparente sobre imagem".',
+    'titulo' => 'Tema: Cabeçalho',
+    'resumo' => 'Aparência do cabeçalho da home: cadastrar uma imagem de fundo muda o cabeçalho de "barra fina sólida" para "alto e transparente sobre imagem".',
     'operacoes' => [
-        [
-            'nome' => 'Logo padrão',
-            'como' => 'Usada quando não há imagem de fundo (ou como logo escura sobre a imagem, se não houver logo clara).',
-        ],
         [
             'nome' => 'Imagem de fundo',
             'como' => '1920×800, opcional.',
@@ -24,11 +20,11 @@ return [
         ],
         [
             'nome' => 'Efeito de transição na base',
-            'como' => 'Onda ou Diagonal — a forma que separa o cabeçalho do restante da página.',
+            'como' => 'Onda ou Diagonal: a forma que separa o cabeçalho do restante da página.',
         ],
         [
             'nome' => 'Logo clara alternativa',
-            'como' => 'Só é usada quando há imagem de fundo — sobre a foto, a logo padrão pode ficar difícil de ler.',
+            'como' => 'Só é usada quando há imagem de fundo, pois sobre a foto a logo padrão pode ficar difícil de ler.',
         ],
         [
             'nome' => 'Título/slogan',

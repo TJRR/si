@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Oficinas',
-    'resumo' => 'Encontros coletivos com tema pré-definido — diferente de Mentorias, sua equipe pode se inscrever em quantas oficinas quiser, sem exclusividade.',
+    'resumo' => 'Encontros coletivos com tema pré-definido. Diferente de Mentorias, sua equipe pode se inscrever em quantas oficinas quiser, sem exclusividade.',
     'operacoes' => [
         [
             'nome' => 'Inscrever-se',
@@ -18,7 +18,7 @@ return [
             'como' => 'Disponível na sua inscrição, com confirmação.',
         ],
         [
-            'nome' => 'Entrar (link do Meet)',
+            'nome' => 'Entrar (hiperlink do Meet)',
             'como' => 'Só aparece para quem está inscrito no horário.',
         ],
     ],

@@ -9,8 +9,15 @@ if (!defined('SI_BOOT')) {
 
 use App\Repositories\ConcursoRepository;
 use App\Repositories\EtapaRepository;
+use App\Repositories\EventoAtividadeRepository;
+use App\Repositories\SemanaInovacaoRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioRepository;
+
+// Fase 49: nenhum repositorio de Trabalhos e' importado aqui - a aba nao
+// depende de nenhum registro alem do id do evento, mesmo padrao ja usado
+// por noEvento()/noAtividades() (o repositorio proprio de Trabalhos so'
+// e' usado dentro dos controllers/services, nao na navegacao).
 
 /**
  * Unica fonte de verdade da hierarquia Concurso > Trilha > Etapa usada pela
@@ -53,8 +60,8 @@ class NavegacaoService
             ['tipo' => 'configuracaoMidia', 'rotulo' => 'Mídia', 'rota' => 'midia/index'],
             ['tipo' => 'configuracaoCabecalho', 'rotulo' => 'Cabeçalho', 'rota' => 'tema/cabecalho'],
             ['tipo' => 'configuracaoRodape', 'rotulo' => 'Rodapé', 'rota' => 'tema/rodape'],
-            ['tipo' => 'configuracaoSlides', 'rotulo' => 'Slideshow', 'rota' => 'slides/index'],
-            ['tipo' => 'configuracaoBanners', 'rotulo' => 'Banners', 'rota' => 'banners/index'],
+            ['tipo' => 'configuracaoSlides', 'rotulo' => 'Apresentação de slides', 'rota' => 'slides/index'],
+            ['tipo' => 'configuracaoBanners', 'rotulo' => 'Faixas', 'rota' => 'banners/index'],
             ['tipo' => 'configuracaoBlocos', 'rotulo' => 'Blocos de conteúdo', 'rota' => 'blocos/index'],
             ['tipo' => 'configuracaoContato', 'rotulo' => 'Contato', 'rota' => 'contatosConcurso/index'],
             ['tipo' => 'configuracaoOrdenacao', 'rotulo' => 'Ordenação', 'rota' => 'ordenacaoHome/index'],
@@ -65,6 +72,66 @@ class NavegacaoService
             ['tipo' => 'configuracaoSeguranca', 'rotulo' => 'Segurança 🔐', 'rota' => 'seguranca/index'],
         ],
         /**
+         * Fase 39 (revisada, redesenho 11/09/2026): Evento e' entidade de
+         * 1o nivel, arvore propria - paralela e independente da de
+         * Concurso (ver filhosDe('raizEvento', ...) abaixo). Diferente de
+         * 'concurso' (que NAO tem sub-abas proprias, so' filhos de arvore),
+         * 'evento' se parece com 'trilha': tem sub-abas horizontais E
+         * filhos de arvore (Atividades/Trabalhos/Estandes/Competicoes,
+         * ainda nao implementados nesta fase). Fase 40 acrescenta
+         * "Divulgacao na home" - Certificado/Comunicacao continuam para
+         * as fases seguintes do plano.
+         */
+        'evento' => [
+            ['tipo' => 'evento', 'rotulo' => 'Dados Gerais', 'rota' => 'eventos/editar'],
+            ['tipo' => 'eventoDivulgacao', 'rotulo' => 'Divulgação na home', 'rota' => 'eventos/divulgacao'],
+            ['tipo' => 'eventoFormulario', 'rotulo' => 'Formulário de inscrição', 'rota' => 'eventoFormulario/index'],
+            ['tipo' => 'eventoInscritos', 'rotulo' => 'Inscritos', 'rota' => 'eventos/inscritos'],
+            // Fase 48 (correcao pos-teste de fumaca): perfis da equipe de
+            // organizacao (Instrutor, Professor, ...), usados ao vincular
+            // um Facilitador de Atividade.
+            ['tipo' => 'eventoPerfis', 'rotulo' => 'Perfis', 'rota' => 'eventos/perfis'],
+            ['tipo' => 'eventoComunicacao', 'rotulo' => 'Comunicação', 'rota' => 'eventos/comunicacao'],
+        ],
+        /**
+         * Fase 46: abas de uma Atividade especifica (filha de arvore do
+         * Evento, mesmo desenho de 'etapa' dentro de 'trilha'). Certificado
+         * fica de fora ate' a Fase 54 chegar - mesmo criterio ja' usado para
+         * Certificado/Comunicacao do proprio Evento (Fases 39->54). "Presencas"
+         * (Fase 47) reaproveita o codigo fixo da atividade gerado na Fase 46.
+         */
+        'atividade' => [
+            ['tipo' => 'atividade', 'rotulo' => 'Dados Gerais', 'rota' => 'atividades/editar'],
+            ['tipo' => 'atividadeInscritos', 'rotulo' => 'Inscritos', 'rota' => 'atividades/inscritos'],
+            ['tipo' => 'atividadeCheckin', 'rotulo' => 'Presenças', 'rota' => 'atividades/checkins'],
+            // Fase 48: instrutor/professor/palestrante desta atividade -
+            // exigido pelo layout da exportacao EJURR (coluna "Categoria").
+            ['tipo' => 'atividadeFacilitador', 'rotulo' => 'Facilitadores', 'rota' => 'atividades/facilitadores'],
+        ],
+        /**
+         * Fase 49: no unico por evento (nao um indice levando a varios
+         * filhos, ao contrario de 'atividade') - mesmo desenho do proprio
+         * grupo 'evento', so' que como segundo irmao de 'atividades' dentro
+         * da arvore do Evento (ver filhosDe('evento', $id) abaixo).
+         */
+        'trabalhos' => [
+            ['tipo' => 'trabalhos', 'rotulo' => 'Configurações', 'rota' => 'trabalhos/index'],
+            // Achado do usuário (19/09/2026 revisão de fumaça): eixos e
+            // naturezas viviam dentro de Configurações, mas são catálogos
+            // próprios (mesmo status de Critérios) - ganharam aba própria.
+            ['tipo' => 'trabalhosEixos', 'rotulo' => 'Eixos temáticos', 'rota' => 'trabalhos/eixos'],
+            ['tipo' => 'trabalhosNaturezas', 'rotulo' => 'Naturezas do trabalho', 'rota' => 'trabalhos/naturezas'],
+            ['tipo' => 'trabalhosCriterios', 'rotulo' => 'Critérios de avaliação', 'rota' => 'trabalhos/criterios'],
+            // Fase 49B (achado do usuário): regra de desempate não tem
+            // relação direta com critério de nota (é sobre COMO decidir
+            // entre dois trabalhos empatados, não sobre O QUE é avaliado)
+            // - ganhou aba própria para não poluir "Critérios de avaliação".
+            ['tipo' => 'trabalhosDesempate', 'rotulo' => 'Regras de desempate', 'rota' => 'trabalhos/desempate'],
+            ['tipo' => 'trabalhosAvaliadores', 'rotulo' => 'Avaliadores', 'rota' => 'trabalhos/avaliadores'],
+            ['tipo' => 'trabalhosRecebidos', 'rotulo' => 'Trabalhos recebidos', 'rota' => 'trabalhos/recebidos'],
+            ['tipo' => 'trabalhosResultado', 'rotulo' => 'Resultado', 'rota' => 'trabalhos/resultado'],
+        ],
+        /**
          * Fase 33: "Meu perfil" passa a usar as mesmas sub-abas das demais
          * telas, em vez de empilhar tres blocos numa pagina so'. Sem id, como
          * o grupo "configuracao". Duas das tres abas sao condicionais - ver a
@@ -73,6 +140,7 @@ class NavegacaoService
         'perfil' => [
             ['tipo' => 'perfilDados', 'rotulo' => 'Meu perfil', 'rota' => 'meuPerfil/index'],
             ['tipo' => 'perfilSenha', 'rotulo' => 'Alterar senha', 'rota' => 'meuPerfil/alterarSenha'],
+            ['tipo' => 'perfilTema', 'rotulo' => 'Aparência', 'rota' => 'meuPerfil/tema'],
             ['tipo' => 'perfilVisualizar', 'rotulo' => 'Visualizar como', 'rota' => 'meuPerfil/visualizarComo'],
         ],
     ];
@@ -113,7 +181,26 @@ class NavegacaoService
         'configuracaoSeguranca' => 'configuracao',
         'perfilDados' => 'perfil',
         'perfilSenha' => 'perfil',
+        'perfilTema' => 'perfil',
         'perfilVisualizar' => 'perfil',
+        'evento' => 'evento',
+        'eventoDivulgacao' => 'evento',
+        'eventoFormulario' => 'evento',
+        'eventoInscritos' => 'evento',
+        'eventoPerfis' => 'evento',
+        'eventoComunicacao' => 'evento',
+        'atividade' => 'atividade',
+        'atividadeInscritos' => 'atividade',
+        'atividadeCheckin' => 'atividade',
+        'atividadeFacilitador' => 'atividade',
+        'trabalhos' => 'trabalhos',
+        'trabalhosEixos' => 'trabalhos',
+        'trabalhosNaturezas' => 'trabalhos',
+        'trabalhosCriterios' => 'trabalhos',
+        'trabalhosDesempate' => 'trabalhos',
+        'trabalhosAvaliadores' => 'trabalhos',
+        'trabalhosRecebidos' => 'trabalhos',
+        'trabalhosResultado' => 'trabalhos',
     ];
 
     /**
@@ -234,6 +321,51 @@ class NavegacaoService
         $trilhas = new TrilhaRepository();
         $etapas = new EtapaRepository();
 
+        if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'evento') {
+            $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+            if ($evento === null) {
+                return [];
+            }
+
+            return [self::noEvento($evento)];
+        }
+
+        if ($tipo === 'atividades') {
+            $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+            if ($evento === null) {
+                return [];
+            }
+
+            return [self::noEvento($evento), self::noAtividades($evento)];
+        }
+
+        // Fase 49: 'trabalhos' e' no unico por evento (id = evento.id),
+        // mesmo criterio ja usado por 'atividades' acima - $id aqui e'
+        // sempre o id do EVENTO, nunca de um trabalho individual.
+        if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'trabalhos') {
+            $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+            if ($evento === null) {
+                return [];
+            }
+
+            return [self::noEvento($evento), self::noTrabalhos($evento)];
+        }
+
+        if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'atividade') {
+            $atividade = (new EventoAtividadeRepository())->buscarPorId($id);
+
+            if ($atividade === null) {
+                return [];
+            }
+
+            $evento = (new SemanaInovacaoRepository())->buscarPorId($atividade['evento_id']);
+
+            return [self::noEvento($evento), self::noAtividades($evento), self::noAtividade($atividade)];
+        }
+
         if (in_array($tipo, ['concurso', 'formularios', 'trilhas', 'categorias_avaliador', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma', 'mentorias', 'oficinas', 'blocoConcurso'], true)) {
             $concurso = $concursos->buscarPorId($id);
 
@@ -325,6 +457,40 @@ class NavegacaoService
                 $lista = [];
                 foreach ((new ConcursoRepository())->listar() as $concurso) {
                     $lista[] = self::noConcurso($concurso);
+                }
+
+                return $lista;
+
+            /**
+             * Fase 39 (revisada): raiz alternativa e independente da de
+             * Concurso - usada pela aba de 1o nivel "Eventos"
+             * (app/Views/layout.php decide qual raiz passar pro parcial da
+             * arvore conforme o modulo atual da rota).
+             */
+            case 'raizEvento':
+                $lista = [];
+                foreach ((new SemanaInovacaoRepository())->listar() as $evento) {
+                    $lista[] = self::noEvento($evento);
+                }
+
+                return $lista;
+
+            case 'evento':
+                $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+                if ($evento === null) {
+                    return [];
+                }
+
+                // Fase 49: Trabalhos entra como irmao de Atividades.
+                // Estandes/Competicoes entram aqui do mesmo jeito nas fases
+                // seguintes do plano.
+                return [self::noAtividades($evento), self::noTrabalhos($evento)];
+
+            case 'atividades':
+                $lista = [];
+                foreach ((new EventoAtividadeRepository())->listarPorEvento($id) as $atividade) {
+                    $lista[] = self::noAtividade($atividade);
                 }
 
                 return $lista;
@@ -559,6 +725,65 @@ class NavegacaoService
             'rotulo' => $etapa['nome'],
             'folha' => true,
             'url' => 'etapas/editar/' . (int) $etapa['id'],
+        ];
+    }
+
+    /**
+     * Fase 46: deixa de ser folha - primeiro filho de arvore e' Atividades
+     * (noAtividades()); Trabalhos/Estandes/Competicoes entram como irmaos
+     * dela nas fases seguintes do plano.
+     */
+    private static function noEvento(array $evento)
+    {
+        return [
+            'tipo' => 'evento',
+            'id' => (int) $evento['id'],
+            'rotulo' => $evento['nome'],
+            'folha' => false,
+            'url' => 'eventos/editar/' . (int) $evento['id'],
+        ];
+    }
+
+    /**
+     * Fase 46: no indice (nao folha) - lista as atividades do evento, mesmo
+     * papel de noEtapas() dentro de noTrilha().
+     */
+    private static function noAtividades(array $evento)
+    {
+        return [
+            'tipo' => 'atividades',
+            'id' => (int) $evento['id'],
+            'rotulo' => 'Atividades',
+            'folha' => false,
+            'url' => 'atividades/index/' . (int) $evento['id'],
+        ];
+    }
+
+    private static function noAtividade(array $atividade)
+    {
+        return [
+            'tipo' => 'atividade',
+            'id' => (int) $atividade['id'],
+            'rotulo' => $atividade['nome'],
+            'folha' => true,
+            'url' => 'atividades/editar/' . (int) $atividade['id'],
+        ];
+    }
+
+    /**
+     * Fase 49: mesmo formato de noEvento() - no unico com abas
+     * horizontais, sem filhos de arvore abaixo dele (folha = true), id =
+     * id do EVENTO (nao existe "trabalhos.id" na arvore, so' trabalho
+     * individual, que nem entra na arvore lateral - ver plano da fase).
+     */
+    private static function noTrabalhos(array $evento)
+    {
+        return [
+            'tipo' => 'trabalhos',
+            'id' => (int) $evento['id'],
+            'rotulo' => 'Trabalhos',
+            'folha' => true,
+            'url' => 'trabalhos/index/' . (int) $evento['id'],
         ];
     }
 }

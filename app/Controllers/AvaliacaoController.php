@@ -182,7 +182,7 @@ class AvaliacaoController extends Controller
             'trilha' => $trilha,
             'submissoes' => $lista,
             'sigiloCego' => $etapa['modo_sigilo'] === 'cego',
-        ], 'Submissões — ' . $etapa['nome']);
+        ], 'Submissões: ' . $etapa['nome']);
     }
 
     public function notar($submissaoId)
@@ -267,7 +267,7 @@ class AvaliacaoController extends Controller
             'erro' => $erro,
             'conteudoPorCriterio' => $conteudoPorCriterio,
             'etapasComparacaoPorCriterio' => $etapasComparacaoPorCriterio,
-        ], 'Lançar notas — Submissão #' . (int) $submissaoId);
+        ], 'Lançar notas: Submissão #' . (int) $submissaoId);
     }
 
     /**

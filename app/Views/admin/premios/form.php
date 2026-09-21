@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1><?php echo $premio === null ? 'Novo prêmio' : 'Editar prêmio'; ?> — <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1><?php echo $premio === null ? 'Novo prêmio' : 'Editar prêmio'; ?>: <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <?php if ($trilha !== null): ?>
     <p>Trilha: <strong><?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></strong></p>

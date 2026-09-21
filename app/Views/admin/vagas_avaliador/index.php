@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Vagas por categoria — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Vagas por categoria: <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('etapas/index/' . (int) $trilha['id']); ?>">Voltar às etapas</a></p>
 

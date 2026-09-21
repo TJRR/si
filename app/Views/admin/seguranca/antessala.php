@@ -23,7 +23,7 @@
 
         <p class="seguranca-antessala-detalhe">
             Aqui ficam as credenciais que ligam o sistema ao Google e ao envio de e-mail.
-            Nenhum valor de credencial é exibido em tela — só a identificação de qual está
+            Nenhum valor de credencial é exibido em tela: só a identificação de qual está
             instalada e quem a alterou pela última vez.
         </p>
 

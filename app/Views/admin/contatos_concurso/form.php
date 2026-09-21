@@ -35,13 +35,13 @@
     // derrubar a tela de Contato com Notice.
     $mapaUrlAtual = ($contato !== null && isset($contato['mapa_url'])) ? (string) $contato['mapa_url'] : '';
     ?>
-    <label>Link do endereço no mapa:
+    <label>Hiperlink do endereço no mapa:
         <input type="text" name="mapa_url" value="<?php echo htmlspecialchars($mapaUrlAtual, ENT_QUOTES, 'UTF-8'); ?>" placeholder="https://..." size="60">
     </label>
     <p style="color:#555;font-size:0.9em;">
-        Com este campo preenchido, o endereço no rodapé da home vira um link que
+        Com este campo preenchido, o endereço no rodapé da home vira um hiperlink que
         abre o mapa. No Google Maps, localize o ponto exato, clique em
-        <strong>Compartilhar</strong> e cole aqui o link gerado. Em branco, o
+        <strong>Compartilhar</strong> e cole aqui o hiperlink gerado. Em branco, o
         endereço continua sendo exibido como texto.
     </p>
 
@@ -58,7 +58,7 @@
     <p style="color:#555;font-size:0.9em;">
         Assina os e-mails automáticos (recuperação de senha e liberação de acesso),
         acima do e-mail e do telefone informados acima. Ex.:
-        <em>Organização do Prêmio de Inovação - TJRR</em>. Em branco, os e-mails
+        <em>Organização do Prêmio de Inovação - <?php echo nomeInstituicao(); ?></em>. Em branco, os e-mails
         saem apenas com os canais de contato preenchidos.
     </p>
 

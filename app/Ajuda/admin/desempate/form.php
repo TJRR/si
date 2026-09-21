@@ -15,11 +15,11 @@ return [
         ],
         [
             'nome' => 'Critério',
-            'como' => 'Só aparece quando o tipo é "Nota de critério" — escolha qual.',
+            'como' => 'Só aparece quando o tipo é "Nota de critério": escolha qual.',
         ],
         [
             'nome' => 'Direção',
-            'como' => 'Decrescente (maior valor vence) ou Crescente (menor valor vence — use Crescente para "Data de inscrição", já que inscrever primeiro deve favorecer a equipe).',
+            'como' => 'Decrescente (maior valor vence) ou Crescente (menor valor vence; use Crescente para "Data de inscrição", já que inscrever primeiro deve favorecer a equipe).',
         ],
     ],
     'conceitos' => [],

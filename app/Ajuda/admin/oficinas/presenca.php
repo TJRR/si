@@ -12,7 +12,7 @@ return [
         [
             'nome' => 'Convidados',
             'como' => 'Uma linha por integrante das equipes inscritas. "Convite" é a resposta ao convite do Google Agenda; "Entrou" e "Permanência" vêm da sala do Meet.',
-            'observacao' => 'Permanência vazia com "Entrou: Sim" significa que a pessoa entrou mas o fim da sessão não foi registrado — não conte como zero.',
+            'observacao' => 'Permanência vazia com "Entrou: Sim" significa que a pessoa entrou mas o fim da sessão não foi registrado. Não conte como zero.',
         ],
         [
             'nome' => 'Entraram sem identificação',

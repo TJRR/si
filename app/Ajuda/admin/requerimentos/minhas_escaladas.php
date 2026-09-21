@@ -6,8 +6,8 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Requerimentos — minhas escaladas',
-    'resumo' => 'Fila pessoal de requerimentos sob sua responsabilidade agora — mesmo padrão de Dúvidas.',
+    'titulo' => 'Requerimentos: minhas escaladas',
+    'resumo' => 'Fila pessoal de requerimentos sob sua responsabilidade agora, mesmo padrão de Dúvidas.',
     'operacoes' => [
         [
             'nome' => 'Ver',

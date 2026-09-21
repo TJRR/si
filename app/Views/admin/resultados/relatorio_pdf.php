@@ -29,7 +29,7 @@
 </head>
 <body>
 
-<h1>Relatório de auditoria — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Relatório de auditoria: <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 <p class="meta">
     <?php echo htmlspecialchars($trilha !== null ? $trilha['nome'] : '', ENT_QUOTES, 'UTF-8'); ?>
     &middot; Gerado em <?php echo htmlspecialchars($geradoEm, ENT_QUOTES, 'UTF-8'); ?>
@@ -76,7 +76,7 @@
                         ?>
                         <td style="background: hsl(<?php echo $matiz; ?>, 65%, 82%);"><?php echo number_format((float) $nota['nota'], 1, ',', '.'); ?></td>
                     <?php else: ?>
-                        <td>—</td>
+                        <td>Não informado</td>
                     <?php endif; ?>
                 <?php endforeach; ?>
             <?php endforeach; ?>
@@ -91,7 +91,7 @@
         <tr>
             <td><?php echo htmlspecialchars($criterio['codigo'], ENT_QUOTES, 'UTF-8'); ?></td>
             <td class="col-esquerda"><?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td class="col-esquerda"><?php echo !empty($criterio['descricao']) ? nl2br(htmlspecialchars($criterio['descricao'], ENT_QUOTES, 'UTF-8')) : '—'; ?></td>
+            <td class="col-esquerda"><?php echo !empty($criterio['descricao']) ? nl2br(htmlspecialchars($criterio['descricao'], ENT_QUOTES, 'UTF-8')) : 'Não informado'; ?></td>
         </tr>
     <?php endforeach; ?>
 </table>
@@ -106,19 +106,19 @@
         $classificado = (bool) (int) $linha['classificado'];
         ?>
         <?php if ($ultimoClassificado === true && $classificado === false): ?>
-            <tr class="corte-linha"><td colspan="4">— linha de corte —</td></tr>
+            <tr class="corte-linha"><td colspan="4">Linha de corte</td></tr>
         <?php endif; ?>
         <?php $ultimoClassificado = $classificado; ?>
         <tr<?php echo !$classificado ? ' class="nao-classificada"' : ''; ?>>
             <td><?php echo $posicao; ?>º</td>
             <td class="col-equipe"><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : ('Equipe #' . $linha['equipe_id']), ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], $casasDecimais, ',', '.') : '—'; ?></td>
+            <td><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], $casasDecimais, ',', '.') : 'Não informado'; ?></td>
             <td><?php echo $classificado ? 'Classificada' : 'Não classificada'; ?></td>
         </tr>
     <?php endforeach; ?>
 </table>
 
-<h2>3. Equipes classificadas — integrantes, submissão e avaliações</h2>
+<h2>3. Equipes classificadas: integrantes, submissão e avaliações</h2>
 <?php foreach ($ranking as $linha): ?>
     <?php if (!((bool) (int) $linha['classificado'])) {
         continue;
@@ -135,7 +135,7 @@
                         <?php echo htmlspecialchars($integrante['nome'], ENT_QUOTES, 'UTF-8'); ?>
                         <?php echo $integrante['papel'] === 'lider' ? ' (Líder)' : ''; ?>
                         <?php if (!empty($integrante['email'])): ?>
-                            — <?php echo htmlspecialchars($integrante['email'], ENT_QUOTES, 'UTF-8'); ?>
+                            , <?php echo htmlspecialchars($integrante['email'], ENT_QUOTES, 'UTF-8'); ?>
                         <?php endif; ?>
                     </li>
                 <?php endforeach; ?>
@@ -153,14 +153,14 @@
             <div class="ficha-item">
                 <div class="ficha-item-label"><?php echo htmlspecialchars($campo['rotulo'], ENT_QUOTES, 'UTF-8'); ?></div>
                 <?php if ($campo['tipo'] === 'upload_pdf'): ?>
-                    <div>Anexo em PDF: <?php echo htmlspecialchars($valor['nome_original'], ENT_QUOTES, 'UTF-8'); ?> (baixe pelo painel — não incluído neste relatório)</div>
+                    <div>Anexo em PDF: <?php echo htmlspecialchars($valor['nome_original'], ENT_QUOTES, 'UTF-8'); ?> (baixe pelo painel; não incluído neste relatório)</div>
                 <?php else: ?>
                     <div><?php echo nl2br(htmlspecialchars((string) $valor, ENT_QUOTES, 'UTF-8')); ?></div>
                 <?php endif; ?>
             </div>
         <?php endforeach; ?>
 
-        <h4>Notas e feedback por avaliador</h4>
+        <h4>Notas e comentários por avaliador</h4>
         <?php foreach ($submissoesDetalhe[$submissaoId]['letraLocalPorUsuario'] as $usuarioId => $letraAvaliador): ?>
             <?php
             $notasDoAvaliador = array_filter($submissoesDetalhe[$submissaoId]['notas'], function ($nota) use ($usuarioId) {
@@ -177,7 +177,7 @@
                         <?php echo htmlspecialchars($nota['criterio_nome'], ENT_QUOTES, 'UTF-8'); ?>:
                         <?php echo number_format((float) $nota['nota'], 1, ',', '.'); ?>
                         <?php if (!empty($nota['feedback'])): ?>
-                            — <em><?php echo htmlspecialchars($nota['feedback'], ENT_QUOTES, 'UTF-8'); ?></em>
+                            : <em><?php echo htmlspecialchars($nota['feedback'], ENT_QUOTES, 'UTF-8'); ?></em>
                         <?php endif; ?>
                     </li>
                 <?php endforeach; ?>

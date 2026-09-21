@@ -42,7 +42,7 @@ $valorAtual = isset($valor) ? (string) $valor : '';
             <input type="color" class="editor-rico-cor" data-comando="cor" title="Cor do texto" aria-label="Cor do texto" value="#191919">
             <input type="color" class="editor-rico-cor" data-comando="realce" title="Cor de realce (fundo do texto)" aria-label="Cor de realce do texto" value="#fff3cd">
             <button type="button" class="editor-rico-btn" data-comando="semRealce" title="Remover realce" aria-label="Remover realce">⌫</button>
-            <button type="button" class="editor-rico-btn" data-comando="link" title="Inserir link" aria-label="Inserir link">🔗</button>
+            <button type="button" class="editor-rico-btn" data-comando="link" title="Inserir hiperlink" aria-label="Inserir hiperlink">🔗</button>
             <button type="button" class="editor-rico-btn" data-comando="imagem" title="Inserir imagem" aria-label="Inserir imagem">🖼</button>
             <button type="button" class="editor-rico-btn" data-comando="barra" title="Inserir barra separadora (usa a cor de texto selecionada)" aria-label="Inserir barra separadora">▬</button>
             <?php if (!empty($mostrarPalavrasChave)): ?>

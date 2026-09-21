@@ -76,7 +76,7 @@ class ArquivoService
         }
 
         if (!isset($arquivo['tmp_name']) || !is_uploaded_file($arquivo['tmp_name'])) {
-            throw new \RuntimeException('Upload inválido.');
+            throw new \RuntimeException('Envio inválido.');
         }
 
         if ($arquivo['size'] > self::limiteMaximoBytes()) {

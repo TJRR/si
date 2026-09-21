@@ -214,7 +214,7 @@ class EtapaAdminController extends Controller
         $this->renderizar('admin/etapas/formulario_vinculado', [
             'etapa' => $etapa,
             'formulario' => $formulario,
-        ], 'Formulário vinculado — ' . $etapa['nome'], ['tipo' => 'formulario_vinculado', 'id' => (int) $etapaId]);
+        ], 'Formulário vinculado: ' . $etapa['nome'], ['tipo' => 'formulario_vinculado', 'id' => (int) $etapaId]);
     }
 
     /**

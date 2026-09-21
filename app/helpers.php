@@ -30,6 +30,92 @@ function urlAbsoluta($rota)
 }
 
 /**
+ * Fase 41 (correcao pos-teste de fumaca): deteccao simples de dispositivo
+ * movel por User-Agent. Usada so' para decidir APARENCIA (celular ve' desde
+ * ja' o visual do aplicativo mesmo antes de ter conta; computador ve' o
+ * site) - nunca para decisao de seguranca/autorizacao. Ver ehContextoApp()
+ * logo abaixo para o caso de quem acessa de um COMPUTADOR com o PWA ja'
+ * instalado (User-Agent de desktop normal, mas a janela ja' esta' em modo
+ * app - precisa do mesmo visual).
+ */
+function ehDispositivoMovel()
+{
+    $userAgent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+
+    return preg_match('/Android|iPhone|iPad|iPod|Mobile|Windows Phone/i', $userAgent) === 1;
+}
+
+/**
+ * Fase 41 (correcao pos-teste de fumaca): reconhece quem esta' navegando
+ * dentro do aplicativo instalado, em QUALQUER dispositivo (nao so' celular)
+ * - ex.: alguem que instalou o PWA no COMPUTADOR, cuja janela ja' abre sem
+ * barra de enderelo (display: standalone), mas cujo User-Agent continua
+ * sendo de desktop comum. O manifesto (EventoAppController::manifesto())
+ * declara start_url com '?modo=app' - toda vez que o navegador abre o app
+ * pelo icone instalado, essa marca chega na primeira requisicao; aqui ela e'
+ * gravada na sessao (bandeira persistente) para continuar valendo mesmo
+ * depois, em telas sem esse parametro (ex.: login, apos a sessao expirar
+ * dentro do app ja' instalado).
+ */
+function ehContextoApp()
+{
+    if (isset($_GET['modo']) && $_GET['modo'] === 'app') {
+        $_SESSION['contexto_app'] = true;
+    }
+
+    return ehDispositivoMovel() || !empty($_SESSION['contexto_app']);
+}
+
+/**
+ * Fase 41 (correcao pos-teste de fumaca): decide se o texto sobre uma cor
+ * de fundo configurada pelo Admin deve ser claro ou escuro, calculando a
+ * luminancia relativa da cor (formula simplificada, sem correcao gamma -
+ * suficiente para uma decisao binaria de contraste). Evita fixar no codigo
+ * "essa cor de fundo sempre usa texto escuro" - o Admin escolhe livremente
+ * a cor (ex.: "Cor de destaque do aplicativo" em Configuracoes > Tema) sem
+ * precisar tambem escolher a cor do texto, nem correr o risco de texto
+ * ilegivel se escolher uma cor escura.
+ */
+function corContrastante($corHex, $corClara = '#fff', $corEscura = '#222')
+{
+    $hex = ltrim((string) $corHex, '#');
+
+    if (strlen($hex) !== 6 || !ctype_xdigit($hex)) {
+        return $corEscura;
+    }
+
+    $r = hexdec(substr($hex, 0, 2));
+    $g = hexdec(substr($hex, 2, 2));
+    $b = hexdec(substr($hex, 4, 2));
+    $luminancia = (0.2126 * $r + 0.7152 * $g + 0.0722 * $b) / 255;
+
+    return $luminancia > 0.55 ? $corEscura : $corClara;
+}
+
+/**
+ * Fase 41: URL de um dos 3 icones do aplicativo web instalavel (PWA) do
+ * Evento ('icon-192.png', 'icon-512.png' ou 'icon-512-maskable.png') - com
+ * fallback pro icone padrao versionado em assets/img/pwa/ quando o
+ * Administrador ainda nao enviou um proprio (Configuracoes Gerais), e
+ * cache-buster (?v=) baseado em configuracoes_sistema.icone_app_atualizado_em
+ * para o navegador nao continuar servindo um icone antigo apos a troca.
+ * Centraliza a logica usada por EventoAppController::manifesto(),
+ * app/Views/layout.php (apple-touch-icon) e o app-bar das telas do evento -
+ * sem isso, os 3 pontos driftariam entre si a cada ajuste futuro.
+ */
+function iconeAppUrl($nomeArquivo)
+{
+    $configuracao = (new \App\Repositories\ConfiguracaoSistemaRepository())->buscar();
+    $temIconePersonalizado = $configuracao !== false && !empty($configuracao['icone_app_atualizado_em']);
+    $versao = $temIconePersonalizado ? strtotime($configuracao['icone_app_atualizado_em']) : 1;
+    $base = $temIconePersonalizado
+        ? config('base_path') . '/assets/uploads/conteudo/icone-app/'
+        : config('base_path') . '/assets/img/pwa/';
+
+    return $base . $nomeArquivo . '?v=' . $versao;
+}
+
+/**
  * Indica se a requisicao atual veio do JS de navegacao da arvore (fetch com o
  * cabecalho X-Requisicao: parcial), pedindo so o fragmento de conteudo em vez
  * da pagina completa com layout.
@@ -253,20 +339,33 @@ function normalizarNomeParaComparacao($nome)
 }
 
 /**
- * Logo GLOBAL/default do sistema (usado no topbar do painel, paginas
- * convidadas, e como fallback da home publica quando a edicao ativa nao tem
- * logo proprio). Fase 18: fonte de verdade passou de conteudos_site
- * (chave 'logo_site', tela "Páginas") para configuracoes_visuais.logo_path
- * (tela "Tema") - mantem o fallback antigo por compatibilidade com o logo
- * ja enviado em producao antes desta fase, ate o admin reenviar pela tela
- * nova.
+ * Logo de Concurso GLOBAL/default do sistema (usado no topbar do painel,
+ * paginas convidadas, e como fallback da home publica quando a edicao ativa
+ * nao tem logo proprio). Fase 48B: fonte de verdade passou a ser a logo de
+ * Concurso do TEMA ativo (usuario autenticado, se houver, senao o tema
+ * padrao do sistema - TemaVisualRepository::resolverAtivo(), mesma logica
+ * de app/Views/layout.php), no lugar da configuracao unica que existia em
+ * configuracoes_visuais.logo_path. Mantem o fallback antigo (conteudos_site,
+ * chave 'logo_site') por compatibilidade com o logo enviado em producao
+ * antes desta fase, para quando nenhum tema tiver logo de Concurso definida.
  */
-function logoAtual()
+/**
+ * Fase 49 (achado do usuario): $contextoEvento faz a mesma escolha usar
+ * logo_evento_path em vez de logo_concurso_path - usado nas telas de
+ * participante/avaliador de Trabalhos (fora do aplicativo instalavel, mas
+ * ainda assim experiencia do Evento, nunca do Concurso). Sem o parametro
+ * (uso normal, telas do Concurso), comportamento identico ao de sempre.
+ */
+function logoAtual($contextoEvento = false)
 {
-    $configVisual = (new \App\Repositories\ConfiguracaoVisualRepository())->buscar();
+    $temaAtivo = (new \App\Repositories\TemaVisualRepository())->resolverAtivo(\App\Core\Auth::autenticado() ? \App\Core\Auth::usuarioId() : null);
 
-    if ($configVisual !== false && !empty($configVisual['logo_path'])) {
-        return config('base_path') . '/assets/' . $configVisual['logo_path'];
+    if ($contextoEvento && $temaAtivo !== null && !empty($temaAtivo['logo_evento_path'])) {
+        return config('base_path') . '/assets/' . $temaAtivo['logo_evento_path'];
+    }
+
+    if ($temaAtivo !== null && !empty($temaAtivo['logo_concurso_path'])) {
+        return config('base_path') . '/assets/' . $temaAtivo['logo_concurso_path'];
     }
 
     $logoConteudo = (new \App\Repositories\ConteudoSiteRepository())->buscarPorChave('logo_site');
@@ -274,6 +373,56 @@ function logoAtual()
     return $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
         ? config('base_path') . '/assets/' . $logoConteudo['arquivo_path']
         : config('base_path') . '/assets/img/logo-padrao.png';
+}
+
+/**
+ * Nome da instituição, configurável pelo Admin (Configurações > Identidade
+ * institucional) - nunca escrever "TJRR" fixo no código; usar esta função.
+ */
+function nomeInstituicao()
+{
+    $configuracao = (new \App\Repositories\ConfiguracaoSistemaRepository())->buscar();
+
+    return $configuracao !== false && !empty($configuracao['instituicao']) ? $configuracao['instituicao'] : 'TJRR';
+}
+
+/**
+ * Nome da unidade responsável, configurável pelo Admin (Configurações >
+ * Identidade institucional) - nunca escrever "NPI" fixo no código; usar
+ * esta função.
+ */
+function nomeUnidadeResponsavel()
+{
+    $configuracao = (new \App\Repositories\ConfiguracaoSistemaRepository())->buscar();
+
+    return $configuracao !== false && !empty($configuracao['unidade_responsavel']) ? $configuracao['unidade_responsavel'] : 'NPI';
+}
+
+/**
+ * Nome completo da instituição (Configurações > Identidade institucional),
+ * para textos formais (rodapé, e-mails de acesso) - use nomeInstituicao()
+ * para a sigla, em menções curtas.
+ */
+function nomeInstituicaoCompleto()
+{
+    $configuracao = (new \App\Repositories\ConfiguracaoSistemaRepository())->buscar();
+
+    return $configuracao !== false && !empty($configuracao['instituicao_nome_completo'])
+        ? $configuracao['instituicao_nome_completo']
+        : 'Tribunal de Justiça do Estado de Roraima';
+}
+
+/**
+ * Nome completo da unidade responsável (Configurações > Identidade
+ * institucional) - use nomeUnidadeResponsavel() para a sigla.
+ */
+function nomeUnidadeResponsavelCompleto()
+{
+    $configuracao = (new \App\Repositories\ConfiguracaoSistemaRepository())->buscar();
+
+    return $configuracao !== false && !empty($configuracao['unidade_responsavel_nome_completo'])
+        ? $configuracao['unidade_responsavel_nome_completo']
+        : 'Núcleo de Projetos e Inovação';
 }
 
 /**

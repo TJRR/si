@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Novo requerimento — <?php echo htmlspecialchars($modelo['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Novo requerimento de <?php echo htmlspecialchars($modelo['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <div class="admin-card">
     <p><?php echo nl2br(htmlspecialchars($modelo['finalidade'], ENT_QUOTES, 'UTF-8')); ?></p>

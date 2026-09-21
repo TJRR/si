@@ -11,7 +11,7 @@
     <p>Nenhum formulário cadastrado.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th>Nome</th><th>Versão</th><th>Status</th><th>Ações</th></tr>
+        <tr><th>Nome</th><th>Versão</th><th>Situação</th><th>Ações</th></tr>
         <?php foreach ($formularios as $formulario): ?>
         <tr>
             <td><?php echo htmlspecialchars($formulario['nome'], ENT_QUOTES, 'UTF-8'); ?></td>

@@ -20,8 +20,8 @@
             <tr>
                 <td><?php echo htmlspecialchars($evento['titulo'], ENT_QUOTES, 'UTF-8'); ?></td>
                 <td><?php echo htmlspecialchars(formatarDataHora($evento['data_inicio']), ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?php echo $evento['data_fim'] ? htmlspecialchars(formatarDataHora($evento['data_fim']), ENT_QUOTES, 'UTF-8') : '—'; ?></td>
-                <td><?php echo $evento['etapa_id'] !== null ? 'Sim' : '—'; ?></td>
+                <td><?php echo $evento['data_fim'] ? htmlspecialchars(formatarDataHora($evento['data_fim']), ENT_QUOTES, 'UTF-8') : 'Não informado'; ?></td>
+                <td><?php echo $evento['etapa_id'] !== null ? 'Sim' : 'Não'; ?></td>
                 <td>
                     <div class="acoes-icones">
                         <a href="<?php echo url('eventosCronograma/editar/' . (int) $evento['id']); ?>" class="btn-icone" title="Editar">

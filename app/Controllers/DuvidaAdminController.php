@@ -239,7 +239,7 @@ class DuvidaAdminController extends Controller
         $this->duvidas->retomar((int) $id);
         $this->notificarAdministradoresFilaGeral($duvida);
 
-        $_SESSION['flash'] = 'Dúvida retomada — de volta à fila geral.';
+        $_SESSION['flash'] = 'Dúvida retomada: de volta à fila geral.';
         $this->redirecionar('home/administrativo');
     }
 
@@ -310,7 +310,7 @@ class DuvidaAdminController extends Controller
 
                 if ($entrada['ativar']) {
                     $this->faqConcurso->ativar($faqId, $entrada['concurso_id']);
-                    flashSucesso('Pergunta criada no banco geral e ativada na edição escolhida — já aparece na home.');
+                    flashSucesso('Pergunta criada no banco geral e ativada na edição escolhida: já aparece na home.');
                 } else {
                     flashAlerta('Pergunta criada no banco geral. Ela ainda NÃO aparece em nenhuma home: ative-a em "FAQ desta edição" quando quiser publicar.');
                 }

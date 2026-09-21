@@ -10,7 +10,7 @@
     <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
-<p>Encontros coletivos com tema pré-definido — sua equipe pode se inscrever em quantas oficinas quiser, sem exclusividade.</p>
+<p>Encontros coletivos com tema pré-definido. Sua equipe pode se inscrever em quantas oficinas quiser, sem exclusividade.</p>
 
 <?php if (empty($horarios)): ?>
     <p>Nenhuma oficina disponível no momento.</p>
@@ -29,7 +29,7 @@
                 <?php elseif ($inscrita && !empty($horario['integracao_google']) && !empty($horario['meet_pendente'])): ?>
                     <span class="status-pill laranja">Gerando sala...</span>
                 <?php else: ?>
-                    —
+                    Não disponível
                 <?php endif; ?>
             </td>
             <td><?php echo htmlspecialchars((string) $horario['observacao'], ENT_QUOTES, 'UTF-8'); ?></td>

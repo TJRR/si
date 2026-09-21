@@ -10,7 +10,7 @@
 ?>
 <aside id="painel-ajuda" class="site-painel-lateral" aria-hidden="true" aria-label="Ajuda desta página">
     <div class="site-painel-cabecalho">
-        <h2>Ajuda — <?php echo htmlspecialchars((string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?></h2>
+        <h2>Ajuda: <?php echo htmlspecialchars((string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?></h2>
         <button type="button" class="site-painel-fechar" data-fechar-painel aria-label="Fechar">×</button>
     </div>
     <div class="site-painel-corpo">

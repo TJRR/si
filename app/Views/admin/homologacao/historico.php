@@ -28,7 +28,7 @@
             <td><?php echo htmlspecialchars($rotulosStatus[$transicao['status_anterior']], ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars($rotulosStatus[$transicao['status_novo']], ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars($transicao['usuario_nome'] !== null ? $transicao['usuario_nome'] : $origensRotulo[$transicao['origem']], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo $transicao['motivo'] !== null ? htmlspecialchars($transicao['motivo'], ENT_QUOTES, 'UTF-8') : '—'; ?></td>
+            <td><?php echo $transicao['motivo'] !== null ? htmlspecialchars($transicao['motivo'], ENT_QUOTES, 'UTF-8') : 'Não informado'; ?></td>
         </tr>
         <?php endforeach; ?>
     </table>

@@ -7,17 +7,17 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Documentos',
-    'resumo' => 'Editais, anexos, retificações, resultados e atas publicados na home de um concurso, com versionamento automático.',
+    'resumo' => 'Editais, anexos, retificações, resultados e atas publicados na página inicial de um concurso, com versionamento automático.',
     'operacoes' => [
         [
             'nome' => '+ Novo',
             'como' => 'Tipo, trilha (opcional), título e o arquivo PDF.',
-            'observacao' => 'Um novo upload com o mesmo tipo + título vira automaticamente uma nova versão do mesmo documento — nunca sobrescreve o arquivo anterior.',
+            'observacao' => 'Um novo envio com o mesmo tipo + título vira automaticamente uma nova versão do mesmo documento. Nunca sobrescreve o arquivo anterior.',
         ],
         [
             'nome' => 'Editar',
             'icone' => 'editar',
-            'como' => 'Altera só os metadados (tipo, trilha, título) — não o arquivo.',
+            'como' => 'Altera só os metadados (tipo, trilha, título), não o arquivo.',
         ],
         [
             'nome' => 'Baixar',
@@ -32,13 +32,13 @@ return [
         [
             'nome' => 'Despublicar / Republicar',
             'icone' => 'despublicar',
-            'como' => 'Despublicar tira o documento da home sem apagar nada; Republicar coloca de volta.',
+            'como' => 'Despublicar tira o documento da página inicial sem apagar nada; Republicar coloca de volta.',
         ],
         [
             'nome' => 'Remover todas as versões',
             'icone' => 'remover',
             'como' => 'Apaga o documento e todo o seu histórico.',
-            'observacao' => 'Irreversível, com confirmação reforçada — diferente de Despublicar, aqui não sobra nada pra recuperar.',
+            'observacao' => 'Irreversível, com confirmação reforçada. Diferente de Despublicar, aqui não sobra nada para recuperar.',
         ],
         [
             'nome' => 'Reordenar',

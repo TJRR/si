@@ -32,6 +32,6 @@ class MentoriaPublicaController extends Controller
         $this->renderizar('publico/mentorias', [
             'concurso' => $concursoAtivo,
             'horarios' => (new MentoriaRepository())->listarPorConcurso($concursoAtivo['id']),
-        ], 'Mentorias — ' . $concursoAtivo['nome']);
+        ], 'Mentorias: ' . $concursoAtivo['nome']);
     }
 }

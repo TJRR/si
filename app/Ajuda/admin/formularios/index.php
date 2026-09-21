@@ -30,7 +30,7 @@ return [
         [
             'nome' => 'Duplicar',
             'como' => 'Cria uma nova versão editável a partir de um formulário publicado ou despublicado.',
-            'observacao' => 'Só disponível para formulário publicado ou despublicado — é o único jeito de alterar campos depois que o formulário já saiu do rascunho.',
+            'observacao' => 'Só disponível para formulário publicado ou despublicado: é o único jeito de alterar campos depois que o formulário já saiu do rascunho.',
         ],
         [
             'nome' => 'Remover',

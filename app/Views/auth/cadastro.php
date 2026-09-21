@@ -3,14 +3,11 @@
     exit('Acesso negado');
 } ?>
 <?php
-$logoConteudo = (new \App\Repositories\ConteudoSiteRepository())->buscarPorChave('logo_site');
-$logoSrc = $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
-    ? config('base_path') . '/assets/' . $logoConteudo['arquivo_path']
-    : config('base_path') . '/assets/img/logo-padrao.png';
+$logoSrc = logoAtual();
 ?>
 <div class="guest-card">
     <?php if (isset($ajudaHtml) && $ajudaHtml !== null): ?>
-    <button type="button" class="guest-ajuda-botao" title="Ajuda desta tela" aria-label="Ajuda desta tela" data-ajuda-titulo="<?php echo htmlspecialchars('Ajuda — ' . (string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?>" onclick="abrirModal(this.dataset.ajudaTitulo, document.getElementById('ajuda-painel-fonte').innerHTML)">
+    <button type="button" class="guest-ajuda-botao" title="Ajuda desta tela" aria-label="Ajuda desta tela" data-ajuda-titulo="<?php echo htmlspecialchars('Ajuda sobre ' . (string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?>" onclick="abrirModal(this.dataset.ajudaTitulo, document.getElementById('ajuda-painel-fonte').innerHTML)">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="10"></circle>
             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
@@ -18,10 +15,10 @@ $logoSrc = $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
         </svg>
     </button>
     <?php endif; ?>
-    <img src="<?php echo htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR" class="guest-logo">
+    <img src="<?php echo htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars('Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="guest-logo">
 
     <h1 class="guest-titulo">Criar cadastro</h1>
-    <p class="guest-subtitulo">Cadastre-se para participar do Prêmio de Inovação do TJRR.</p>
+    <p class="guest-subtitulo">Cadastre-se para participar do Prêmio de Inovação do <?php echo nomeInstituicao(); ?>.</p>
 
     <?php if (!empty($erro)): ?>
         <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -62,5 +59,5 @@ $logoSrc = $logoConteudo !== null && !empty($logoConteudo['arquivo_path'])
     <p class="guest-cadastro"><a href="<?php echo url('auth/login'); ?>">Voltar para o login</a></p>
 </div>
 
-<a href="<?php echo config('base_path'); ?>/" class="guest-voltar">&larr; Voltar ao site</a>
+<a href="<?php echo config('base_path'); ?>/" class="guest-voltar">&larr; Voltar ao portal</a>
 <p class="guest-copyright">&copy; <?php echo date('Y'); ?> Poder Judiciário de Roraima</p>

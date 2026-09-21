@@ -7,19 +7,19 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Lançar notas',
-    'resumo' => 'Ficha da submissão organizada em abas por critério (ou em grade única, quando todos os critérios da etapa usam exatamente os mesmos campos), com o campo de nota e o feedback correspondentes a cada uma.',
+    'resumo' => 'Ficha da submissão organizada em abas por critério (ou em grade única, quando todos os critérios da etapa usam exatamente os mesmos campos), com o campo de nota e o comentário correspondentes a cada uma.',
     'operacoes' => [
         [
             'nome' => 'Abas de critério',
-            'como' => 'Clique no nome do critério para trocar de aba. Cada aba mostra só o conteúdo da submissão relevante para aquele critério (conforme configurado em Critérios — novo/editar).',
+            'como' => 'Clique no nome do critério para trocar de aba. Cada aba mostra só o conteúdo da submissão relevante para aquele critério, conforme configurado na tela de edição de Critérios.',
         ],
         [
             'nome' => 'Nota',
             'como' => 'Digite um valor dentro da escala mostrada ao lado do campo (mín.–máx. daquele critério), com casas decimais (passo de 0,1).',
         ],
         [
-            'nome' => 'Feedback',
-            'como' => 'Aparece por critério ou por submissão inteira, conforme a etapa foi configurada — nunca as duas formas ao mesmo tempo.',
+            'nome' => 'Comentário',
+            'como' => 'Aparece por critério ou por submissão inteira, conforme a etapa foi configurada. Nunca as duas formas ao mesmo tempo.',
         ],
         [
             'nome' => 'Baixar anexos',
@@ -27,8 +27,8 @@ return [
         ],
         [
             'nome' => 'Salvar notas',
-            'como' => 'Grava as notas e feedbacks preenchidos até agora — pode ser usado mais de uma vez enquanto a avaliação não travar.',
-            'observacao' => 'A avaliação trava automaticamente assim que todos os critérios desta submissão estiverem notados — mesmo antes de o resultado da etapa ser publicado. Depois de travada, os campos ficam somente leitura e não é mais possível editar. Ela também trava se o resultado da etapa já tiver sido publicado. Se a etapa estiver configurada com avanço automático, completar a última nota pendente pode disparar a publicação do resultado sozinha.',
+            'como' => 'Grava as notas e comentários preenchidos até agora; pode ser usado mais de uma vez enquanto a avaliação não travar.',
+            'observacao' => 'A avaliação trava automaticamente assim que todos os critérios desta submissão estiverem notados, mesmo antes de o resultado da etapa ser publicado. Depois de travada, os campos ficam somente leitura e não é mais possível editar. Ela também trava se o resultado da etapa já tiver sido publicado. Se a etapa estiver configurada com avanço automático, completar a última nota pendente pode disparar a publicação do resultado sozinha.',
         ],
     ],
     'conceitos' => ['sigilo_anonimato'],

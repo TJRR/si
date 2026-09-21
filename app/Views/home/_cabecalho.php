@@ -15,14 +15,27 @@ $posicaoImagemCabecalho = $mapaPosicoesCabecalho[$posicaoChaveCabecalho] ?? 'cen
 $efeitoEntradaCabecalho = !empty($configVisual['cabecalho_efeito_entrada']) ? $configVisual['cabecalho_efeito_entrada'] : 'nenhum';
 $classeEntradaCabecalho = $efeitoEntradaCabecalho !== 'nenhum' ? ' site-header-hero-entrada-' . $efeitoEntradaCabecalho : '';
 ?>
-<header class="site-header<?php echo $temImagemCabecalho ? ' site-header-com-imagem' : ''; ?>" id="cabecalho-site"
+<?php
+/**
+ * Fase 48B (correcao pos-teste de fumaca): "logo clara" e' opcional mesmo
+ * com imagem de fundo cadastrada - sem ela, a logo normal continua valendo
+ * por cima da imagem. A classe "site-header-com-logo-clara" so' e'
+ * adicionada quando ha' de fato uma logo clara, para o CSS nao esconder a
+ * logo normal (.site-logo-solido) sem ter uma substituta real (bug achado
+ * pelo usuario: antes a regra dependia so' de site-header-com-imagem,
+ * escondendo a logo normal mesmo sem logo clara nenhuma, deixando o
+ * cabecalho sem nenhuma logo visivel).
+ */
+$temLogoClara = $temImagemCabecalho && $logoClaroSrc !== null;
+?>
+<header class="site-header<?php echo $temImagemCabecalho ? ' site-header-com-imagem' : ''; ?><?php echo $temLogoClara ? ' site-header-com-logo-clara' : ''; ?>" id="cabecalho-site"
         <?php if ($temImagemCabecalho): ?>style="background-image:url('<?php echo htmlspecialchars($urlImagemCabecalho, ENT_QUOTES, 'UTF-8'); ?>');background-position:<?php echo $posicaoImagemCabecalho; ?>;--cabecalho-overlay-opacidade:<?php echo $overlayOpacidadeCabecalho; ?>;"<?php endif; ?>>
     <div class="site-header-nav" id="site-header-nav">
         <div class="site-header-inner">
             <?php if ($temImagemCabecalho && $logoClaroSrc !== null): ?>
-                <img src="<?php echo htmlspecialchars($logoClaroSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR" class="site-logo site-logo-claro">
+                <img src="<?php echo htmlspecialchars($logoClaroSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars('Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="site-logo site-logo-claro">
             <?php endif; ?>
-            <img src="<?php echo htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR" class="site-logo site-logo-solido">
+            <img src="<?php echo htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars('Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="site-logo site-logo-solido">
             <span class="site-edicao-indicador"><?php echo htmlspecialchars($concursoAtivo['nome'], ENT_QUOTES, 'UTF-8'); ?></span>
             <button type="button" class="site-menu-toggle" aria-expanded="false" aria-controls="site-nav-principal" aria-label="Abrir menu">
                 <span aria-hidden="true">☰</span>

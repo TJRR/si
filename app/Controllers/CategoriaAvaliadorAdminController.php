@@ -36,7 +36,7 @@ class CategoriaAvaliadorAdminController extends Controller
         $this->renderizar('admin/categorias_avaliador/index', [
             'concurso' => $concurso,
             'categorias' => $this->categorias->listarPorConcurso($concursoId),
-        ], 'Categorias de avaliador — ' . $concurso['nome'], ['tipo' => 'categorias_avaliador', 'id' => (int) $concursoId]);
+        ], 'Categorias de avaliador: ' . $concurso['nome'], ['tipo' => 'categorias_avaliador', 'id' => (int) $concursoId]);
     }
 
     public function novo($concursoId)

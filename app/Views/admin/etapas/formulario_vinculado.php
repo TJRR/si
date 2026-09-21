@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Formulário vinculado — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Formulário vinculado: <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <?php if ($formulario === null): ?>
     <p>Esta etapa ainda não tem um formulário dinâmico vinculado.</p>
@@ -11,7 +11,7 @@
     <table border="1" cellpadding="6">
         <tr><th>Nome</th><td><?php echo htmlspecialchars($formulario['nome'], ENT_QUOTES, 'UTF-8'); ?></td></tr>
         <tr><th>Versão</th><td><?php echo (int) $formulario['versao']; ?></td></tr>
-        <tr><th>Status</th><td><?php echo htmlspecialchars($formulario['status'], ENT_QUOTES, 'UTF-8'); ?></td></tr>
+        <tr><th>Situação</th><td><?php echo htmlspecialchars($formulario['status'], ENT_QUOTES, 'UTF-8'); ?></td></tr>
     </table>
 
     <div class="acoes-icones">

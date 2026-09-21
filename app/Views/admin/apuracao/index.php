@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Apuração — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Apuração: <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <h2>Fórmula da nota final</h2>
 <p>Define como a Nota Final (NF) da trilha é calculada a partir das notas das etapas. Ex.: Editais 12/2026 e 13/2026
@@ -14,8 +14,8 @@
     <p>Variáveis disponíveis (nota de cada etapa, pela ordem):</p>
     <ul>
         <?php foreach ($etapasDaTrilha as $etapaDaTrilha): ?>
-            <li><code>NE<?php echo (int) $etapaDaTrilha['ordem']; ?></code>
-                — <?php echo htmlspecialchars($etapaDaTrilha['nome'], ENT_QUOTES, 'UTF-8'); ?></li>
+            <li><code>NE<?php echo (int) $etapaDaTrilha['ordem']; ?></code>:
+                <?php echo htmlspecialchars($etapaDaTrilha['nome'], ENT_QUOTES, 'UTF-8'); ?></li>
         <?php endforeach; ?>
     </ul>
 
@@ -97,7 +97,7 @@
                     </form>
                 </div>
                 <?php else: ?>
-                    —
+                    Não informado
                 <?php endif; ?>
             </td>
         </tr>
@@ -110,7 +110,7 @@
 <?php if ($erroResultado !== null): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erroResultado, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php elseif (empty($ranking)): ?>
-    <p>Nenhuma equipe com todas as etapas publicadas ainda — publique o resultado de cada etapa da trilha antes de calcular a nota final.</p>
+    <p>Nenhuma equipe com todas as etapas publicadas ainda. Publique o resultado de cada etapa da trilha antes de calcular a nota final.</p>
 <?php else: ?>
     <p>
         <?php if ($publicado): ?>
@@ -127,7 +127,7 @@
             </form>
             <?php endif; ?>
         <?php else: ?>
-            <strong>Prévia (ainda não publicada)</strong> — recalculada a cada acesso.
+            <strong>Prévia (ainda não publicada)</strong>, recalculada a cada acesso.
             <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
             <form method="post" action="<?php echo url('resultados/publicarTrilha'); ?>" style="display:inline;"><?= campoCsrf() ?>
                 <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
@@ -147,7 +147,7 @@
         <?php foreach ($ranking as $linha): ?>
         <tr>
             <td><?php echo (int) $linha['colocacao']; ?></td>
-            <td><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : '—', ENT_QUOTES, 'UTF-8'); ?></td>
+            <td><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : 'Não informado', ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo number_format((float) $linha['nf'], $casasDecimais, ',', '.'); ?></td>
             <?php if ($publicado && \App\Core\Auth::possuiPerfil('administrador')): ?>
             <td>

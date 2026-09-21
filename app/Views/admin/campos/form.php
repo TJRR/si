@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1><?php echo $campo === null ? 'Novo campo' : 'Editar campo'; ?> — <?php echo htmlspecialchars($formulario['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1><?php echo $campo === null ? 'Novo campo' : 'Editar campo'; ?>: <?php echo htmlspecialchars($formulario['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -38,7 +38,7 @@ $tipoAtual = $campo !== null ? $campo['tipo'] : 'texto';
 
     <label>
         <input type="checkbox" name="papel_documento_solucao_proposta" value="1" <?php echo (!empty($configAtual['_papel_documento']) && $configAtual['_papel_documento'] === 'solucao_proposta') ? 'checked' : ''; ?>>
-        Marcar como: Solução proposta (usada em modelos de documento — no máximo um campo por trilha)
+        Marcar como: Solução proposta (usada em modelos de documento; no máximo um campo por trilha)
     </label><br>
 
     <div id="config-grupo-participantes" style="display:none;">

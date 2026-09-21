@@ -50,11 +50,11 @@
     </div>
 
     <?php if (count($slides) > 1): ?>
-    <button type="button" class="site-slideshow-seta site-slideshow-seta-anterior" data-slideshow-anterior aria-label="Slide anterior">‹</button>
-    <button type="button" class="site-slideshow-seta site-slideshow-seta-proxima" data-slideshow-proxima aria-label="Próximo slide">›</button>
-    <div class="site-slideshow-marcadores" role="tablist" aria-label="Selecionar slide">
+    <button type="button" class="site-slideshow-seta site-slideshow-seta-anterior" data-slideshow-anterior aria-label="Quadro anterior">‹</button>
+    <button type="button" class="site-slideshow-seta site-slideshow-seta-proxima" data-slideshow-proxima aria-label="Próximo quadro">›</button>
+    <div class="site-slideshow-marcadores" role="tablist" aria-label="Selecionar quadro">
         <?php foreach ($slides as $indice => $slide): ?>
-            <button type="button" class="site-slideshow-marcador<?php echo $indice === 0 ? ' ativo' : ''; ?>" data-slideshow-ir="<?php echo $indice; ?>" role="tab" aria-label="Ir para o slide <?php echo $indice + 1; ?>"></button>
+            <button type="button" class="site-slideshow-marcador<?php echo $indice === 0 ? ' ativo' : ''; ?>" data-slideshow-ir="<?php echo $indice; ?>" role="tab" aria-label="Ir para o quadro <?php echo $indice + 1; ?>"></button>
         <?php endforeach; ?>
     </div>
     <?php endif; ?>

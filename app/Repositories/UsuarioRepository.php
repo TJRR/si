@@ -46,6 +46,30 @@ class UsuarioRepository
         return $stmt->fetchAll();
     }
 
+    /**
+     * Fase 48 (correcao pos-teste de fumaca): busca em tempo real por nome
+     * OU e-mail - usado por AtividadeAdminController::buscarUsuarios() para
+     * o campo de vinculo de facilitador (a pessoa que cadastra digita e
+     * escolhe entre sugestoes, em vez de digitar o e-mail cru de memoria).
+     * So' contas aprovadas - as demais nao conseguem logar, entao nao faz
+     * sentido oferece-las aqui.
+     */
+    public function buscarPorTermo($termo, $limite = 10)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            "SELECT id, nome, email FROM usuarios
+             WHERE (nome LIKE :termo OR email LIKE :termo) AND status = 'aprovado'
+             ORDER BY nome ASC
+             LIMIT :limite"
+        );
+        $stmt->bindValue('termo', '%' . $termo . '%', \PDO::PARAM_STR);
+        $stmt->bindValue('limite', $limite, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
+
     public function buscarPorEmail($email)
     {
         $pdo = Database::conexao();
@@ -113,6 +137,29 @@ class UsuarioRepository
         return $id;
     }
 
+    /**
+     * Fase 40: cadastro auto-aprovado com senha propria (perfil "inscrito"
+     * de evento) - mesma logica de criarAprovadoSemSenha(), mas com hash de
+     * senha direto no INSERT (evita duas queries criar()+atualizarStatus()).
+     */
+    public function criarAprovado($nome, $email, $senhaHash)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            "INSERT INTO usuarios (nome, email, senha_hash, status) VALUES (:nome, :email, :senha_hash, 'aprovado')"
+        );
+        $stmt->execute([
+            'nome' => $nome,
+            'email' => $email,
+            'senha_hash' => $senhaHash,
+        ]);
+        $id = (int) $pdo->lastInsertId();
+
+        Auditoria::registrar('criar', 'usuarios', $id, null, ['nome' => $nome, 'email' => $email, 'status' => 'aprovado']);
+
+        return $id;
+    }
+
     public function definirSenha($id, $senhaHash)
     {
         $antes = $this->buscarPorId($id);
@@ -167,6 +214,21 @@ class UsuarioRepository
         $stmt->execute(['concurso_id' => $concursoId]);
 
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Fase 40 (correcao pos-teste de fumaca): marca/desmarca o sinal de "esta
+     * conta ja existia pendente e foi auto-aprovada de passagem pelo fluxo
+     * do evento - revisar se tambem precisa de um perfil do Concurso". So'
+     * setada em AuthService::resolverUsuarioGoogle() (conta pre-existente,
+     * nunca em cadastro novo) e zerada em UsuarioAdminController quando o
+     * Admin atribui/edita o perfil da conta.
+     */
+    public function definirPrecisaRevisarConcurso($id, $valor)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE usuarios SET precisa_revisar_concurso = :valor WHERE id = :id');
+        $stmt->execute(['valor' => $valor ? 1 : 0, 'id' => $id]);
     }
 
     public function atualizarStatus($id, $status)
@@ -239,5 +301,21 @@ class UsuarioRepository
         $stmt->execute(['foto_path' => $caminhoRelativo, 'id' => $id]);
 
         Auditoria::registrar('atualizar_foto', 'usuarios', $id, $antes, ['foto_path' => $caminhoRelativo]);
+    }
+
+    /**
+     * Fase 48B: $temaVisualId null volta o usuario para o tema padrao do
+     * sistema (nenhuma escolha propria). Coluna "tema_visual_id" (nao
+     * "tema_id"), de proposito: "tema" sozinho ja e' usado no dominio do
+     * Premio de Inovacao (Trilha->Tema->Desafio) - ver TemaVisualRepository.
+     */
+    public function definirTemaVisual($id, $temaVisualId)
+    {
+        $antes = $this->buscarPorId($id);
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE usuarios SET tema_visual_id = :tema_visual_id WHERE id = :id');
+        $stmt->execute(['tema_visual_id' => $temaVisualId, 'id' => $id]);
+
+        Auditoria::registrar('selecionar_tema_visual', 'usuarios', $id, $antes, ['tema_visual_id' => $temaVisualId]);
     }
 }

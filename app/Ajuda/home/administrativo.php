@@ -7,15 +7,15 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Painel',
-    'resumo' => 'Primeira tela ao entrar na área administrativa — visão geral do sistema (contadores) e três seções recolhíveis: Dúvidas, Requerimentos e Progresso da avaliação. Cada seção começa fechada, e reabre sozinha se o filtro dela acabou de ser usado.',
+    'resumo' => 'Primeira tela ao entrar na área administrativa, com visão geral do sistema (contadores) e três seções recolhíveis: Dúvidas, Requerimentos e Progresso da avaliação. Cada seção começa fechada, e reabre sozinha se o filtro dela acabou de ser usado.',
     'operacoes' => [
         [
             'nome' => 'Cartões numéricos',
-            'como' => 'Participantes, Equipes, Avaliadores, Concursos ativos, Concursos realizados e Cadastros pendentes — visão geral, sem filtro, sem clique.',
+            'como' => 'Participantes, Equipes, Avaliadores, Concursos ativos, Concursos realizados e Cadastros pendentes, visão geral, sem filtro, sem clique.',
         ],
         [
             'nome' => 'Seção Dúvidas',
-            'como' => 'Administrador vê contadores (Recebidas/Escaladas/Respondidas) e a tabela completa, com filtro de status. Qualquer perfil (Administrador, Suporte, Colaborador) vê "Escaladas para mim" — a fila pessoal.',
+            'como' => 'Administrador vê contadores (Recebidas/Escaladas/Respondidas) e a tabela completa, com filtro de situação. Qualquer perfil (Administrador, Suporte, Colaborador) vê "Escaladas para mim", a fila pessoal.',
             'pills' => [
                 ['cor' => 'azul', 'rotulo' => 'Recebida'],
                 ['cor' => 'laranja', 'rotulo' => 'Em análise'],
@@ -24,7 +24,7 @@ return [
         ],
         [
             'nome' => 'Seção Requerimentos',
-            'como' => 'Mesmo padrão de Dúvidas, com status extras de assinatura/decisão.',
+            'como' => 'Mesmo padrão de Dúvidas, com situações extras de assinatura/decisão.',
             'pills' => [
                 ['cor' => 'cinza', 'rotulo' => 'Aguardando assinatura'],
                 ['cor' => 'roxo', 'rotulo' => 'Esclarecimento solicitado'],
@@ -33,8 +33,8 @@ return [
             ],
         ],
         [
-            'nome' => 'SLA (coluna nas duas tabelas)',
-            'como' => 'Calculado desde a última movimentação — sem clique, é só leitura.',
+            'nome' => 'Prazo (coluna nas duas tabelas)',
+            'como' => 'Calculado desde a última movimentação; sem clique, é só leitura.',
             'pills' => [
                 ['cor' => 'verde', 'rotulo' => 'Em dia'],
                 ['cor' => 'vermelho', 'rotulo' => 'Atrasada'],

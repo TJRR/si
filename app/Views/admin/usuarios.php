@@ -50,7 +50,7 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
     <form method="get" action="<?php echo config('base_path'); ?>/index.php" class="filtros-barra">
         <input type="hidden" name="r" value="usuarios/index">
         <label class="filtro-busca">Busca:
-            <input type="text" name="busca" placeholder="Nome, e-mail, status, perfil, acesso..." value="<?php echo htmlspecialchars((string) $busca, ENT_QUOTES, 'UTF-8'); ?>">
+            <input type="text" name="busca" placeholder="Nome, e-mail, situação, perfil, acesso..." value="<?php echo htmlspecialchars((string) $busca, ENT_QUOTES, 'UTF-8'); ?>">
         </label>
         <label>Concurso:
             <select name="concurso_id">
@@ -72,7 +72,7 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                 <?php endforeach; ?>
             </select>
         </label>
-        <label>Status:
+        <label>Situação:
             <select name="status">
                 <option value="">Todos</option>
                 <?php foreach (['pendente' => 'Pendente', 'aprovado' => 'Aprovado', 'rejeitado' => 'Rejeitado', 'suspenso' => 'Suspenso'] as $valor => $rotulo): ?>
@@ -115,7 +115,7 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
         <tr>
             <th><?php echo usuarios_link_ordenar('Nome', 'nome', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $filtroStatus, $filtroAcesso, $busca); ?></th>
             <th><?php echo usuarios_link_ordenar('E-mail', 'email', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $filtroStatus, $filtroAcesso, $busca); ?></th>
-            <th><?php echo usuarios_link_ordenar('Status', 'status', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $filtroStatus, $filtroAcesso, $busca); ?></th>
+            <th><?php echo usuarios_link_ordenar('Situação', 'status', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $filtroStatus, $filtroAcesso, $busca); ?></th>
             <th><?php echo usuarios_link_ordenar('Perfis', 'perfis', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $filtroStatus, $filtroAcesso, $busca); ?></th>
             <th><?php echo usuarios_link_ordenar('Acesso', 'acesso', $ordenar, $direcao, $filtroConcursoId, $filtroPerfil, $filtroStatus, $filtroAcesso, $busca); ?></th>
             <th>Ações</th>
@@ -132,20 +132,35 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
             </td>
             <td>
                 <?php if (empty($usuario['perfis'])): ?>
-                    —
+                    Não informado
                 <?php else: ?>
                     <?php foreach ($usuario['perfis'] as $vinculo): ?>
                         <?php echo htmlspecialchars($vinculo['perfil_nome'], ENT_QUOTES, 'UTF-8'); ?>
-                        (<?php echo htmlspecialchars($vinculo['concurso_nome'] !== null ? $vinculo['concurso_nome'] : 'Global', ENT_QUOTES, 'UTF-8'); ?>)
+                        <?php if ($vinculo['perfil'] === 'inscrito'): ?>
+                            (<?php echo !empty($vinculo['eventos_nomes']) ? htmlspecialchars(implode(', ', $vinculo['eventos_nomes']), ENT_QUOTES, 'UTF-8') : 'nenhum evento confirmado'; ?>)
+                        <?php else: ?>
+                            (<?php echo htmlspecialchars($vinculo['concurso_nome'] !== null ? $vinculo['concurso_nome'] : 'Global', ENT_QUOTES, 'UTF-8'); ?>)
+                        <?php endif; ?>
                         <?php if ($vinculo['perfil'] === 'avaliador' && $vinculo['concurso_id'] !== null): ?>
                             <?php if (!empty($vinculo['categoria_atual'])): ?>
-                                — Categoria: <?php echo htmlspecialchars($vinculo['categoria_atual']['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                , Categoria: <?php echo htmlspecialchars($vinculo['categoria_atual']['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?>
                             <?php else: ?>
-                                — <em>sem categoria</em>
+                                , <em>sem categoria</em>
                             <?php endif; ?>
                         <?php endif; ?>
                         <br>
                     <?php endforeach; ?>
+                <?php endif; ?>
+                <?php
+                    $jaTemPerfilInscrito = !empty(array_filter($usuario['perfis'], function ($v) {
+                        return $v['perfil'] === 'inscrito';
+                    }));
+                ?>
+                <?php if (!$jaTemPerfilInscrito && !empty($usuario['eventosNomes'])): ?>
+                    <div style="color:#555;font-size:0.9em;">Também inscrito em: <?php echo htmlspecialchars(implode(', ', $usuario['eventosNomes']), ENT_QUOTES, 'UTF-8'); ?></div>
+                <?php endif; ?>
+                <?php if (!empty($usuario['precisa_revisar_concurso'])): ?>
+                    <span class="status-pill laranja" title="Esta conta já tinha um cadastro pendente no sistema antes de se inscrever num Evento pelo Google, e foi aprovada automaticamente por esse fluxo (perfil Inscrito). Se ela também precisa de um perfil do Concurso, use &quot;Editar&quot; para atribuir.">Cadastro anterior pendente: verificar se precisa de perfil do Concurso</span>
                 <?php endif; ?>
             </td>
             <td>
@@ -160,7 +175,7 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                     if (!empty($tiposAcesso)) {
                         echo htmlspecialchars(implode(' + ', $tiposAcesso), ENT_QUOTES, 'UTF-8');
                     } elseif (!empty($usuario['convite_vencido'])) {
-                        $tituloVencido = 'O link de definir senha expirou em ' . formatarDataHora($usuario['convite_expirado_em']) . ' ' . sufixoFusoHorario() . ' — use "Reenviar convite" para gerar um novo.';
+                        $tituloVencido = 'O hiperlink de definir senha expirou em ' . formatarDataHora($usuario['convite_expirado_em']) . ' ' . sufixoFusoHorario() . ': use "Reenviar convite" para gerar um novo.';
                         echo '<span class="status-pill vermelho" title="' . htmlspecialchars($tituloVencido, ENT_QUOTES, 'UTF-8') . '">Convite vencido</span>';
                     } else {
                         echo '<span class="status-pill laranja">Nenhum ainda</span>';
@@ -192,7 +207,7 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                                 <option value="">Sem categoria de avaliador</option>
                                 <?php foreach ($todasCategorias as $categoria): ?>
                                     <option value="<?php echo (int) $categoria['id']; ?>">
-                                        <?php echo htmlspecialchars($categoria['nome'] . ' — ' . $categoria['concurso_nome'], ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php echo htmlspecialchars($categoria['nome'] . ': ' . $categoria['concurso_nome'], ENT_QUOTES, 'UTF-8'); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -251,7 +266,7 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                     <?php if ($usuario['bloqueado_login']): ?>
                         <form method="post" action="<?php echo url('usuarios/removerBloqueioLogin'); ?>"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
-                            <button type="submit" class="btn-icone" title="Bloqueado por tentativas de login — remover bloqueio" onclick="return confirm('Este usuário está bloqueado por várias tentativas de login malsucedidas recentes. Se for um ataque em andamento (alguém tentando adivinhar a senha), remover o bloqueio agora permite que a pessoa continue tentando. Só remova se tiver certeza de que foi o próprio usuário se confundindo com a senha. Remover o bloqueio mesmo assim?');">
+                            <button type="submit" class="btn-icone" title="Bloqueado por tentativas de login: remover bloqueio" onclick="return confirm('Este usuário está bloqueado por várias tentativas de login malsucedidas recentes. Se for um ataque em andamento (alguém tentando adivinhar a senha), remover o bloqueio agora permite que a pessoa continue tentando. Só remova se tiver certeza de que foi o próprio usuário se confundindo com a senha. Remover o bloqueio mesmo assim?');">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                                     <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
@@ -262,7 +277,7 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                     <?php if ($usuario['senha_hash'] === null && $usuario['google_id'] === null): ?>
                         <form method="post" action="<?php echo url('usuarios/reenviarConvite'); ?>"><?= campoCsrf() ?>
                             <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
-                            <button type="submit" class="btn-icone" title="Reenviar convite" onclick="return confirm('Reenviar o convite de acesso para <?php echo htmlspecialchars(addslashes($usuario['email']), ENT_QUOTES, 'UTF-8'); ?>? O link anterior deixará de funcionar.');">
+                            <button type="submit" class="btn-icone" title="Reenviar convite" onclick="return confirm('Reenviar o convite de acesso para <?php echo htmlspecialchars(addslashes($usuario['email']), ENT_QUOTES, 'UTF-8'); ?>? O hiperlink anterior deixará de funcionar.');">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <line x1="22" y1="2" x2="11" y2="13"></line>
                                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>

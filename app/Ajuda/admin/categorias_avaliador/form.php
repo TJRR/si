@@ -6,7 +6,7 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Categoria de avaliador — novo/editar',
+    'titulo' => 'Categoria de avaliador: novo/editar',
     'resumo' => 'Nome de uma categoria de avaliador.',
     'operacoes' => [],
     'conceitos' => [],

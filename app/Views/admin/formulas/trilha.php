@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Fórmula da nota final — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Fórmula da nota final: <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('trilhas/index/' . (int) $trilha['concurso_id']); ?>">Voltar às trilhas</a></p>
 
@@ -27,8 +27,8 @@
     <p>Variáveis disponíveis (nota de cada etapa, pela ordem):</p>
     <ul>
         <?php foreach ($etapasDaTrilha as $etapaDaTrilha): ?>
-            <li><code>NE<?php echo (int) $etapaDaTrilha['ordem']; ?></code>
-                — <?php echo htmlspecialchars($etapaDaTrilha['nome'], ENT_QUOTES, 'UTF-8'); ?></li>
+            <li><code>NE<?php echo (int) $etapaDaTrilha['ordem']; ?></code>:
+                <?php echo htmlspecialchars($etapaDaTrilha['nome'], ENT_QUOTES, 'UTF-8'); ?></li>
         <?php endforeach; ?>
     </ul>
 

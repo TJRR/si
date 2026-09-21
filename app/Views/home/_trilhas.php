@@ -75,7 +75,7 @@
                                     <circle cx="12" cy="8" r="7"></circle>
                                     <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
                                 </svg>
-                                <a href="<?php echo url('resultadosPublicos/etapa/' . (int) $item['etapa_id']); ?>"><?php echo htmlspecialchars('Ver resultado — ' . $item['etapa_nome'], ENT_QUOTES, 'UTF-8'); ?></a>
+                                <a href="<?php echo url('resultadosPublicos/etapa/' . (int) $item['etapa_id']); ?>"><?php echo htmlspecialchars('Ver resultado: ' . $item['etapa_nome'], ENT_QUOTES, 'UTF-8'); ?></a>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -101,7 +101,7 @@
                     </ul>
                 <?php endif; ?>
                 <?php if ($inscricaoDaTrilha !== null): ?>
-                    <a href="<?php echo url('inscricao/formulario/' . (int) $inscricaoDaTrilha['etapa_id']); ?>" class="btn btn-cta">Inscreva-se — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></a>
+                    <a href="<?php echo url('inscricao/formulario/' . (int) $inscricaoDaTrilha['etapa_id']); ?>" class="btn btn-cta">Inscreva-se: <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></a>
                 <?php endif; ?>
             </div>
             <?php endforeach; ?>

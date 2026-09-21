@@ -8,7 +8,7 @@
         <a href="<?php echo url('mentoriaAdmin/novo/' . (int) $concurso['id']); ?>" class="btn-acao">+ Novo horário</a>
     </div>
 </div>
-<p>Qualquer administrador ou suporte pode criar horários de mentoria pra si mesmo — a equipe reserva o horário pelo próprio painel. Você só pode remover os horários que você mesmo criou (Administrador pode remover qualquer um, para moderação).</p>
+<p>Qualquer administrador ou suporte pode criar horários de mentoria para si mesmo: a equipe reserva o horário pelo próprio painel. Você só pode remover os horários que você mesmo criou (Administrador pode remover qualquer um, para moderação).</p>
 
 <?php if (!empty($_SESSION['flash'])): ?>
     <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
@@ -19,7 +19,7 @@
 <?php else: ?>
     <div class="tabela-scroll">
         <table>
-            <tr><th>Mentor</th><th>Início</th><th>Fim <?php echo sufixoFusoHorario(); ?></th><th>Restrito a</th><th>Meet</th><th>Google Agenda</th><th>Observação</th><th>Status</th><th>Ações</th></tr>
+            <tr><th>Mentor</th><th>Início</th><th>Fim <?php echo sufixoFusoHorario(); ?></th><th>Restrito a</th><th>Meet</th><th>Google Agenda</th><th>Observação</th><th>Situação</th><th>Ações</th></tr>
             <?php foreach ($horarios as $horario): ?>
             <tr>
                 <td><?php echo htmlspecialchars($horario['mentor_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
@@ -29,7 +29,7 @@
                     <?php if (empty($horario['etapa_nome'])): ?>
                         <span class="status-pill">Aberto a todos</span>
                     <?php else: ?>
-                        <span class="status-pill laranja" title="Só enxerga e reserva quem está habilitado a esta etapa"><?php echo htmlspecialchars($horario['etapa_trilha_nome'] . ' — ' . $horario['etapa_nome'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="status-pill laranja" title="Só enxerga e reserva quem está habilitado a esta etapa"><?php echo htmlspecialchars($horario['etapa_trilha_nome'] . ': ' . $horario['etapa_nome'], ENT_QUOTES, 'UTF-8'); ?></span>
                     <?php endif; ?>
                 </td>
                 <td>
@@ -38,12 +38,12 @@
                     <?php elseif (!empty($horario['integracao_google']) && !empty($horario['meet_pendente'])): ?>
                         <span class="status-pill laranja">Gerando sala...</span>
                     <?php else: ?>
-                        —
+                        Não informado
                     <?php endif; ?>
                 </td>
                 <td>
                     <?php if (empty($horario['integracao_google'])): ?>
-                        —
+                        Não informado
                     <?php else: ?>
                         <?php if (empty($horario['google_event_id'])): ?>
                             <span class="status-pill vermelho">Falha na integração</span>
@@ -80,7 +80,7 @@
                 <td><?php echo htmlspecialchars((string) $horario['observacao'], ENT_QUOTES, 'UTF-8'); ?></td>
                 <td>
                     <?php if ($horario['equipe_id'] !== null): ?>
-                        <span class="status-pill laranja">Reservado — <?php echo htmlspecialchars($horario['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="status-pill laranja">Reservado: <?php echo htmlspecialchars($horario['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></span>
                     <?php else: ?>
                         <span class="status-pill verde">Vago</span>
                     <?php endif; ?>
@@ -149,7 +149,7 @@
     <?php if ($trilhaFiltro !== null): ?>
         <label>Etapa:
             <select name="etapa_id" onchange="this.form.submit()">
-                <option value="" <?php echo $etapaFiltro === null ? 'selected' : ''; ?>>— homologação de cadastro —</option>
+                <option value="" <?php echo $etapaFiltro === null ? 'selected' : ''; ?>>Homologação de cadastro</option>
                 <?php foreach ($etapasDaTrilha as $etapa): ?>
                     <option value="<?php echo (int) $etapa['id']; ?>" <?php echo $etapaFiltro === (int) $etapa['id'] ? 'selected' : ''; ?>>
                         <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?>
@@ -161,9 +161,9 @@
 </form>
 
 <?php if (empty($equipesSemParticipacao) && !empty($etapaAindaNaoIniciada)): ?>
-    <p>Esta etapa terá início em <?php echo htmlspecialchars(formatarDataHora($etapaSelecionada['data_inicio']), ENT_QUOTES, 'UTF-8'); ?> <?php echo sufixoFusoHorario(); ?> — ainda não há equipes aprovadas para ela.</p>
+    <p>Esta etapa terá início em <?php echo htmlspecialchars(formatarDataHora($etapaSelecionada['data_inicio']), ENT_QUOTES, 'UTF-8'); ?> <?php echo sufixoFusoHorario(); ?>: ainda não há equipes aprovadas para ela.</p>
 <?php elseif (empty($equipesSemParticipacao)): ?>
-    <p>Nenhuma equipe pendente — todas já participaram de algum evento.</p>
+    <p>Nenhuma equipe pendente: todas já participaram de algum evento.</p>
 <?php else: ?>
     <div class="tabela-scroll">
         <table>

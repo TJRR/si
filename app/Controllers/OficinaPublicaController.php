@@ -39,6 +39,6 @@ class OficinaPublicaController extends Controller
         $this->renderizar('publico/oficinas', [
             'concurso' => $concursoAtivo,
             'horarios' => $horarios,
-        ], 'Oficinas — ' . $concursoAtivo['nome']);
+        ], 'Oficinas: ' . $concursoAtivo['nome']);
     }
 }

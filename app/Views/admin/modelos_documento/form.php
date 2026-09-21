@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1><?php echo $modelo === null ? 'Novo modelo de documento' : 'Editar modelo de documento'; ?> — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1><?php echo $modelo === null ? 'Novo modelo de documento' : 'Editar modelo de documento'; ?>: <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('modelosDocumento/index/' . (int) $etapa['id']); ?>" class="btn-voltar">Voltar</a></p>
 

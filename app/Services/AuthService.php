@@ -7,7 +7,9 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
 use App\Core\GoogleOAuth;
+use App\Repositories\PerfilRepository;
 use App\Repositories\TentativaLoginRepository;
 use App\Repositories\TokenSenhaRepository;
 use App\Repositories\UsuarioRepository;
@@ -77,6 +79,26 @@ class AuthService
     }
 
     /**
+     * Fase 40: cadastro dedicado do fluxo publico de Evento - auto-aprovado,
+     * ja nasce com perfil "inscrito" (sem concurso_id, perfil global). Nao
+     * mexe em cadastrar()/AuthService::cadastrar() nem em CadastroController,
+     * que continuam servindo so' o fluxo generico/pendente do Concurso.
+     */
+    public function cadastrarInscrito($nome, $email, $senha)
+    {
+        if ($this->usuarios->buscarPorEmail($email) !== null) {
+            return ['sucesso' => false, 'mensagem' => 'Já existe um cadastro com este e-mail. Entre com sua conta.'];
+        }
+
+        $id = $this->usuarios->criarAprovado($nome, $email, password_hash($senha, PASSWORD_DEFAULT));
+        $perfilInscrito = (new PerfilRepository())->buscarPorChave('inscrito');
+        (new PerfilRepository())->atribuir($id, $perfilInscrito['id'], null);
+        Auditoria::registrar('cadastro_auto_aprovado_evento', 'usuarios', $id, null, ['status' => 'aprovado', 'perfil' => 'inscrito']);
+
+        return ['sucesso' => true, 'usuario_id' => $id];
+    }
+
+    /**
      * "Esqueci minha senha" - sempre silenciosa pra quem chama: nunca revela
      * se o e-mail existe, esta ativo ou aprovado (evita enumeracao de
      * contas). So' gera token/envia e-mail quando a conta realmente existe e
@@ -106,7 +128,7 @@ class AuthService
         }
     }
 
-    public function autenticarComGoogle($code)
+    public function autenticarComGoogle($code, $contexto = null)
     {
         $token = GoogleOAuth::trocarCodigoPorToken($code);
 
@@ -125,19 +147,21 @@ class AuthService
             'email' => $perfil['email'],
             'nome' => isset($perfil['name']) ? $perfil['name'] : $perfil['email'],
             'email_verified' => isset($perfil['email_verified']) && $perfil['email_verified'] === true,
-        ]);
+        ], $contexto);
     }
 
-    public function resolverUsuarioGoogle(array $dadosGoogle)
+    public function resolverUsuarioGoogle(array $dadosGoogle, $contexto = null)
     {
         if (empty($dadosGoogle['email_verified'])) {
             return ['sucesso' => false, 'mensagem' => 'O e-mail da sua conta Google não está verificado.'];
         }
 
         $usuario = $this->usuarios->buscarPorGoogleId($dadosGoogle['google_id']);
+        $contaJaExistia = $usuario !== null;
 
         if ($usuario === null) {
             $usuario = $this->usuarios->buscarPorEmail($dadosGoogle['email']);
+            $contaJaExistia = $usuario !== null;
 
             if ($usuario === null) {
                 $id = $this->usuarios->criarComGoogle($dadosGoogle['nome'], $dadosGoogle['email'], $dadosGoogle['google_id']);
@@ -162,16 +186,57 @@ class AuthService
             }
         }
 
+        /*
+         * Fase 40: auto-aprovacao restrita ao contexto "evento" - so' afeta
+         * contas que nunca foram curadas por ninguem (nem aprovadas, nem com
+         * qualquer perfil atribuido). Cobre tanto conta nova (acabou de ser
+         * criada acima) quanto conta 'pendente' pre-existente esquecida sem
+         * perfil. Quem ja tem qualquer perfil (mesmo pendente de reaprovacao
+         * por outro motivo) NAO e' afetado - continua exigindo aprovacao
+         * manual do Admin, exatamente como hoje. status='aprovado' so'
+         * destrava login; o que a conta pode fazer depois continua
+         * controlado por RoleMiddleware/perfil (ver plano da Fase 40).
+         *
+         * Correcao pos-teste de fumaca: so' marcar precisa_revisar_concurso
+         * quando a conta JA EXISTIA antes deste request ($contaJaExistia) -
+         * um cadastro novo comum (a esmagadora maioria) nunca teve nenhuma
+         * pendencia com o Concurso, entao nao deve ganhar o selo de aviso na
+         * tela de Usuarios (o calculo antigo, baseado so' em "tem 1 unico
+         * perfil e e' inscrito", disparava indiscriminadamente).
+         */
+        if ($contexto === 'evento' && $usuario['status'] === 'pendente') {
+            $perfisAtuais = $this->usuarios->perfisDoUsuario($usuario['id']);
+
+            if (empty($perfisAtuais)) {
+                $this->usuarios->atualizarStatus($usuario['id'], 'aprovado');
+                $usuario['status'] = 'aprovado';
+                $perfilInscrito = (new PerfilRepository())->buscarPorChave('inscrito');
+                (new PerfilRepository())->atribuir($usuario['id'], $perfilInscrito['id'], null);
+
+                if ($contaJaExistia) {
+                    $this->usuarios->definirPrecisaRevisarConcurso($usuario['id'], true);
+                }
+
+                Auditoria::registrar(
+                    'aprovacao_automatica_evento',
+                    'usuarios',
+                    $usuario['id'],
+                    ['status' => 'pendente'],
+                    ['status' => 'aprovado', 'perfil' => 'inscrito', 'conta_pre_existente' => $contaJaExistia]
+                );
+            }
+        }
+
         if ($usuario['status'] === 'pendente') {
             return ['sucesso' => false, 'mensagem' => 'Cadastro aguardando aprovação do Administrador.'];
         }
 
         if ($usuario['status'] === 'rejeitado') {
-            return ['sucesso' => false, 'mensagem' => 'Cadastro rejeitado. Entre em contato com o NPI.'];
+            return ['sucesso' => false, 'mensagem' => 'Cadastro rejeitado. Entre em contato com o ' . nomeUnidadeResponsavel() . '.'];
         }
 
         if ((int) $usuario['ativo'] === 0) {
-            return ['sucesso' => false, 'mensagem' => 'Cadastro suspenso. Entre em contato com o NPI.'];
+            return ['sucesso' => false, 'mensagem' => 'Cadastro suspenso. Entre em contato com o ' . nomeUnidadeResponsavel() . '.'];
         }
 
         return [

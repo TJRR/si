@@ -6,13 +6,14 @@
     <div class="site-page">
         <header class="site-header">
             <div class="site-header-inner">
-                <img src="<?php echo htmlspecialchars(logoAtual(), ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR" class="site-logo">
+                <img src="<?php echo htmlspecialchars(logoAtual(), ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars('Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="site-logo">
                 <nav class="site-nav">
                     <a href="<?php echo url('edicoes/index'); ?>">Edições Anteriores</a>
                     <a href="<?php echo url('auth/login'); ?>" class="btn btn-bordered">Entrar</a>
                 </nav>
             </div>
         </header>
+        <?php include __DIR__ . '/_bloco_evento.php'; ?>
         <section class="site-section" style="text-align:center;padding:4rem 1rem;">
             <h1>Nenhuma edição ativa no momento</h1>
             <p>Consulte o histórico de <a href="<?php echo url('edicoes/index'); ?>">edições anteriores</a> do Prêmio de Inovação.</p>
@@ -20,19 +21,21 @@
     </div>
 <?php else: ?>
 <?php
-$logoSrc = !empty($configVisual['logo_path'])
-    ? config('base_path') . '/assets/' . $configVisual['logo_path']
+// Fase 48B: cor e logo deixaram de vir da configuracao unica
+// (ConfiguracaoVisualRepository) e passam a vir do tema ativo (do usuario
+// autenticado, se houver, senao o padrao do sistema), mesma logica de
+// app/Views/layout.php e app/helpers.php::logoAtual().
+$temaAtivo = (new \App\Repositories\TemaVisualRepository())->resolverAtivo(\App\Core\Auth::autenticado() ? \App\Core\Auth::usuarioId() : null);
+$logoSrc = !empty($temaAtivo['logo_concurso_path'])
+    ? config('base_path') . '/assets/' . $temaAtivo['logo_concurso_path']
     : logoAtual();
 $temImagemCabecalho = !empty($configVisual['cabecalho_imagem_path']);
 $urlImagemCabecalho = $temImagemCabecalho ? config('base_path') . '/assets/' . $configVisual['cabecalho_imagem_path'] : null;
 $logoClaroSrc = !empty($configVisual['cabecalho_logo_claro_path']) ? config('base_path') . '/assets/' . $configVisual['cabecalho_logo_claro_path'] : null;
-$estiloCores = '';
 
-if ($configVisual !== false && $configVisual !== null) {
-    $estiloCores = '--cor-primaria-inicio:' . htmlspecialchars($configVisual['cor_primaria_inicio'], ENT_QUOTES, 'UTF-8') . ';'
-        . '--cor-primaria-fim:' . htmlspecialchars($configVisual['cor_primaria_fim'], ENT_QUOTES, 'UTF-8') . ';'
-        . (!empty($configVisual['cor_secundaria']) ? '--cor-secundaria:' . htmlspecialchars($configVisual['cor_secundaria'], ENT_QUOTES, 'UTF-8') . ';' : '');
-}
+$estiloCores = '--cor-primaria-inicio:' . htmlspecialchars($temaAtivo['cor_primaria_inicio'], ENT_QUOTES, 'UTF-8') . ';'
+    . '--cor-primaria-fim:' . htmlspecialchars($temaAtivo['cor_primaria_fim'], ENT_QUOTES, 'UTF-8') . ';'
+    . '--cor-secundaria:' . htmlspecialchars($temaAtivo['cor_secundaria'], ENT_QUOTES, 'UTF-8') . ';';
 ?>
 <div class="site-page" id="topo" style="<?php echo $estiloCores; ?>">
     <a href="#conteudo-principal" class="skip-link">Pular para o conteúdo principal</a>
@@ -50,6 +53,7 @@ if ($configVisual !== false && $configVisual !== null) {
 
         <?php include __DIR__ . '/_slideshow.php'; ?>
         <?php include __DIR__ . '/_banners.php'; ?>
+        <?php include __DIR__ . '/_bloco_evento.php'; ?>
         <?php
         // Fase 19 (#97): ordem definida pelo Admin (aba "Ordenação") -
         // cada partial ja se auto-esconde quando nao tem dado

@@ -116,8 +116,8 @@
 
                     <?php if ($etapa['modo_feedback_avaliador'] === 'criterio'): ?>
                         <?php $feedbackAtual = isset($notasAtuais[$criterio['id']]['feedback']) ? (string) $notasAtuais[$criterio['id']]['feedback'] : ''; ?>
-                        <button type="button" data-toggle-feedback><?php echo $feedbackAtual !== '' ? 'Ocultar feedback' : 'Adicionar feedback'; ?></button>
-                        <label>Feedback sobre "<?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>":<br>
+                        <button type="button" data-toggle-feedback><?php echo $feedbackAtual !== '' ? 'Ocultar comentário' : 'Adicionar comentário'; ?></button>
+                        <label>Comentário sobre "<?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>":<br>
                             <textarea name="feedback[<?php echo (int) $criterio['id']; ?>]" rows="4" <?php echo $feedbackAtual === '' ? 'hidden' : ''; ?> <?php echo $avaliacaoTravada ? 'readonly' : ''; ?>><?php echo htmlspecialchars($feedbackAtual, ENT_QUOTES, 'UTF-8'); ?></textarea>
                         </label>
                     <?php endif; ?>
@@ -127,7 +127,7 @@
 
         <?php if ($etapa['modo_feedback_avaliador'] === 'submissao'): ?>
             <section class="criterio-bloco">
-                <h3>Feedback desta submissão</h3>
+                <h3>Comentário desta submissão</h3>
                 <label>
                     <textarea name="feedback_submissao" id="campo-feedback-submissao" rows="6" <?php echo $avaliacaoTravada ? 'readonly' : ''; ?>><?php echo $feedbackSubmissaoAtual !== null ? htmlspecialchars($feedbackSubmissaoAtual['feedback'], ENT_QUOTES, 'UTF-8') : ''; ?></textarea>
                 </label>

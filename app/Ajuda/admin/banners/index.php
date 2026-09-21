@@ -6,13 +6,13 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Banners',
-    'resumo' => 'Faixas de texto exibidas logo abaixo do slideshow, na home.',
+    'titulo' => 'Faixas',
+    'resumo' => 'Faixas de texto exibidas logo abaixo do carrossel de imagens, na página inicial.',
     'operacoes' => [
         [
-            'nome' => '+ Novo / Editar / Remover',
+            'nome' => '+ Nova / Editar / Remover',
             'icone' => 'editar',
-            'como' => 'CRUD do banner.',
+            'como' => 'Criar, editar e remover a faixa.',
         ],
         [
             'nome' => 'Reordenar',

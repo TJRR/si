@@ -2,13 +2,13 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Editar documento — <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Editar documento: <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
 <?php endif; ?>
 
-<p><small>Aqui só é possível corrigir Tipo, Trilha e Título — para trocar o arquivo, use "+ Novo documento" (vira uma nova versão).</small></p>
+<p><small>Aqui só é possível corrigir Tipo, Trilha e Título: para trocar o arquivo, use "+ Novo documento" (vira uma nova versão).</small></p>
 
 <form method="post" action="<?php echo url('documentos/editar/' . (int) $documento['id']); ?>"><?= campoCsrf() ?>
     <label>Tipo:
@@ -20,9 +20,9 @@
         </select>
     </label><br>
 
-    <label>Trilha (opcional — deixe em branco se o documento vale para todo o concurso):
+    <label>Trilha (opcional; deixe em branco se o documento vale para todo o concurso):
         <select name="trilha_id">
-            <option value="">— Todo o concurso —</option>
+            <option value="">Todo o concurso</option>
             <?php foreach ($trilhas as $trilha): ?>
                 <option value="<?php echo (int) $trilha['id']; ?>" <?php echo (int) $documento['trilha_id'] === (int) $trilha['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?></option>
             <?php endforeach; ?>

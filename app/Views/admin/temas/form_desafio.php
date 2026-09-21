@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1><?php echo $desafio === null ? 'Novo desafio' : 'Editar desafio'; ?> — <?php echo htmlspecialchars($tema['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1><?php echo $desafio === null ? 'Novo desafio' : 'Editar desafio'; ?>: <?php echo htmlspecialchars($tema['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -16,7 +16,7 @@
 
     <label>Ícone do desafio (opcional, independente do ícone do Tema):
         <select name="icone" <?php echo $desabilitado; ?>>
-            <option value="">— Nenhum —</option>
+            <option value="">Nenhum</option>
             <?php foreach (\App\Repositories\TemaRepository::ICONES_DISPONIVEIS as $valorOpcao => $rotuloOpcao): ?>
                 <option value="<?php echo $valorOpcao; ?>" <?php echo ($desafio !== null && $desafio['icone'] === $valorOpcao) ? 'selected' : ''; ?>><?php echo $rotuloOpcao; ?></option>
             <?php endforeach; ?>

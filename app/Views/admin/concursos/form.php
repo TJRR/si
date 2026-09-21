@@ -32,7 +32,7 @@
         <input type="date" name="data_fim" value="<?php echo htmlspecialchars($concurso !== null ? (string) $concurso['data_fim'] : '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $desabilitado; ?>>
     </label><br>
 
-    <label>Status:
+    <label>Situação:
         <select name="status" <?php echo $desabilitado; ?>>
             <?php $statusAtual = $concurso !== null ? $concurso['status'] : 'rascunho'; ?>
             <option value="rascunho" <?php echo $statusAtual === 'rascunho' ? 'selected' : ''; ?>>Rascunho</option>

@@ -134,12 +134,12 @@ class ApresentacaoPitchController extends Controller
         $resultado = $this->googleSync->criar(
             $emailOrganizador,
             [
-                'titulo' => 'Apresentação de pitch — ' . ($equipe !== null ? $equipe['nome_equipe'] : 'Equipe #' . $equipeId),
+                'titulo' => 'Apresentação de pitch: ' . ($equipe !== null ? $equipe['nome_equipe'] : 'Equipe #' . $equipeId),
                 'descricao' => 'Apresentação de pitch da Etapa 3 (' . $etapa['nome'] . ").\n\nDetalhes no sistema: " . urlAbsoluta('apresentacaoPitch/index/' . $etapaId),
                 'data_inicio' => $slot['data_inicio'],
                 'data_fim' => $slot['data_fim'],
             ],
-            'Apresentações de pitch — ' . $etapa['nome']
+            'Apresentações de pitch: ' . $etapa['nome']
         );
 
         if ($resultado === null) {

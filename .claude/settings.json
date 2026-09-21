@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/f3011432/Code/NPI/si/.claude/hooks/bloquear_referencia_fase.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 /home/f3011432/Code/NPI/si/.claude/hooks/bloquear_nominizacao_hardcoded.py"
+          }
+        ]
+      }
+    ]
+  }
+}

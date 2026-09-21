@@ -27,7 +27,7 @@
                 <?php elseif (!empty($reserva['integracao_google']) && !empty($reserva['meet_pendente'])): ?>
                     <span class="status-pill laranja">Gerando sala...</span>
                 <?php else: ?>
-                    —
+                    Não disponível
                 <?php endif; ?>
             </td>
             <td><?php echo htmlspecialchars((string) $reserva['observacao'], ENT_QUOTES, 'UTF-8'); ?></td>

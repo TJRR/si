@@ -6,7 +6,7 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Pergunta do FAQ — novo/editar',
+    'titulo' => 'Pergunta do FAQ: novo/editar',
     'resumo' => 'Texto de uma pergunta/resposta do banco global. A mesma tela atende o cadastro de uma pergunta nova e a edição de uma já existente.',
     'operacoes' => [
         [

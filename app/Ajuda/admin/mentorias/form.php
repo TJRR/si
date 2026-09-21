@@ -6,12 +6,12 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Mentoria — novo horário / edição',
-    'resumo' => 'Cadastro de um horário de mentoria 1:1. A mesma tela atende a criação de um horário novo e a edição de um horário já criado; o que muda entre as duas está descrito em "Editar / Remover".',
+    'titulo' => 'Mentoria: novo horário / edição',
+    'resumo' => 'Cadastro de um horário de mentoria. A mesma tela atende a criação de um horário novo e a edição de um horário já criado; o que muda entre as duas está descrito em "Editar / Remover".',
     'operacoes' => [
         [
             'nome' => 'Mentor',
-            'como' => 'Ao trocar o mentor selecionado, a elegibilidade para integração com Google Agenda é recalculada automaticamente (via JavaScript, sem recarregar a página).',
+            'como' => 'Ao trocar o mentor selecionado, a elegibilidade para integração com Google Agenda é recalculada automaticamente, sem precisar recarregar a página.',
         ],
         [
             'nome' => 'Datas',
@@ -19,19 +19,19 @@ return [
         ],
         [
             'nome' => 'Restringir a quem está habilitado à etapa',
-            'como' => 'Opcional. "Aberto a todos" (padrão) mantém o compromisso visível para todas as equipes do concurso. Escolhendo uma etapa, só enxerga e se inscreve a equipe habilitada a ela — o mesmo critério que libera a submissão: estar classificada na etapa anterior. Como etapa pertence a uma trilha, escolher uma etapa restringe o compromisso àquela trilha. Enquanto o resultado da etapa anterior não for publicado, ninguém vê o compromisso. Etapas que não restringem ninguém (a primeira da trilha, ou aquelas cuja anterior não é avaliada por avaliadores) aparecem na lista marcadas como "(não restringe)".',
+            'como' => 'Opcional. "Aberto a todos" (padrão) mantém o compromisso visível para todas as equipes do concurso. Escolhendo uma etapa, só enxerga e se inscreve a equipe habilitada a ela, pelo mesmo critério que libera a submissão: estar classificada na etapa anterior. Como etapa pertence a uma trilha, escolher uma etapa restringe o compromisso àquela trilha. Enquanto o resultado da etapa anterior não for publicado, ninguém vê o compromisso. Etapas que não restringem ninguém (a primeira da trilha, ou aquelas cuja anterior não é avaliada por avaliadores) aparecem na lista marcadas como "(não restringe)".',
         ],
         [
             'nome' => 'Integrar com Google Agenda',
-            'como' => 'Ver conceito abaixo — só habilitado para mentores com e-mail @tjrr.jus.br, e mutuamente exclusivo com o link manual.',
+            'como' => 'Ver conceito abaixo. Só habilitado para mentores com e-mail @tjrr.jus.br, e mutuamente exclusivo com o hiperlink manual.',
         ],
         [
-            'nome' => 'Link Meet manual',
+            'nome' => 'Hiperlink do Google Meet',
             'como' => 'Só usado quando a integração está desmarcada.',
         ],
         [
             'nome' => 'Editar / Remover',
-            'como' => 'Só antes da data de início. A partir do horário marcado, o compromisso não pode mais ser alterado nem removido. Na edição, o mentor e a integração com o Google Agenda não mudam — para trocar qualquer um dos dois, remova e crie outro. A equipe que já reservou é avisada por notificação e e-mail apenas quando o início ou o fim mudam de fato; alterar só o vínculo de etapa, o link ou a observação não dispara aviso nenhum.',
+            'como' => 'Só antes da data de início. A partir do horário marcado, o compromisso não pode mais ser alterado nem removido. Na edição, o mentor e a integração com o Google Agenda não mudam. Para trocar qualquer um dos dois, remova e crie outro. A equipe que já reservou é avisada por notificação e e-mail apenas quando o início ou o fim mudam de fato; alterar só o vínculo de etapa, o hiperlink ou a observação não dispara aviso nenhum.',
         ],
     ],
     'conceitos' => ['integracao_google_agenda'],

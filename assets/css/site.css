@@ -307,19 +307,24 @@ html {
     display: none;
 }
 
-.site-header-com-imagem .site-header-nav .site-logo-solido {
+/* Fase 48B (correcao pos-teste de fumaca): condicionado a
+   site-header-com-logo-clara (so' existe quando ha' logo clara de verdade),
+   nao mais so' site-header-com-imagem - antes, com imagem de fundo mas SEM
+   logo clara cadastrada, a logo normal ficava escondida sem nenhuma
+   substituta, sumindo o cabecalho inteiro sem logo nenhuma. */
+.site-header-com-logo-clara .site-header-nav .site-logo-solido {
     display: none;
 }
 
-.site-header-com-imagem .site-header-nav .site-logo-claro {
+.site-header-com-logo-clara .site-header-nav .site-logo-claro {
     display: block;
 }
 
-.site-header-com-imagem .site-header-nav.site-header-nav-fixa .site-logo-claro {
+.site-header-com-logo-clara .site-header-nav.site-header-nav-fixa .site-logo-claro {
     display: none;
 }
 
-.site-header-com-imagem .site-header-nav.site-header-nav-fixa .site-logo-solido {
+.site-header-com-logo-clara .site-header-nav.site-header-nav-fixa .site-logo-solido {
     display: block;
 }
 
@@ -1078,10 +1083,34 @@ body.admin-page a.btn-icone:focus {
     margin-bottom: 1rem;
 }
 
+/* Fase 41 (correcao pos-teste de fumaca): botoes de acesso/cadastro da
+   tela de entrada do Evento (publico/evento_inscricao.php), centralizados
+   e empilhados um por linha - separa "Cadastro" (quem ainda nao tem conta)
+   de "Acesso" (quem ja' esta' inscrito), que antes apareciam misturados. */
+.site-botoes-empilhados {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: center;
+    margin: 1.5rem 0;
+}
+
+.site-botoes-empilhados h3 {
+    margin: 0.5rem 0 0;
+}
+
+.site-botoes-empilhados .btn {
+    width: 100%;
+    max-width: 320px;
+    box-sizing: border-box;
+}
+
 .site-form-page input[type="text"],
 .site-form-page input[type="number"],
 .site-form-page input[type="email"],
 .site-form-page input[type="url"],
+.site-form-page input[type="tel"],
 .site-form-page select,
 .site-form-page textarea {
     width: 100%;
@@ -1092,6 +1121,162 @@ body.admin-page a.btn-icone:focus {
     border-radius: 4px;
 }
 
+/* Fase 49B (achado do teste de fumaça): sem isto, cada <label>Texto:
+   <input></label> ficava com o texto e o campo colados um no outro, e o
+   campo "Telefone para contato" (input[type="tel"], que faltava na lista
+   acima) ficava ao lado do texto em vez de quebrar como os demais - o
+   navegador só quebra a linha quando o filho tem width:100%, então um
+   type sem essa regra herdava o comportamento inline padrão de <label>. */
+.site-form-page label {
+    display: block;
+    margin-bottom: 0.85rem;
+}
+
+/* Fase 49B (achado do usuário): tela de avaliação de Trabalhos - nota por
+   critério como range (0 até a nota máxima do critério, passo de 0,01),
+   em vez de campo numérico livre, e a descrição de cada critério vira um
+   texto discreto por trás de um ícone de ajuda, em vez de sempre visível
+   solto na tela. */
+.avaliacao-criterio {
+    margin-bottom: 1.5rem;
+}
+
+.avaliacao-criterio-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.35rem;
+}
+
+.avaliacao-criterio-cabecalho label {
+    margin-bottom: 0;
+    font-weight: 600;
+}
+
+.avaliacao-ajuda-botao {
+    flex-shrink: 0;
+    width: 1.35rem;
+    height: 1.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--cor-borda);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--cor-texto-suave);
+    padding: 0;
+    cursor: pointer;
+}
+
+.avaliacao-ajuda-texto {
+    font-size: 0.85rem;
+    background: rgba(0, 0, 0, 0.06);
+    border-left: 3px solid var(--cor-terciaria);
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    margin: 0 0 0.6rem;
+}
+
+.avaliacao-criterio-controle {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.avaliacao-criterio-range {
+    display: block;
+    width: 100%;
+    accent-color: var(--cor-terciaria);
+}
+
+/* Fase 49B (achado do usuário): variante SOLIDA do .btn (fundo em degrade
+   sempre visível, não só no hover/foco) - para o botão de baixar o
+   documento, que precisa se destacar como ação principal do cartão, não
+   como convite discreto de navegação. */
+.btn-solido {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--cor-branco);
+}
+
+.btn-solido::after {
+    opacity: 0;
+}
+
+.avaliacao-download-linha {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.avaliacao-edital-botao {
+    flex-shrink: 0;
+    width: 2.6rem;
+    height: 2.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 2px solid var(--cor-primaria-fim);
+    background: transparent;
+    color: var(--cor-primaria-fim);
+    cursor: pointer;
+}
+
+/* Fase 49B: painel de consulta ao edital, mesmo mecanismo generico de
+   assets/js/painel-lateral.js (abre/fecha por id, reaproveita o backdrop
+   ja injetado por _menu_painel.php nesta pagina) - so' muda a POSICAO
+   (sobe do fundo da tela em vez de entrar pela lateral), variante que
+   soma-se a .site-painel-lateral no mesmo elemento. Seletor composto para
+   nao depender da ordem das regras no arquivo. */
+.site-painel-lateral.site-painel-fundo {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    height: auto;
+    max-height: 80vh;
+    border-radius: 16px 16px 0 0;
+    transform: translateY(100%);
+}
+
+.site-painel-lateral.site-painel-fundo.aberto {
+    transform: translateY(0);
+}
+
+.avaliacao-criterio-numero {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.avaliacao-numero-botao {
+    flex-shrink: 0;
+    width: 2.2rem;
+    height: 2.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--cor-borda);
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.avaliacao-criterio-max {
+    flex-shrink: 0;
+    opacity: 0.75;
+    font-size: 0.85rem;
+}
 
 /* Desktop */
 @media (min-width: 768px) {
@@ -1256,8 +1441,12 @@ body.admin-page button.topbar-icone[hidden] {
     text-align: center;
 }
 
+/* Fase 48B (correcao pos-teste de fumaca): antes usava display:none/block
+   (sem nenhuma transicao), diferente do efeito ja usado no menu do app
+   (.app-menu-lateral, escala + opacidade) - o usuario nao conseguia
+   perceber se eram o mesmo efeito porque um deles simplesmente nao tinha
+   nenhum. Agora os dois usam exatamente o mesmo mecanismo. */
 .notificacoes-sino-painel {
-    display: none;
     position: absolute;
     right: 0;
     top: calc(100% + 8px);
@@ -1268,10 +1457,17 @@ body.admin-page button.topbar-icone[hidden] {
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     z-index: 50;
+    transform-origin: top right;
+    transform: scale(0.95);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.18s ease, opacity 0.18s ease, visibility 0.18s;
 }
 
 .notificacoes-sino-painel.aberto {
-    display: block;
+    transform: scale(1);
+    opacity: 1;
+    visibility: visible;
 }
 
 .notificacoes-sino-cabecalho {
@@ -1346,6 +1542,36 @@ body.admin-page button.topbar-icone[hidden] {
     text-align: center;
     font-size: 0.85rem;
     color: var(--cor-texto-suave);
+}
+
+/* Fase 44: os botoes de acao dentro do dropdown (marcar lida/marcar todas)
+   usam .btn-icone, que so' tem estilo sob o seletor "body.admin-page" (ver
+   acima) - o dropdown passa a aparecer tambem dentro do app do evento
+   (body.app-evento-page, nunca body.admin-page). Regra propria, restrita ao
+   proprio dropdown (sempre fundo branco em qualquer contexto que o inclua),
+   corrige isso preventivamente. Especificidade menor que a regra do admin
+   (1 classe+elemento vs 2 classes+elemento) - onde as duas se aplicam
+   (dentro do painel administrativo), a regra do admin continua vencendo,
+   sem mudar nada la'. */
+.notificacoes-sino-painel button.btn-icone {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    background: var(--cor-branco);
+    color: var(--cor-texto-suave);
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.notificacoes-sino-painel button.btn-icone:hover,
+.notificacoes-sino-painel button.btn-icone:focus {
+    background: var(--cor-fundo-alt);
+    color: var(--cor-texto);
 }
 
 body.admin-page .admin-tabs {
@@ -1569,8 +1795,13 @@ body.admin-page .status-avaliacao.pendente {
 
 /* Pill de status generico (mesma tecnica de .status-avaliacao, mas para
    homologacao de equipe/integrante em vez de avaliacao) - Fase 15,
-   tela unica do participante. */
-.status-pill {
+   tela unica do participante. Fase 49B: .selo-situacao e' o mesmo
+   componente com nome so' em portugues (o hook de linguagem de interface
+   bloqueia a palavra "status" em arquivo novo de app/Views), usado pelas
+   telas de Trabalhos - mesmas regras via seletor combinado, sem duplicar
+   declaracao. */
+.status-pill,
+.selo-situacao {
     display: inline-block;
     padding: 0.2rem 0.6rem;
     border-radius: 12px;
@@ -1578,23 +1809,34 @@ body.admin-page .status-avaliacao.pendente {
     font-weight: 600;
 }
 
-.status-pill.verde {
+.status-pill.verde,
+.selo-situacao.verde {
     background: #e3f6e8;
     color: #1e7d3c;
 }
 
-.status-pill.laranja {
+.status-pill.laranja,
+.selo-situacao.laranja {
     background: #fdf1dc;
     color: #a0630d;
 }
 
-.status-pill.vermelho {
+.status-pill.vermelho,
+.selo-situacao.vermelho {
     background: #fbe4e4;
     color: #a3242c;
 }
 
+/* Fase 49B: texto de alerta simples (sem fundo/pilula), mesma cor de
+   .status-pill.vermelho - usado em avisos administrativos curtos (ex.:
+   quantidade de avaliadores designados abaixo do configurado). */
+.texto-alerta {
+    color: #a3242c;
+}
+
 /* Fase 19 (#101): azul piscina para o status "Futuro" do cronograma. */
-.status-pill.azul {
+.status-pill.azul,
+.selo-situacao.azul {
     background: #d4f4f9;
     color: #0f7a8c;
 }
@@ -1603,12 +1845,14 @@ body.admin-page .status-avaliacao.pendente {
    do TJRR agir) e roxo pra "esclarecimento solicitado" (bola com o lider,
    nao com um atendente especifico - sinal visualmente diferente de
    "escalado", que ja usa laranja). */
-.status-pill.cinza {
+.status-pill.cinza,
+.selo-situacao.cinza {
     background: #e8e8ea;
     color: #55585c;
 }
 
-.status-pill.roxo {
+.status-pill.roxo,
+.selo-situacao.roxo {
     background: #ede4fb;
     color: #6b3fa0;
 }
@@ -4582,4 +4826,578 @@ a.status-pill {
 .seguranca-teste input[type="email"] {
     max-width: 320px;
     margin-right: 0.5rem;
+}
+
+/* Fase 41: aparencia de aplicativo (fundo colorido, app-bar compacta, menu
+   estilo "bottom sheet") - so' nas telas do fluxo do Evento (classe
+   .app-evento-page no <body>, ver $ehAppEvento em app/Views/layout.php),
+   para diferenciar visualmente da navegacao web comum (fundo branco).
+   Classes proprias (.app-bar-* e .app-menu-*), deliberadamente SEM reaproveitar
+   .site-header/.site-nav/.site-painel-lateral do sistema publico: essas
+   carregam um comportamento responsivo pensado pro menu da HOME
+   (@media max-width:780px esconde .site-nav inteiro por padrao, esperando
+   um .site-menu-toggle proprio pra reabrir) - reaproveitar a mesma classe
+   fazia o botao de menu do app sumir em telas pequenas sem nenhum jeito de
+   reabrir (achado real do teste de fumaca desta fase). Cores vem do tema
+   ativo (TemaVisualRepository, Fase 48B - --cor-primaria-inicio/terciaria/
+   secundaria/destaque-app). --app-raio: raio de borda unico para todo
+   elemento do app (site-form-page, admin-card, input, botao), so' consistencia
+   visual, nao carrega cor nenhuma. */
+body.app-evento-page {
+    background: linear-gradient(160deg, var(--cor-primaria-inicio), var(--cor-terciaria));
+    min-height: 100vh;
+    --app-raio: 14px;
+}
+
+/* Fase 48B (correcao pos-teste de fumaca): sem padding lateral e gap menor
+   entre os elementos, para sobrar mais espaco para o titulo - antes disso,
+   junto com o 3o botao (ajuda) que existia aqui, o nome do evento ficava
+   cortado cedo demais em telas estreitas; o botao de ajuda saiu totalmente
+   da app-bar, virou parte do cartao de conteudo (ver .app-ajuda-card). */
+.app-bar {
+    position: relative;
+    z-index: 51;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 0;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.app-bar-icone {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    flex-shrink: 0;
+    object-fit: cover;
+}
+
+.app-bar-titulo {
+    flex: 1;
+    min-width: 0;
+    color: var(--cor-branco);
+    font-family: var(--fonte-titulo);
+    font-weight: 700;
+    font-size: 1.05rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.app-bar-botao {
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: var(--cor-branco);
+    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* Fase 48B (correcao pos-teste de fumaca): icone de ajuda ancorado no canto
+   do CARTAO de conteudo (.site-form-page, que ganha position:relative
+   abaixo) - mesmo mecanismo de posicionamento da tela de login
+   (.guest-ajuda-botao, ancorado no .guest-card), nao da tela inteira.
+   Pequeno e com fundo translucido (nao solido), consistente com os outros
+   botoes do app sobre fundo colorido (.app-bar-botao). Duas tentativas
+   anteriores (dentro do cabecalho, e um icone fixo na tela) falharam: a
+   primeira cortava o nome do evento, a segunda colidia com o botao de
+   WhatsApp (.site-whatsapp-flutuante, mesmo canto inferior direito). */
+.app-ajuda-card {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 5;
+    width: 1.75rem;
+    height: 1.75rem;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--cor-destaque-app-texto);
+    padding: 0;
+    cursor: pointer;
+}
+
+/* Fase 48B (correcao pos-teste de fumaca): antes o card so' arredondava os
+   cantos de CIMA e ocupava quase 100% da altura da tela
+   (min-height: calc(100vh - 76px)), sem nenhuma margem inferior - em
+   qualquer tela onde o conteudo nao enchia o viewport inteiro isso escondia
+   o efeito de "flutuar" sobre o fundo em degrade (nunca sobrava fundo
+   visivel embaixo/nas laterais para mostrar o arredondamento e a sombra).
+   Agora e' margem em volta (todos os lados) + arredondamento nos 4 cantos +
+   sombra sem offset negativo (elevacao percebida em qualquer direcao), com
+   a altura definida pelo proprio conteudo, nunca forcada. */
+body.app-evento-page .site-form-page {
+    position: relative;
+    background: var(--cor-destaque-app);
+    color: var(--cor-destaque-app-texto);
+    border-radius: var(--app-raio);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.25);
+    margin: 0.75rem 0.75rem 1.5rem;
+    padding: 1.75rem 1.5rem;
+}
+
+body.app-evento-page .site-form-page h1,
+body.app-evento-page .site-form-page h2,
+body.app-evento-page .site-form-page h3,
+body.app-evento-page .site-form-page h4,
+body.app-evento-page .site-form-page p,
+body.app-evento-page .site-form-page li {
+    color: var(--cor-destaque-app-texto);
+}
+
+body.app-evento-page .site-form-page a:not(.btn) {
+    color: var(--cor-destaque-app-texto);
+    text-decoration: underline;
+}
+
+/* Fase 48B: o .admin-card dentro do app deixou de ter fundo solido proprio
+   (era uma 3a camada de cor por cima do fundo ja claro do tema - com
+   contraste baixo demais nos temas mais claros, ex.: Verde #EAF7EF, achado
+   ao revisar o plano com o usuario). So' 2 camadas de cor no total: fundo em
+   degrade (body) e area de conteudo clara (.site-form-page, ambos abaixo).
+   O card herda o mesmo fundo/texto do pai e ganha so' sombra + borda sutil
+   para indicar elevacao, sem introduzir nenhuma cor nova. A cor do TEXTO
+   continua calculada automaticamente por luminancia (corContrastante(),
+   app/helpers.php, --cor-destaque-app-texto), garantindo contraste legivel
+   qualquer que seja o tema escolhido. */
+body.app-evento-page .site-form-page .admin-card {
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border-radius: var(--app-raio);
+}
+
+body.app-evento-page .site-form-page .admin-card,
+body.app-evento-page .site-form-page .admin-card p,
+body.app-evento-page .site-form-page .admin-card h1,
+body.app-evento-page .site-form-page .admin-card h2,
+body.app-evento-page .site-form-page .admin-card h3,
+body.app-evento-page .site-form-page .admin-card h4,
+body.app-evento-page .site-form-page .admin-card ul,
+body.app-evento-page .site-form-page .admin-card li,
+body.app-evento-page .site-form-page .admin-card strong {
+    color: var(--cor-destaque-app-texto);
+}
+
+/* Fase 42: a borda entre itens de .cartao-credenciamento-dados (definida em
+   rgba branco fixo, pensada pro fundo escuro do .site-form-page) precisa de
+   um tom que funcione tambem sobre o fundo CLARO do .admin-card dentro do
+   app - sem isto, ficava quase invisivel (baixo contraste) num fundo claro. */
+body.app-evento-page .site-form-page .admin-card .cartao-credenciamento-dados li {
+    border-bottom-color: rgba(0, 0, 0, 0.12);
+}
+
+@media (min-width: 700px) {
+    body.app-evento-page .site-form-page {
+        margin: 1.5rem auto 2rem;
+    }
+}
+
+/* Fase 42 (correcao pos-teste de fumaca): cartao unico de "Minha inscricao"
+   (nome + selo + QR + codigo + dados), reaproveitando o .admin-card ja
+   escurecido/clareado pelo bloco acima (var(--cor-destaque-app)) - nao
+   inventa nova cor de fundo, so' reorganiza o CONTEUDO dentro dele. App-bar
+   e fundo externo (.site-form-page, cor terciaria) ficam intocados. */
+.cartao-credenciamento {
+    text-align: center;
+}
+
+.cartao-credenciamento-nome {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+}
+
+.cartao-credenciamento-selo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+}
+
+.cartao-credenciamento-qr {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.cartao-credenciamento-qr-wrap {
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+}
+
+.cartao-credenciamento-qr svg {
+    width: 220px;
+    height: 220px;
+    max-width: 100%;
+    display: block;
+}
+
+/* Fase 42 (correcao pos-teste de fumaca #2): substitui o botao de texto
+   "Aumentar brilho para leitura" por um icone discreto ancorado no canto do
+   QR - mesma funcionalidade (abre o overlay em tela cheia, ver
+   assets/js/brilho-cracha.js), interface mais limpa. */
+.cartao-credenciamento-zoom {
+    position: absolute;
+    bottom: -6px;
+    right: -6px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: var(--cor-primaria-inicio);
+    color: var(--cor-branco);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.cartao-credenciamento-codigo {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin: 0 0 1.25rem;
+}
+
+.cartao-credenciamento-dados {
+    text-align: left;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.25rem;
+}
+
+.cartao-credenciamento-dados li {
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.cartao-credenciamento-dados li:last-child {
+    border-bottom: none;
+}
+
+/* Overlay de "aumentar brilho": fundo branco puro em tela cheia com o QR
+   ampliado - nao existe API de navegador pra controlar o brilho real do
+   hardware, isto so' maximiza a luminancia que a propria tela emite atras
+   do QR (assets/js/brilho-cracha.js). */
+.overlay-brilho-qr {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: #fff;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.overlay-brilho-qr:not([hidden]) {
+    display: flex;
+}
+
+.overlay-brilho-qr svg {
+    width: min(80vw, 360px);
+    height: min(80vw, 360px);
+}
+
+/* Fase 43: componente de leitura de codigo (camera + digitacao manual),
+   assets/js/leitor-codigo.js. O botao "Usar a camera" usa .btn (mesma
+   aparencia dos demais botoes do sistema) - .btn define display:inline-block
+   com a MESMA especificidade de [hidden] do stylesheet do agente de usuario,
+   e como .btn vem depois no arquivo ele venceria hidden por ordem (mesmo bug
+   ja documentado na Fase 42 com .overlay-brilho-qr). Por isso a regra abaixo
+   usa uma classe extra propria (maior especificidade) em vez de depender so
+   de [hidden]. */
+.leitor-codigo-video-wrap {
+    margin: 1rem 0;
+}
+
+.leitor-codigo-video-wrap:not([hidden]) {
+    display: block;
+}
+
+.leitor-codigo-video {
+    width: 100%;
+    max-width: 360px;
+    border-radius: 12px;
+    background: #000;
+}
+
+.leitor-codigo-botao-camera[hidden] {
+    display: none;
+}
+
+.leitor-codigo-manual {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 1rem 0;
+}
+
+.leitor-codigo-manual label {
+    flex: 1 1 100%;
+}
+
+.leitor-codigo-input {
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    max-width: 140px;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--app-raio, 8px);
+    border: 1px solid var(--cor-borda, #ccc);
+}
+
+.leitor-codigo-resultado {
+    margin-top: 1rem;
+    font-size: 1rem;
+    padding: 0.6rem 1rem;
+}
+
+.leitor-codigo-resultado:not([hidden]) {
+    display: block;
+}
+
+/* Menu do aplicativo: dropdown ancorado no proprio botao hamburguer (dentro
+   de .app-bar, que e' position:relative com z-index acima do backdrop e do
+   menu) - abre logo abaixo dele, nunca o cobre, e o mesmo botao funciona
+   como alternancia (abrir/fechar, ver assets/js/painel-lateral.js). Efeito
+   deliberadamente diferente do painel lateral (desliza da direita) usado
+   pelo cronograma/ajuda da home publica - pedido explicito de nao repetir a
+   mesma linguagem visual da pagina web. */
+.app-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    background: transparent;
+    z-index: 49;
+    display: none;
+}
+
+.app-menu-backdrop.aberto {
+    display: block;
+}
+
+/* Fase 48B: fundo solido escuro (--cor-terciaria) virou fundo claro
+   (--cor-destaque-app, mesma cor da area de conteudo), com texto calculado
+   automaticamente por contraste - antes o menu ficava na mesma familia de
+   cor do resto do app, sem se destacar como uma camada propria "flutuando"
+   por cima; o box-shadow de elevacao ja existia e continua. */
+.app-menu-lateral {
+    position: absolute;
+    top: 100%;
+    right: 1rem;
+    width: 220px;
+    background: var(--cor-destaque-app);
+    color: var(--cor-destaque-app-texto);
+    border-radius: var(--app-raio, 14px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+    transform-origin: top right;
+    transform: scale(0.95);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.18s ease, opacity 0.18s ease, visibility 0.18s;
+    z-index: 50;
+    overflow: hidden;
+}
+
+.app-menu-lateral.aberto {
+    transform: scale(1);
+    opacity: 1;
+    visibility: visible;
+}
+
+.app-menu-corpo {
+    padding: 0.4rem 1rem;
+}
+
+.app-menu-corpo a,
+.app-menu-corpo button {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 0;
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    background: transparent;
+    color: var(--cor-destaque-app-texto);
+    text-decoration: none;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.app-menu-corpo a:last-child,
+.app-menu-corpo button:last-child {
+    border-bottom: none;
+}
+
+/* Item "Sair" diferenciado dos demais, na cor terciaria do tema. */
+.app-menu-corpo a.app-menu-sair {
+    color: var(--cor-terciaria);
+}
+
+/* Banner de instalacao - convite em destaque logo abaixo da app-bar,
+   escondido/mostrado via JS (assets/js/instalar-app.js) conforme o proprio
+   navegador libera a instalabilidade. Reaproveita a cor de destaque e o
+   contraste automatico ja configuraveis pelo Admin (Configuracoes > Tema,
+   --cor-destaque-app/--cor-destaque-app-texto). */
+.app-banner-instalar {
+    display: block;
+    width: calc(100% - 2rem);
+    max-width: 700px;
+    margin: 0 auto 0.75rem;
+    background: var(--cor-destaque-app);
+    color: var(--cor-destaque-app-texto);
+    border: none;
+    border-radius: var(--app-raio, 12px);
+    padding: 0.85rem 1.25rem;
+    font-family: var(--fonte-corpo);
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.app-banner-instalar[hidden] {
+    display: none;
+}
+
+/* Fase 48B: banner de status (sucesso/alerta/erro), reposicionado para
+   logo abaixo do cabecalho (ver _app_bar.php), sobre a camada de fundo em
+   degrade. Fundo continua claro (nao usa cor do tema, para nao competir
+   com o fundo em degrade atras) com uma faixa lateral na cor terciaria do
+   tema como acento de identidade; texto e icone mantem as 3 cores
+   semanticas ja usadas no resto do sistema (nao dependem so' da cor pra
+   comunicar o estado). */
+.app-flash {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: calc(100% - 2rem);
+    max-width: 700px;
+    margin: 0 auto 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--cor-branco);
+    border-left: 4px solid var(--cor-terciaria);
+    border-radius: var(--app-raio, 12px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    font-weight: 600;
+}
+
+.app-flash svg {
+    flex-shrink: 0;
+}
+
+.app-flash.sucesso {
+    color: #1e7d3c;
+}
+
+.app-flash.alerta {
+    color: #a0630d;
+}
+
+.app-flash.erro {
+    color: #a3242c;
+}
+
+/* Botao de acao principal dentro de um card do app (ex.: "Validar" no
+   leitor de codigo) - cor secundaria do tema, para se diferenciar do card
+   claro em que esta inserido, conforme pedido do usuario. */
+.app-btn-acao {
+    background: var(--cor-secundaria);
+    color: var(--cor-branco);
+    border: none;
+    border-radius: var(--app-raio, 12px);
+    padding: 0.7rem 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Fase 48B: amostra visual de um tema (degrade primaria/terciaria + cores
+   secundaria/destaque) nas telas de gestao de tema (admin) e de escolha de
+   tema (Meu Perfil) - cada cor chega via variavel CSS definida inline pela
+   view (ver app/Views/admin/tema/index.php e meuPerfil/index.php), nunca
+   hardcoded aqui. */
+.tema-amostra-degrade {
+    display: inline-block;
+    width: 48px;
+    height: 22px;
+    border-radius: 4px;
+    vertical-align: middle;
+    background: linear-gradient(90deg, var(--tema-amostra-inicio), var(--tema-amostra-fim));
+}
+
+.tema-amostra-cor {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    vertical-align: middle;
+    border: 1px solid #ccc;
+    background: var(--tema-amostra-cor);
+}
+
+.tema-escolha-lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.tema-escolha-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+}
+
+/* Fase 48 (correcao pos-teste de fumaca): lista de sugestoes do campo de
+   busca de usuario ja cadastrado (assets/js/busca-usuario.js), flutuando
+   sobre o restante do formulario. */
+.busca-usuario {
+    position: relative;
+    max-width: 30em;
+}
+
+.busca-usuario-resultados {
+    position: absolute;
+    z-index: 10;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    max-height: 12em;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.busca-usuario-resultados li {
+    padding: 0.5em 0.75em;
+    cursor: pointer;
+}
+
+.busca-usuario-resultados li:hover {
+    background: #f2f2f2;
 }

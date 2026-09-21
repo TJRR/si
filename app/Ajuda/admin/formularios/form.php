@@ -6,7 +6,7 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Formulário — novo/editar',
+    'titulo' => 'Formulário: novo/editar',
     'resumo' => 'Nome e descrição de um formulário dinâmico.',
     'operacoes' => [
         [

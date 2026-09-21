@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Editar equipe',
-    'resumo' => 'Dados gerais da equipe — só o líder tem acesso a esta tela (403 para os demais integrantes).',
+    'resumo' => 'Dados gerais da equipe: só o líder tem acesso a esta tela (acesso negado para os demais integrantes).',
     'operacoes' => [
         [
             'nome' => 'Nome / Vínculo institucional / Observações',

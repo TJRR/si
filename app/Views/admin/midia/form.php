@@ -35,7 +35,7 @@
 
     <label>Origem/edição (opcional, só para filtro):
         <select name="concurso_id">
-            <option value="">— Não vinculada —</option>
+            <option value="">Não vinculada</option>
             <?php foreach ($concursos as $concurso): ?>
                 <option value="<?php echo (int) $concurso['id']; ?>"><?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></option>
             <?php endforeach; ?>

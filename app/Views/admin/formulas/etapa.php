@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Fórmula de pontuação — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Fórmula de pontuação: <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('etapas/index/' . (int) $etapa['trilha_id']); ?>">Voltar às etapas</a></p>
 
@@ -19,18 +19,18 @@
 <?php endif; ?>
 
 <p>Define como a Nota da Etapa (NE) desta etapa é calculada, a partir das notas que serão lançadas para cada
-    critério. Os pesos já são conhecidos agora — embuta o peso de cada critério como número na própria expressão.</p>
+    critério. Os pesos já são conhecidos agora: embuta o peso de cada critério como número na própria expressão.</p>
 
 <?php if (empty($criteriosDaEtapa)): ?>
     <p>Nenhum critério cadastrado nesta etapa ainda. Cadastre os critérios em
         <a href="<?php echo url('criterios/index/' . (int) $etapa['id']); ?>">Critérios</a> antes de escrever a fórmula.</p>
 <?php else: ?>
-    <p>Variáveis disponíveis (código — nome — peso):</p>
+    <p>Variáveis disponíveis (código, nome, peso):</p>
     <ul>
         <?php foreach ($criteriosDaEtapa as $criterio): ?>
-            <li><code><?php echo htmlspecialchars($criterio['codigo'], ENT_QUOTES, 'UTF-8'); ?></code>
-                — <?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>
-                — peso <?php echo number_format((float) $criterio['peso'], 2, ',', '.'); ?></li>
+            <li><code><?php echo htmlspecialchars($criterio['codigo'], ENT_QUOTES, 'UTF-8'); ?></code>:
+                <?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>,
+                peso <?php echo number_format((float) $criterio['peso'], 2, ',', '.'); ?></li>
         <?php endforeach; ?>
     </ul>
 

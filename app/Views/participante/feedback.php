@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Notas e Feedback — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Notas e comentários da etapa <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('participante/index'); ?>">Voltar à minha inscrição</a></p>
 
@@ -29,14 +29,14 @@
                     <td>
                         <?php echo isset($notasPorCriterioEAvaliador[$criterioId][$ordinal])
                             ? htmlspecialchars((string) $notasPorCriterioEAvaliador[$criterioId][$ordinal], ENT_QUOTES, 'UTF-8')
-                            : '—'; ?>
+                            : 'Sem nota'; ?>
                     </td>
                 <?php endfor; ?>
                 <td>
                     <strong>
                         <?php echo isset($mediaPorCriterioId[$criterioId])
                             ? number_format($mediaPorCriterioId[$criterioId], $casasDecimais, ',', '')
-                            : '—'; ?>
+                            : 'Sem nota'; ?>
                     </strong>
                 </td>
             </tr>
@@ -50,7 +50,7 @@
 
 <?php if ($etapa['modo_feedback_avaliador'] === 'criterio'): ?>
     <?php if (empty($feedbacksPorCriterio)): ?>
-        <p>Nenhum feedback registrado para esta submissão.</p>
+        <p>Nenhum comentário registrado para esta submissão.</p>
     <?php else: ?>
         <?php foreach ($criterios as $criterio): ?>
             <?php if (empty($feedbacksPorCriterio[(int) $criterio['id']])): ?>
@@ -64,7 +64,7 @@
     <?php endif; ?>
 <?php else: ?>
     <?php if (empty($feedbacksPorSubmissao)): ?>
-        <p>Nenhum feedback registrado para esta submissão.</p>
+        <p>Nenhum comentário registrado para esta submissão.</p>
     <?php else: ?>
         <?php foreach ($feedbacksPorSubmissao as $texto): ?>
             <p><?php echo nl2br(htmlspecialchars($texto, ENT_QUOTES, 'UTF-8')); ?></p>

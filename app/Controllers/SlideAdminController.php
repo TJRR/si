@@ -56,7 +56,7 @@ class SlideAdminController extends Controller
 
         if ($slide === null) {
             http_response_code(404);
-            exit('Slide não encontrado.');
+            exit('Quadro não encontrado.');
         }
 
         $erro = null;
@@ -87,7 +87,7 @@ class SlideAdminController extends Controller
 
             $_SESSION['flash'] = 'Slide removido.';
         } catch (\PDOException $e) {
-            flashErro('Não foi possível remover o slide.');
+            flashErro('Não foi possível remover o quadro.');
         }
 
         $this->redirecionar('slides/index');
@@ -175,7 +175,7 @@ class SlideAdminController extends Controller
         $dados = $this->dadosComuns();
 
         if (!empty($dados['cta_titulo']) && empty($dados['cta_link'])) {
-            return 'Informe o link do botão (ou remova o título do botão) — o sistema não permite salvar um botão sem destino.';
+            return 'Informe o link do botão (ou remova o título do botão): o sistema não permite salvar um botão sem destino.';
         }
 
         $dados['imagem_desktop_path'] = $caminhoDesktop;
@@ -215,7 +215,7 @@ class SlideAdminController extends Controller
         $dados = $this->dadosComuns();
 
         if (!empty($dados['cta_titulo']) && empty($dados['cta_link'])) {
-            return 'Informe o link do botão (ou remova o título do botão) — o sistema não permite salvar um botão sem destino.';
+            return 'Informe o link do botão (ou remova o título do botão): o sistema não permite salvar um botão sem destino.';
         }
 
         $dados['imagem_desktop_path'] = $caminhoDesktop;

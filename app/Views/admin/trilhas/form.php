@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1><?php echo $trilha === null ? 'Nova trilha' : 'Editar trilha'; ?> — <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1><?php echo $trilha === null ? 'Nova trilha' : 'Editar trilha'; ?>: <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -25,7 +25,7 @@
     <label>Mínimo de integrantes homologados para a equipe contar como homologada:
         <input type="number" name="minimo_integrantes_homologados" min="1" value="<?php echo $trilha !== null ? (int) $trilha['minimo_integrantes_homologados'] : 1; ?>" <?php echo $somenteLeitura ? 'disabled' : ''; ?>>
     </label>
-    <p><small>Usado na página pública de equipes homologadas — defina aqui o critério de cada edital, sem depender de alteração de código.</small></p><br>
+    <p><small>Usado na página pública de equipes homologadas: defina aqui o critério de cada edital, sem depender de alteração de código.</small></p><br>
 
     <label>
         <input type="checkbox" name="ativo" value="1" <?php echo ($trilha === null || $trilha['ativo']) ? 'checked' : ''; ?> <?php echo $somenteLeitura ? 'disabled' : ''; ?>>

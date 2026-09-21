@@ -20,11 +20,11 @@
     </div>
 </div>
 
-<p>Origem: dúvida #<?php echo (int) $duvida['id']; ?> —
+<p>Origem: dúvida #<?php echo (int) $duvida['id']; ?> (
     <?php echo htmlspecialchars($duvida['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?> ·
     <?php echo htmlspecialchars($duvida['trilha_nome'], ENT_QUOTES, 'UTF-8'); ?> ·
-    <?php echo htmlspecialchars($duvida['concurso_nome'], ENT_QUOTES, 'UTF-8'); ?>.
-    A dúvida original e a resposta enviada à equipe <strong>não mudam</strong> — o que se cria aqui é um item novo e independente.</p>
+    <?php echo htmlspecialchars($duvida['concurso_nome'], ENT_QUOTES, 'UTF-8'); ?>).
+    A dúvida original e a resposta enviada à equipe <strong>não mudam</strong>: o que se cria aqui é uma pergunta frequente nova e independente.</p>
 
 <?php if (!empty($erro)): ?>
     <p class="flash-mensagem erro"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -45,8 +45,8 @@
 <div class="promover-faq-aviso atencao">
     <strong>Este texto vai para uma página pública.</strong>
     A dúvida foi escrita por um participante e pode conter nome da equipe, nome do projeto, dado pessoal e detalhe de submissão sob sigilo.
-    Reescreva a pergunta e a resposta em termos genéricos antes de salvar — o preenchimento abaixo é só um ponto de partida.
-    Anexos da dúvida e das respostas <strong>não</strong> acompanham o item de FAQ.
+    Reescreva a pergunta e a resposta em termos genéricos antes de salvar: o preenchimento abaixo é só um ponto de partida.
+    Anexos da dúvida e das respostas <strong>não</strong> acompanham a pergunta frequente.
 </div>
 
 <form method="post" action="<?php echo url('duvidaAdmin/promoverFaq/' . (int) $duvida['id']); ?>"><?= campoCsrf() ?>
@@ -60,7 +60,7 @@
     <p class="promover-faq-dica">
         Máximo de <?php echo (int) $limitePergunta; ?> caracteres.
         <?php if ($perguntaFoiCortada): ?>
-            <strong>O texto da dúvida era mais longo que isso e foi cortado no preenchimento</strong> — reescreva como uma pergunta curta e genérica.
+            <strong>O texto da dúvida era mais longo que isso e foi cortado no preenchimento</strong>: reescreva como uma pergunta curta e genérica.
         <?php endif; ?>
     </p>
 
@@ -71,16 +71,16 @@
 
     <fieldset class="promover-faq-destino">
         <legend>Destino</legend>
-        <p class="promover-faq-dica">Toda pergunta nasce obrigatoriamente no banco geral, que é acumulativo entre edições. Por isso existem só estas duas opções — não há uma terceira.</p>
+        <p class="promover-faq-dica">Toda pergunta nasce obrigatoriamente no banco geral, que é acumulativo entre edições. Por isso existem só estas duas opções: não há uma terceira.</p>
 
         <label>
             <input type="radio" name="destino" value="banco" <?php echo $entrada['ativar'] ? '' : 'checked'; ?>>
-            Só no banco geral — fica guardada, mas <strong>não aparece</strong> em nenhuma home até ser ativada.
+            Só no banco geral: fica guardada, mas <strong>não aparece</strong> em nenhuma home até ser ativada.
         </label><br>
 
         <label>
             <input type="radio" name="destino" value="ativar" <?php echo $entrada['ativar'] ? 'checked' : ''; ?>>
-            Banco geral <strong>e</strong> ativa na edição escolhida — passa a aparecer na home dessa edição.
+            Banco geral <strong>e</strong> ativa na edição escolhida: passa a aparecer na home dessa edição.
         </label><br>
 
         <label>Edição:
@@ -103,7 +103,7 @@
 
 <?php if (!empty($respostasAnteriores)): ?>
     <h2>Respostas anteriores desta dúvida</h2>
-    <p class="promover-faq-dica">Somente leitura — a dúvida foi reaberta e acumulou mais de uma resposta. Copie daqui o que quiser aproveitar.</p>
+    <p class="promover-faq-dica">Somente leitura: a dúvida foi reaberta e acumulou mais de uma resposta. Copie daqui o que quiser aproveitar.</p>
     <?php foreach ($respostasAnteriores as $anterior): ?>
         <div class="promover-faq-anterior">
             <p class="promover-faq-dica">

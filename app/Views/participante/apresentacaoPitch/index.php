@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Apresentação de pitch — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Apresentação de pitch da etapa <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('participante/index'); ?>">Voltar ao painel</a></p>
 
@@ -15,7 +15,7 @@
     <p>
         <strong><?php echo htmlspecialchars(formatarDataHora($reserva['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
         às <?php echo htmlspecialchars(formatarDataHora($reserva['data_fim']), ENT_QUOTES, 'UTF-8'); ?> <?php echo sufixoFusoHorario(); ?></strong>
-        — modalidade <?php echo $reserva['modalidade'] === 'online' ? 'online' : 'presencial'; ?>.
+        na modalidade <?php echo $reserva['modalidade'] === 'online' ? 'online' : 'presencial'; ?>.
     </p>
     <?php if ($reserva['modalidade'] === 'presencial'): ?>
         <p>Endereço: <?php echo htmlspecialchars((string) ($config['endereco_presencial'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
@@ -23,12 +23,16 @@
         <p><a href="<?php echo htmlspecialchars($reserva['link_meet'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer" class="btn-acao">Entrar na sala do Google Meet</a></p>
         <p><small>O convite também chega pela sua Google Agenda institucional.</small></p>
     <?php elseif (!empty($reserva['integracao_google']) && !empty($reserva['meet_pendente'])): ?>
-        <p>Gerando a sala do Google Meet — atualize esta página em alguns instantes.</p>
+        <p>Gerando a sala do Google Meet. Atualize esta página em alguns instantes.</p>
     <?php else: ?>
-        <p>O sistema ainda não conseguiu conectar com o Google Agenda — o link da sala será enviado assim que possível.</p>
+        <p>O sistema ainda não conseguiu conectar com o Google Agenda. O hiperlink da sala será enviado assim que possível.</p>
     <?php endif; ?>
 <?php elseif (!$dentroDaJanela): ?>
-    <p>A escolha de data e horário ainda não está aberta<?php echo $config !== null && !empty($config['janela_escolha_inicio']) ? (' — abre em ' . htmlspecialchars(formatarDataHora($config['janela_escolha_inicio']), ENT_QUOTES, 'UTF-8') . ' ' . sufixoFusoHorario()) : ''; ?>.</p>
+    <?php if ($config !== null && !empty($config['janela_escolha_inicio'])): ?>
+        <p>A escolha de data e horário ainda não está aberta. Abre em <?php echo htmlspecialchars(formatarDataHora($config['janela_escolha_inicio']), ENT_QUOTES, 'UTF-8'); ?> <?php echo sufixoFusoHorario(); ?>.</p>
+    <?php else: ?>
+        <p>A escolha de data e horário ainda não está aberta.</p>
+    <?php endif; ?>
 <?php elseif (empty($vagos)): ?>
     <p>Não há horários disponíveis no momento.</p>
 <?php else: ?>
@@ -41,7 +45,7 @@
             <td><?php echo htmlspecialchars(formatarDataHora($vaga['data_fim']), ENT_QUOTES, 'UTF-8'); ?></td>
             <td>
                 <select name="modalidade" form="reservar-<?php echo (int) $vaga['id']; ?>" required>
-                    <option value="">— escolha —</option>
+                    <option value="">Selecione a modalidade</option>
                     <option value="online">Online (Google Meet)</option>
                     <option value="presencial">Presencial</option>
                 </select>

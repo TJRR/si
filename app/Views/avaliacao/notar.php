@@ -118,7 +118,7 @@
                 </label>
 
                 <?php if ($etapa['modo_feedback_avaliador'] === 'criterio'): ?>
-                    <label>Feedback sobre "<?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>":<br>
+                    <label>Comentário sobre "<?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>":<br>
                         <textarea name="feedback[<?php echo (int) $criterio['id']; ?>]" rows="4" <?php echo $avaliacaoTravada ? 'readonly' : ''; ?>><?php echo isset($notasAtuais[$criterio['id']]['feedback']) ? htmlspecialchars((string) $notasAtuais[$criterio['id']]['feedback'], ENT_QUOTES, 'UTF-8') : ''; ?></textarea>
                     </label>
                 <?php endif; ?>
@@ -127,7 +127,7 @@
 
         <?php if ($etapa['modo_feedback_avaliador'] === 'submissao'): ?>
             <section class="criterio-bloco">
-                <h3>Feedback desta submissão</h3>
+                <h3>Comentário desta submissão</h3>
                 <label>
                     <textarea name="feedback_submissao" id="campo-feedback-submissao" rows="6" <?php echo $avaliacaoTravada ? 'readonly' : ''; ?>><?php echo $feedbackSubmissaoAtual !== null ? htmlspecialchars($feedbackSubmissaoAtual['feedback'], ENT_QUOTES, 'UTF-8') : ''; ?></textarea>
                 </label>

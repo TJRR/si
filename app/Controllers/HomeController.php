@@ -24,6 +24,7 @@ use App\Repositories\DuvidaRepository;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\EventoCronogramaRepository;
+use App\Repositories\EventoDivulgacaoRepository;
 use App\Repositories\FaqConcursoRepository;
 use App\Repositories\FormularioDinamicoRepository;
 use App\Repositories\HomeSecaoOrdemRepository;
@@ -45,10 +46,19 @@ class HomeController extends Controller
         $concursos = new ConcursoRepository();
         $concursoAtivo = $concursos->buscarAtivo();
 
+        // Fase 40: bloco de divulgacao do Evento na home - buscado ANTES do
+        // ramo "sem concurso ativo" de proposito. Evento foi desacoplado de
+        // Concurso justamente pra ter vida propria (pode ocorrer sem nenhum
+        // concurso em andamento) - e' exatamente nesse cenario que a
+        // divulgacao mais precisa aparecer, entao os dois ramos abaixo
+        // recebem $blocosEvento.
+        $blocosEvento = (new EventoDivulgacaoRepository())->listarAtivosParaHome();
+
         if ($concursoAtivo === null) {
             $this->renderizar('home/index', [
                 'concursoAtivo' => null,
-            ], 'Sistema de Gestão da Semana de Inovação e do Prêmio de Inovação do TJRR');
+                'blocosEvento' => $blocosEvento,
+            ], 'Sistema de Gestão da Semana de Inovação e do Prêmio de Inovação do ' . nomeInstituicao());
             return;
         }
 
@@ -285,6 +295,7 @@ class HomeController extends Controller
                 'menuRodape' => $menuRodape,
                 'slides' => (new SlideRepository())->listarAtivos(),
                 'banners' => (new BannerRepository())->listarAtivos(),
+                'blocosEvento' => $blocosEvento,
                 'blocoSobre' => $blocoSobre,
                 'blocoPremiacao' => $blocoPremiacao,
                 'blocosLivres' => $blocosLivres,
@@ -302,7 +313,7 @@ class HomeController extends Controller
                 'faqAtivas' => $faqAtivas,
                 'contato' => $contato,
             ],
-            'Sistema de Gestão da Semana de Inovação e do Prêmio de Inovação do TJRR'
+            'Sistema de Gestão da Semana de Inovação e do Prêmio de Inovação do ' . nomeInstituicao()
         );
     }
 

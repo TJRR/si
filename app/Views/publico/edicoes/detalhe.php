@@ -11,10 +11,10 @@ $rotulosTipoDocumento = [
 <div class="site-page">
     <header class="site-header">
         <div class="site-header-inner">
-            <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR" class="site-logo">
+            <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars('Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="site-logo">
             <nav class="site-nav">
                 <?php if (isset($ajudaHtml) && $ajudaHtml !== null): ?>
-                <button type="button" class="site-header-icone" title="Ajuda desta página" aria-label="Ajuda desta página" data-ajuda-titulo="<?php echo htmlspecialchars('Ajuda — ' . (string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?>" onclick="abrirModal(this.dataset.ajudaTitulo, document.getElementById('ajuda-painel-fonte').innerHTML)">
+                <button type="button" class="site-header-icone" title="Ajuda desta página" aria-label="Ajuda desta página" data-ajuda-titulo="<?php echo htmlspecialchars('Ajuda: ' . (string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?>" onclick="abrirModal(this.dataset.ajudaTitulo, document.getElementById('ajuda-painel-fonte').innerHTML)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <circle cx="12" cy="12" r="10"></circle>
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
@@ -63,7 +63,7 @@ $rotulosTipoDocumento = [
         <?php foreach ($vencedoresPorTrilha as $indiceGrupo => $grupo): ?>
         <div class="site-secao-publica <?php echo $indiceGrupo % 2 === 0 ? 'site-secao-publica-alt' : ''; ?>">
             <div class="site-secao-larga">
-                <h2 class="section-title"><?php echo htmlspecialchars($grupo['trilha']['nome'], ENT_QUOTES, 'UTF-8'); ?> — Vencedores</h2>
+                <h2 class="section-title"><?php echo htmlspecialchars($grupo['trilha']['nome'], ENT_QUOTES, 'UTF-8'); ?>: Vencedores</h2>
                 <div class="site-vencedores-grid">
                     <?php foreach ($grupo['vencedores'] as $vencedor): ?>
                         <div class="admin-card site-premio-card">
@@ -79,7 +79,7 @@ $rotulosTipoDocumento = [
                                 <div style="position:relative;width:100%;padding-top:56.25%;">
                                     <iframe src="https://www.youtube.com/embed/<?php echo htmlspecialchars($vencedor['youtube_id'], ENT_QUOTES, 'UTF-8'); ?>"
                                             style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
-                                            title="Vídeo de apresentação — <?php echo htmlspecialchars($vencedor['nome_equipe'] !== null ? $vencedor['nome_equipe'] : '', ENT_QUOTES, 'UTF-8'); ?>"
+                                            title="Vídeo de apresentação: <?php echo htmlspecialchars($vencedor['nome_equipe'] !== null ? $vencedor['nome_equipe'] : '', ENT_QUOTES, 'UTF-8'); ?>"
                                             allowfullscreen></iframe>
                                 </div>
                             <?php endif; ?>
@@ -99,7 +99,7 @@ $rotulosTipoDocumento = [
                 <?php foreach ($documentos as $documento): ?>
                     <li>
                         <a href="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $documento['arquivo_path'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">
-                            <?php echo htmlspecialchars((isset($rotulosTipoDocumento[$documento['tipo']]) ? $rotulosTipoDocumento[$documento['tipo']] : $documento['tipo']) . ' — ' . $documento['titulo'], ENT_QUOTES, 'UTF-8'); ?>
+                            <?php echo htmlspecialchars((isset($rotulosTipoDocumento[$documento['tipo']]) ? $rotulosTipoDocumento[$documento['tipo']] : $documento['tipo']) . ': ' . $documento['titulo'], ENT_QUOTES, 'UTF-8'); ?>
                         </a>
                     </li>
                 <?php endforeach; ?>

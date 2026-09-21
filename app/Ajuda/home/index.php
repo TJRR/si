@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Página inicial',
-    'resumo' => 'Página institucional do concurso ativo — conteúdo e ordem das seções são configurados pelo Administrador; esta ajuda cobre só o que você, como visitante, pode fazer nesta tela.',
+    'resumo' => 'Página institucional do concurso ativo. Conteúdo e ordem das seções são configurados pelo Administrador; esta ajuda cobre só o que você, como visitante, pode fazer nesta tela.',
     'operacoes' => [
         [
             'nome' => 'Menu superior',
@@ -18,8 +18,8 @@ return [
             'como' => 'Abre um painel lateral com a linha do tempo (cronograma) do concurso, sem precisar rolar a página.',
         ],
         [
-            'nome' => 'Slideshow (topo)',
-            'como' => 'Use as setas ou os marcadores abaixo das imagens para navegar manualmente — ele também avança sozinho.',
+            'nome' => 'Carrossel de imagens (topo)',
+            'como' => 'Use as setas ou os marcadores abaixo das imagens para navegar manualmente; ele também avança sozinho.',
         ],
         [
             'nome' => '"Ver equipes homologadas" / "Ver resultado" (por trilha)',
@@ -31,7 +31,7 @@ return [
         ],
         [
             'nome' => 'Linha do tempo (seção Cronograma)',
-            'como' => 'Cada item mostra uma etiqueta de status, calculada automaticamente pela data — sem ação do Administrador.',
+            'como' => 'Cada item mostra uma etiqueta de situação, calculada automaticamente pela data; sem ação do Administrador.',
             'pills' => [
                 ['cor' => 'azul', 'rotulo' => 'Futuro'],
                 ['cor' => 'laranja', 'rotulo' => 'Em andamento'],
@@ -44,12 +44,12 @@ return [
         ],
         [
             'nome' => '"Inscreva-se" (por trilha)',
-            'como' => 'Leva ao formulário público de inscrição de uma nova equipe — não requer login prévio, é o próprio formulário que cria a conta.',
+            'como' => 'Leva ao formulário público de inscrição de uma nova equipe, que não requer login prévio: é o próprio formulário que cria a conta.',
             'observacao' => 'Só fica disponível enquanto as inscrições daquela trilha estiverem abertas.',
         ],
         [
             'nome' => 'Fale conosco (rodapé)',
-            'como' => 'Formulário nativo de contato, quando ativado pelo Administrador — envia uma mensagem para a equipe organizadora.',
+            'como' => 'Formulário nativo de contato, quando ativado pelo Administrador; envia uma mensagem para a equipe organizadora.',
         ],
     ],
     'conceitos' => [],

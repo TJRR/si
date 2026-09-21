@@ -58,7 +58,7 @@ foreach ($concursos as $concurso) {
                 <?php foreach ($todasCategorias as $categoria): ?>
                     <option value="<?php echo (int) $categoria['id']; ?>"
                         <?php echo (!empty($vinculoAtual['categoria_atual']) && (int) $vinculoAtual['categoria_atual']['categoria_avaliador_id'] === (int) $categoria['id']) ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($categoria['nome'] . ' — ' . $categoria['concurso_nome'], ENT_QUOTES, 'UTF-8'); ?>
+                        <?php echo htmlspecialchars($categoria['nome'] . ': ' . $categoria['concurso_nome'], ENT_QUOTES, 'UTF-8'); ?>
                     </option>
                 <?php endforeach; ?>
             </select>

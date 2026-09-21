@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Resultado — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Resultado: <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('etapas/index/' . (int) $etapa['trilha_id']); ?>">Voltar às etapas</a></p>
 
@@ -28,7 +28,7 @@
                 </button>
             </form>
         <?php else: ?>
-            <strong>Prévia (ainda não publicada)</strong> — recalculada a cada acesso conforme as notas lançadas até agora.
+            <strong>Prévia (ainda não publicada)</strong>, recalculada a cada acesso conforme as notas lançadas até agora.
             <form method="post" action="<?php echo url('resultados/publicarEtapa'); ?>" style="display:inline;"><?= campoCsrf() ?>
                 <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
                 <button type="submit" class="btn-icone" title="Confirmar e publicar" onclick="return confirm('Publicar congela este ranking e bloqueia novas notas nesta etapa. Confirmar?');">
@@ -65,7 +65,7 @@
         <tr>
             <td><?php echo $posicao + 1; ?></td>
             <td>#<?php echo (int) $linha['submissao_id']; ?></td>
-            <td><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : '—', ENT_QUOTES, 'UTF-8'); ?></td>
+            <td><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : 'Não informado', ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars(formatarDataHora($linha['criado_em']), ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], $casasDecimais, ',', '.') : 'sem notas ainda'; ?></td>
             <td><?php echo !empty($linha['classificado']) ? 'Sim' : 'Não'; ?></td>

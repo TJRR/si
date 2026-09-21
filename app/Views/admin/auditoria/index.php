@@ -118,7 +118,7 @@ $urlExportar = url('auditoria/exportarCsv') . '&' . http_build_query($paramsComp
                     </span>
                 </td>
                 <td><?php echo htmlspecialchars($registro['entidade'] . ($registro['entidade_id'] !== null ? ' #' . (int) $registro['entidade_id'] : ''), ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?php echo htmlspecialchars($registro['ip_origem'] !== null ? $registro['ip_origem'] : '—', ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?php echo htmlspecialchars($registro['ip_origem'] !== null ? $registro['ip_origem'] : 'Não informado', ENT_QUOTES, 'UTF-8'); ?></td>
                 <td>
                     <?php if ($temDetalhe): ?>
                         <button type="button" class="btn-icone auditoria-ver-detalhes" data-alvo="auditoria-detalhes-<?php echo (int) $indice; ?>" title="Ver detalhes">
@@ -128,7 +128,7 @@ $urlExportar = url('auditoria/exportarCsv') . '&' . http_build_query($paramsComp
                             </svg>
                         </button>
                     <?php else: ?>
-                        —
+                        Não informado
                     <?php endif; ?>
                 </td>
             </tr>

@@ -83,7 +83,7 @@ class ResultadoPublicoController extends Controller
             'modo' => $modo,
             'equipes' => $equipes,
             'casasDecimais' => FormulaPontuacaoRepository::casasDecimais($this->formulas->buscarPorEtapa($etapaId)),
-        ], 'Resultado — ' . $etapa['nome']);
+        ], 'Resultado: ' . $etapa['nome']);
     }
 
     private function materialPublicoDaSubmissao($submissaoId)

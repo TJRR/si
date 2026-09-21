@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1><?php echo $slide === null ? 'Novo slide' : 'Editar slide'; ?></h1>
+<h1><?php echo $slide === null ? 'Novo quadro' : 'Editar quadro'; ?></h1>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -12,7 +12,7 @@
     <fieldset>
         <legend>Imagem</legend>
 
-        <label>Imagem de fundo (opcional — 1440×800; o sistema gera a versão mobile automaticamente) <?php echo $slide !== null ? '(deixe em branco para manter a atual)' : ''; ?>:
+        <label>Imagem de fundo (opcional: 1440×800; o sistema gera a versão mobile automaticamente) <?php echo $slide !== null ? '(deixe em branco para manter a atual)' : ''; ?>:
             <input type="file" name="imagem" accept="image/*">
         </label><br>
         <?php if ($slide !== null && !empty($slide['imagem_desktop_path'])): ?>
@@ -61,7 +61,7 @@
     <fieldset>
         <legend>Apresentação</legend>
 
-        <label>Duração deste slide (segundos):
+        <label>Duração deste quadro (segundos):
             <input type="number" name="duracao_segundos" min="1" max="30" value="<?php echo $slide !== null ? (int) ($slide['duracao_ms'] / 1000) : 7; ?>">
         </label><br>
 
@@ -89,13 +89,13 @@
     </fieldset>
 
     <fieldset>
-        <legend>Botão (CTA)</legend>
+        <legend>Botão de ação</legend>
 
         <label>Título do botão:
             <input type="text" name="cta_titulo" value="<?php echo htmlspecialchars($slide !== null ? (string) $slide['cta_titulo'] : '', ENT_QUOTES, 'UTF-8'); ?>">
         </label><br>
 
-        <label>Link do botão:
+        <label>Hiperlink do botão:
             <input type="text" name="cta_link" value="<?php echo htmlspecialchars($slide !== null ? (string) $slide['cta_link'] : '', ENT_QUOTES, 'UTF-8'); ?>">
         </label><br>
 

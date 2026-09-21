@@ -43,4 +43,23 @@ class CpfValidador
 
         return true;
     }
+
+    /**
+     * Fase 42 (correcao pos-teste de fumaca): mesma mascara ja aplicada em
+     * tempo real pelo JS (assets/js/cpf-validador.js, formatarCpf()), aqui
+     * para formatar na EXIBICAO um CPF ja gravado (so' digitos no banco,
+     * mesmo padrao usado desde o cadastro do Concurso). Nao mascara valor
+     * que nao tenha exatamente 11 digitos - devolve como veio, ao inves de
+     * exibir uma mascara parcial/enganosa sobre dado incompleto ou legado.
+     */
+    public static function formatar($cpf)
+    {
+        $digitos = self::apenasDigitos($cpf);
+
+        if (strlen($digitos) !== 11) {
+            return (string) $cpf;
+        }
+
+        return substr($digitos, 0, 3) . '.' . substr($digitos, 3, 3) . '.' . substr($digitos, 6, 3) . '-' . substr($digitos, 9, 2);
+    }
 }

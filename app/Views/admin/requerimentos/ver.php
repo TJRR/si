@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Requerimento — <?php echo htmlspecialchars($requerimento['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Requerimento: <?php echo htmlspecialchars($requerimento['nome_equipe'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('home/administrativo'); ?>" class="btn-voltar">Voltar ao Painel</a></p>
 
@@ -63,22 +63,22 @@
     <?php if ($certificadoDeclarado !== null): ?>
         <div class="admin-card" style="background:#fff8e1;">
             <p><strong>Certificado declara:</strong>
-                <?php echo htmlspecialchars($certificadoDeclarado['nome'], ENT_QUOTES, 'UTF-8'); ?><?php echo $certificadoDeclarado['cpf'] !== null ? ' — CPF ' . htmlspecialchars($certificadoDeclarado['cpf'], ENT_QUOTES, 'UTF-8') : ''; ?>
+                <?php echo htmlspecialchars($certificadoDeclarado['nome'], ENT_QUOTES, 'UTF-8'); ?><?php echo $certificadoDeclarado['cpf'] !== null ? ', CPF ' . htmlspecialchars($certificadoDeclarado['cpf'], ENT_QUOTES, 'UTF-8') : ''; ?>
             </p>
-            <p><small>Isto é o que o certificado declara, sem confirmação de validade — a confirmação real só acontece no site oficial do governo, abaixo.</small></p>
+            <p><small>Isto é o que o certificado declara, sem confirmação de validade: a confirmação real só acontece no portal oficial do governo, abaixo.</small></p>
         </div>
     <?php endif; ?>
     <?php if (in_array($requerimento['status'], ['recebido', 'escalado'], true)): ?>
     <form method="post" action="<?php echo url('requerimentoAdmin/validarIti/' . (int) $requerimento['id']); ?>" style="margin-bottom:1rem;"><?= campoCsrf() ?>
         <button type="submit">Validar automaticamente no ITI</button>
-        <p><small>Envia o PDF assinado direto pro validador oficial do governo, por uma janela de poucos minutos e uso único — um atalho de apoio, não substitui a conferência manual abaixo.</small></p>
+        <p><small>Envia o PDF assinado direto para o validador oficial do governo, por uma janela de poucos minutos e uso único; um atalho de apoio, não substitui a conferência manual abaixo.</small></p>
     </form>
     <?php endif; ?>
 
     <p>Antes de aprovar, confirme a assinatura no validador oficial do governo:</p>
     <ol>
-        <li>Baixe o PDF assinado (link acima, se ainda não baixou).</li>
-        <li>Abra o <a href="https://validar.iti.gov.br" target="_blank" rel="noopener">validar.iti.gov.br</a> e use <strong>"Escolher Arquivo"</strong> (não "Colar URL" — o PDF fica fora do ar de propósito, por ter CPF de várias pessoas) para selecionar o mesmo arquivo. Deixe "Assinatura Destacada" desmarcado.</li>
+        <li>Baixe o PDF assinado (hiperlink acima, se ainda não baixou).</li>
+        <li>Abra o <a href="https://validar.iti.gov.br" target="_blank" rel="noopener">validar.iti.gov.br</a> e use <strong>"Escolher Arquivo"</strong> (não "Colar URL"; o PDF fica fora do ar de propósito, por ter CPF de várias pessoas) para selecionar o mesmo arquivo. Deixe "Assinatura Destacada" desmarcado.</li>
         <li>Confira se o nome/CPF que o ITI mostrou bate com o líder da equipe (<?php echo htmlspecialchars($requerimento['participante_nome'], ENT_QUOTES, 'UTF-8'); ?>) e se o certificado está válido/não revogado.</li>
         <li>Depois de conferir, apague a cópia baixada do seu computador.</li>
     </ol>
@@ -104,9 +104,9 @@
         <?php if ($podeGerenciar): ?>
         <label>
             <input type="checkbox" name="assinatura_conferida" value="1">
-            Confirmo que validei a assinatura no site oficial do gov.br e ela pertence ao líder da equipe.
+            Confirmo que validei a assinatura no portal oficial do gov.br e ela pertence ao líder da equipe.
         </label><br>
-        <p><small>Isto é obrigatório apenas para aprovar. A verificação automática desta tela (quando disponível) só mostra o que o próprio certificado declara — não substitui a checagem no validador oficial acima.</small></p>
+        <p><small>Isto é obrigatório apenas para aprovar. A verificação automática desta tela (quando disponível) só mostra o que o próprio certificado declara: não substitui a checagem no validador oficial acima.</small></p>
         <?php endif; ?>
         <button type="submit">Registrar resposta</button>
     </form>
@@ -147,8 +147,8 @@
         </form>
     <?php endif; ?>
     <?php if ($requerimento['status'] === 'escalado' && $podeGerenciar): ?>
-        <form method="post" action="<?php echo url('requerimentoAdmin/retomar/' . (int) $requerimento['id']); ?>" onsubmit="return confirm('Retomar este requerimento pra fila geral?');" style="margin-top:0.5rem;"><?= campoCsrf() ?>
-            <button type="submit">Retomar pra fila geral</button>
+        <form method="post" action="<?php echo url('requerimentoAdmin/retomar/' . (int) $requerimento['id']); ?>" onsubmit="return confirm('Retomar este requerimento para a fila geral?');" style="margin-top:0.5rem;"><?= campoCsrf() ?>
+            <button type="submit">Retomar para a fila geral</button>
         </form>
     <?php endif; ?>
 </div>
@@ -160,8 +160,8 @@
 <?php else: ?>
     <?php foreach ($respostas as $resposta): ?>
         <div class="admin-card">
-            <p><strong><?php echo htmlspecialchars($rotulosStatus[$resposta['desfecho']], ENT_QUOTES, 'UTF-8'); ?></strong>
-                — <?php echo htmlspecialchars($resposta['usuario_nome'], ENT_QUOTES, 'UTF-8'); ?>,
+            <p><strong><?php echo htmlspecialchars($rotulosStatus[$resposta['desfecho']], ENT_QUOTES, 'UTF-8'); ?>:</strong>
+                <?php echo htmlspecialchars($resposta['usuario_nome'], ENT_QUOTES, 'UTF-8'); ?>,
                 <?php echo htmlspecialchars(formatarDataHora($resposta['criado_em']), ENT_QUOTES, 'UTF-8'); ?></p>
             <p><?php echo nl2br(htmlspecialchars($resposta['resposta'], ENT_QUOTES, 'UTF-8')); ?></p>
             <?php if ($resposta['anexo_path'] !== null): ?>

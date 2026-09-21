@@ -7,11 +7,11 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Minha inscrição',
-    'resumo' => 'Tela central do participante: equipe, trilha, tema/desafio escolhido, integrantes com status de homologação, e as etapas de submissão já liberadas para a equipe.',
+    'resumo' => 'Tela central do participante: equipe, trilha, tema/desafio escolhido, integrantes com situação de homologação, e as etapas de submissão já liberadas para a equipe.',
     'operacoes' => [
         [
             'nome' => 'Mentoria / Oficinas / Dúvidas / Requerimentos',
-            'como' => 'Botões condicionais — só aparecem quando aquele recurso está disponível para a sua trilha/etapa atual. Os botões de Mentoria e Oficinas levam em conta o vínculo com etapa: se todos os horários do concurso forem restritos a etapas em que a sua equipe não está habilitada, o botão não aparece (em vez de abrir uma tela vazia).',
+            'como' => 'Botões condicionais: só aparecem quando aquele recurso está disponível para a sua trilha/etapa atual. Os botões de Mentoria e Oficinas levam em conta o vínculo com etapa: se todos os horários do concurso forem restritos a etapas em que a sua equipe não está habilitada, o botão não aparece (em vez de abrir uma tela vazia).',
         ],
         [
             'nome' => 'Editar equipe',
@@ -19,7 +19,7 @@ return [
         ],
         [
             'nome' => 'Editar integrante',
-            'como' => 'Cada integrante só edita a si mesmo (inclusive o líder) — bloqueado no servidor com 403 se tentar editar outro.',
+            'como' => 'Cada integrante só edita a si mesmo (inclusive o líder); bloqueado no servidor, com acesso negado, se tentar editar outro.',
         ],
         [
             'nome' => 'Incluir e-mail / Promover / Excluir integrante',
@@ -27,9 +27,9 @@ return [
             'observacao' => 'Não é possível excluir o líder, nem reduzir a equipe abaixo de 2 integrantes.',
         ],
         [
-            'nome' => 'Preencher / Ver notas e feedback',
-            'como' => 'Por etapa — "Preencher" leva ao formulário de submissão; "Ver notas e feedback" só aparece depois que o resultado da etapa é publicado.',
-            'observacao' => 'Uma etapa só aparece se a equipe estiver homologada. Cada etapa pode estar bloqueada por um motivo próprio — fora do prazo, ou equipe não classificada na etapa anterior.',
+            'nome' => 'Preencher / Ver notas e comentário',
+            'como' => 'Por etapa: "Preencher" leva ao formulário de submissão; "Ver notas e comentário" só aparece depois que o resultado da etapa é publicado.',
+            'observacao' => 'Uma etapa só aparece se a equipe estiver homologada. Cada etapa pode estar bloqueada por um motivo próprio: fora do prazo, ou equipe não classificada na etapa anterior.',
         ],
     ],
     'conceitos' => ['cadastro_pendente_aprovacao'],

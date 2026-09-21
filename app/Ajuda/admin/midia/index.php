@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Biblioteca de Mídia',
-    'resumo' => 'Repositório global de imagens, PDFs e vídeos, reaproveitável em qualquer edição — mesmo conceito de banco global do FAQ.',
+    'resumo' => 'Repositório global de imagens, PDFs e vídeos, reaproveitável em qualquer edição, mesmo conceito de banco global do FAQ.',
     'operacoes' => [
         [
             'nome' => 'Filtrar por tipo',
@@ -21,7 +21,7 @@ return [
             'nome' => 'Remover',
             'icone' => 'remover',
             'como' => 'Apaga o item.',
-            'observacao' => 'Bloqueado com erro se o item ainda estiver em uso em algum lugar do sistema.',
+            'observacao' => 'Bloqueado com erro se o item ainda estiver em uso, por exemplo na galeria de fotos de uma edição.',
         ],
         [
             'nome' => '+ Nova mídia',

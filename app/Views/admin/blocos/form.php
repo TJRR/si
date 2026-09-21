@@ -13,7 +13,7 @@
         <input type="text" name="titulo" required value="<?php echo htmlspecialchars($bloco !== null ? (string) $bloco['titulo'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>
 
-    <label>Âncora da seção (usada no menu/scrollspy, sem espaços):
+    <label>Âncora da seção (usada no menu/navegação por rolagem, sem espaços):
         <input type="text" name="secao_ancora" value="<?php echo htmlspecialchars($bloco !== null ? (string) $bloco['secao_ancora'] : '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo ($bloco !== null && $bloco['chave'] !== null) ? 'readonly' : ''; ?>>
     </label>
 
@@ -49,11 +49,11 @@
     </fieldset>
 
     <fieldset>
-        <legend>Botão (CTA, opcional)</legend>
+        <legend>Botão de ação (opcional)</legend>
         <label>Título do botão:
             <input type="text" name="cta_titulo" value="<?php echo htmlspecialchars($bloco !== null ? (string) $bloco['cta_titulo'] : '', ENT_QUOTES, 'UTF-8'); ?>">
         </label><br>
-        <label>Link do botão:
+        <label>Hiperlink do botão:
             <input type="text" name="cta_link" value="<?php echo htmlspecialchars($bloco !== null ? (string) $bloco['cta_link'] : '', ENT_QUOTES, 'UTF-8'); ?>">
         </label><br>
         <label>Alinhamento do botão:

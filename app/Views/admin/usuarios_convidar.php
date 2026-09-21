@@ -53,14 +53,14 @@ foreach ($concursos as $concurso) {
                 <option value="">Sem categoria de avaliador</option>
                 <?php foreach ($todasCategorias as $categoria): ?>
                     <option value="<?php echo (int) $categoria['id']; ?>">
-                        <?php echo htmlspecialchars($categoria['nome'] . ' — ' . $categoria['concurso_nome'], ENT_QUOTES, 'UTF-8'); ?>
+                        <?php echo htmlspecialchars($categoria['nome'] . ': ' . $categoria['concurso_nome'], ENT_QUOTES, 'UTF-8'); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
         </label><br>
     </span>
 
-    <p>Se o e-mail já tiver cadastro, só o perfil escolhido acima é adicionado — nenhum e-mail novo é enviado.</p>
+    <p>Se o e-mail já tiver cadastro, só o perfil escolhido acima é adicionado: nenhum e-mail novo é enviado.</p>
 
     <div class="form-acoes">
         <a href="<?php echo url('usuarios/index'); ?>" class="btn-voltar">Voltar</a>

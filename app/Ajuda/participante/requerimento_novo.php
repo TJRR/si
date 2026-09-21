@@ -11,7 +11,7 @@ return [
     'operacoes' => [
         [
             'nome' => 'Gerar PDF',
-            'como' => 'Preencha a textarea "Necessidade" e clique — cria o registro do requerimento e já baixa o PDF, ainda sem assinatura.',
+            'como' => 'Preencha a textarea "Necessidade" e clique: isso cria o registro do requerimento e já baixa o PDF, ainda sem assinatura.',
         ],
     ],
     'conceitos' => [],

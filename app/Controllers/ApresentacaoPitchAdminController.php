@@ -76,7 +76,7 @@ class ApresentacaoPitchAdminController extends Controller
             'slots' => $slots,
             'config' => $this->apresentacoes->buscarConfig($etapaId),
             'equipesParaAtribuir' => $this->equipesSemSlot($etapaId),
-        ], 'Apresentação de pitch — ' . $etapa['nome'], ['tipo' => 'apresentacao_pitch', 'id' => (int) $etapaId]);
+        ], 'Apresentação de pitch: ' . $etapa['nome'], ['tipo' => 'apresentacao_pitch', 'id' => (int) $etapaId]);
 
         unset($_SESSION['flash']);
     }
@@ -124,7 +124,7 @@ class ApresentacaoPitchAdminController extends Controller
 
         if ($slot['equipe_id'] !== null) {
             http_response_code(403);
-            exit('Este horário já foi reservado e não pode mais ser editado — remova e crie outro, se necessário.');
+            exit('Este horário já foi reservado e não pode mais ser editado: remova e crie outro, se necessário.');
         }
 
         $etapa = $this->etapas->buscarPorId($slot['etapa_id']);
@@ -150,7 +150,7 @@ class ApresentacaoPitchAdminController extends Controller
             'erro' => $erro,
             'slot' => $slot,
             'etapa' => $etapa,
-        ], 'Editar horário — ' . $etapa['nome']);
+        ], 'Editar horário: ' . $etapa['nome']);
     }
 
     public function removerSlot()
@@ -164,7 +164,7 @@ class ApresentacaoPitchAdminController extends Controller
         }
 
         if ($slot['equipe_id'] !== null) {
-            flashErro('Não é possível remover um horário já reservado — cancele a reserva primeiro.');
+            flashErro('Não é possível remover um horário já reservado: cancele a reserva primeiro.');
             $this->redirecionar('apresentacaoPitchAdmin/index/' . (int) $slot['etapa_id']);
             return;
         }
@@ -262,7 +262,7 @@ class ApresentacaoPitchAdminController extends Controller
         $resultado = $this->googleSync->criar(
             $emailOrganizador,
             $this->dadosEventoGoogle($etapa, $slot['data_inicio'], $slot['data_fim'], $equipeId),
-            'Apresentações de pitch — ' . $etapa['nome']
+            'Apresentações de pitch: ' . $etapa['nome']
         );
 
         if ($resultado === null) {
@@ -314,7 +314,7 @@ class ApresentacaoPitchAdminController extends Controller
         $equipe = $this->equipes->buscarPorId($equipeId);
 
         return [
-            'titulo' => 'Apresentação de pitch — ' . ($equipe !== null ? $equipe['nome_equipe'] : 'Equipe #' . $equipeId),
+            'titulo' => 'Apresentação de pitch: ' . ($equipe !== null ? $equipe['nome_equipe'] : 'Equipe #' . $equipeId),
             'descricao' => 'Apresentação de pitch da Etapa 3 (' . $etapa['nome'] . ").\n\nDetalhes no sistema: " . urlAbsoluta('apresentacaoPitch/index'),
             'data_inicio' => $dataInicio,
             'data_fim' => $dataFim,

@@ -329,7 +329,7 @@ class PresencaMeetCapturaService
             'O horário de ' . $this->rotulo($tipo) . ' de ' . formatarDataHora($horario['data_inicio'])
                 . ' esgotou as tentativas de captura de presença. Se vários horários apresentarem'
                 . ' este aviso ao mesmo tempo, a causa provavelmente é única (autorização do escopo'
-                . ' do Google Meet) — verifique isso antes de tratar caso a caso.',
+                . ' do Google Meet): verifique isso antes de tratar caso a caso.',
             $tipo
         );
     }

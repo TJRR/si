@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Categorias de avaliador — <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Categorias de avaliador: <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p>Categorias livres (ex.: professor, área, TI) usadas pelo modo de designação "sorteio por categoria" das etapas deste concurso.</p>
 

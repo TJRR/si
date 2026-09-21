@@ -6,12 +6,12 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Banner — novo/editar',
-    'resumo' => 'Uma faixa de texto/imagem abaixo do slideshow.',
+    'titulo' => 'Faixa: novo/editar',
+    'resumo' => 'Uma faixa de texto/imagem abaixo do carrossel de imagens.',
     'operacoes' => [
         [
             'nome' => 'Imagem ou cor sólida',
-            'como' => 'Upload de imagem (1440×400) ou, na ausência dela, cor sólida de fundo.',
+            'como' => 'Envio de imagem (1440×400) ou, na ausência dela, cor sólida de fundo.',
         ],
         [
             'nome' => 'Texto sobreposto',
@@ -19,11 +19,11 @@ return [
         ],
         [
             'nome' => 'Botão',
-            'como' => 'Tipo de destino (Link interno/externo/Âncora/Arquivo/Vídeo), posição em grade 3×3 sobre o banner, e efeito de hover.',
+            'como' => 'Tipo de destino (Hiperlink interno/Hiperlink externo/Âncora/Arquivo/Vídeo), posição em grade 3×3 sobre a faixa, e efeito ao passar o mouse.',
         ],
         [
             'nome' => 'Ativo',
-            'como' => 'Controla se o banner aparece na home.',
+            'como' => 'Controla se a faixa aparece na página inicial.',
         ],
     ],
     'conceitos' => [],

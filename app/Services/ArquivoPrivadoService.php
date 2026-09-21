@@ -38,7 +38,7 @@ class ArquivoPrivadoService
         }
 
         if (!isset($arquivo['tmp_name']) || !is_uploaded_file($arquivo['tmp_name'])) {
-            throw new \RuntimeException('Upload inválido.');
+            throw new \RuntimeException('Envio inválido.');
         }
 
         // Fase 31 (Auditoria de Seguranca, achado #15): validacao de MIME

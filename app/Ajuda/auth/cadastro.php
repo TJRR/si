@@ -11,7 +11,7 @@ return [
     'operacoes' => [
         [
             'nome' => 'Cadastrar com Google',
-            'como' => 'Cria a conta a partir dos dados da conta Google — não precisa definir senha.',
+            'como' => 'Cria a conta a partir dos dados da conta Google; não precisa definir senha.',
         ],
         [
             'nome' => 'Nome, e-mail e senha',

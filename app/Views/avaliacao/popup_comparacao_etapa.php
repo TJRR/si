@@ -6,8 +6,8 @@
     <p><em>Esta equipe não possui submissão registrada nessa etapa.</em></p>
 <?php else: ?>
     <p class="ficha-submissao-enviada-em">
-        Etapa: <?php echo htmlspecialchars($etapaComparacao['nome'], ENT_QUOTES, 'UTF-8'); ?>
-        — enviada em <?php echo htmlspecialchars(formatarDataHora($submissaoAnterior['criado_em']), ENT_QUOTES, 'UTF-8'); ?>
+        Etapa: <?php echo htmlspecialchars($etapaComparacao['nome'], ENT_QUOTES, 'UTF-8'); ?>,
+        enviada em <?php echo htmlspecialchars(formatarDataHora($submissaoAnterior['criado_em']), ENT_QUOTES, 'UTF-8'); ?>
     </p>
     <?php if (empty($conteudoAnterior)): ?>
         <p><em>Esta submissão não tem conteúdo disponível para comparação.</em></p>

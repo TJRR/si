@@ -26,18 +26,108 @@ class AuthController extends Controller
             $senha = isset($_POST['senha']) ? $_POST['senha'] : '';
 
             $resultado = (new AuthService())->autenticar($email, $senha);
+            $erro = $this->entrarComResultado($resultado, null);
 
-            if ($resultado['sucesso']) {
-                Auth::login($resultado['usuario'], $resultado['perfis']);
-                Auditoria::registrar('login', 'usuarios', $resultado['usuario']['id']);
-                $this->redirecionar(Auth::destinoPainel());
+            if ($erro === null) {
                 return;
             }
-
-            $erro = $resultado['mensagem'];
         }
 
         $this->renderizar('auth/login', ['erro' => $erro], 'Entrar');
+    }
+
+    /**
+     * Fase 48B: porta de entrada propria do app de Evento, com identidade
+     * visual distinta da porta do Concurso (login()) - o formulario e' o
+     * mesmo (auth/login com $contextoEvento), mas o destino pos-login e'
+     * sempre eventoApp/index, mesmo para quem tambem e' Administrador ou
+     * participante do Concurso (ver entrarComResultado()).
+     */
+    public function loginEvento()
+    {
+        $erro = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = trim(isset($_POST['email']) ? $_POST['email'] : '');
+            $senha = isset($_POST['senha']) ? $_POST['senha'] : '';
+
+            $resultado = (new AuthService())->autenticar($email, $senha);
+            $erro = $this->entrarComResultado($resultado, 'evento');
+
+            if ($erro === null) {
+                return;
+            }
+        }
+
+        $this->renderizar('auth/login', ['erro' => $erro, 'contextoEvento' => true], 'Entrar - Evento');
+    }
+
+    /**
+     * Fase 48B: passo comum a login()/loginEvento()/googleCallback() apos
+     * autenticar (por senha ou Google) - login na sessao, auditoria e
+     * destino. $contexto === 'evento' forca o destino para eventoApp/index,
+     * ignorando a prioridade de perfil de Auth::destinoPainel() (mesmo
+     * criterio de AuthService::resolverUsuarioGoogle($code, $contexto)).
+     * Devolve null quando o login deu certo (a chamadora ja redirecionou),
+     * ou a mensagem de erro para renderizar de novo o formulario.
+     */
+    private function entrarComResultado(array $resultado, $contexto)
+    {
+        if (!$resultado['sucesso']) {
+            return $resultado['mensagem'];
+        }
+
+        Auth::login($resultado['usuario'], $resultado['perfis']);
+        Auditoria::registrar('login', 'usuarios', $resultado['usuario']['id']);
+
+        if (!$this->redirecionarPosLogin()) {
+            $this->redirecionar($contexto === 'evento' ? 'eventoApp/index' : Auth::destinoPainel());
+        }
+
+        return null;
+    }
+
+    /**
+     * Fase 40/41: retorno automatico para a tela de inscricao no evento (ou
+     * para o shell do aplicativo) apos login/cadastro -
+     * EventoInscricaoPublicaController::index() e EventoAppController::index()
+     * gravam $_SESSION['retorno_apos_login'] quando um visitante nao
+     * autenticado acessa uma dessas telas. Escopo restrito de proposito: so'
+     * aceita os padroes exatos 'eventoInscricao/index/<numero>' e
+     * 'eventoApp/index' (com '/<numero>' opcional) - nunca uma URL arbitraria
+     * vinda da sessao - e expira em 30min, para nao redirecionar de volta pra
+     * la' um Admin que so' passou por curiosidade horas antes.
+     */
+    private function redirecionarPosLogin()
+    {
+        if (!isset($_SESSION['retorno_apos_login'])) {
+            return false;
+        }
+
+        $retorno = $_SESSION['retorno_apos_login'];
+        unset($_SESSION['retorno_apos_login']);
+
+        if (!is_array($retorno) || !isset($retorno['expira_em'], $retorno['destino']) || time() >= $retorno['expira_em']) {
+            return false;
+        }
+
+        $padroesAceitos = [
+            '#^eventoInscricao/index/[1-9][0-9]*$#',
+            '#^eventoApp/index(/[1-9][0-9]*)?$#',
+            // Fase 49: visitante sem conta que tentou submeter um Trabalho
+            // volta direto ao formulario apos logar/cadastrar, em vez de
+            // cair no destino padrao de Auth::destinoPainel().
+            '#^trabalho/formulario/[1-9][0-9]*$#',
+        ];
+
+        foreach ($padroesAceitos as $padrao) {
+            if (preg_match($padrao, $retorno['destino']) === 1) {
+                $this->redirecionar($retorno['destino']);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function logout()
@@ -52,6 +142,17 @@ class AuthController extends Controller
     {
         $state = bin2hex(random_bytes(16));
         $_SESSION['oauth_state'] = $state;
+
+        // Fase 40: contexto "evento" propagado pela ida-e-volta ao Google
+        // (mesmo mecanismo do oauth_state) - usado em
+        // AuthService::resolverUsuarioGoogle() pra decidir a auto-aprovacao
+        // do perfil "inscrito". Whitelist estrita: qualquer outro valor e'
+        // ignorado.
+        if (isset($_GET['contexto']) && $_GET['contexto'] === 'evento') {
+            $_SESSION['oauth_contexto'] = 'evento';
+        } else {
+            unset($_SESSION['oauth_contexto']);
+        }
 
         header('Location: ' . GoogleOAuth::urlAutorizacao($state));
         exit;
@@ -82,16 +183,20 @@ class AuthController extends Controller
             return;
         }
 
-        $resultado = (new AuthService())->autenticarComGoogle($code);
+        $contexto = isset($_SESSION['oauth_contexto']) ? $_SESSION['oauth_contexto'] : null;
+        unset($_SESSION['oauth_contexto']);
 
-        if ($resultado['sucesso']) {
-            Auth::login($resultado['usuario'], $resultado['perfis']);
-            Auditoria::registrar('login', 'usuarios', $resultado['usuario']['id']);
-            $this->redirecionar(Auth::destinoPainel());
+        $resultado = (new AuthService())->autenticarComGoogle($code, $contexto);
+        $erro = $this->entrarComResultado($resultado, $contexto);
+
+        if ($erro === null) {
             return;
         }
 
-        $this->renderizar('auth/login', ['erro' => $resultado['mensagem']], 'Entrar');
+        $this->renderizar('auth/login', [
+            'erro' => $erro,
+            'contextoEvento' => $contexto === 'evento',
+        ], 'Entrar');
     }
 
     /**

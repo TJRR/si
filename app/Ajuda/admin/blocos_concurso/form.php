@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Bloco da Edição',
-    'resumo' => 'Conteúdo em texto rico opcional, específico desta edição, exibido na página pública "Edições Anteriores" logo depois da galeria de fotos — útil para informações que não se encaixam no modelo genérico de trilhas/vencedores, como uma "Classificação Geral" do encontro.',
+    'resumo' => 'Conteúdo em texto rico opcional, específico desta edição, exibido na página pública "Edições Anteriores" logo depois da galeria de fotos, útil para informações que não se encaixam no modelo genérico de trilhas/vencedores, como uma "Classificação Geral" do encontro.',
     'operacoes' => [
         [
             'nome' => 'Título da seção',
@@ -15,15 +15,15 @@ return [
         ],
         [
             'nome' => 'Conteúdo',
-            'como' => 'Editor rico — mesmo editor usado nos Blocos de Conteúdo da home e no Contato.',
+            'como' => 'Editor rico: mesmo editor usado nos Blocos de Conteúdo da página inicial e no Contato.',
         ],
         [
             'nome' => 'Exibir este bloco na página pública desta edição',
-            'como' => 'Checkbox — desmarcar oculta o bloco da página pública sem apagar o texto salvo, permitindo reativar depois. Só concursos com status "Encerrado" têm página pública ("Edições Anteriores"); em um concurso ainda ativo, o bloco fica salvo mas não aparece em lugar nenhum até o concurso ser encerrado.',
+            'como' => 'Caixa de seleção: desmarcar oculta o bloco da página pública sem apagar o texto salvo, permitindo reativar depois. Só concursos com situação "Encerrado" têm página pública ("Edições Anteriores"); em um concurso ainda ativo, o bloco fica salvo mas não aparece em lugar nenhum até o concurso ser encerrado.',
         ],
         [
             'nome' => 'Salvar',
-            'como' => 'Há no máximo 1 bloco por concurso — salvar sempre atualiza o mesmo registro desta edição. Só Administrador grava; Suporte só visualiza.',
+            'como' => 'Há no máximo 1 bloco por concurso: salvar sempre atualiza o mesmo registro desta edição. Só Administrador grava; Suporte só visualiza.',
         ],
     ],
     'conceitos' => ['permissao_suporte_admin'],

@@ -213,7 +213,7 @@ class ParticipanteController extends Controller
 
         if (!$resultadoPublicado) {
             http_response_code(404);
-            exit('Notas e feedback não disponíveis para esta submissão.');
+            exit('Notas e comentários não disponíveis para esta submissão.');
         }
 
         $criterios = $this->criterios->listarPorEtapa($etapa['id']);
@@ -268,7 +268,7 @@ class ParticipanteController extends Controller
             'mediaPorCriterioId' => $mediaPorCriterioId,
             'notaFinal' => $notaFinal,
             'casasDecimais' => FormulaPontuacaoRepository::casasDecimais($formula),
-        ], 'Notas e Feedback — ' . $etapa['nome']);
+        ], 'Notas e Feedback: ' . $etapa['nome']);
     }
 
     public function meusDados()
@@ -452,7 +452,7 @@ class ParticipanteController extends Controller
         }
 
         if (count($this->equipes->listarParticipantes($equipe['id'])) <= 2) {
-            flashErro('A equipe precisa ter no mínimo 2 integrantes — não é possível excluir.');
+            flashErro('A equipe precisa ter no mínimo 2 integrantes: não é possível excluir.');
             $this->redirecionar('participante/index');
             return;
         }
@@ -463,7 +463,7 @@ class ParticipanteController extends Controller
         // (sem mudanca); lider rejeitado ou pendente-pos-correcao so' pode
         // remover integrante que tambem esta rejeitado.
         if (!(new PermissaoParticipanteService())->podeRemoverIntegrante($liderAtual['id'], $participanteId)) {
-            flashErro('Sua inscrição não está homologada — você só pode remover integrantes rejeitados.');
+            flashErro('Sua inscrição não está homologada: você só pode remover integrantes rejeitados.');
             $this->redirecionar('participante/index');
             return;
         }
@@ -695,7 +695,7 @@ class ParticipanteController extends Controller
             $this->notificacoes->criar(
                 $usuario['id'],
                 'cpf_alterado_pendente',
-                'CPF alterado — pendente de homologação',
+                'CPF alterado: pendente de homologação',
                 $mensagem,
                 [
                     'url' => url('homologacao/index/' . (int) $equipe['trilha_id']) . '?status=pendente&destaque=' . (int) $vinculoId,

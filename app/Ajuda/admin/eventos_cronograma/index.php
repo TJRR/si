@@ -6,8 +6,8 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Cronograma — eventos avulsos',
-    'resumo' => 'Eventos extras da linha do tempo pública, que não são Etapas formais (ex.: um workshop, uma cerimônia de abertura). Aparecem misturados às Etapas na linha do tempo, ordenados por data — não há reordenação manual aqui.',
+    'titulo' => 'Cronograma: eventos avulsos',
+    'resumo' => 'Eventos extras da linha do tempo pública, que não são Etapas formais (ex.: uma oficina, uma cerimônia de abertura). Aparecem misturados às Etapas na linha do tempo, ordenados por data. Não há reordenação manual aqui.',
     'operacoes' => [
         [
             'nome' => '+ Novo',
@@ -16,7 +16,7 @@ return [
         [
             'nome' => 'Editar / Remover',
             'icone' => 'editar',
-            'como' => 'CRUD do evento.',
+            'como' => 'Criar, editar e remover o evento.',
         ],
     ],
     'conceitos' => [],

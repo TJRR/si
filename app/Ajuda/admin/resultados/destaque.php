@@ -6,13 +6,13 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Destaque do case',
+    'titulo' => 'Destaque do caso de sucesso',
     'resumo' => 'Metadados de exibição pública de uma equipe vencedora (usado na página de Edições Anteriores/resultado).',
     'operacoes' => [
         [
             'nome' => 'Resumo de destaque / Imagem',
-            'como' => 'Texto rico (editor com formatação, cor, imagem, link) + imagem (alt obrigatório) → Salvar.',
-            'observacao' => 'Só edita o que é exibido publicamente — não recalcula nota nem posição no ranking. O HTML digitado passa por uma limpeza de segurança ao salvar (remove script/handlers), sem afetar formatação normal.',
+            'como' => 'Texto rico (editor com formatação, cor, imagem, hiperlink) + imagem (alt obrigatório) → Salvar.',
+            'observacao' => 'Só edita o que é exibido publicamente: não recalcula nota nem posição no ranking. O texto digitado passa por uma limpeza de segurança ao salvar (remove trechos que representem risco de segurança), sem afetar formatação normal.',
         ],
     ],
     'conceitos' => [],

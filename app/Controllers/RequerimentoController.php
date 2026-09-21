@@ -97,7 +97,7 @@ class RequerimentoController extends Controller
 
         $this->renderizar('participante/requerimento_novo', [
             'modelo' => $modelo,
-        ], 'Novo requerimento — ' . $modelo['nome']);
+        ], 'Novo requerimento: ' . $modelo['nome']);
     }
 
     public function gerarPdf($modeloDocumentoId)
@@ -209,7 +209,7 @@ class RequerimentoController extends Controller
         }
 
         if (!$this->contemAssinaturaDigital($_FILES['pdf_assinado']['tmp_name'])) {
-            flashErro('Este PDF não contém nenhuma assinatura digital — assine no gov.br antes de enviar.');
+            flashErro('Este PDF não contém nenhuma assinatura digital: assine no gov.br antes de enviar.');
             $this->redirecionar('requerimento/ver/' . $id);
             return;
         }

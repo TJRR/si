@@ -7,12 +7,12 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Ver dúvida',
-    'resumo' => 'Thread completa da dúvida, com avatar de quem escreveu cada mensagem.',
+    'resumo' => 'Conversa completa da dúvida, com foto de perfil de quem escreveu cada mensagem.',
     'operacoes' => [
         [
             'nome' => 'Reabrir dúvida',
             'como' => 'Textarea obrigatória + anexo opcional, para continuar a conversa depois de uma resposta.',
-            'observacao' => 'Só aparece quando a dúvida já está com status "Respondida" — não é possível reabrir uma dúvida ainda em análise.',
+            'observacao' => 'Só aparece quando a dúvida já está na situação "Respondida"; não é possível reabrir uma dúvida ainda em análise.',
         ],
     ],
     'conceitos' => [],

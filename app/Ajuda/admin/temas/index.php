@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Temas',
-    'resumo' => 'Grandes áreas de desafio de uma trilha (do edital), exibidas na home pública — cada tema agrupa vários Desafios.',
+    'resumo' => 'Grandes áreas de desafio de uma trilha (do edital), exibidas na home pública. Cada tema agrupa vários Desafios.',
     'operacoes' => [
         [
             'nome' => '+ Novo tema',
@@ -30,7 +30,7 @@ return [
         ],
         [
             'nome' => 'Reordenar',
-            'como' => 'Ver conceito "Reordenar por arraste" abaixo — aqui a ordem define a posição dos temas na home pública.',
+            'como' => 'Ver conceito "Reordenar por arraste" abaixo: aqui a ordem define a posição dos temas na home pública.',
         ],
     ],
     'conceitos' => ['reordenar_arraste', 'permissao_suporte_admin'],

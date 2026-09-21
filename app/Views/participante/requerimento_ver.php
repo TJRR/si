@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Requerimento — <?php echo htmlspecialchars($requerimento['modelo_nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Requerimento de <?php echo htmlspecialchars($requerimento['modelo_nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('requerimento/index'); ?>" class="btn-voltar">Voltar</a></p>
 
@@ -87,7 +87,7 @@
     <?php foreach ($respostas as $resposta): ?>
         <div class="admin-card">
             <p><strong><?php echo htmlspecialchars($rotulosStatus[$resposta['desfecho']], ENT_QUOTES, 'UTF-8'); ?></strong>
-                — <?php echo htmlspecialchars($resposta['usuario_nome'], ENT_QUOTES, 'UTF-8'); ?>,
+                por <?php echo htmlspecialchars($resposta['usuario_nome'], ENT_QUOTES, 'UTF-8'); ?>,
                 <?php echo htmlspecialchars(formatarDataHora($resposta['criado_em']), ENT_QUOTES, 'UTF-8'); ?></p>
             <p><?php echo nl2br(htmlspecialchars($resposta['resposta'], ENT_QUOTES, 'UTF-8')); ?></p>
             <?php if ($resposta['anexo_path'] !== null): ?>

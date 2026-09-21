@@ -52,7 +52,7 @@ class ModeloDocumentoAdminController extends Controller
             'modelos' => $this->modelos->listarPorEtapa($etapaId),
             'naoTerminaisPendentes' => $this->requerimentos->contarNaoTerminaisPorEtapa($etapaId),
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
-        ], 'Modelos de Documento — ' . $etapa['nome'], ['tipo' => 'modelos_documento', 'id' => (int) $etapaId]);
+        ], 'Modelos de Documento: ' . $etapa['nome'], ['tipo' => 'modelos_documento', 'id' => (int) $etapaId]);
 
         unset($_SESSION['flash']);
     }
@@ -158,7 +158,7 @@ class ModeloDocumentoAdminController extends Controller
         $confirmacao = trim(isset($_POST['confirmacao']) ? $_POST['confirmacao'] : '');
 
         if ($confirmacao !== $etapa['nome']) {
-            flashErro('Confirmação incorreta — digite exatamente o nome da etapa para expurgar.');
+            flashErro('Confirmação incorreta: digite exatamente o nome da etapa para expurgar.');
             $this->redirecionar('modelosDocumento/index/' . $etapaId);
             return;
         }

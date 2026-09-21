@@ -7,13 +7,13 @@ $rotulosFixos = [
     'trilhas' => 'Trilhas',
     'cronograma' => 'Cronograma',
     'temas' => 'Desafios',
-    'faq' => 'Dúvidas (FAQ)',
+    'faq' => 'Perguntas frequentes',
 ];
 ?>
 <div class="pagina-titulo-acoes">
     <h1>Ordenação</h1>
 </div>
-<p>Define a ordem das seções que aparecem entre os Banners e o rodapé da home — inclusive das seções fixas (Trilhas, Cronograma, Desafios, FAQ), não só dos blocos de conteúdo. Slideshow e Banners ficam sempre no topo; Contato fica sempre no rodapé — nenhum dos dois entra nesta lista.</p>
+<p>Define a ordem das seções que aparecem entre as Faixas e o rodapé da home, inclusive das seções fixas (Trilhas, Cronograma, Desafios, Perguntas frequentes), não só dos blocos de conteúdo. A Apresentação de slides e as Faixas ficam sempre no topo; o Contato fica sempre no rodapé: nenhum dos dois entra nesta lista.</p>
 
 <?php if (empty($secoes)): ?>
     <p>Nenhuma seção cadastrada ainda.</p>

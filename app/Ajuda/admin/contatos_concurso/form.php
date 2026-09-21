@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Contato do Concurso',
-    'resumo' => 'Dados de contato institucional exibidos no rodapé/seção de contato da home.',
+    'resumo' => 'Dados de contato institucional exibidos no rodapé/seção de contato da página inicial.',
     'operacoes' => [
         [
             'nome' => 'E-mail / Telefone / WhatsApp / Endereço',
@@ -19,15 +19,15 @@ return [
         ],
         [
             'nome' => 'Redes sociais',
-            'como' => 'URLs — só aparece o ícone de quem foi preenchido.',
+            'como' => 'URLs. Só aparece o ícone de quem foi preenchido.',
         ],
         [
-            'nome' => 'Exibir formulário nativo na home',
-            'como' => 'Checkbox — ativa um formulário de contato na própria home (em vez de só mostrar os dados de contato).',
+            'nome' => 'Exibir formulário nativo na página inicial',
+            'como' => 'Caixa de seleção: ativa um formulário de contato na própria página inicial (em vez de só mostrar os dados de contato).',
         ],
         [
             'nome' => 'Ver mensagens recebidas',
-            'como' => 'Leva à tela de mensagens enviadas pelo formulário nativo (só leitura, com link mailto: para responder por fora do sistema).',
+            'como' => 'Leva à tela de mensagens enviadas pelo formulário nativo (só leitura, com hiperlink mailto: para responder por fora do sistema).',
         ],
     ],
     'conceitos' => [],

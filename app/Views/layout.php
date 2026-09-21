@@ -14,11 +14,53 @@ if (isset($view) && !$ehPainelInterno) {
         }
     }
 }
-$ehPaginaConvidado = isset($view) && in_array($view, ['auth/login', 'auth/cadastro', 'auth/definir_senha', 'auth/esqueci_senha'], true);
+$ehPaginaConvidado = isset($view) && in_array($view, ['auth/login', 'auth/cadastro', 'auth/definir_senha', 'auth/esqueci_senha', 'publico/evento_inscricao_cadastro'], true);
+
+// Fase 41 (correcao pos-teste de fumaca): manifesto/service worker/aparencia
+// de aplicativo (fundo colorido, app-bar, menu) - nunca em
+// admin/avaliacao/concurso/home institucional. As telas do proprio app
+// (painel/selecionar/inscricao) sempre ativam; a tela publica de inscricao
+// (para quem ainda nao tem conta) so' ativa quando ehContextoApp() -
+// celular (User-Agent) ou navegacao vinda do PWA ja' instalado, mesmo no
+// computador (app/helpers.php). Defesa 1 das duas descritas no plano da
+// Fase 41 (a segunda e' o fetch handler do proprio SW, que so' intercepta
+// sub-recursos estaticos, nunca navegacao de pagina). $view aqui e' o
+// CAMINHO DO ARQUIVO DE TEMPLATE (ex.: 'eventoApp/painel'), nao o nome da
+// rota.
+// Fase 49B (correcao apos o usuario reverter a leitura anterior): a
+// submissao de Trabalhos pelo PROPRIO AUTOR passa a ser parte do
+// aplicativo instalavel de verdade (manifesto/tema-color/service worker),
+// com ponto de entrada dentro do painel do evento (ver eventoApp/painel.php)
+// - decisao confirmada explicitamente pelo usuario, substitui o que ficou
+// registrado antes no plano mestre/Fase 49 sobre isso ficar "fora do app".
+// So' cobre as 4 telas de uso do AUTOR (trabalho/formulario, trabalho/ver,
+// trabalho/meusTrabalhos, trabalho/indisponivel) - a avaliacao avulsa
+// (avaliacaoTrabalhos/*, avaliador convidado) continua fora do app
+// instalavel de proposito (decisao separada, confirmada tambem), so' com a
+// mesma aparencia visual (ver $ehContextoEvento abaixo).
+$ehAppEvento = isset($view) && (
+    in_array($view, ['eventoApp/painel', 'eventoApp/selecionar', 'eventoApp/inscricao', 'eventoApp/ler', 'eventoApp/aviso', 'eventoApp/atividades', 'eventoApp/presenca', 'eventoApp/facilitacoes'], true)
+    || ($view === 'publico/evento_inscricao' && ehContextoApp())
+    || (isset($view) && strpos($view, 'trabalho/') === 0)
+);
+// Fase 49B: $ehContextoEvento cobre tudo que $ehAppEvento cobre, mais a
+// avaliacao avulsa de Trabalhos (avaliacaoTrabalhos/*) - essa ganha so' a
+// APARENCIA do app (fundo em degrade, app-bar, cartao de conteudo), nunca
+// o manifesto/service worker, porque o avaliador avulso continua
+// deliberadamente fora do aplicativo instalavel.
+$ehContextoEvento = $ehAppEvento || (isset($view) && strpos($view, 'avaliacaoTrabalhos/') === 0);
+// Fase 48B: cor deixou de ser configuracao unica (ConfiguracaoVisualRepository)
+// e virou tema selecionavel por usuario (TemaVisualRepository) - vale em toda
+// pagina, nao so' no app de Evento. $corVisual continua so' para o favicon,
+// que nao faz parte de tema nenhum.
 $corVisual = (new \App\Repositories\ConfiguracaoVisualRepository())->buscar();
-$corPrimariaInicio = $corVisual !== false ? $corVisual['cor_primaria_inicio'] : '#FF6600';
-$corPrimariaFim = $corVisual !== false ? $corVisual['cor_primaria_fim'] : '#FF9955';
-$corSecundaria = $corVisual !== false && !empty($corVisual['cor_secundaria']) ? $corVisual['cor_secundaria'] : '#191919';
+$temaAtivo = (new \App\Repositories\TemaVisualRepository())->resolverAtivo(\App\Core\Auth::autenticado() ? \App\Core\Auth::usuarioId() : null);
+$corPrimariaInicio = $temaAtivo['cor_primaria_inicio'];
+$corPrimariaFim = $temaAtivo['cor_primaria_fim'];
+$corSecundaria = $temaAtivo['cor_secundaria'];
+$corTerciaria = $temaAtivo['cor_terciaria'];
+$corDestaqueApp = $temaAtivo['cor_destaque_app'];
+$corDestaqueAppTexto = corContrastante($corDestaqueApp);
 $faviconSrc = $corVisual !== false && !empty($corVisual['favicon_path'])
     ? config('base_path') . '/assets/' . $corVisual['favicon_path']
     : config('base_path') . '/assets/img/favicon-padrao.png';
@@ -29,10 +71,10 @@ $faviconSrc = $corVisual !== false && !empty($corVisual['favicon_path'])
 $ehPaginaPublicaComLogo = $ehPainelInterno || $ehPaginaConvidado;
 
 if ($ehPaginaPublicaComLogo) {
-    $logoAdminSrc = logoAtual();
+    $logoAdminSrc = logoAtual($ehContextoEvento);
 }
 
-$modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'vagasAvaliador', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao', 'categoriasAvaliador', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma', 'mentoriaAdmin', 'oficinaAdmin', 'blocoConcurso'];
+$modulosArvore = ['concursos', 'trilhas', 'etapas', 'temas', 'criterios', 'formulas', 'desempate', 'designacoes', 'vagasAvaliador', 'resultados', 'homologacao', 'formularios', 'campos', 'apuracao', 'categoriasAvaliador', 'premios', 'faqConcurso', 'documentos', 'eventosCronograma', 'mentoriaAdmin', 'oficinaAdmin', 'blocoConcurso', 'apresentacaoPitchAdmin'];
 
 if ($ehPainelInterno && \App\Core\Auth::autenticado()) {
     $repoNotificacoes = new \App\Repositories\NotificacaoPainelRepository();
@@ -57,7 +99,21 @@ if ($ehPainelAdmin) {
     $rotaAtual = isset($_GET['r']) ? trim($_GET['r'], '/') : 'home/index';
     $partesRota = explode('/', $rotaAtual);
     $moduloAtual = $partesRota[0];
-    $ehEscopoArvore = in_array($moduloAtual, $modulosArvore, true);
+    $ehEscopoArvoreConcurso = in_array($moduloAtual, $modulosArvore, true);
+
+    // Fase 39 (revisada): segunda arvore, independente da de Concurso -
+    // "Eventos" e' aba de 1o nivel propria (ver NavegacaoService::
+    // filhosDe('raizEvento', ...) e admin/_arvore.php, generalizado para
+    // aceitar mais de uma raiz).
+    $modulosArvoreEvento = ['eventos', 'eventoFormulario', 'atividades', 'trabalhos'];
+    $ehEscopoArvoreEvento = in_array($moduloAtual, $modulosArvoreEvento, true);
+    $ehEscopoArvore = $ehEscopoArvoreConcurso || $ehEscopoArvoreEvento;
+
+    if ($ehEscopoArvoreEvento) {
+        $arvoreRaizTipo = 'raizEvento';
+        $arvoreRotulo = 'Navegação de eventos';
+        $arvoreVazia = 'Nenhum evento cadastrado ainda.';
+    }
 
     $abasAdmin = [];
 
@@ -94,7 +150,8 @@ if ($ehPainelAdmin) {
     }
 
     if (\App\Core\Auth::possuiPerfil('administrador') || \App\Core\Auth::possuiPerfil('suporte')) {
-        $abasAdmin[] = ['rotulo' => 'Concursos', 'url' => 'concursos/index', 'ativo' => $ehEscopoArvore];
+        $abasAdmin[] = ['rotulo' => 'Concursos', 'url' => 'concursos/index', 'ativo' => $ehEscopoArvoreConcurso];
+        $abasAdmin[] = ['rotulo' => 'Eventos', 'url' => 'eventos/index', 'ativo' => $ehEscopoArvoreEvento];
     }
 
     if (\App\Core\Auth::possuiPerfil('administrador')) {
@@ -107,8 +164,13 @@ if ($ehPainelAdmin) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php echo htmlspecialchars($titulo !== null ? $titulo : 'Sistema de Gestão da Semana de Inovação e do Prêmio de Inovação do TJRR', ENT_QUOTES, 'UTF-8'); ?></title>
+    <title><?php echo htmlspecialchars($titulo !== null ? $titulo : 'Sistema de Gestão da Semana de Inovação e do Prêmio de Inovação do ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?></title>
     <link rel="icon" type="image/png" href="<?php echo htmlspecialchars($faviconSrc, ENT_QUOTES, 'UTF-8'); ?>">
+    <?php if ($ehAppEvento): ?>
+    <link rel="manifest" href="<?php echo htmlspecialchars(url('eventoApp/manifesto'), ENT_QUOTES, 'UTF-8'); ?>">
+    <meta name="theme-color" content="<?php echo htmlspecialchars($corPrimariaInicio, ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="apple-touch-icon" href="<?php echo htmlspecialchars(iconeAppUrl('icon-512.png'), ENT_QUOTES, 'UTF-8'); ?>">
+    <?php endif; ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo config('base_path'); ?>/assets/css/site.css?v=<?php echo filemtime(__DIR__ . '/../../assets/css/site.css'); ?>">
@@ -117,10 +179,22 @@ if ($ehPainelAdmin) {
             --cor-primaria-inicio: <?php echo htmlspecialchars($corPrimariaInicio, ENT_QUOTES, 'UTF-8'); ?>;
             --cor-primaria-fim: <?php echo htmlspecialchars($corPrimariaFim, ENT_QUOTES, 'UTF-8'); ?>;
             --cor-secundaria: <?php echo htmlspecialchars($corSecundaria, ENT_QUOTES, 'UTF-8'); ?>;
+            --cor-terciaria: <?php echo htmlspecialchars($corTerciaria, ENT_QUOTES, 'UTF-8'); ?>;
+            --cor-destaque-app: <?php echo htmlspecialchars($corDestaqueApp, ENT_QUOTES, 'UTF-8'); ?>;
+            --cor-destaque-app-texto: <?php echo htmlspecialchars($corDestaqueAppTexto, ENT_QUOTES, 'UTF-8'); ?>;
         }
     </style>
+    <?php if ($ehAppEvento): ?>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register(<?php echo json_encode(config('base_path') . '/service-worker.js', JSON_UNESCAPED_SLASHES); ?>);
+            });
+        }
+    </script>
+    <?php endif; ?>
 </head>
-<body class="<?php echo $ehPainelInterno ? 'admin-page' : ($ehPaginaConvidado ? 'guest-page' : ''); ?>">
+<body class="<?php echo $ehPainelInterno ? 'admin-page' : ($ehPaginaConvidado ? 'guest-page' : ($ehContextoEvento ? 'app-evento-page' : '')); ?>">
 <?php if ($ehPainelInterno && \App\Core\Auth::estaVisualizandoComoOutro()): ?>
     <div class="faixa-visualizacao-como">
         Visualizando como <strong><?php echo htmlspecialchars(\App\Core\Auth::nome(), ENT_QUOTES, 'UTF-8'); ?></strong> (somente leitura)
@@ -132,78 +206,10 @@ if ($ehPainelAdmin) {
 <?php if ($ehPainelInterno): ?>
     <div class="admin-topbar">
       <div class="admin-largura-max">
-        <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR">
+        <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(($ehContextoEvento ? '' : 'Prêmio de Inovação ') . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>">
         <div class="admin-topbar-acoes">
-            <div class="notificacoes-sino-wrapper">
-                <button type="button" id="notificacoes-sino-botao" class="notificacoes-sino-botao" title="Notificações" aria-haspopup="true" aria-expanded="false" aria-controls="notificacoes-sino-painel">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                    </svg>
-                    <?php if (!empty($notificacoesNaoLidas)): ?>
-                        <span class="notificacoes-sino-badge"><?php echo $notificacoesNaoLidas > 9 ? '9+' : $notificacoesNaoLidas; ?></span>
-                    <?php endif; ?>
-                </button>
-                <div id="notificacoes-sino-painel" class="notificacoes-sino-painel">
-                    <div class="notificacoes-sino-cabecalho">
-                        <span>Notificações</span>
-                        <?php if (!empty($notificacoesNaoLidas)): ?>
-                            <form method="post" action="<?php echo url('notificacoesPainel/marcarTodasLidas'); ?>"><?= campoCsrf() ?>
-                                <button type="submit" class="btn-icone" title="Marcar todas como lidas">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </button>
-                            </form>
-                        <?php endif; ?>
-                    </div>
-                    <div class="notificacoes-sino-lista">
-                        <?php if (empty($notificacoesRecentes)): ?>
-                            <p class="notificacoes-sino-vazio">Nenhuma notificação ainda.</p>
-                        <?php else: ?>
-                            <?php foreach ($notificacoesRecentes as $notificacao): ?>
-                                <div class="notificacoes-sino-linha<?php echo empty($notificacao['lida']) ? ' nao-lida' : ''; ?>">
-                                    <a class="notificacoes-sino-item" href="<?php echo url('notificacoesPainel/abrir/' . (int) $notificacao['id']); ?>">
-                                        <span class="notificacoes-sino-titulo"><?php echo htmlspecialchars($notificacao['titulo'], ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <span class="notificacoes-sino-mensagem">
-                                            <?php echo htmlspecialchars($notificacao['mensagem'], ENT_QUOTES, 'UTF-8'); ?>
-                                            <?php if (!empty($notificacao['estado_participante'])): ?>
-                                                <span class="status-pill <?php echo \App\Services\PermissaoParticipanteService::corDoEstado($notificacao['estado_participante']); ?>"><?php echo \App\Services\PermissaoParticipanteService::rotuloDoEstado($notificacao['estado_participante']); ?></span>
-                                            <?php endif; ?>
-                                        </span>
-                                    </a>
-                                    <?php if (empty($notificacao['lida'])): ?>
-                                        <?php $ehConvitePendente = $notificacao['tipo'] === 'participante_email_completo'; ?>
-                                        <?php $ehCpfAlterado = $notificacao['tipo'] === 'cpf_alterado_pendente'; ?>
-                                        <?php
-                                            $tituloIcone = 'Marcar como lida';
-                                            if ($ehConvitePendente) {
-                                                $tituloIcone = 'Convidar acesso agora';
-                                            } elseif ($ehCpfAlterado) {
-                                                $tituloIcone = 'Homologar agora';
-                                            }
-                                        ?>
-                                        <form method="post" action="<?php echo url('notificacoesPainel/marcarLida/' . (int) $notificacao['id']); ?>"><?= campoCsrf() ?>
-                                            <button type="submit" class="btn-icone" title="<?php echo $tituloIcone; ?>">
-                                                <?php if ($ehConvitePendente): ?>
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                        <path d="M22 2 11 13"></path>
-                                                        <path d="M22 2 15 22l-4-9-9-4 20-7Z"></path>
-                                                    </svg>
-                                                <?php else: ?>
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                                    </svg>
-                                                <?php endif; ?>
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-            <button type="button" id="ajuda-botao" class="topbar-icone" title="Ajuda desta tela" data-ajuda-titulo="<?php echo htmlspecialchars('Ajuda — ' . (string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?>" onclick="abrirModal(this.dataset.ajudaTitulo, document.getElementById('ajuda-painel-fonte').innerHTML)" <?php echo $ajudaHtml === null ? 'hidden' : ''; ?>>
+            <?php require __DIR__ . '/_notificacoes_sino.php'; ?>
+            <button type="button" id="ajuda-botao" class="topbar-icone" title="Ajuda desta tela" data-ajuda-titulo="<?php echo htmlspecialchars('Ajuda: ' . (string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?>" onclick="abrirModal(this.dataset.ajudaTitulo, document.getElementById('ajuda-painel-fonte').innerHTML)" <?php echo $ajudaHtml === null ? 'hidden' : ''; ?>>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="10"></circle>
                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
@@ -277,7 +283,11 @@ if ($ehPainelAdmin) {
             <?php endforeach; ?>
         </nav>
         <?php endif; ?>
-        <?php if (!empty($_SESSION['flash'])): ?>
+        <?php /* Fase 48B: no app de Evento o flash sai daqui - _app_bar.php
+        exibe logo abaixo do cabecalho, sobre a camada de fundo. Fase 49B:
+        mesma regra vale para as telas de Trabalhos, que agora tambem
+        montam sua propria _app_bar.php ($ehContextoEvento). */ ?>
+        <?php if (!empty($_SESSION['flash']) && !$ehContextoEvento): ?>
             <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); ?></p>
             <?php unset($_SESSION['flash']); ?>
         <?php endif; ?>
@@ -308,14 +318,28 @@ if ($ehPainelAdmin) {
     <script src="<?php echo config('base_path'); ?>/assets/js/editor-rico.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/editor-rico.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/reordenar-arrastar.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/reordenar-arrastar.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/campo-cor.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/campo-cor.js'); ?>" defer></script>
+    <!-- Fase 48 (correcao pos-teste de fumaca): busca-usuario.js e
+         atividade-tolerancia.js passam a carregar incondicionalmente (nao
+         so' nas telas onde nasceram) porque os dois so' agem quando
+         encontram seus elementos no DOM, e precisam reagir ao evento
+         'conteudo-admin-atualizado' apos navegacao pela arvore lateral
+         (ver assets/js/navegacao-arvore.js) - condicionar por $view nunca
+         funcionaria pra isso, ja que essa navegacao nunca reexecuta os
+         <script> de layout.php (achado real: os rotulos de tolerancia e a
+         busca de facilitador so' funcionavam em F5 direto na URL). -->
+    <script src="<?php echo config('base_path'); ?>/assets/js/busca-usuario.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/busca-usuario.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/atividade-tolerancia.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/atividade-tolerancia.js'); ?>" defer></script>
     <?php endif; ?>
 <?php endif; ?>
-<?php $ehPaginaPublicaSemTopbar = $ehPaginaConvidado || (isset($view) && strpos($view, 'publico/') === 0); ?>
+<?php $ehPaginaPublicaSemTopbar = $ehPaginaConvidado || $ehContextoEvento || (isset($view) && strpos($view, 'publico/') === 0); ?>
 <?php if ($ehPaginaPublicaSemTopbar && $ajudaHtml !== null): ?>
     <!-- Fase 31: paginas convidadas (login/cadastro/senha) e publico/* nao
          passam pelo bloco $ehPainelInterno acima (cada uma monta o proprio
          cabecalho, sem topbar), entao o shell do modal generico precisa ser
-         injetado aqui tambem para a ajuda contextual funcionar nelas. -->
+         injetado aqui tambem para a ajuda contextual funcionar nelas. Fase 41:
+         mesmo motivo vale para as telas do aplicativo do Evento (app-bar
+         propria, tambem sem topbar) - sem isso, abrirModal() nao existe e o
+         botao de ajuda quebra com erro no console. -->
     <div id="ajuda-painel-fonte" hidden><?php echo $ajudaHtml; ?></div>
     <div id="modal-generico" class="modal-overlay" hidden>
         <div class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
@@ -354,9 +378,50 @@ if ($ehPainelAdmin) {
     $whatsappSuporte = $contatoSuporte !== null ? linkWhatsApp($contatoSuporte['whatsapp']) : null;
     ?>
     <?php if ($whatsappSuporte !== null): ?>
-    <a href="<?php echo htmlspecialchars($whatsappSuporte, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener" class="site-whatsapp-flutuante" aria-label="Falar com o suporte do NPI pelo WhatsApp">
+    <a href="<?php echo htmlspecialchars($whatsappSuporte, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener" class="site-whatsapp-flutuante" aria-label="<?php echo htmlspecialchars('Falar com o suporte do ' . nomeUnidadeResponsavel() . ' pelo WhatsApp', ENT_QUOTES, 'UTF-8'); ?>">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38a9.9 9.9 0 0 0 4.76 1.21h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.12-2.9-6.99A9.82 9.82 0 0 0 12.04 2Zm0 1.67c2.19 0 4.25.85 5.79 2.4a8.2 8.2 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.13.82.84-3.05-.2-.31a8.18 8.18 0 0 1-1.26-4.37c0-4.55 3.7-8.23 8.24-8.23h.04Z"></path></svg>
     </a>
+    <?php endif; ?>
+<?php endif; ?>
+<?php if ($ehContextoEvento): ?>
+    <!-- Fase 41: menu do aplicativo (botao hamburguer na app-bar + painel,
+         ver app/Views/eventoApp/_app_bar.php/_menu_painel.php) reaproveita o
+         mesmo componente generico de painel lateral da home publica. Fase
+         49B: passa a valer tambem para trabalho/*/avaliacaoTrabalhos/*
+         ($ehContextoEvento), que agora montam a mesma _app_bar.php. -->
+    <script src="<?php echo config('base_path'); ?>/assets/js/painel-lateral.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/painel-lateral.js'); ?>" defer></script>
+    <?php if ($ehAppEvento): ?>
+    <!-- Fase 41 (correcao pos-teste de fumaca): item "Instalar aplicativo"
+         sempre visivel no menu, em vez de depender do usuario encontrar a
+         opcao escondida no menu de tres pontos do navegador. Fase 49B:
+         continua restrito a $ehAppEvento (rotas eventoApp/*) de proposito -
+         so' ali existe manifesto/service worker para o navegador considerar
+         a pagina instalavel; nas telas de Trabalhos o banner ficaria inerte
+         mesmo carregando o script (nunca aparece), entao nao ha motivo pra
+         carregar. -->
+    <script src="<?php echo config('base_path'); ?>/assets/js/instalar-app.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/instalar-app.js'); ?>" defer></script>
+    <?php endif; ?>
+    <!-- Fase 44: sino de notificacoes agora tambem na app-bar do evento
+         (eventoApp/_app_bar.php) - mesmo script usado pelo painel interno. -->
+    <script src="<?php echo config('base_path'); ?>/assets/js/notificacoes-sino.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/notificacoes-sino.js'); ?>" defer></script>
+    <?php if ($view === 'eventoApp/inscricao'): ?>
+    <!-- Fase 42 (correcao pos-teste de fumaca): botao "Aumentar brilho para
+         leitura" do cartao de credenciamento - so' existe em "Minha
+         inscricao", nao precisa carregar nas demais telas do app. -->
+    <script src="<?php echo config('base_path'); ?>/assets/js/brilho-cracha.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/brilho-cracha.js'); ?>" defer></script>
+    <?php endif; ?>
+    <?php if (in_array($view, ['eventoApp/ler', 'eventoApp/presenca'], true)): ?>
+    <!-- Fase 43: componente de leitura de codigo (camera + digitacao
+         manual) - existe em "Ler codigo" e, desde a Fase 47, em "Confirmar
+         presenca" - reaproveitavel pelas Fases 49/50 (estandes, networking).
+         window.SI_CSRF_TOKEN so' era definido dentro do bloco $ehPainelAdmin
+         (linha ~358) - as
+         telas do app do evento nunca tinham precisado de POST via fetch
+         antes desta fase, entao a variavel nunca existia aqui (undefined),
+         o header X-CSRF-Token ia como a string literal "undefined", e o
+         Router rejeitava com 403 (bug real, achado no teste de fumaca). -->
+    <script>window.SI_CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token']); ?>;</script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/leitor-codigo.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/leitor-codigo.js'); ?>" defer></script>
     <?php endif; ?>
 <?php endif; ?>
 </body>

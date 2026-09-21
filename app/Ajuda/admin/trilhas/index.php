@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Trilhas',
-    'resumo' => 'Categorias do concurso (ex.: "Interna"/"Externa"), com ordem, status e situação das inscrições.',
+    'resumo' => 'Categorias do concurso (ex.: "Interna"/"Externa"), com ordem e situação das inscrições.',
     'operacoes' => [
         [
             'nome' => '+ Nova trilha',
@@ -21,7 +21,7 @@ return [
             'nome' => 'Abrir/fechar inscrições',
             'icone' => 'cadeado_fechado',
             'como' => 'Alterna se a página pública de inscrição desta trilha aceita novas equipes. Só Administrador.',
-            'observacao' => 'Só funciona se a trilha já tiver uma etapa de ordem 1 chamada "Cadastro de Equipe" configurada — sem isso, o cadeado nem aparece.',
+            'observacao' => 'Só funciona se a trilha já tiver uma etapa de ordem 1 chamada "Cadastro de Equipe" configurada; sem isso, o cadeado nem aparece.',
         ],
         [
             'nome' => 'Editar',

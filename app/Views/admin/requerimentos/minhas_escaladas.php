@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Requerimentos — Minhas pendências</h1>
+<h1>Requerimentos: Minhas pendências</h1>
 
 <p><a href="<?php echo url('duvidaAdmin/minhasEscaladas'); ?>">Ver minhas dúvidas escaladas</a></p>
 
@@ -20,10 +20,10 @@
 </form>
 
 <?php if (empty($minhasEscaladas)): ?>
-    <p>Nenhum requerimento escalado pra você no momento.</p>
+    <p>Nenhum requerimento escalado para você no momento.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th>Equipe</th><th>Modelo</th><th>Status</th><th>SLA</th><th>Ações</th></tr>
+        <tr><th>Equipe</th><th>Modelo</th><th>Situação</th><th>Prazo</th><th>Ações</th></tr>
         <?php
             $rotulosStatus = [
                 'recebido' => 'Recebido', 'escalado' => 'Em análise', 'aprovado' => 'Aprovado',

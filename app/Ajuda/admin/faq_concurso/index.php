@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'FAQ desta edição',
-    'resumo' => 'Escolhe quais perguntas do banco global de FAQ ficam ativas na home deste concurso, e em que ordem. Aberto a Administrador e Suporte — e, ao contrário da maioria das telas do núcleo do concurso, aqui o Suporte grava, não só lê. Cada um só age no concurso a que está vinculado.',
+    'resumo' => 'Escolhe quais perguntas do banco global de FAQ ficam ativas na página inicial deste concurso, e em que ordem. Aberto a Administrador e Suporte, e, ao contrário da maioria das telas do núcleo do concurso, aqui o Suporte grava, não só lê. Cada um só age no concurso a que está vinculado.',
     'operacoes' => [
         [
             'nome' => 'Lista "Ativas"',
@@ -16,7 +16,7 @@ return [
         [
             'nome' => 'Lista "Disponíveis no banco"',
             'como' => 'Botão "Ativar" liga a pergunta a esta edição.',
-            'observacao' => 'Ativar só marca a pergunta como ativa aqui — nunca duplica o texto.',
+            'observacao' => 'Ativar só marca a pergunta como ativa aqui; nunca duplica o texto.',
         ],
         [
             'nome' => '+ Nova pergunta no banco',

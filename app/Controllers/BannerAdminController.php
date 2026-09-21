@@ -56,7 +56,7 @@ class BannerAdminController extends Controller
 
         if ($banner === null) {
             http_response_code(404);
-            exit('Banner não encontrado.');
+            exit('Faixa não encontrada.');
         }
 
         $erro = null;
@@ -87,7 +87,7 @@ class BannerAdminController extends Controller
 
             $_SESSION['flash'] = 'Banner removido.';
         } catch (\PDOException $e) {
-            flashErro('Não foi possível remover o banner.');
+            flashErro('Não foi possível remover a faixa.');
         }
 
         $this->redirecionar('banners/index');
@@ -164,7 +164,7 @@ class BannerAdminController extends Controller
         $dados = $this->dadosComuns();
 
         if (!empty($dados['cta_titulo']) && (empty($dados['cta_destino_tipo']) || empty($dados['cta_destino_valor']))) {
-            return 'Selecione o destino do botão e informe o valor (ou remova o título do botão) — o sistema não permite salvar um botão sem destino.';
+            return 'Selecione o destino do botão e informe o valor (ou remova o título do botão). O sistema não permite salvar um botão sem destino.';
         }
 
         $dados['imagem_desktop_path'] = $caminhoDesktop;
@@ -204,7 +204,7 @@ class BannerAdminController extends Controller
         $dados = $this->dadosComuns();
 
         if (!empty($dados['cta_titulo']) && (empty($dados['cta_destino_tipo']) || empty($dados['cta_destino_valor']))) {
-            return 'Selecione o destino do botão e informe o valor (ou remova o título do botão) — o sistema não permite salvar um botão sem destino.';
+            return 'Selecione o destino do botão e informe o valor (ou remova o título do botão). O sistema não permite salvar um botão sem destino.';
         }
 
         $dados['imagem_desktop_path'] = $caminhoDesktop;

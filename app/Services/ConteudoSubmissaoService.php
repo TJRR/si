@@ -66,7 +66,7 @@ class ConteudoSubmissaoService
 
                 if ($desafio !== null) {
                     $tema = $this->temas->buscarPorId($desafio['tema_id']);
-                    $valor = ($tema !== null ? $tema['nome'] . ' — ' : '') . $desafio['pergunta'];
+                    $valor = ($tema !== null ? $tema['nome'] . ': ' : '') . $desafio['pergunta'];
                 }
             }
 

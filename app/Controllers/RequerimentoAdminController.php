@@ -144,7 +144,7 @@ class RequerimentoAdminController extends Controller
 
         if (!$statusPermiteEsteDesfecho || !$this->podeAgir($requerimento)) {
             http_response_code(403);
-            exit('Acesso negado ou pedido em status que não permite esta ação.');
+            exit('Acesso negado ou pedido em situação que não permite esta ação.');
         }
 
         $desfechoDefinitivo = in_array($desfecho, ['aprovado', 'recusado', 'revogado'], true);
@@ -165,7 +165,7 @@ class RequerimentoAdminController extends Controller
         $assinaturaConferida = isset($_POST['assinatura_conferida']) ? 1 : 0;
 
         if ($desfecho === 'aprovado' && $assinaturaConferida !== 1) {
-            flashErro('Confirme que validou a assinatura no site oficial do gov.br antes de aprovar.');
+            flashErro('Confirme que validou a assinatura no portal oficial do gov.br antes de aprovar.');
             $this->redirecionar('requerimentoAdmin/ver/' . (int) $id);
             return;
         }
@@ -250,7 +250,7 @@ class RequerimentoAdminController extends Controller
     private function mensagemResultadoIti($resultado, array $requerimento)
     {
         if ($resultado === null) {
-            return ['Não foi possível confirmar automaticamente no ITI — confira manualmente no site oficial, abaixo.', 'alerta'];
+            return ['Não foi possível confirmar automaticamente no ITI: confira manualmente no site oficial, abaixo.', 'alerta'];
         }
 
         $partes = ['Validação automática ITI: ' . $resultado['status_geral']];
@@ -267,7 +267,7 @@ class RequerimentoAdminController extends Controller
             $partes[] = 'assinado em ' . $resultado['data_assinatura'];
         }
 
-        $mensagem = implode(' — ', $partes) . '. Isto não substitui a conferência manual abaixo.';
+        $mensagem = implode('; ', $partes) . '. Isto não substitui a conferência manual abaixo.';
         $alerta = $this->alertaDivergenciaIti($resultado, $requerimento);
 
         return $alerta !== null ? [$alerta . ' ' . $mensagem, 'erro'] : [$mensagem, 'alerta'];
@@ -333,7 +333,7 @@ class RequerimentoAdminController extends Controller
 
         if (!in_array($requerimento['status'], ['recebido', 'escalado'], true) || !$this->podeAgir($requerimento)) {
             http_response_code(403);
-            exit('Acesso negado ou pedido em status que não permite escalar.');
+            exit('Acesso negado ou pedido em situação que não permite escalar.');
         }
 
         $novoResponsavelId = (int) (isset($_POST['usuario_id']) ? $_POST['usuario_id'] : 0);
@@ -374,7 +374,7 @@ class RequerimentoAdminController extends Controller
         $this->requerimentos->retomar((int) $id);
         $this->notificarAdministradoresFilaGeral($requerimento);
 
-        $_SESSION['flash'] = 'Requerimento retomado — de volta à fila geral.';
+        $_SESSION['flash'] = 'Requerimento retomado: de volta à fila geral.';
         $this->redirecionar('home/administrativo');
     }
 

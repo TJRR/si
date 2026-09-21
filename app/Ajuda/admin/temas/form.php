@@ -6,7 +6,7 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Tema — novo/editar',
+    'titulo' => 'Tema (novo/editar)',
     'resumo' => 'Dados de um Tema (grande área de desafio de uma trilha).',
     'operacoes' => [
         [
@@ -15,7 +15,7 @@ return [
         ],
         [
             'nome' => 'Ícone',
-            'como' => 'Escolha entre os ícones pré-definidos da lista — não é upload de imagem.',
+            'como' => 'Escolha entre os ícones pré-definidos da lista: não é envio de imagem.',
         ],
         [
             'nome' => 'Ordem',

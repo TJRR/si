@@ -71,7 +71,7 @@ class ExpressaoAritmetica
         $resultado = $this->parseExpressao();
 
         if ($this->tokenAtual() !== null) {
-            throw new \RuntimeException('Token inesperado na formula: ' . $this->tokenAtual()['valor']);
+            throw new \RuntimeException('Símbolo inesperado na fórmula: ' . $this->tokenAtual()['valor']);
         }
 
         return $resultado;
@@ -171,7 +171,7 @@ class ExpressaoAritmetica
             $this->consumir();
 
             if (!array_key_exists($token['valor'], $this->variaveis)) {
-                throw new \RuntimeException('Variavel desconhecida na formula: ' . $token['valor']);
+                throw new \RuntimeException('Variável desconhecida na fórmula: ' . $token['valor']);
             }
 
             return (float) $this->variaveis[$token['valor']];
@@ -190,7 +190,7 @@ class ExpressaoAritmetica
             return $valor;
         }
 
-        throw new \RuntimeException('Token inesperado na formula: ' . $token['valor']);
+        throw new \RuntimeException('Símbolo inesperado na fórmula: ' . $token['valor']);
     }
 
     private function tokenAtual()

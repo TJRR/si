@@ -8,7 +8,7 @@
         <a href="<?php echo url('blocos/novo'); ?>" class="btn-acao">+ Novo bloco livre</a>
     </div>
 </div>
-<p>Os blocos <strong>Sobre o Prêmio</strong> e <strong>Premiação</strong> são padrão do sistema — sempre existem, só podem ser editados ou desativados, nunca removidos. Blocos livres (ex.: "Mentorias", "Parceiros") podem ser criados, editados e removidos livremente.</p>
+<p>Os blocos <strong>Sobre o Prêmio</strong> e <strong>Premiação</strong> são padrão do sistema: sempre existem, só podem ser editados ou desativados, nunca removidos. Blocos livres (ex.: "Mentorias", "Parceiros") podem ser criados, editados e removidos livremente.</p>
 
 <?php if (empty($blocos)): ?>
     <p>Nenhum bloco cadastrado ainda.</p>

@@ -22,7 +22,7 @@ $mapaRsvp = [
 /** Segundos -> "1h 05min" / "12min" / "—" quando nao ha o que apurar. */
 $formatarDuracao = function ($segundos) {
     if ($segundos === null) {
-        return '—';
+        return 'Não informado';
     }
 
     $minutos = (int) round($segundos / 60);
@@ -38,7 +38,7 @@ $formatarDuracao = function ($segundos) {
 <?php if ($horario['presenca_status'] === 'pendente'): ?>
     <p class="status-pill laranja">Presença ainda não capturada</p>
     <p>
-        O relatório é gerado automaticamente algumas horas depois do fim do horário — o Google
+        O relatório é gerado automaticamente algumas horas depois do fim do horário: o Google
         leva um tempo para fechar o registro da chamada.
         <?php if ((int) $horario['presenca_tentativas'] > 0): ?>
             Já foram feitas <strong><?php echo (int) $horario['presenca_tentativas']; ?> de <?php echo (int) $maxTentativas; ?></strong> tentativas
@@ -52,7 +52,7 @@ $formatarDuracao = function ($segundos) {
     <p>
         As tentativas de obter os dados desta sala se esgotaram. Se vários horários mostrarem
         este mesmo aviso, a causa provavelmente é única (autorização do escopo do Google Meet
-        ou edição do Workspace sem rastreamento de presença) — verifique isso antes de tratar
+        ou edição do Workspace sem rastreamento de presença); verifique isso antes de tratar
         caso a caso. Depois de corrigida a causa, use o botão abaixo para tentar de novo.
     </p>
     <form method="post" action="<?php echo url($rotaModulo . '/reprocessarPresenca'); ?>"><?= campoCsrf() ?>
@@ -99,7 +99,7 @@ $formatarDuracao = function ($segundos) {
                         <?php elseif ($horario['presenca_status'] === 'capturada'): ?>
                             <span class="status-pill vermelho">Não</span>
                         <?php else: ?>
-                            <span class="status-pill">—</span>
+                            <span class="status-pill">Não informado</span>
                         <?php endif; ?>
                     </td>
                     <td>
@@ -109,13 +109,13 @@ $formatarDuracao = function ($segundos) {
                                 <small>(<?php echo (int) $presenca['total_sessoes']; ?> entradas)</small>
                             <?php endif; ?>
                         <?php else: ?>
-                            —
+                            Não informado
                         <?php endif; ?>
                     </td>
                     <td>
                         <?php echo $presenca !== null
                             ? htmlspecialchars(formatarDataHora($presenca['primeira_entrada']), ENT_QUOTES, 'UTF-8')
-                            : '—'; ?>
+                            : 'Não informado'; ?>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -127,7 +127,7 @@ $formatarDuracao = function ($segundos) {
     <h3>Entraram sem identificação</h3>
     <p>
         Estas pessoas entraram na sala mas <strong>não foram reconhecidas como convidados deste horário</strong>.
-        A identificação é feita pelo <strong>nome da conta Google usada para entrar</strong> — a API do Meet não
+        A identificação é feita pelo <strong>nome da conta Google usada para entrar</strong>: a integração com o Google Meet não
         informa o e-mail de quem participou. Por isso, esta lista pode conter tanto alguém realmente
         de fora quanto um integrante legítimo cujo nome na conta Google difere do nome cadastrado
         (apelido, nome social, conta pessoal). Confira antes de tratar como intruso.

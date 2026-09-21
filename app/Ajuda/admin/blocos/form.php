@@ -6,16 +6,16 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Bloco de Conteúdo — editar',
-    'resumo' => 'Conteúdo de uma seção de texto + imagem da home.',
+    'titulo' => 'Bloco de Conteúdo: editar',
+    'resumo' => 'Conteúdo de uma seção de texto + imagem da página inicial.',
     'operacoes' => [
         [
             'nome' => 'Título / Âncora',
-            'como' => 'A âncora é o link do menu superior para essa seção — travada nos blocos padrão.',
+            'como' => 'A âncora é o hiperlink do menu superior para essa seção, travada nos blocos padrão.',
         ],
         [
             'nome' => 'Conteúdo',
-            'como' => 'Editor rico com upload de imagem inline.',
+            'como' => 'Editor rico com envio de imagem inline.',
         ],
         [
             'nome' => 'Imagem principal',

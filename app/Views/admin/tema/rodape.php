@@ -16,7 +16,7 @@
 <form method="post" action="<?php echo url('tema/rodape'); ?>" enctype="multipart/form-data" id="form-rodape"><?= campoCsrf() ?>
     <fieldset>
         <legend>Logo do rodapé (opcional)</legend>
-        <p>Se enviada, substitui a logo padrão no rodapé (útil pra uma versão em cor diferente, sem precisar de tratamento de imagem toda vez). Sem imagem, o rodapé usa a mesma logo do cabeçalho.</p>
+        <p>Se enviada, substitui a logo padrão no rodapé (útil para uma versão em cor diferente, sem precisar de tratamento de imagem toda vez). Sem imagem, o rodapé usa a mesma logo do cabeçalho.</p>
         <?php if (!empty($configuracaoVisual['rodape_logo_path'])): ?>
             <img src="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $configuracaoVisual['rodape_logo_path'], ENT_QUOTES, 'UTF-8'); ?>" alt="Logo atual do rodapé" style="max-width:200px;display:block;margin-bottom:.5rem;background:#333;padding:.5rem;">
         <?php endif; ?>
@@ -28,7 +28,7 @@
 
     <fieldset>
         <legend>Atalhos de navegação no rodapé</legend>
-        <p>Escolha quais seções aparecem na coluna "Navegação" do rodapé — independente do que aparece no menu do cabeçalho. "Sobre o Prêmio", "Premiação" e blocos livres (como "Mentorias Opcionais") têm essa opção na própria tela de Blocos de conteúdo.</p>
+        <p>Escolha quais seções aparecem na coluna "Navegação" do rodapé: independente do que aparece no menu do cabeçalho. "Sobre o Prêmio", "Premiação" e blocos livres (como "Mentorias Opcionais") têm essa opção na própria tela de Blocos de conteúdo.</p>
         <label>
             <input type="checkbox" name="rodape_mostrar_trilhas" value="1" <?php echo (!$configuracaoVisual || $configuracaoVisual['rodape_mostrar_trilhas']) ? 'checked' : ''; ?>>
             Trilhas

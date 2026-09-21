@@ -8,7 +8,7 @@
 <p><a href="<?php echo url('criterios/novo/' . (int) $etapa['id']); ?>">+ Novo critério</a></p>
 
 <p>Soma dos pesos: <strong><?php echo number_format($somaPesos, 2, ',', '.'); ?></strong>
-    (a fórmula <em>média ponderada de critérios</em> usa esta soma como denominador — os editais 2026 usam pesos que somam 10)</p>
+    (a fórmula <em>média ponderada de critérios</em> usa esta soma como denominador; os editais 2026 usam pesos que somam 10)</p>
 
 <?php if (empty($criterios)): ?>
     <p>Nenhum critério cadastrado.</p>

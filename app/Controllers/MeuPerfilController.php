@@ -10,7 +10,9 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auditoria;
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Repositories\TemaVisualRepository;
 use App\Repositories\TokenSenhaRepository;
+use App\Repositories\UsuarioPerfilRepository;
 use App\Repositories\UsuarioRepository;
 use App\Services\ImagemService;
 
@@ -35,9 +37,17 @@ class MeuPerfilController extends Controller
         $this->imagens = new ImagemService();
     }
 
+    /**
+     * Fase 48 (correcao pos-teste de fumaca): documento/cargo/categoria
+     * profissional/orgao de origem/minicurriculo (usuarios_perfil) passam a
+     * ser editaveis tambem aqui pelo proprio usuario - mesma tabela que
+     * AtividadeAdminController::vincularFacilitador() usa (o Admin so'
+     * preenche o que ainda estiver vazio, nunca duplica o dado).
+     */
     public function index()
     {
         $usuario = $this->usuarios->buscarPorId(Auth::usuarioId());
+        $perfis = new UsuarioPerfilRepository();
         $erro = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -68,6 +78,19 @@ class MeuPerfilController extends Controller
                 }
 
                 if ($erro === null) {
+                    $perfis->salvar($usuario['id'], [
+                        'documento' => trim(isset($_POST['documento']) ? $_POST['documento'] : ''),
+                        'tipo_documento' => in_array(isset($_POST['tipo_documento']) ? $_POST['tipo_documento'] : null, UsuarioPerfilRepository::TIPOS_DOCUMENTO, true)
+                            ? $_POST['tipo_documento']
+                            : 'CPF',
+                        'cargo' => trim(isset($_POST['cargo']) ? $_POST['cargo'] : ''),
+                        'categoria_profissional' => in_array(isset($_POST['categoria_profissional']) ? $_POST['categoria_profissional'] : null, UsuarioPerfilRepository::CATEGORIAS_PROFISSIONAIS, true)
+                            ? $_POST['categoria_profissional']
+                            : '',
+                        'orgao_origem' => trim(isset($_POST['orgao_origem']) ? $_POST['orgao_origem'] : ''),
+                        'minicurriculo' => trim(isset($_POST['minicurriculo']) ? $_POST['minicurriculo'] : ''),
+                    ]);
+
                     $_SESSION['flash'] = 'Perfil atualizado.';
                     $this->redirecionar('meuPerfil/index');
                     return;
@@ -79,9 +102,48 @@ class MeuPerfilController extends Controller
 
         $this->renderizar('meuPerfil/index', [
             'usuario' => $usuario,
+            'perfil' => $perfis->buscarPorUsuarioId($usuario['id']),
             'erro' => $erro,
             'destinoPainel' => Auth::destinoPainel(),
         ], 'Meu perfil', ['tipo' => 'perfilDados', 'id' => null]);
+    }
+
+    /**
+     * Fase 48B (correcao pos-teste de fumaca): virou sub-aba propria
+     * "Aparência", mesmo padrao de alterarSenha() - antes era uma secao a
+     * mais dentro de index(), junto com nome/foto/dados complementares.
+     * O usuario escolhe, entre os temas publicados, qual usar em todo o
+     * sistema (portal publico, painel administrativo e app de Evento) - nao
+     * gerencia tema nenhum, so' seleciona. Ver TemaVisualRepository::resolverAtivo().
+     */
+    public function tema()
+    {
+        $temasVisuais = new TemaVisualRepository();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $temaId = (int) (isset($_POST['tema_id']) ? $_POST['tema_id'] : 0);
+            $temaEscolhido = $temaId > 0 ? $temasVisuais->buscarPorId($temaId) : null;
+
+            if ($temaId > 0 && ($temaEscolhido === null || (int) $temaEscolhido['publicado'] === 0)) {
+                flashErro('Tema não encontrado ou não disponível.');
+                $this->redirecionar('meuPerfil/tema');
+                return;
+            }
+
+            $this->usuarios->definirTemaVisual(Auth::usuarioId(), $temaId > 0 ? $temaId : null);
+
+            flashSucesso('Tema atualizado.');
+            $this->redirecionar('meuPerfil/tema');
+            return;
+        }
+
+        $usuario = $this->usuarios->buscarPorId(Auth::usuarioId());
+
+        $this->renderizar('meuPerfil/tema', [
+            'temasDisponiveis' => $temasVisuais->listarPublicados(),
+            'temaAtualId' => $usuario['tema_visual_id'],
+            'destinoPainel' => Auth::destinoPainel(),
+        ], 'Aparência', ['tipo' => 'perfilTema', 'id' => null]);
     }
 
     /**

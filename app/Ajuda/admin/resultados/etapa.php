@@ -13,7 +13,7 @@ return [
             'nome' => 'Confirmar e publicar',
             'icone' => 'publicar',
             'como' => 'Publica o ranking desta etapa numa página pública.',
-            'observacao' => 'Publicar bloqueia novos lançamentos de nota nesta etapa — nenhum avaliador consegue mais salvar notas depois disso.',
+            'observacao' => 'Publicar bloqueia novos lançamentos de nota nesta etapa: nenhum avaliador consegue mais salvar notas depois disso.',
         ],
         [
             'nome' => 'Reabrir',
@@ -23,7 +23,7 @@ return [
         [
             'nome' => 'Ver submissão / Ver avaliações',
             'icone' => 'ver',
-            'como' => 'Abrem em popup o conteúdo enviado pela equipe, ou as notas e feedbacks de cada avaliador daquela submissão.',
+            'como' => 'Abrem em janela sobreposta o conteúdo enviado pela equipe, ou as notas e comentários de cada avaliador daquela submissão.',
         ],
         [
             'nome' => 'Gerar relatório de auditoria (PDF)',
@@ -31,7 +31,7 @@ return [
         ],
         [
             'nome' => 'Gerar relatório de notas (PDF)',
-            'como' => 'Relatório de uso interno, com as iniciais reais do avaliador na etapa (não anonimizado) — não deve circular fora da administração.',
+            'como' => 'Relatório de uso interno, com as iniciais reais do avaliador na etapa (não anonimizado). Não deve circular fora da administração.',
         ],
     ],
     'conceitos' => ['publicar_trava', 'sigilo_anonimato'],

@@ -12,7 +12,7 @@ return [
         [
             'nome' => 'Edição obrigatória',
             'como' => 'O formulário abre pré-preenchido, mas nunca grava direto. Reescreva a pergunta e a resposta em termos genéricos antes de salvar.',
-            'observacao' => 'O texto veio de um participante e pode conter nome da equipe, nome do projeto, dado pessoal e detalhe de submissão sob sigilo — e o destino dele é uma página pública. Este é o único momento de retirar isso.',
+            'observacao' => 'O texto veio de um participante e pode conter nome da equipe, nome do projeto, dado pessoal e detalhe de submissão sob sigilo, e o destino dele é uma página pública. Este é o único momento de retirar isso.',
         ],
         [
             'nome' => 'Pergunta',
@@ -24,7 +24,7 @@ return [
         ],
         [
             'nome' => 'Destino',
-            'como' => 'Duas opções, e só duas: "Só no banco geral" guarda a pergunta sem publicar em lugar nenhum; "Banco geral e ativa na edição escolhida" também a liga àquela edição, e aí ela passa a aparecer na home. Toda pergunta nasce obrigatoriamente no banco geral — ver o conceito abaixo.',
+            'como' => 'Duas opções, e só duas: "Só no banco geral" guarda a pergunta sem publicar em lugar nenhum; "Banco geral e ativa na edição escolhida" também a liga àquela edição, e aí ela passa a aparecer na página inicial. Toda pergunta nasce obrigatoriamente no banco geral; ver o conceito abaixo.',
             'observacao' => 'A edição sugerida é a da própria dúvida.',
         ],
         [
@@ -33,7 +33,7 @@ return [
         ],
         [
             'nome' => 'Promover duas vezes',
-            'como' => 'Se a dúvida já tiver gerado pergunta, a tela avisa e lista o que já existe, mas não impede — uma dúvida longa pode render mais de uma pergunta.',
+            'como' => 'Se a dúvida já tiver gerado pergunta, a tela avisa e lista o que já existe, mas não impede: uma dúvida longa pode render mais de uma pergunta.',
         ],
     ],
     'conceitos' => ['banco_global_vs_edicao'],

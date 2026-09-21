@@ -105,7 +105,7 @@ class DesignacaoAdminController extends Controller
             'filtroAvaliador' => $filtroAvaliador,
             'filtroNota' => $filtroNota,
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
-        ], 'Designação de avaliadores — ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
+        ], 'Designação de avaliadores: ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
 
         unset($_SESSION['flash']);
     }
@@ -228,13 +228,13 @@ class DesignacaoAdminController extends Controller
         RoleMiddleware::exigir(['administrador'], $trilhaDaDesignacao !== null ? $trilhaDaDesignacao['concurso_id'] : null);
 
         if ($designacao['origem'] === 'sorteio') {
-            flashErro('Designações de sorteio não podem ser removidas — a distribuição já foi aceita.');
+            flashErro('Designações de sorteio não podem ser removidas: a distribuição já foi aceita.');
             $this->redirecionar('designacoes/index/' . $etapaId);
             return;
         }
 
         if ($this->notas->contarNotasPorUsuario($designacao['submissao_id'], $designacao['usuario_id']) > 0) {
-            flashErro('Este avaliador já lançou nota para esta submissão — não é possível remover a designação.');
+            flashErro('Este avaliador já lançou nota para esta submissão: não é possível remover a designação.');
             $this->redirecionar('designacoes/index/' . $etapaId);
             return;
         }
@@ -264,7 +264,7 @@ class DesignacaoAdminController extends Controller
             'etapa' => $etapa,
             'trilha' => $trilha,
             'progresso' => $this->servico->progressoPorAvaliador($etapaId),
-        ], 'Progresso da avaliação — ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
+        ], 'Progresso da avaliação: ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
     }
 
     public function distribuir($etapaId)
@@ -301,7 +301,7 @@ class DesignacaoAdminController extends Controller
                 'etapa' => $etapa,
                 'trilha' => $trilha,
                 'categorias' => $categorias,
-            ], 'Selecionar avaliadores do sorteio — ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
+            ], 'Selecionar avaliadores do sorteio: ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
             return;
         }
 
@@ -323,7 +323,7 @@ class DesignacaoAdminController extends Controller
             'etapa' => $etapa,
             'trilha' => $trilha,
             'linhas' => $linhas,
-        ], 'Prévia da distribuição — ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
+        ], 'Prévia da distribuição: ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
     }
 
     public function distribuirComSelecao()
@@ -361,7 +361,7 @@ class DesignacaoAdminController extends Controller
             'etapa' => $etapa,
             'trilha' => $trilha,
             'linhas' => $linhas,
-        ], 'Prévia da distribuição — ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
+        ], 'Prévia da distribuição: ' . $etapa['nome'], ['tipo' => 'designacoes', 'id' => (int) $etapaId]);
     }
 
     public function confirmarDistribuicao()

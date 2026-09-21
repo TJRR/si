@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1><?php echo $evento === null ? 'Novo evento' : 'Editar evento'; ?> — <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1><?php echo $evento === null ? 'Novo evento' : 'Editar evento'; ?>: <?php echo htmlspecialchars($concurso['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -32,10 +32,10 @@ $paraInputDatetime = function ($valor) {
 
     <label>Vincular a uma Etapa real (opcional):
         <select name="etapa_id">
-            <option value="">— Nenhuma —</option>
+            <option value="">Nenhuma</option>
             <?php foreach ($etapasDisponiveis as $etapa): ?>
                 <option value="<?php echo (int) $etapa['id']; ?>" <?php echo ($evento !== null && (int) $evento['etapa_id'] === (int) $etapa['id']) ? 'selected' : ''; ?>>
-                    <?php echo htmlspecialchars($etapa['trilha_nome'] . ' — ' . $etapa['nome'], ENT_QUOTES, 'UTF-8'); ?>
+                    <?php echo htmlspecialchars($etapa['trilha_nome'] . ': ' . $etapa['nome'], ENT_QUOTES, 'UTF-8'); ?>
                 </option>
             <?php endforeach; ?>
         </select>

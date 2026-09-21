@@ -6,12 +6,12 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Critério — novo/editar',
+    'titulo' => 'Critério: novo/editar',
     'resumo' => 'Dados de um critério de avaliação.',
     'operacoes' => [
         [
             'nome' => 'Código',
-            'como' => 'Sugerido automaticamente; precisa ser único dentro da etapa — é a variável usada na Fórmula da Etapa.',
+            'como' => 'Sugerido automaticamente; precisa ser único dentro da etapa: é a variável usada na Fórmula da Etapa.',
         ],
         [
             'nome' => 'Nome / Descrição / Peso / Escala mín-máx',
@@ -19,8 +19,8 @@ return [
         ],
         [
             'nome' => 'Campos do formulário nesta aba',
-            'como' => 'Checkboxes que escolhem quais campos da submissão aparecem na aba deste critério na tela do avaliador.',
-            'observacao' => 'Se nenhum campo for marcado, a aba mostra a ficha inteira. Se todos os critérios da etapa tiverem exatamente o mesmo conjunto de campos marcado, a tela do avaliador muda de "abas" para o layout "compartilhado" (grade) automaticamente.',
+            'como' => 'Caixas de seleção que escolhem quais campos da submissão aparecem na aba deste critério na tela do avaliador.',
+            'observacao' => 'Se nenhum campo for marcado, a aba mostra a ficha inteira. Se todos os critérios da etapa tiverem exatamente o mesmo conjunto de campos marcado, a tela do avaliador muda do formato "abas" para o formato "compartilhado" (grade) automaticamente.',
         ],
     ],
     'conceitos' => [],

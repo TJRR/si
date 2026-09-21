@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Novo critério de desempate — <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?> — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Novo critério de desempate: <?php echo htmlspecialchars($trilha['nome'], ENT_QUOTES, 'UTF-8'); ?>, etapa <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -33,7 +33,7 @@
     <label>Direção:
         <select name="direcao">
             <option value="desc">Decrescente (maior valor vence)</option>
-            <option value="asc">Crescente (menor valor vence — use esta opção para "Data de inscrição")</option>
+            <option value="asc">Crescente (menor valor vence; use esta opção para "Data de inscrição")</option>
         </select>
     </label><br>
 

@@ -5,7 +5,16 @@ RUN docker-php-ext-install pdo_mysql mbstring
 # unzip: sem isso "composer require" falha ao baixar pacotes (dist e' sempre
 # zip) - so' passou despercebido ate agora porque o unico pacote do projeto
 # (phpmailer) ja estava resolvido no composer.lock antes de existir esse Dockerfile.
-RUN apt-get update && apt-get install -y --no-install-recommends unzip \
+#
+# Fase 42: o build passou a falhar porque a versao mais recente do unzip
+# (+deb11u2) sumiu do mirror bullseye-security no meio do ciclo de vida da
+# imagem (404 ao baixar, sem relacao com o projeto) - o "||" cai pra versao
+# anterior (+deb11u1), ainda disponivel no mirror principal (bullseye/main),
+# em vez de travar o build por uma inconsistencia externa e temporaria.
+RUN apt-get update && ( \
+        apt-get install -y --no-install-recommends unzip \
+        || apt-get install -y --no-install-recommends unzip=6.0-26+deb11u1 \
+    ) \
     && rm -rf /var/lib/apt/lists/*
 
 # GD com suporte a WebP - usado pelo ImagemService para redimensionar/converter

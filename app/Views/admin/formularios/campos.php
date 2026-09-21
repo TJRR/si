@@ -6,7 +6,7 @@
 
 <p><a href="<?php echo url('formularios/index/' . (int) $formulario['concurso_id']); ?>">Voltar aos formulários</a></p>
 
-<p>Status do formulário: <strong><?php echo htmlspecialchars($formulario['status'], ENT_QUOTES, 'UTF-8'); ?></strong></p>
+<p>Situação do formulário: <strong><?php echo htmlspecialchars($formulario['status'], ENT_QUOTES, 'UTF-8'); ?></strong></p>
 
 <?php $editavel = $formulario['status'] === 'rascunho'; ?>
 
@@ -73,7 +73,7 @@
                         </form>
                     </div>
                 <?php else: ?>
-                    —
+                    Não informado
                 <?php endif; ?>
             </td>
         </tr>

@@ -2,7 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1><?php echo $banner === null ? 'Novo banner' : 'Editar banner'; ?></h1>
+<h1><?php echo $banner === null ? 'Nova faixa' : 'Editar faixa'; ?></h1>
 
 <?php if (!empty($erro)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -10,9 +10,9 @@
 
 <form method="post" action="<?php echo $banner === null ? url('banners/novo') : url('banners/editar/' . (int) $banner['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
     <fieldset>
-        <legend>Imagem de fundo (opcional — sem imagem, a cor de fundo prevalece)</legend>
+        <legend>Imagem de fundo (opcional; sem imagem, a cor de fundo prevalece)</legend>
 
-        <label>Imagem (1440×400 — o sistema gera a versão mobile automaticamente):
+        <label>Imagem (1440×400; o sistema gera a versão mobile automaticamente):
             <input type="file" name="imagem" accept="image/*">
         </label><br>
         <?php if ($banner !== null && !empty($banner['imagem_desktop_path'])): ?>
@@ -47,7 +47,7 @@
     </fieldset>
 
     <fieldset>
-        <legend>Botão (CTA)</legend>
+        <legend>Botão de ação</legend>
 
         <label>Título do botão:
             <input type="text" name="cta_titulo" value="<?php echo htmlspecialchars($banner !== null ? (string) $banner['cta_titulo'] : '', ENT_QUOTES, 'UTF-8'); ?>">
@@ -55,8 +55,8 @@
 
         <label>Destino:
             <select name="cta_destino_tipo">
-                <option value="">— Sem destino —</option>
-                <?php $destinos = ['link_interno' => 'Link interno', 'externo' => 'Link externo', 'ancora' => 'Âncora da página', 'arquivo' => 'Arquivo', 'video' => 'Vídeo']; ?>
+                <option value="">Sem destino</option>
+                <?php $destinos = ['link_interno' => 'Hiperlink interno', 'externo' => 'Hiperlink externo', 'ancora' => 'Âncora da página', 'arquivo' => 'Arquivo', 'video' => 'Vídeo']; ?>
                 <?php foreach ($destinos as $valorOpcao => $rotuloOpcao): ?>
                     <option value="<?php echo $valorOpcao; ?>" <?php echo ($banner !== null && $banner['cta_destino_tipo'] === $valorOpcao) ? 'selected' : ''; ?>><?php echo $rotuloOpcao; ?></option>
                 <?php endforeach; ?>

@@ -94,7 +94,7 @@ class SegurancaAdminController extends Controller
             'chaveMestraConfigurada' => Cifra::chaveMestraConfigurada(),
             'possuiCredencialNoBanco' => $this->credenciais->possuiAlgumaCredencial(),
             'resultadoTeste' => isset($_SESSION['seguranca_teste']) ? $_SESSION['seguranca_teste'] : null,
-        ], 'Segurança — credenciais', ['tipo' => 'configuracaoSeguranca', 'id' => 0]);
+        ], 'Segurança: credenciais', ['tipo' => 'configuracaoSeguranca', 'id' => 0]);
 
         unset($_SESSION['seguranca_teste']);
     }
@@ -107,7 +107,7 @@ class SegurancaAdminController extends Controller
         }
 
         if (!Cifra::chaveMestraConfigurada()) {
-            flashErro('Não há chave-mestra configurada em config/local.php — sem ela não é possível gravar credencial nenhuma.');
+            flashErro('Não há chave-mestra configurada em config/local.php: sem ela não é possível gravar credencial nenhuma.');
             $this->redirecionar('seguranca/credenciais');
             return;
         }
@@ -205,8 +205,8 @@ class SegurancaAdminController extends Controller
     private function gruposParaTela()
     {
         $rotulos = [
-            'google_service_account' => 'Google — Conta de Serviço (Agenda e Meet)',
-            'google_oauth' => 'Google — Login dos usuários',
+            'google_service_account' => 'Google: Conta de Serviço (Agenda e Meet)',
+            'google_oauth' => 'Google: Login dos usuários',
             'smtp' => 'Envio de e-mail',
         ];
 
@@ -247,7 +247,7 @@ class SegurancaAdminController extends Controller
             $email = trim(isset($_POST['client_email']) ? $_POST['client_email'] : '');
 
             if ($email !== '' && !preg_match('/^[^@\s]+@[^@\s]+\.iam\.gserviceaccount\.com$/', $email)) {
-                return 'E-mail da Conta de Serviço em formato inesperado — deve ser algo como nome@projeto.iam.gserviceaccount.com.';
+                return 'E-mail da Conta de Serviço em formato inesperado: deve ser algo como nome@projeto.iam.gserviceaccount.com.';
             }
 
             $chave = trim(isset($_POST['private_key']) ? $_POST['private_key'] : '');

@@ -46,6 +46,6 @@ class HomologacaoPublicaController extends Controller
         $this->renderizar('publico/equipes_homologadas', [
             'trilha' => $trilha,
             'equipes' => $equipes,
-        ], 'Equipes homologadas — ' . $trilha['nome']);
+        ], 'Equipes homologadas: ' . $trilha['nome']);
     }
 }

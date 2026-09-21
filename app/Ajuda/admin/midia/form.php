@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Nova mídia',
-    'resumo' => 'Upload de um item novo para a Biblioteca de Mídia.',
+    'resumo' => 'Envio de um item novo para a Biblioteca de Mídia.',
     'operacoes' => [
         [
             'nome' => 'Tipo / Arquivo / Alt / Título / Descrição',

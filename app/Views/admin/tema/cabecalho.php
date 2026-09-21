@@ -13,23 +13,19 @@
     <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
 <?php endif; ?>
 
-<form method="post" action="<?php echo url('tema/cabecalho'); ?>" enctype="multipart/form-data" id="form-cabecalho"><?= campoCsrf() ?>
-    <fieldset>
-        <legend>Logo padrão do sistema</legend>
-        <?php if (!empty($configuracaoVisual['logo_path'])): ?>
-            <img src="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $configuracaoVisual['logo_path'], ENT_QUOTES, 'UTF-8'); ?>" alt="Logo atual" style="max-width:200px;display:block;margin-bottom:.5rem;">
-        <?php endif; ?>
-        <label>
-            Trocar logo:<br>
-            <input type="file" name="logo" accept="image/*">
-        </label>
-    </fieldset>
+<p style="color:#555;font-size:0.9em;">A logo do sistema agora faz parte de cada tema (uma para o Concurso e outra para o Evento) - edite em Configurações &gt; Tema.</p>
 
+<form method="post" action="<?php echo url('tema/cabecalho'); ?>" enctype="multipart/form-data" id="form-cabecalho"><?= campoCsrf() ?>
     <fieldset>
         <legend>Imagem de fundo do cabeçalho (opcional)</legend>
         <p>Se enviada, o cabeçalho aparece alto, com esta imagem de fundo, transparente sobre ela e vira sólido ao rolar a página. Sem imagem, o cabeçalho continua uma barra fina sólida, igual sempre foi.</p>
         <?php if (!empty($configuracaoVisual['cabecalho_imagem_path'])): ?>
             <img src="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $configuracaoVisual['cabecalho_imagem_path'], ENT_QUOTES, 'UTF-8'); ?>" alt="Imagem atual do cabeçalho" style="max-width:320px;display:block;margin-bottom:.5rem;">
+            <label>
+                <input type="checkbox" name="remover_cabecalho_imagem" value="1">
+                Remover imagem de fundo
+            </label>
+            <br>
         <?php endif; ?>
         <label>
             Trocar imagem de fundo:<br>
@@ -71,10 +67,15 @@
     </fieldset>
 
     <fieldset>
-        <legend>Logo clara — usada sobre a imagem de fundo (opcional)</legend>
+        <legend>Logo clara: usada sobre a imagem de fundo (opcional)</legend>
         <p>Só faz efeito se a imagem de fundo acima estiver preenchida. Sem uma logo clara enviada, a logo normal acima é usada mesmo sobre a imagem.</p>
         <?php if (!empty($configuracaoVisual['cabecalho_logo_claro_path'])): ?>
             <img src="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $configuracaoVisual['cabecalho_logo_claro_path'], ENT_QUOTES, 'UTF-8'); ?>" alt="Logo clara atual" style="max-width:200px;display:block;margin-bottom:.5rem;background:#333;padding:.5rem;">
+            <label>
+                <input type="checkbox" name="remover_logo_claro" value="1">
+                Remover logo clara
+            </label>
+            <br>
         <?php endif; ?>
         <label>
             Trocar logo clara:<br>
@@ -83,8 +84,8 @@
     </fieldset>
 
     <fieldset>
-        <legend>Título do cabeçalho (opcional — aparece só quando há imagem de fundo)</legend>
-        <p>Escreva o título/slogan do jeito que quiser. Dá pra inserir imagens usando o botão de imagem da barra abaixo — qualquer imagem inserida aqui ganha um efeito de "boiar" suave automaticamente na home.</p>
+        <legend>Título do cabeçalho (opcional: aparece só quando há imagem de fundo)</legend>
+        <p>Escreva o título/slogan do jeito que quiser. É possível inserir imagens usando o botão de imagem da barra abaixo; qualquer imagem inserida aqui ganha um efeito de "boiar" suave automaticamente na home.</p>
         <?php
         $nome = 'cabecalho_titulo_html';
         $valor = $configuracaoVisual !== false ? (string) $configuracaoVisual['cabecalho_titulo_html'] : '';

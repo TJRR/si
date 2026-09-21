@@ -7,11 +7,11 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Auditoria',
-    'resumo' => 'Log de todas as ações relevantes do sistema (quem, quando, onde). Só leitura, só Administrador.',
+    'resumo' => 'Registro de todas as ações relevantes do sistema (quem, quando, onde). Só leitura, só Administrador.',
     'operacoes' => [
         [
             'nome' => 'Filtros',
-            'como' => 'Busca livre, usuário, ação, período — combináveis.',
+            'como' => 'Busca livre, usuário, ação e período, todos combináveis entre si.',
         ],
         [
             'nome' => 'Ordenação por coluna',
@@ -29,10 +29,10 @@ return [
         [
             'nome' => 'Ver detalhes',
             'icone' => 'ver',
-            'como' => 'Expande o JSON de antes/depois daquele registro.',
+            'como' => 'Expande os dados técnicos da alteração (antes/depois) daquele registro.',
         ],
         [
-            'nome' => 'Exportar CSV',
+            'nome' => 'Exportar CSV (arquivo de valores separados por vírgula)',
             'como' => 'Baixa a lista filtrada atual.',
         ],
     ],

@@ -6,7 +6,7 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Submissão enviada — sucesso',
+    'titulo' => 'Submissão enviada com sucesso',
     'resumo' => 'Confirmação de que a submissão foi recebida, com o número dela. Tela só de leitura.',
     'operacoes' => [],
     'conceitos' => [],

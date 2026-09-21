@@ -7,11 +7,11 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Premiação',
-    'resumo' => 'Lista de prêmios exibidos na home — o concurso escolhe entre um modo "geral" (prêmios únicos, para todo o concurso) ou "por trilha" (um conjunto de prêmios por trilha).',
+    'resumo' => 'Lista de prêmios exibidos na página inicial: o concurso escolhe entre um modo "geral" (prêmios únicos, para todo o concurso) ou "por trilha" (um conjunto de prêmios por trilha).',
     'operacoes' => [
         [
             'nome' => 'Prêmio geral / Prêmio por trilha',
-            'como' => 'Radio com auto-envio — ao trocar, a lista muda de imediato para mostrar o modo escolhido.',
+            'como' => 'Botões de opção com envio automático: ao trocar, a lista muda de imediato para mostrar o modo escolhido.',
             'observacao' => 'Trocar o modo não apaga os prêmios já cadastrados no outro modo, só muda o que fica visível na lista.',
         ],
         [

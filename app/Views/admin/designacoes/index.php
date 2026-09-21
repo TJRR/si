@@ -2,9 +2,9 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Designação de avaliadores — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Designação de avaliadores: <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
-<p><a href="<?php echo url('etapas/index/' . (int) $trilha['id']); ?>">Voltar às etapas</a> — <a href="<?php echo url('designacoes/progresso/' . (int) $etapa['id']); ?>">Ver progresso por avaliador</a></p>
+<p><a href="<?php echo url('etapas/index/' . (int) $trilha['id']); ?>">Voltar às etapas</a> · <a href="<?php echo url('designacoes/progresso/' . (int) $etapa['id']); ?>">Ver progresso por avaliador</a></p>
 
 <?php if (!empty($_SESSION['flash'])): ?>
     <p class="flash-mensagem <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
@@ -16,7 +16,7 @@
         'aberto' => 'Todo avaliador da trilha vê tudo (não precisa designar)',
         'automatico' => 'Distribuição automática balanceada',
         'sorteio_categoria' => 'Sorteio aleatório garantindo 1 avaliador de cada categoria',
-    ][$etapa['modo_designacao']] ?? 'Não definido — edite a etapa e configure antes de designar';
+    ][$etapa['modo_designacao']] ?? 'Não definido: edite a etapa e configure antes de designar';
 ?></strong></p>
 
 <?php if ($etapa['modo_designacao'] === 'sorteio_categoria'): ?>
@@ -24,7 +24,7 @@
 <?php endif; ?>
 
 <?php if ($etapa['modo_designacao'] === 'aberto'): ?>
-    <p>Como o modo é "aberto", qualquer avaliador vinculado a este concurso já pode notar todas as submissões desta etapa — não há necessidade de designar manualmente.</p>
+    <p>Como o modo é "aberto", qualquer avaliador vinculado a este concurso já pode notar todas as submissões desta etapa: não há necessidade de designar manualmente.</p>
 <?php else: ?>
 
     <?php if ($etapa['modo_designacao'] === 'automatico' || $etapa['modo_designacao'] === 'sorteio_categoria'): ?>
@@ -48,7 +48,7 @@
                 <?php endforeach; ?>
             </select>
         </label>
-        <label>Status de nota:
+        <label>Situação da nota:
             <select name="filtro_nota">
                 <option value="">Todos</option>
                 <option value="lancada" <?php echo $filtroNota === 'lancada' ? 'selected' : ''; ?>>Nota já lançada</option>
@@ -63,7 +63,7 @@
         <p>
             <input type="checkbox" id="marcar-todos">
             <label for="marcar-todos">Selecionar todos</label>
-            —
+            ·
             <select name="usuario_id">
                 <option value="">Escolha o avaliador...</option>
                 <?php foreach ($avaliadores as $avaliador): ?>
@@ -81,7 +81,7 @@
             <tr>
                 <td><input type="checkbox" name="submissao_ids[]" value="<?php echo (int) $submissao['id']; ?>" class="marcar-linha"></td>
                 <td>#<?php echo (int) $submissao['id']; ?></td>
-                <td><?php echo htmlspecialchars($submissao['nome_equipe'] !== null ? $submissao['nome_equipe'] : '—', ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?php echo htmlspecialchars($submissao['nome_equipe'] !== null ? $submissao['nome_equipe'] : 'Não informado', ENT_QUOTES, 'UTF-8'); ?></td>
                 <td>
                     <?php if (empty($submissao['designacoes'])): ?>
                         Nenhum
@@ -92,7 +92,7 @@
                                 <em>(<?php echo htmlspecialchars($designacao['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?>)</em>
                             <?php endif; ?>
                             <?php if ($designacao['travada']): ?>
-                                <span title="<?php echo $designacao['origem'] === 'sorteio' ? 'Designação de sorteio — não pode ser removida' : 'Avaliador já lançou nota — não pode ser removida'; ?>">🔒</span>
+                                <span title="<?php echo $designacao['origem'] === 'sorteio' ? 'Designação de sorteio: não pode ser removida' : 'Avaliador já lançou nota: não pode ser removida'; ?>">🔒</span>
                             <?php else: ?>
                                 <button type="submit" form="remover-<?php echo (int) $designacao['id']; ?>" class="btn-icone" title="Remover designação">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

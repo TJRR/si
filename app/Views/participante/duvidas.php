@@ -23,7 +23,7 @@
     <p>Sua equipe ainda não registrou nenhuma dúvida.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th>Pergunta</th><th>Registrada por</th><th>Data</th><th>Status</th><th>Ação</th></tr>
+        <tr><th>Pergunta</th><th>Registrada por</th><th>Data</th><th>Situação</th><th>Ação</th></tr>
         <?php foreach ($duvidas as $duvida): ?>
         <tr>
             <td><?php echo htmlspecialchars(mb_substr($duvida['pergunta'], 0, 80) . (mb_strlen($duvida['pergunta']) > 80 ? '…' : ''), ENT_QUOTES, 'UTF-8'); ?></td>

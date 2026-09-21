@@ -5,7 +5,7 @@
 <footer class="site-footer" id="contato">
     <div class="site-footer-colunas">
         <div class="site-footer-coluna">
-            <img src="<?php echo htmlspecialchars(!empty($configVisual['rodape_logo_path']) ? config('base_path') . '/assets/' . $configVisual['rodape_logo_path'] : $logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Prêmio de Inovação TJRR" class="site-footer-logo">
+            <img src="<?php echo htmlspecialchars(!empty($configVisual['rodape_logo_path']) ? config('base_path') . '/assets/' . $configVisual['rodape_logo_path'] : $logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars('Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="site-footer-logo">
         </div>
 
         <?php if ($contato !== null && !empty($contato['texto_institucional'])): ?>
@@ -15,7 +15,7 @@
         <?php endif; ?>
 
         <?php if (!empty($menuRodape)): ?>
-        <nav class="site-footer-coluna" aria-label="Mapa do site">
+        <nav class="site-footer-coluna" aria-label="Mapa da página">
             <h2>Navegação</h2>
             <ul>
                 <?php foreach ($menuRodape as $item): ?>
@@ -130,7 +130,7 @@
     <?php endif; ?>
 
     <div class="site-footer-barra">
-        <p class="site-footer-copyright">© <?php echo date('Y'); ?> Tribunal de Justiça do Estado de Roraima — Sistema de Gestão do Prêmio de Inovação.</p>
+        <p class="site-footer-copyright">© <?php echo date('Y'); ?> <?php echo htmlspecialchars(nomeInstituicaoCompleto(), ENT_QUOTES, 'UTF-8'); ?>: Sistema de Gestão do Prêmio de Inovação.</p>
         <p class="site-footer-links">
             <a href="<?php echo config('base_path'); ?>/politica.php">Política de Privacidade</a>
             &nbsp;|&nbsp;

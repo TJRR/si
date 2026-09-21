@@ -14,11 +14,11 @@ $nomeEquipe = !empty($convidados) ? $convidados[0]['nome_equipe'] : null;
         <?php else: ?>
             (horário não reservado por nenhuma equipe)
         <?php endif; ?>
-    </strong>
-    — <?php echo htmlspecialchars(formatarDataHora($horario['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
+    </strong>,
+    em <?php echo htmlspecialchars(formatarDataHora($horario['data_inicio']), ENT_QUOTES, 'UTF-8'); ?>
     às <?php echo htmlspecialchars(formatarDataHora($horario['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
     <?php echo sufixoFusoHorario(); ?>
 </p>
-<p><small>A Comissão de Avaliação é convidada formalmente do evento, mas não entra neste cruzamento de presença — o sistema só identifica automaticamente integrantes da equipe. Um avaliador que entrar na sala aparece em "Entraram sem identificação".</small></p>
+<p><small>A Comissão de Avaliação é convidada formalmente do evento, mas não entra neste cruzamento de presença: o sistema só identifica automaticamente integrantes da equipe. Um avaliador que entrar na sala aparece em "Entraram sem identificação".</small></p>
 
 <?php include __DIR__ . '/../_presenca_relatorio.php'; ?>

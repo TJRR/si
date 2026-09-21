@@ -2,11 +2,11 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<h1>Prévia da distribuição automática — <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+<h1>Prévia da distribuição automática: <?php echo htmlspecialchars($etapa['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 
 <p><a href="<?php echo url('designacoes/index/' . (int) $etapa['id']); ?>">Voltar às designações</a></p>
 
-<p>Revise as sugestões abaixo — troque o avaliador em qualquer linha antes de confirmar. Nada é gravado até você clicar em "Confirmar distribuição".</p>
+<p>Revise as sugestões abaixo: troque o avaliador em qualquer linha antes de confirmar. Nada é gravado até você clicar em "Confirmar distribuição".</p>
 
 <form method="post" action="<?php echo url('designacoes/confirmarDistribuicao'); ?>"><?= campoCsrf() ?>
     <input type="hidden" name="etapa_id" value="<?php echo (int) $etapa['id']; ?>">
@@ -19,7 +19,7 @@
                 #<?php echo (int) $linha['submissao_id']; ?>
                 <input type="hidden" name="submissao_id[]" value="<?php echo (int) $linha['submissao_id']; ?>">
             </td>
-            <td><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : '—', ENT_QUOTES, 'UTF-8'); ?></td>
+            <td><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : 'Não informado', ENT_QUOTES, 'UTF-8'); ?></td>
             <?php if (isset($linha['categoria_nome'])): ?>
                 <td><?php echo htmlspecialchars($linha['categoria_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
             <?php endif; ?>

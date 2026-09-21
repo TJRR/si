@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Desempate',
-    'resumo' => 'Critérios de desempate aplicados quando duas equipes empatam na Nota Final, configurados por etapa e aplicados em cascata — a primeira regra da lista tem prioridade sobre as seguintes.',
+    'resumo' => 'Critérios de desempate aplicados quando duas equipes empatam na Nota Final, configurados por etapa e aplicados em cascata: a primeira regra da lista tem prioridade sobre as seguintes.',
     'operacoes' => [
         [
             'nome' => '+ Nova regra',

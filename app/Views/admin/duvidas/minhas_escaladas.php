@@ -3,7 +3,7 @@
     exit('Acesso negado');
 } ?>
 <h1>Dúvidas</h1>
-<p>Dúvidas escaladas para você — responda ou, se não for a pessoa certa, escale para outro colaborador.</p>
+<p>Dúvidas escaladas para você: responda ou, se não for a pessoa certa, escale para outro colaborador.</p>
 <p><a href="<?php echo url('requerimentoAdmin/minhasEscaladas'); ?>">Ver meus requerimentos escalados</a></p>
 
 <?php if (!empty($_SESSION['flash'])): ?>
@@ -25,7 +25,7 @@
     <p>Nenhuma dúvida neste filtro.</p>
 <?php else: ?>
     <table border="1" cellpadding="6">
-        <tr><th>Pergunta</th><th>Equipe</th><th>Trilha</th><th>Registrada em</th><th>Status</th><th>SLA</th><th>Ações</th></tr>
+        <tr><th>Pergunta</th><th>Equipe</th><th>Trilha</th><th>Registrada em</th><th>Situação</th><th>Prazo</th><th>Ações</th></tr>
         <?php foreach ($minhasEscaladas as $duvida): ?>
         <?php $urlVer = url('duvidaAdmin/ver/' . (int) $duvida['id']); ?>
         <tr>

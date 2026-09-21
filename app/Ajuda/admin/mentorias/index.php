@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Mentorias (admin)',
-    'resumo' => 'Horários de mentoria 1:1 — encontro individual entre uma equipe e um mentor específico, com exclusividade (a equipe pode ter no máximo 1 reserva ativa).',
+    'resumo' => 'Horários de mentoria: encontro individual entre uma equipe e um mentor específico, com exclusividade (a equipe pode ter no máximo 1 reserva ativa).',
     'operacoes' => [
         [
             'nome' => 'Coluna "Restrito a"',
@@ -15,7 +15,7 @@ return [
         ],
         [
             'nome' => 'Editar',
-            'como' => 'Aparece apenas enquanto o horário não começou. Depois da data de início, o botão de editar e o de remover somem — e o servidor recusa a ação mesmo se ela for forçada.',
+            'como' => 'Aparece apenas enquanto o horário não começou. Depois da data de início, o botão de editar e o de remover somem, e o servidor recusa a ação mesmo se ela for forçada.',
         ],
         [
             'nome' => '+ Novo horário',
@@ -23,11 +23,11 @@ return [
         ],
         [
             'nome' => 'Verificar/Tentar novamente',
-            'como' => 'Reconsulta o Google Agenda para atualizar o status da integração e o RSVP dos convidados.',
+            'como' => 'Reconsulta o Google Agenda para atualizar a situação da integração e a confirmação de presença (RSVP) dos convidados.',
         ],
         [
             'nome' => 'Presença na sala do Meet',
-            'como' => 'Abre, em popup, quem de fato entrou na sala e por quanto tempo, cruzado com o convite e a resposta de cada um.',
+            'como' => 'Abre, em janela sobreposta, quem de fato entrou na sala e por quanto tempo, cruzado com o convite e a resposta de cada um.',
             'observacao' => 'Só aparece em horários com integração ao Google Agenda e que já terminaram. A captura é automática e começa 2h depois do fim do horário.',
         ],
         [

@@ -82,7 +82,7 @@ class BlocoConteudoAdminController extends Controller
         $bloco = $this->blocos->buscarPorId($id);
 
         if ($bloco !== null && $bloco['chave'] !== null) {
-            flashErro('Este é um bloco padrão do sistema (Sobre/Premiação) e não pode ser removido — apenas editado ou desativado.');
+            flashErro('Este é um bloco padrão do sistema (Sobre/Premiação) e não pode ser removido, apenas editado ou desativado.');
             $this->redirecionar('blocos/index');
             return;
         }
@@ -154,7 +154,7 @@ class BlocoConteudoAdminController extends Controller
         }
 
         if (!empty($dados['cta_titulo']) && empty($dados['cta_link'])) {
-            return 'Informe o link do botão (ou remova o título do botão) — o sistema não permite salvar um botão sem destino.';
+            return 'Informe o link do botão (ou remova o título do botão): o sistema não permite salvar um botão sem destino.';
         }
 
         try {
@@ -190,7 +190,7 @@ class BlocoConteudoAdminController extends Controller
         }
 
         if (!empty($dados['cta_titulo']) && empty($dados['cta_link'])) {
-            return 'Informe o link do botão (ou remova o título do botão) — o sistema não permite salvar um botão sem destino.';
+            return 'Informe o link do botão (ou remova o título do botão): o sistema não permite salvar um botão sem destino.';
         }
 
         $dados['imagem_path'] = $blocoAtual['imagem_path'];
