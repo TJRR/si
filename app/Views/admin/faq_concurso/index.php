@@ -43,8 +43,8 @@ $disponiveis = array_values(array_filter($faqs, function ($faq) {
                 <button type="submit" class="btn-icone" title="Desativar nesta edição">✕</button>
             </form>
             <div class="reordenar-botoes">
-                <button type="button" data-mover="cima" aria-label="Mover para cima" <?php echo $indice === 0 ? 'disabled' : ''; ?>>▲</button>
-                <button type="button" data-mover="baixo" aria-label="Mover para baixo" <?php echo $indice === count($ativas) - 1 ? 'disabled' : ''; ?>>▼</button>
+                <button type="button" class="btn-icone" data-mover="cima" aria-label="Mover para cima" <?php echo $indice === 0 ? 'disabled' : ''; ?>>▲</button>
+                <button type="button" class="btn-icone" data-mover="baixo" aria-label="Mover para baixo" <?php echo $indice === count($ativas) - 1 ? 'disabled' : ''; ?>>▼</button>
             </div>
         </li>
         <?php endforeach; ?>
@@ -64,10 +64,17 @@ $disponiveis = array_values(array_filter($faqs, function ($faq) {
                     <span class="status-pill"><?php echo htmlspecialchars($faq['categoria'], ENT_QUOTES, 'UTF-8'); ?></span>
                 <?php endif; ?>
             </div>
-            <form method="post" action="<?php echo url('faqConcurso/alternar/' . (int) $concurso['id'] . '/' . (int) $faq['id']); ?>"><?= campoCsrf() ?>
-                <input type="hidden" name="ativo" value="1">
-                <button type="submit" class="btn-acao">Ativar nesta edição</button>
-            </form>
+            <div class="acoes-icones">
+                <form method="post" action="<?php echo url('faqConcurso/alternar/' . (int) $concurso['id'] . '/' . (int) $faq['id']); ?>"><?= campoCsrf() ?>
+                    <input type="hidden" name="ativo" value="1">
+                    <button type="submit" class="btn-icone" title="Ativar nesta edição">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </button>
+                </form>
+            </div>
         </li>
         <?php endforeach; ?>
     </ul>

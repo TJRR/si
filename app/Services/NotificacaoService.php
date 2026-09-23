@@ -280,6 +280,81 @@ class NotificacaoService
         }
     }
 
+    /**
+     * Fase 51: autor cujo trabalho foi recebido por canal alternativo (item
+     * 5.2 do edital) e trazido para o sistema pela importacao. Conta criada
+     * na hora, entao o texto leva o endereco de definir senha, como o
+     * convite de avaliador avulso ja faz.
+     *
+     * Texto fixo no codigo por decisao desta fase, e registrado na divida de
+     * textos de e-mail sem tela administrativa: nesta fase o aceite dos
+     * termos virou configuravel, mas o corpo do e-mail ainda nao.
+     *
+     * Devolve verdadeiro/falso para a fila de envio marcar o destinatario
+     * como enviado ou falhou, igual avisoIndividualEvento().
+     */
+    public function conviteAutorTrabalhoImportado($destinatarioEmail, $nomeUsuario, array $evento, $linkDefinirSenha)
+    {
+        $assunto = 'Seu trabalho foi registrado: ' . $evento['nome'];
+        $abertura = 'O trabalho que você enviou para o evento "' . htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8') . '" foi registrado no sistema oficial do evento. Para acompanhar a situação dele, defina sua senha de acesso no endereço abaixo.';
+        $corpo = $this->montarCorpoAcesso($nomeUsuario, $abertura, $linkDefinirSenha);
+
+        $id = $this->notificacoes->criar(
+            'convite_autor_trabalho_importado',
+            'convite_autor_trabalho_importado',
+            $destinatarioEmail,
+            $assunto,
+            $corpo
+        );
+
+        try {
+            $resultado = Mailer::enviar($destinatarioEmail, $assunto, $corpo);
+        } catch (\Exception $e) {
+            $resultado = ['sucesso' => false, 'erro' => $e->getMessage()];
+        }
+
+        if ($resultado['sucesso']) {
+            $this->notificacoes->marcarEnviada($id);
+        } else {
+            $this->notificacoes->marcarFalhou($id);
+        }
+
+        return $resultado['sucesso'];
+    }
+
+    /**
+     * Fase 51: mesma situacao do metodo acima, para quem JA tinha conta no
+     * sistema - sem endereco de definir senha, sem mencao a criar conta.
+     */
+    public function avisoAutorTrabalhoImportado($destinatarioEmail, $nomeUsuario, array $evento)
+    {
+        $assunto = 'Seu trabalho foi registrado: ' . $evento['nome'];
+        $mensagem = 'O trabalho que você enviou para o evento "' . htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8') . '" foi registrado no sistema oficial do evento. Como você já tem conta neste sistema, acesse normalmente com o e-mail e a senha que já usa (ou com sua conta Google, se for assim que costuma entrar) para acompanhar a situação do trabalho.';
+        $corpo = $this->montarCorpoAcessoExistente($nomeUsuario, $mensagem);
+
+        $id = $this->notificacoes->criar(
+            'aviso_autor_trabalho_importado',
+            'aviso_autor_trabalho_importado',
+            $destinatarioEmail,
+            $assunto,
+            $corpo
+        );
+
+        try {
+            $resultado = Mailer::enviar($destinatarioEmail, $assunto, $corpo);
+        } catch (\Exception $e) {
+            $resultado = ['sucesso' => false, 'erro' => $e->getMessage()];
+        }
+
+        if ($resultado['sucesso']) {
+            $this->notificacoes->marcarEnviada($id);
+        } else {
+            $this->notificacoes->marcarFalhou($id);
+        }
+
+        return $resultado['sucesso'];
+    }
+
     public function recuperacaoSenha($destinatarioEmail, $nomeUsuario, $linkDefinirSenha)
     {
         $assunto = 'Redefinição de senha: Sistema do Prêmio de Inovação ' . nomeInstituicao();

@@ -15,6 +15,10 @@ return [
             'como' => 'Mesmo padrão do Resultado da Etapa e da Apuração.',
         ],
         [
+            'nome' => 'Coluna Desempate',
+            'como' => 'Preenchida só nas linhas que empataram com a de cima: diz qual regra decidiu aquela posição, ou avisa quando nenhuma regra resolveu. Fica congelada junto com o resultado publicado.',
+        ],
+        [
             'nome' => 'Editar resumo/imagem de destaque',
             'como' => 'Disponível por linha, só depois de publicado.',
         ],

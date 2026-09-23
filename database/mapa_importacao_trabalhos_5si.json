@@ -1,0 +1,19 @@
+{
+    "carimbo": "Carimbo de data/hora",
+    "email_resposta": "Endereço de e-mail",
+    "declaracao": "Declaro que li e aceito integralmente as normas do edital, que todos os coautores conhecem e concordam com o conteúdo do trabalho, que a versão para avaliação não contém identificação de autoria e que autorizo, sem ônus, a publicação e a divulgação do trabalho pelo TJRR, com o devido crédito aos autores.",
+    "titulo": "Título do trabalho",
+    "eixo": "Eixo temático",
+    "natureza": "Natureza do trabalho",
+    "autor_nome": "Autor principal - Nome completo",
+    "autor_cpf": "Autor principal - CPF",
+    "autor_email": "Autor principal - E-mail",
+    "telefone": "Autor principal - Telefone para contato (com DDD)",
+    "autor_vinculo": "Autor principal - Instituição de vínculo (por extenso)",
+    "coautor_nome": "Coautor - Nome completo",
+    "coautor_cpf": "Coautor - CPF",
+    "coautor_email": "Coautor - E-mail",
+    "coautor_vinculo": "Coautor - Instituição de vínculo (por extenso)",
+    "arquivo_avaliacao": "Versão para avaliação (sem identificação)",
+    "arquivo_publicacao": "Versão para publicação (identificada)"
+}

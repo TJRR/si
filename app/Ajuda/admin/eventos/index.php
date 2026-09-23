@@ -12,7 +12,7 @@ return [
         ['nome' => '+ Novo evento', 'como' => 'Abre o formulário de um evento novo (Dados Gerais).'],
         ['nome' => 'Editar', 'icone' => 'editar', 'como' => 'Abre a árvore de configuração do evento.'],
         ['nome' => 'Remover', 'icone' => 'remover', 'como' => 'Só funciona se o evento ainda não tiver inscrições.'],
-        ['nome' => 'Inscritos', 'como' => 'Lista de inscritos naquele evento, com exportação e credenciamento.'],
+        ['nome' => 'Inscritos', 'icone' => 'inscritos', 'como' => 'Lista de inscritos naquele evento, com exportação e credenciamento.'],
     ],
     'conceitos' => [],
 ];

@@ -16,6 +16,7 @@ return [
         ],
         [
             'nome' => 'Remover',
+            'icone' => 'remover',
             'como' => 'Tira a pessoa do pool geral de avaliadores deste evento - não desfaz designações já feitas a trabalhos específicos (ver "Trabalhos recebidos").',
         ],
     ],

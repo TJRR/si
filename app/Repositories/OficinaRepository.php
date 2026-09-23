@@ -120,21 +120,6 @@ class OficinaRepository
     }
 
     /**
-     * Fase 34: mesma logica de MentoriaRepository::etapasVinculadasNoConcurso()
-     * - ver comentario la'.
-     */
-    public function etapasVinculadasNoConcurso($concursoId)
-    {
-        $pdo = Database::conexao();
-        $stmt = $pdo->prepare('SELECT DISTINCT etapa_id FROM oficina_horarios WHERE concurso_id = :concurso_id');
-        $stmt->execute(['concurso_id' => $concursoId]);
-
-        return array_map(function ($valor) {
-            return $valor === null ? null : (int) $valor;
-        }, $stmt->fetchAll(\PDO::FETCH_COLUMN));
-    }
-
-    /**
      * Fase 31: mesma logica de MentoriaRepository::atualizarGoogle() - ver
      * comentario la' (mapeamento meet_link -> coluna link_meet, etc).
      */
@@ -241,20 +226,6 @@ class OficinaRepository
         $stmt->execute(['id' => $id]);
 
         Auditoria::registrar('remover', 'oficina_horarios', $id, $antes, null);
-    }
-
-    /**
-     * Fase 24: oficina e' opcional - o botão "Oficinas" só aparece no
-     * painel do participante se algum horário já tiver sido criado pro
-     * concurso.
-     */
-    public function existeParaConcurso($concursoId)
-    {
-        $pdo = Database::conexao();
-        $stmt = $pdo->prepare('SELECT COUNT(*) FROM oficina_horarios WHERE concurso_id = :concurso_id');
-        $stmt->execute(['concurso_id' => $concursoId]);
-
-        return (int) $stmt->fetchColumn() > 0;
     }
 
     public function listarInscritos($horarioId)

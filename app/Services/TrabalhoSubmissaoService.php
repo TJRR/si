@@ -8,11 +8,13 @@ if (!defined('SI_BOOT')) {
 }
 
 use App\Core\Database;
+use App\Repositories\EventoTrabalhoTermoRepository;
 use App\Repositories\PerfilRepository;
 use App\Repositories\TrabalhoAutorRepository;
 use App\Repositories\TrabalhoAvaliadorRepository;
 use App\Repositories\TrabalhoConfigRepository;
 use App\Repositories\TrabalhoRepository;
+use App\Repositories\TrabalhoTermoAceiteRepository;
 use App\Repositories\UsuarioPerfilRepository;
 use App\Validation\CpfValidador;
 
@@ -37,6 +39,8 @@ class TrabalhoSubmissaoService
     private $perfis;
     private $avaliadores;
     private $usuarioPerfil;
+    private $termos;
+    private $aceites;
 
     public function __construct()
     {
@@ -46,6 +50,8 @@ class TrabalhoSubmissaoService
         $this->perfis = new PerfilRepository();
         $this->avaliadores = new TrabalhoAvaliadorRepository();
         $this->usuarioPerfil = new UsuarioPerfilRepository();
+        $this->termos = new EventoTrabalhoTermoRepository();
+        $this->aceites = new TrabalhoTermoAceiteRepository();
     }
 
     /**
@@ -57,8 +63,11 @@ class TrabalhoSubmissaoService
      * $coautores: lista de ['nome','cpf','email','cargo','orgao_origem'].
      * $arquivosEnviados: $_FILES['arquivo_avaliacao']/['arquivo_publicacao']
      * (metodos de documento).
+     * $termosAceitos (Fase 51): ids dos termos de aceite marcados no
+     * formulario. Todo termo ativo e obrigatorio precisa estar aqui, e o
+     * texto aceito e' gravado congelado em trabalho_termos_aceitos.
      */
-    public function submeter($eventoId, $usuarioId, array $dadosAutorPrincipal, array $dadosTrabalho, array $coautores, array $arquivosEnviados = [])
+    public function submeter($eventoId, $usuarioId, array $dadosAutorPrincipal, array $dadosTrabalho, array $coautores, array $arquivosEnviados = [], array $termosAceitos = [])
     {
         $config = $this->config->buscarPorEvento($eventoId);
 
@@ -102,6 +111,8 @@ class TrabalhoSubmissaoService
                 throw new \RuntimeException('O e-mail de um dos coautores já está cadastrado como avaliador de Trabalhos deste evento.');
             }
         }
+
+        $termosParaRegistrar = $this->validarTermos($eventoId, $termosAceitos);
 
         $conteudo = $this->validarConteudo($config, $dadosTrabalho, $arquivosEnviados);
 
@@ -183,6 +194,10 @@ class TrabalhoSubmissaoService
                 );
             }
 
+            if (!empty($termosParaRegistrar)) {
+                $this->aceites->registrar($trabalhoId, $termosParaRegistrar);
+            }
+
             $this->garantirPerfilInscrito($usuarioId);
 
             $pdo->commit();
@@ -193,6 +208,46 @@ class TrabalhoSubmissaoService
         }
 
         return $trabalhoId;
+    }
+
+    /**
+     * Fase 51: confere os termos de aceite do evento contra o que foi
+     * marcado no formulario e devolve, ja pronto, o que sera gravado como
+     * aceite (rotulo e texto do momento, copia congelada). Evento sem termo
+     * cadastrado simplesmente nao exige nada: o mecanismo e' opcional, como
+     * todo catalogo por evento neste sistema.
+     */
+    private function validarTermos($eventoId, array $termosAceitos)
+    {
+        $ativos = $this->termos->listarAtivos($eventoId);
+
+        if (empty($ativos)) {
+            return [];
+        }
+
+        $marcados = array_map('intval', $termosAceitos);
+        $registrar = [];
+
+        foreach ($ativos as $termo) {
+            $foiMarcado = in_array((int) $termo['id'], $marcados, true);
+
+            if (!$foiMarcado) {
+                if ((int) $termo['obrigatorio'] === 1) {
+                    throw new \RuntimeException('É necessário aceitar: ' . $termo['rotulo']);
+                }
+
+                continue;
+            }
+
+            $registrar[] = [
+                'termo_id' => (int) $termo['id'],
+                'rotulo' => $termo['rotulo'],
+                'texto_html' => $termo['texto_html'],
+                'origem' => 'sistema',
+            ];
+        }
+
+        return $registrar;
     }
 
     /**

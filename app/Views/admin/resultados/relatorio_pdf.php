@@ -98,7 +98,7 @@
 
 <h2>2. Classificação</h2>
 <table>
-    <tr><th>Posição</th><th class="col-equipe">Equipe</th><th>Nota geral (NE)</th><th>Situação</th></tr>
+    <tr><th>Posição</th><th class="col-equipe">Equipe</th><th>Nota geral (NE)</th><th>Desempate</th><th>Situação</th></tr>
     <?php $posicao = 0; $ultimoClassificado = null; ?>
     <?php foreach ($ranking as $linha): ?>
         <?php
@@ -106,13 +106,15 @@
         $classificado = (bool) (int) $linha['classificado'];
         ?>
         <?php if ($ultimoClassificado === true && $classificado === false): ?>
-            <tr class="corte-linha"><td colspan="4">Linha de corte</td></tr>
+            <tr class="corte-linha"><td colspan="5">Linha de corte</td></tr>
         <?php endif; ?>
         <?php $ultimoClassificado = $classificado; ?>
         <tr<?php echo !$classificado ? ' class="nao-classificada"' : ''; ?>>
             <td><?php echo $posicao; ?>º</td>
             <td class="col-equipe"><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : ('Equipe #' . $linha['equipe_id']), ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], $casasDecimais, ',', '.') : 'Não informado'; ?></td>
+            <?php $criterioDesempate = isset($linha['desempate_criterio']) ? (string) $linha['desempate_criterio'] : ''; ?>
+            <td><?php echo $criterioDesempate !== '' ? htmlspecialchars($criterioDesempate, ENT_QUOTES, 'UTF-8') : '-'; ?></td>
             <td><?php echo $classificado ? 'Classificada' : 'Não classificada'; ?></td>
         </tr>
     <?php endforeach; ?>

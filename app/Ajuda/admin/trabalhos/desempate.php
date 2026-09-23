@@ -19,6 +19,7 @@ return [
         ],
         [
             'nome' => 'Remover',
+            'icone' => 'remover',
             'como' => 'Remove a regra da cascata; as demais continuam valendo na mesma ordem relativa.',
         ],
     ],

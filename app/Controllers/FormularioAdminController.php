@@ -174,7 +174,7 @@ class FormularioAdminController extends Controller
         $this->renderizar('admin/formularios/duplicar', [
             'formulario' => $formulario,
             'concursos' => $this->concursos->listar(),
-        ], 'Duplicar formulário');
+        ], 'Duplicar formulário', ['tipo' => 'formularios', 'id' => (int) $formulario['concurso_id']]);
     }
 
     public function duplicar()

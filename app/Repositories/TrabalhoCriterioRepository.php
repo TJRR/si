@@ -79,40 +79,28 @@ class TrabalhoCriterioRepository
     }
 
     /**
-     * Troca a ordem com o vizinho (swap), mesmo padrao de
-     * CriterioAvaliacaoRepository::mover() do Concurso.
+     * Fase 50 (achado de seguranca): WHERE inclui evento_id, nao so' id -
+     * sem isso, um id de criterio de OUTRO evento seria aceito e teria sua
+     * ordem alterada, sem checagem de posse.
      */
-    public function mover($id, $direcao)
+    public function reordenar($eventoId, array $ids)
     {
-        $atual = $this->buscarPorId($id);
-
-        if ($atual === null) {
-            return;
-        }
-
         $pdo = Database::conexao();
-        $operador = $direcao === 'cima' ? '<' : '>';
-        $ordemDirecao = $direcao === 'cima' ? 'DESC' : 'ASC';
-
-        $stmt = $pdo->prepare(
-            "SELECT * FROM trabalho_criterios
-             WHERE evento_id = :evento_id AND ordem {$operador} :ordem
-             ORDER BY ordem {$ordemDirecao} LIMIT 1"
-        );
-        $stmt->execute(['evento_id' => $atual['evento_id'], 'ordem' => $atual['ordem']]);
-        $vizinho = $stmt->fetch();
-
-        if ($vizinho === false) {
-            return;
-        }
-
         $pdo->beginTransaction();
-        $upd = $pdo->prepare('UPDATE trabalho_criterios SET ordem = :ordem WHERE id = :id');
-        $upd->execute(['ordem' => $vizinho['ordem'], 'id' => $atual['id']]);
-        $upd->execute(['ordem' => $atual['ordem'], 'id' => $vizinho['id']]);
-        $pdo->commit();
 
-        Auditoria::registrar('mover', 'trabalho_criterios', $id, $atual, ['ordem' => $vizinho['ordem']]);
+        try {
+            $stmt = $pdo->prepare('UPDATE trabalho_criterios SET ordem = :ordem WHERE id = :id AND evento_id = :evento_id');
+
+            foreach ($ids as $indice => $id) {
+                $stmt->execute(['ordem' => $indice, 'id' => (int) $id, 'evento_id' => $eventoId]);
+            }
+
+            $pdo->commit();
+            Auditoria::registrar('reordenar', 'trabalho_criterios', null, null, ['evento_id' => $eventoId, 'ids' => $ids]);
+        } catch (\Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 
     public function remover($id)

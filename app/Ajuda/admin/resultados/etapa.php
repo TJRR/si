@@ -10,6 +10,10 @@ return [
     'resumo' => 'Prévia (ou resultado publicado) do ranking desta etapa, calculado a partir das notas lançadas e da Fórmula da Etapa. Se a fórmula ou os critérios estiverem incompletos, a tela mostra um erro no lugar do ranking. A coluna "Enviada em" mostra a data e hora exatas do envio da submissão.',
     'operacoes' => [
         [
+            'nome' => 'Coluna Desempate',
+            'como' => 'Preenchida só nas linhas que empataram com a de cima: diz qual regra decidiu aquela posição, ou avisa quando nenhuma regra resolveu. Fica congelada junto com o resultado publicado.',
+        ],
+        [
             'nome' => 'Confirmar e publicar',
             'icone' => 'publicar',
             'como' => 'Publica o ranking desta etapa numa página pública.',

@@ -24,6 +24,24 @@
         ?>
     </fieldset>
 
+    <?php
+    // Fase 51: tipo e destaque alimentam as seções "Destaques" e
+    // "Programação" da página pública do evento. Sem tipo cadastrado, a
+    // lista aparece vazia e a atividade fica sem etiqueta, sem impedir nada.
+    $tipoAtual = $atividade !== null && isset($atividade['tipo_id']) ? (int) $atividade['tipo_id'] : 0;
+    ?>
+    <label>Tipo (etiqueta na página pública):
+        <select name="tipo_id">
+            <option value="">Sem tipo</option>
+            <?php foreach ($tiposAtividade as $tipoAtividade): ?>
+                <option value="<?php echo (int) $tipoAtividade['id']; ?>" <?php echo $tipoAtual === (int) $tipoAtividade['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($tipoAtividade['nome'], ENT_QUOTES, 'UTF-8'); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </label>
+    <p style="color:#555;font-size:0.9em;">Os tipos são cadastrados em <a href="<?php echo url('atividadeTipos/index/' . (int) $evento['id']); ?>">Tipos de atividade</a>.</p>
+
+    <label><input type="checkbox" name="destacar_na_pagina" value="1" <?php echo ($atividade !== null && !empty($atividade['destacar_na_pagina'])) ? 'checked' : ''; ?>> Destacar esta atividade na página pública do evento</label><br>
+
     <label>Local:
         <input type="text" name="local" value="<?php echo htmlspecialchars($atividade !== null ? (string) $atividade['local'] : '', ENT_QUOTES, 'UTF-8'); ?>" maxlength="150" size="40">
     </label><br>

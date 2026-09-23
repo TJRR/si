@@ -9,17 +9,14 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
-use App\Repositories\BlocoConteudoRepository;
 use App\Repositories\EventoCampoInscricaoRepository;
 use App\Repositories\EventoCheckinRepository;
 use App\Repositories\EventoComunicacaoRepository;
-use App\Repositories\EventoDivulgacaoRepository;
 use App\Repositories\EventoInscricaoRepository;
 use App\Repositories\EventoPerfilOrganizacaoRepository;
 use App\Repositories\NotificacaoPainelRepository;
 use App\Repositories\SemanaInovacaoRepository;
 use App\Services\EjurrExportService;
-use App\Services\ImagemService;
 
 /**
  * Fase 39 (revisada): CRUD da entidade Evento (aba de 1o nivel "Eventos",
@@ -121,99 +118,16 @@ class EventoAdminController extends Controller
             $this->eventos->remover($id);
             flashSucesso('Evento removido.');
         } catch (\PDOException $e) {
+            // Fase 50 (correcao): mensagem generica, sem apontar uma causa
+            // especifica - a violacao de chave estrangeira (23000) pode vir
+            // de inscricoes, atividades, cabecalho, slides, faixas ou
+            // blocos de conteudo do evento, nao so' de inscricoes.
             flashErro($e->getCode() === '23000'
-                ? 'Não é possível remover: este evento já tem inscrições.'
+                ? 'Não é possível remover: este evento ainda tem dados vinculados (inscrições, atividades, cabeçalho, slides, faixas ou blocos de conteúdo).'
                 : 'Não foi possível remover o evento.');
         }
 
         $this->redirecionar('eventos/index');
-    }
-
-    /**
-     * Fase 40: bloco de chamada do evento na home publica (sub-aba
-     * "Divulgacao na home"). Sempre upsert - evento_divulgacao tem no maximo
-     * 1 linha por evento (ver EventoDivulgacaoRepository::salvar()), entao
-     * nao ha' distincao "novo vs editar" como em editar(): $atual pode ser
-     * null na primeira gravacao.
-     */
-    public function divulgacao($id)
-    {
-        $evento = $this->eventos->buscarPorId($id);
-
-        if ($evento === null) {
-            http_response_code(404);
-            exit('Evento não encontrado.');
-        }
-
-        $repositorioDivulgacao = new EventoDivulgacaoRepository();
-        $atual = $repositorioDivulgacao->buscarPorEvento($id);
-        $erro = null;
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            RoleMiddleware::exigir(['administrador']);
-
-            $dados = [
-                'titulo' => trim(isset($_POST['titulo']) ? $_POST['titulo'] : ''),
-                'conteudo_html' => isset($_POST['conteudo_html']) ? sanitizarHtmlRico($_POST['conteudo_html']) : null,
-                'imagem_posicao' => in_array(isset($_POST['imagem_posicao']) ? $_POST['imagem_posicao'] : null, BlocoConteudoRepository::IMAGEM_POSICOES, true)
-                    ? $_POST['imagem_posicao']
-                    : 'esquerda',
-                'cta_titulo' => $this->campoOuNulo('cta_titulo'),
-                'cta_alinhamento' => in_array(isset($_POST['cta_alinhamento']) ? $_POST['cta_alinhamento'] : null, BlocoConteudoRepository::CTA_ALINHAMENTOS, true)
-                    ? $_POST['cta_alinhamento']
-                    : 'esquerda',
-                'ativo' => isset($_POST['ativo']) ? 1 : 0,
-            ];
-
-            if ($dados['titulo'] === '') {
-                $dados['titulo'] = null;
-            }
-
-            if ($dados['ativo'] === 1 && $dados['titulo'] === null) {
-                $erro = 'Informe o título antes de ativar. Sem título, o bloco não aparece na home.';
-            }
-
-            $dados['imagem_path'] = $atual !== null ? $atual['imagem_path'] : null;
-            $dados['imagem_alt'] = $atual !== null ? $atual['imagem_alt'] : null;
-
-            if ($erro === null) {
-                try {
-                    if (!empty($_FILES['imagem']) && $_FILES['imagem']['error'] === UPLOAD_ERR_OK) {
-                        $alt = trim(isset($_POST['imagem_alt']) ? $_POST['imagem_alt'] : '');
-
-                        if ($alt === '') {
-                            $erro = 'Informe o texto alternativo (alt) da imagem.';
-                        } else {
-                            $dados['imagem_path'] = (new ImagemService())->salvar($_FILES['imagem'], 'eventos', 900, 900);
-                            $dados['imagem_alt'] = $alt;
-
-                            if ($atual !== null && !empty($atual['imagem_path'])) {
-                                (new ImagemService())->remover($atual['imagem_path']);
-                            }
-                        }
-                    } elseif ($atual !== null && isset($_POST['imagem_alt'])) {
-                        $dados['imagem_alt'] = trim($_POST['imagem_alt']);
-                    }
-                } catch (\RuntimeException $e) {
-                    $erro = $e->getMessage();
-                }
-            }
-
-            if ($erro === null) {
-                $repositorioDivulgacao->salvar($id, $dados);
-                flashSucesso('Divulgação atualizada.');
-                $this->redirecionar('eventos/divulgacao/' . (int) $id);
-                return;
-            }
-
-            $atual = $dados + ['id' => $atual !== null ? $atual['id'] : null];
-        }
-
-        $this->renderizar('admin/eventos/divulgacao', [
-            'evento' => $evento,
-            'divulgacao' => $atual,
-            'erro' => $erro,
-        ], 'Divulgação na home: ' . $evento['nome'], ['tipo' => 'eventoDivulgacao', 'id' => (int) $id]);
     }
 
     public function inscritos($id)

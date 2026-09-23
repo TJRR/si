@@ -27,6 +27,22 @@
     </label>
     <p><small>Usado na página pública de equipes homologadas: defina aqui o critério de cada edital, sem depender de alteração de código.</small></p><br>
 
+    <?php
+    // Fase 51: divulgação pública do resultado FINAL desta trilha. Nasce
+    // oculto: nada muda para quem já usa até o Admin escolher outra opção.
+    $visibilidadeResultado = $trilha !== null && isset($trilha['visibilidade_publica_resultado'])
+        ? (string) $trilha['visibilidade_publica_resultado']
+        : 'oculto';
+    ?>
+    <label>Resultado final desta trilha na página pública:
+        <select name="visibilidade_publica_resultado" <?php echo $somenteLeitura ? 'disabled' : ''; ?>>
+            <option value="oculto" <?php echo $visibilidadeResultado === 'oculto' ? 'selected' : ''; ?>>Oculto</option>
+            <option value="apenas_destaques" <?php echo $visibilidadeResultado === 'apenas_destaques' ? 'selected' : ''; ?>>Só as colocações com destaque cadastrado</option>
+            <option value="ranking_completo" <?php echo $visibilidadeResultado === 'ranking_completo' ? 'selected' : ''; ?>>Classificação completa, com Nota Final</option>
+        </select>
+    </label>
+    <p><small>Só vale depois que o resultado final estiver publicado em Apuração. O resumo e a imagem de cada case são os do "Destaque público", em Resultado da trilha.</small></p><br>
+
     <label>
         <input type="checkbox" name="ativo" value="1" <?php echo ($trilha === null || $trilha['ativo']) ? 'checked' : ''; ?> <?php echo $somenteLeitura ? 'disabled' : ''; ?>>
         Ativa

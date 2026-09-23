@@ -15,7 +15,7 @@
             <a href="<?php echo url('apresentacaoPitch/index/' . (int) $apresentacaoPitchEtapaId); ?>" class="btn-acao">Apresentação de Pitch</a>
         <?php endif; ?>
         <a href="<?php echo url('duvida/index'); ?>" class="btn-acao">Dúvidas</a>
-        <?php if ($ehLider): ?>
+        <?php if ($ehLider && !empty($requerimentoDisponivel)): ?>
             <a href="<?php echo url('requerimento/index'); ?>" class="btn-acao">Requerimentos</a>
         <?php endif; ?>
     </div>

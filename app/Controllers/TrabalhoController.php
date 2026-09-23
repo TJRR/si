@@ -11,6 +11,7 @@ use App\Core\Auth;
 use App\Core\Controller;
 use App\Repositories\SemanaInovacaoRepository;
 use App\Repositories\TrabalhoAutorRepository;
+use App\Repositories\EventoTrabalhoTermoRepository;
 use App\Repositories\TrabalhoConfigRepository;
 use App\Repositories\TrabalhoCriterioRepository;
 use App\Repositories\TrabalhoEixoTematicoRepository;
@@ -63,7 +64,14 @@ class TrabalhoController extends Controller
             'destino' => 'trabalho/formulario/' . (int) $eventoId,
             'expira_em' => time() + 1800,
         ];
-        $this->redirecionar('auth/login');
+
+        // Fase 51: a porta de entrada e' a do Evento (identidade visual
+        // propria, Fase 48B), nao a do Concurso - quem chega aqui veio da
+        // pagina publica do evento e nunca deveria ver a marca do Premio de
+        // Inovacao no meio do caminho. O retorno para o formulario continua
+        // funcionando: AuthController::entrarComResultado() consulta
+        // redirecionarPosLogin() antes do destino padrao do contexto.
+        $this->redirecionar('auth/loginEvento');
         exit;
     }
 
@@ -122,6 +130,8 @@ class TrabalhoController extends Controller
             'extensoesHabilitadas' => $this->config->extensoesEditavelHabilitadas($eventoId),
             'usuario' => $usuario,
             'perfilPessoa' => $perfilPessoa,
+            'termos' => (new EventoTrabalhoTermoRepository())->listarAtivos($eventoId),
+            'termosMarcados' => [],
             'erro' => null,
         ], 'Submeter trabalho: ' . $evento['nome']);
     }
@@ -177,8 +187,14 @@ class TrabalhoController extends Controller
             $arquivosEnviados['arquivo_publicacao'] = $_FILES['arquivo_publicacao'];
         }
 
+        $termosAceitos = [];
+
+        if (!empty($_POST['termos_aceitos']) && is_array($_POST['termos_aceitos'])) {
+            $termosAceitos = array_map('intval', $_POST['termos_aceitos']);
+        }
+
         try {
-            $trabalhoId = (new TrabalhoSubmissaoService())->submeter($eventoId, Auth::usuarioId(), $dadosAutorPrincipal, $dadosTrabalho, $coautores, $arquivosEnviados);
+            $trabalhoId = (new TrabalhoSubmissaoService())->submeter($eventoId, Auth::usuarioId(), $dadosAutorPrincipal, $dadosTrabalho, $coautores, $arquivosEnviados, $termosAceitos);
             flashSucesso('Trabalho submetido com sucesso.');
             $this->redirecionar('trabalho/ver/' . $trabalhoId);
         } catch (\RuntimeException $e) {
@@ -195,6 +211,8 @@ class TrabalhoController extends Controller
                 'extensoesHabilitadas' => $this->config->extensoesEditavelHabilitadas($eventoId),
                 'usuario' => $usuario,
                 'perfilPessoa' => $perfilPessoa,
+                'termos' => (new EventoTrabalhoTermoRepository())->listarAtivos($eventoId),
+                'termosMarcados' => $termosAceitos,
                 'erro' => $e->getMessage(),
             ], 'Submeter trabalho: ' . $evento['nome']);
         }

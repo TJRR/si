@@ -15,8 +15,7 @@ return [
         ],
         [
             'nome' => 'Mover cima/baixo',
-            'icone' => 'mover_cima',
-            'como' => 'Muda a prioridade entre as regras.',
+            'como' => 'Arraste pela alça ⠿ ou use as setas: muda a prioridade entre as regras da mesma etapa.',
         ],
         [
             'nome' => 'Remover',

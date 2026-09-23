@@ -13,6 +13,7 @@ use App\Middleware\RoleMiddleware;
 use App\Repositories\EventoAtividadeFacilitadorRepository;
 use App\Repositories\EventoAtividadeInscricaoRepository;
 use App\Repositories\EventoAtividadeRepository;
+use App\Repositories\EventoAtividadeTipoRepository;
 use App\Repositories\EventoCheckinRepository;
 use App\Repositories\EventoInscricaoRepository;
 use App\Repositories\EventoPerfilOrganizacaoRepository;
@@ -87,6 +88,7 @@ class AtividadeAdminController extends Controller
             'erro' => $erro,
             'evento' => $evento,
             'atividade' => $atividade,
+            'tiposAtividade' => (new EventoAtividadeTipoRepository())->listar($eventoId),
         ], 'Nova atividade', ['tipo' => 'atividades', 'id' => (int) $eventoId]);
     }
 
@@ -119,6 +121,7 @@ class AtividadeAdminController extends Controller
             'erro' => $erro,
             'evento' => $evento,
             'atividade' => $atividade,
+            'tiposAtividade' => (new EventoAtividadeTipoRepository())->listar((int) $evento['id']),
         ], 'Editar atividade', ['tipo' => 'atividade', 'id' => (int) $id]);
     }
 
@@ -536,6 +539,8 @@ class AtividadeAdminController extends Controller
     {
         return [
             'nome' => trim(isset($_POST['nome']) ? $_POST['nome'] : ''),
+            'tipo_id' => !empty($_POST['tipo_id']) ? (int) $_POST['tipo_id'] : null,
+            'destacar_na_pagina' => isset($_POST['destacar_na_pagina']),
             'descricao_html' => isset($_POST['descricao_html']) ? sanitizarHtmlRico($_POST['descricao_html']) : '',
             'local' => trim(isset($_POST['local']) ? $_POST['local'] : ''),
             'modalidade' => in_array(isset($_POST['modalidade']) ? $_POST['modalidade'] : null, ['presencial', 'online', 'hibrido'], true)

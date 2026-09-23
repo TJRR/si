@@ -42,6 +42,15 @@
         </select>
     </label>
 
+    <label>Pasta:
+        <select name="pasta_id">
+            <option value="">Biblioteca (raiz)</option>
+            <?php foreach ($todasAsPastas as $pastaOpcao): ?>
+                <option value="<?php echo (int) $pastaOpcao['id']; ?>" <?php echo $pastaSelecionada === (int) $pastaOpcao['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($pastaOpcao['nome'], ENT_QUOTES, 'UTF-8'); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </label>
+
     <div class="form-acoes">
         <a href="<?php echo url('midia/index'); ?>" class="btn-voltar">Voltar</a>
         <button type="submit">Enviar</button>

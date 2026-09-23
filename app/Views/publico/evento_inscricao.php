@@ -22,9 +22,19 @@
     require __DIR__ . '/../eventoApp/_app_bar.php';
     ?>
     <?php else: ?>
+    <?php
+    // Fase 50 (correcao): esta view e' exclusiva do Evento - $logoAdminSrc
+    // (app/Views/layout.php) nunca era definida aqui (esta view nao entra
+    // em $ehPaginaConvidado), e o texto alternativo fixo "Prêmio de
+    // Inovação" era branding do Concurso numa tela que e' so' do Evento.
+    // logoAtual(true) resolve a logo propria do Evento (com fallback pra
+    // logo do site), mesmo padrao ja usado em EventoPublicoController.
+    $logoDesktopEvento = logoAtual(true);
+    $altLogoDesktopEvento = isset($evento) && $evento !== null ? $evento['nome'] : 'Semana de Inovação';
+    ?>
     <header class="site-header">
         <div class="site-header-inner">
-            <img src="<?php echo htmlspecialchars($logoAdminSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars('Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="site-logo">
+            <img src="<?php echo htmlspecialchars($logoDesktopEvento, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($altLogoDesktopEvento, ENT_QUOTES, 'UTF-8'); ?>" class="site-logo">
             <nav class="site-nav">
                 <?php if (isset($ajudaHtml) && $ajudaHtml !== null): ?>
                 <button type="button" class="site-header-icone" title="Ajuda desta página" aria-label="Ajuda desta página" data-ajuda-titulo="<?php echo htmlspecialchars('Ajuda: ' . (string) $ajudaTitulo, ENT_QUOTES, 'UTF-8'); ?>" onclick="abrirModal(this.dataset.ajudaTitulo, document.getElementById('ajuda-painel-fonte').innerHTML)">

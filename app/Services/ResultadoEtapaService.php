@@ -129,7 +129,7 @@ class ResultadoEtapaService
 
         $this->marcarClassificados($linhas, $etapa);
 
-        return $linhas;
+        return $this->anotarDesempate($linhas, $regrasDaEtapa);
     }
 
     public function publicar($etapaId, $usuarioId)
@@ -262,6 +262,65 @@ class ResultadoEtapaService
         }
 
         return empty($valores) ? null : array_sum($valores) / count($valores);
+    }
+
+    /**
+     * Fase 51: mesma ideia aplicada ao resultado da trilha - diz qual regra
+     * decidiu o empate com a submissao imediatamente acima, em texto pronto,
+     * gravado junto com o resultado publicado (que fica congelado).
+     */
+    private function anotarDesempate(array $linhas, array $regrasDaEtapa)
+    {
+        foreach ($linhas as $indice => &$linha) {
+            $linha['desempate_criterio'] = null;
+
+            if ($indice === 0 || $linha['ne'] === null) {
+                continue;
+            }
+
+            $acima = $linhas[$indice - 1];
+
+            if ($acima['ne'] === null || abs($linha['ne'] - $acima['ne']) > self::EPSILON) {
+                continue;
+            }
+
+            $linha['desempate_criterio'] = $this->regraDecisiva($acima, $linha, $regrasDaEtapa);
+        }
+
+        unset($linha);
+
+        return $linhas;
+    }
+
+    private function regraDecisiva(array $acima, array $abaixo, array $regrasDaEtapa)
+    {
+        foreach ($regrasDaEtapa as $regra) {
+            if ($regra['tipo'] === 'data_submissao') {
+                if ($acima['criado_em'] === $abaixo['criado_em']) {
+                    continue;
+                }
+
+                return 'Data de inscrição: ' . ($regra['direcao'] === 'asc' ? 'quem enviou primeiro vence' : 'quem enviou por último vence');
+            }
+
+            $valorAcima = $this->valorDesempatePorSubmissao($acima['submissao_id'], $regra['criterio_avaliacao_id']);
+            $valorAbaixo = $this->valorDesempatePorSubmissao($abaixo['submissao_id'], $regra['criterio_avaliacao_id']);
+
+            if ($valorAcima === null && $valorAbaixo === null) {
+                continue;
+            }
+
+            if ($valorAcima !== null && $valorAbaixo !== null && abs($valorAcima - $valorAbaixo) <= self::EPSILON) {
+                continue;
+            }
+
+            $nome = !empty($regra['criterio_nome']) ? $regra['criterio_nome'] : 'critério de desempate';
+            $direcao = $regra['direcao'] === 'asc' ? 'menor valor vence' : 'maior valor vence';
+
+            return $nome . ': ' . $direcao;
+        }
+
+        return 'Empate não resolvido por nenhuma regra cadastrada';
     }
 
     private function compararLinhas(array $a, array $b, array $regrasDaEtapa)

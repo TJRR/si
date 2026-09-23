@@ -61,6 +61,10 @@ class TrilhaRepository
             'ordem' => $ordem,
             'ativo' => $ativo,
             'minimo_integrantes_homologados' => $minimoIntegrantesHomologados,
+            // Fase 51: quanto do resultado final desta trilha fica publico.
+            'visibilidade_publica_resultado' => in_array($visibilidadePublicaResultado, ['oculto', 'apenas_destaques', 'ranking_completo'], true)
+                ? $visibilidadePublicaResultado
+                : 'oculto',
         ];
         $stmt->execute($dados);
         $id = (int) $pdo->lastInsertId();
@@ -70,14 +74,15 @@ class TrilhaRepository
         return $id;
     }
 
-    public function atualizar($id, $nome, $descricao, $ordem, $ativo, $minimoIntegrantesHomologados = 1)
+    public function atualizar($id, $nome, $descricao, $ordem, $ativo, $minimoIntegrantesHomologados = 1, $visibilidadePublicaResultado = 'oculto')
     {
         $antes = $this->buscarPorId($id);
         $pdo = Database::conexao();
 
         $stmt = $pdo->prepare(
             'UPDATE trilhas SET nome = :nome, descricao = :descricao, ordem = :ordem, ativo = :ativo,
-                minimo_integrantes_homologados = :minimo_integrantes_homologados
+                minimo_integrantes_homologados = :minimo_integrantes_homologados,
+                visibilidade_publica_resultado = :visibilidade_publica_resultado
              WHERE id = :id'
         );
         $depois = [

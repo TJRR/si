@@ -92,9 +92,9 @@ class EventoAtividadeRepository
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'INSERT INTO evento_atividades
-                (evento_id, nome, descricao_html, local, modalidade, data_inicio, data_fim, exige_inscricao, emite_certificado, vagas, permite_lista_espera, tolerancia_presenca_efetiva, antecedencia_abertura_presenca, codigo_atividade, codigo_presenca_online)
+                (evento_id, nome, tipo_id, destacar_na_pagina, descricao_html, local, modalidade, data_inicio, data_fim, exige_inscricao, emite_certificado, vagas, permite_lista_espera, tolerancia_presenca_efetiva, antecedencia_abertura_presenca, codigo_atividade, codigo_presenca_online)
              VALUES
-                (:evento_id, :nome, :descricao_html, :local, :modalidade, :data_inicio, :data_fim, :exige_inscricao, :emite_certificado, :vagas, :permite_lista_espera, :tolerancia_presenca_efetiva, :antecedencia_abertura_presenca, :codigo_atividade, :codigo_presenca_online)'
+                (:evento_id, :nome, :tipo_id, :destacar_na_pagina, :descricao_html, :local, :modalidade, :data_inicio, :data_fim, :exige_inscricao, :emite_certificado, :vagas, :permite_lista_espera, :tolerancia_presenca_efetiva, :antecedencia_abertura_presenca, :codigo_atividade, :codigo_presenca_online)'
         );
         $stmt->execute($campos);
         $id = (int) $pdo->lastInsertId();
@@ -129,7 +129,8 @@ class EventoAtividadeRepository
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'UPDATE evento_atividades
-             SET nome = :nome, descricao_html = :descricao_html, local = :local, modalidade = :modalidade,
+             SET nome = :nome, tipo_id = :tipo_id, destacar_na_pagina = :destacar_na_pagina,
+                 descricao_html = :descricao_html, local = :local, modalidade = :modalidade,
                  codigo_presenca_online = :codigo_presenca_online, data_inicio = :data_inicio,
                  data_fim = :data_fim, exige_inscricao = :exige_inscricao, emite_certificado = :emite_certificado,
                  vagas = :vagas, permite_lista_espera = :permite_lista_espera,
@@ -157,6 +158,11 @@ class EventoAtividadeRepository
     {
         return [
             'nome' => $dados['nome'],
+            // Fase 51: tipo (etiqueta colorida) e destaque na pagina publica
+            // do evento - os dois so' fazem sentido quando a pagina existe,
+            // por isso sao opcionais aqui.
+            'tipo_id' => !empty($dados['tipo_id']) ? (int) $dados['tipo_id'] : null,
+            'destacar_na_pagina' => !empty($dados['destacar_na_pagina']) ? 1 : 0,
             'descricao_html' => $dados['descricao_html'] !== '' ? $dados['descricao_html'] : null,
             'local' => $dados['local'] !== '' ? $dados['local'] : null,
             'modalidade' => $dados['modalidade'],

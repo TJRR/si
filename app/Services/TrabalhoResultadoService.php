@@ -130,7 +130,67 @@ class TrabalhoResultadoService
             return $this->compararLinhas($a, $b, $regras);
         });
 
+        return $this->anotarDesempate($linhas, $regras);
+    }
+
+    /**
+     * Fase 51: qual regra decidiu o empate com o trabalho imediatamente
+     * acima (item 7.6 do edital: originalidade, relevancia, aderencia e,
+     * por fim, data e hora de envio). Texto pronto, gravado no trabalho
+     * quando o resultado e' aplicado.
+     */
+    private function anotarDesempate(array $linhas, array $regras)
+    {
+        foreach ($linhas as $indice => &$linha) {
+            $linha['desempate_criterio'] = null;
+
+            if ($indice === 0 || $linha['nota'] === null) {
+                continue;
+            }
+
+            $acima = $linhas[$indice - 1];
+
+            if ($acima['nota'] === null || abs($linha['nota'] - $acima['nota']) > self::EPSILON) {
+                continue;
+            }
+
+            $linha['desempate_criterio'] = $this->regraDecisiva($acima, $linha, $regras);
+        }
+
+        unset($linha);
+
         return $linhas;
+    }
+
+    private function regraDecisiva(array $acima, array $abaixo, array $regras)
+    {
+        foreach ($regras as $regra) {
+            if ($regra['tipo'] === 'data_submissao') {
+                if ($acima['submetido_em'] === $abaixo['submetido_em']) {
+                    continue;
+                }
+
+                return 'Data e hora de envio: ' . ($regra['direcao'] === 'asc' ? 'quem enviou primeiro vence' : 'quem enviou por último vence');
+            }
+
+            $valorAcima = $this->notas->mediaPorTrabalhoECriterio($acima['trabalho_id'], $regra['criterio_id']);
+            $valorAbaixo = $this->notas->mediaPorTrabalhoECriterio($abaixo['trabalho_id'], $regra['criterio_id']);
+
+            if ($valorAcima === null && $valorAbaixo === null) {
+                continue;
+            }
+
+            if ($valorAcima !== null && $valorAbaixo !== null && abs($valorAcima - $valorAbaixo) <= self::EPSILON) {
+                continue;
+            }
+
+            $nome = !empty($regra['criterio_nome']) ? $regra['criterio_nome'] : 'critério de desempate';
+            $direcao = $regra['direcao'] === 'asc' ? 'menor nota vence' : 'maior nota vence';
+
+            return $nome . ': ' . $direcao;
+        }
+
+        return 'Empate não resolvido por nenhuma regra cadastrada';
     }
 
     private function compararLinhas(array $a, array $b, array $regras)
@@ -213,6 +273,7 @@ class TrabalhoResultadoService
             $status = $linha['aprovado'] ? 'aprovado' : 'reprovado';
             $this->trabalhos->atualizarStatus($linha['trabalho_id'], $status);
             $this->trabalhos->marcarSelecionado($linha['trabalho_id'], false);
+            $this->trabalhos->definirDesempateCriterio($linha['trabalho_id'], $linha['desempate_criterio']);
         }
 
         $aprovados = array_values(array_filter($linhas, function (array $linha) {

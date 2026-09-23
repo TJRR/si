@@ -56,7 +56,7 @@
     </p>
 
     <table border="1" cellpadding="6">
-        <tr><th>#</th><th>Submissão</th><th>Equipe</th><th>Enviada em</th><th>NE</th><th>Classificado</th><th>Ações</th></tr>
+        <tr><th>#</th><th>Submissão</th><th>Equipe</th><th>Enviada em</th><th>NE</th><th>Desempate</th><th>Classificado</th><th>Ações</th></tr>
         <?php foreach ($ranking as $posicao => $linha): ?>
         <?php
         $urlSubmissao = url('resultados/popupSubmissao/' . (int) $linha['submissao_id']);
@@ -68,6 +68,8 @@
             <td><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : 'Não informado', ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars(formatarDataHora($linha['criado_em']), ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo $linha['ne'] !== null ? number_format((float) $linha['ne'], $casasDecimais, ',', '.') : 'sem notas ainda'; ?></td>
+            <?php $criterioDesempate = isset($linha['desempate_criterio']) ? (string) $linha['desempate_criterio'] : ''; ?>
+            <td><?php echo $criterioDesempate !== '' ? htmlspecialchars($criterioDesempate, ENT_QUOTES, 'UTF-8') : '&mdash;'; ?></td>
             <td><?php echo !empty($linha['classificado']) ? 'Sim' : 'Não'; ?></td>
             <td>
                 <div class="acoes-icones">

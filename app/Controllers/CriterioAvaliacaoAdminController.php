@@ -184,14 +184,15 @@ class CriterioAvaliacaoAdminController extends Controller
         ], 'Editar critério', ['tipo' => 'criterios', 'id' => (int) $etapa['id']]);
     }
 
-    public function mover()
+    public function reordenar($etapaId)
     {
-        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
-        $direcao = isset($_POST['direcao']) ? $_POST['direcao'] : 'cima';
-        $etapaId = (int) (isset($_POST['etapa_id']) ? $_POST['etapa_id'] : 0);
+        header('Content-Type: application/json; charset=utf-8');
+        $corpo = json_decode((string) file_get_contents('php://input'), true);
+        $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
 
-        $this->criterios->mover($id, $direcao);
-        $this->redirecionar('criterios/index/' . $etapaId);
+        $this->criterios->reordenar($etapaId, $ids);
+
+        echo json_encode(['ok' => true]);
     }
 
     public function remover()

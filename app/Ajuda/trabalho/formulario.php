@@ -10,6 +10,10 @@ return [
     'resumo' => 'Formulário de envio de um artigo ou resumo expandido para este evento.',
     'operacoes' => [
         [
+            'nome' => 'Declarações',
+            'como' => 'Caixas no fim do formulário, cadastradas pela organização do evento. As obrigatórias precisam ser marcadas para enviar, e o texto aceito fica guardado junto com a submissão, como estava no dia do envio.',
+        ],
+        [
             'nome' => 'Autor principal e coautores',
             'como' => 'CPF, nome, e-mail, cargo e órgão de origem de cada autor. O CPF e o cargo do autor principal, se já cadastrados em "Meu Perfil", vêm preenchidos automaticamente.',
         ],

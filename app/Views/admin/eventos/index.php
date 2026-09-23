@@ -27,9 +27,16 @@
                 <?php echo htmlspecialchars(formatarData($evento['data_fim']), ENT_QUOTES, 'UTF-8'); ?>
             </td>
             <td>
-                <a href="<?php echo url('eventos/inscritos/' . (int) $evento['id']); ?>">Inscritos</a>
-                <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
                 <div class="acoes-icones">
+                    <a href="<?php echo url('eventos/inscritos/' . (int) $evento['id']); ?>" class="btn-icone" title="Inscritos">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </a>
+                    <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
                     <a href="<?php echo url('eventos/editar/' . (int) $evento['id']); ?>" class="btn-icone" title="Editar">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>

@@ -7,7 +7,11 @@
 (function () {
     'use strict';
 
-    var secao = document.getElementById('slideshow-principal');
+    // Fase 51: a pagina do Evento monta o carrossel dentro da ordem das
+    // secoes, e por isso o id dele ali e' a ancora daquela secao, nao um
+    // nome fixo - a busca passou a ser pela classe, que vale nas duas
+    // paginas (uma so' apresentacao de slides por pagina).
+    var secao = document.querySelector('.site-slideshow');
 
     if (!secao) {
         return;
@@ -32,8 +36,13 @@
     function proximo() { irPara(indiceAtual + 1); }
     function anterior() { irPara(indiceAtual - 1); }
 
+    // Fase 51: a pagina do Evento pode desligar o avanco automatico
+    // (data-avanco-automatico="0"); a home do Concurso nunca manda o
+    // atributo e continua avancando sozinha.
+    var avancoAutomaticoLigado = secao.getAttribute('data-avanco-automatico') !== '0';
+
     function iniciarAutoAvanco() {
-        if (reduzirMovimento || slides.length < 2) {
+        if (!avancoAutomaticoLigado || reduzirMovimento || slides.length < 2) {
             return;
         }
 

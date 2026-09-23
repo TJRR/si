@@ -15,7 +15,7 @@ return [
         ],
         [
             'nome' => 'Mover ▲ / ▼',
-            'como' => 'Reordena o critério - é a ordem em que aparece na tela de avaliação.',
+            'como' => 'Arraste pela alça ⠿ ou use as setas: reordena o critério, é a ordem em que aparece na tela de avaliação.',
         ],
         [
             'nome' => 'Remover',

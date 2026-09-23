@@ -18,6 +18,10 @@ return [
             'como' => 'Hiperlink para a tela de Desempate.',
         ],
         [
+            'nome' => 'Reordenar regras de desempate',
+            'como' => 'Arraste pela alça ⠿ ou use as setas: dá para reordenar direto aqui, sem precisar abrir a tela de Desempate. Cada etapa tem sua própria lista: uma regra nunca troca de posição com a de outra etapa.',
+        ],
+        [
             'nome' => 'Confirmar e publicar',
             'icone' => 'publicar',
             'como' => 'Publica o ranking final da trilha numa página pública.',
@@ -27,6 +31,10 @@ return [
             'nome' => 'Reabrir',
             'icone' => 'despublicar',
             'como' => 'Apaga o resultado publicado e volta a mostrar a prévia recalculada.',
+        ],
+        [
+            'nome' => 'Coluna Desempate',
+            'como' => 'Preenchida só nas linhas que empataram na Nota Final com a equipe logo acima: diz qual regra decidiu aquela posição, ou avisa quando nenhuma regra cadastrada resolveu o empate. Depois de publicado, o texto fica congelado junto com o resultado, mesmo que a regra seja renomeada ou removida depois.',
         ],
         [
             'nome' => 'Destaque público',

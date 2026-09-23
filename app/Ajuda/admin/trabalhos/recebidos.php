@@ -15,6 +15,7 @@ return [
         ],
         [
             'nome' => 'Ver',
+            'icone' => 'ver',
             'como' => 'Abre o detalhe do trabalho: dados de autoria, conteúdo submetido, avaliadores designados e ação de desclassificar.',
         ],
     ],

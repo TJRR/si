@@ -10,6 +10,10 @@ return [
     'resumo' => 'Dados gerais de uma trilha (categoria) dentro de um concurso.',
     'operacoes' => [
         [
+            'nome' => 'Resultado final na página pública',
+            'como' => 'Oculto (padrão), só as colocações com destaque cadastrado, ou classificação completa com Nota Final. Só vale depois que o resultado final estiver publicado em Apuração.',
+        ],
+        [
             'nome' => 'Nome / Descrição / Ordem',
             'como' => 'Ordem define a posição de exibição entre as trilhas.',
         ],

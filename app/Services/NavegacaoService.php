@@ -33,6 +33,12 @@ class NavegacaoService
             ['tipo' => 'trilha', 'rotulo' => 'Dados Gerais', 'rota' => 'trilhas/editar'],
             ['tipo' => 'temas', 'rotulo' => 'Temas/Desafios', 'rota' => 'temas/index'],
             ['tipo' => 'inscritos', 'rotulo' => 'Inscritos', 'rota' => 'homologacao/index'],
+            // Fase 50: sub-aba propria para a tela dedicada de regras de
+            // desempate por etapa (antes so' alcancavel por um link de texto
+            // dentro de Apuracao, sem entrada na navegacao - usuario relatou
+            // nao conseguir encontra-la). O link de texto em Apuracao continua
+            // existindo, os dois caminhos levam a mesma tela.
+            ['tipo' => 'desempate', 'rotulo' => 'Critérios De Desempate', 'rota' => 'desempate/index'],
             ['tipo' => 'apuracao', 'rotulo' => 'Apuração', 'rota' => 'apuracao/index'],
         ],
         'etapa' => [
@@ -78,13 +84,24 @@ class NavegacaoService
          * 'concurso' (que NAO tem sub-abas proprias, so' filhos de arvore),
          * 'evento' se parece com 'trilha': tem sub-abas horizontais E
          * filhos de arvore (Atividades/Trabalhos/Estandes/Competicoes,
-         * ainda nao implementados nesta fase). Fase 40 acrescenta
-         * "Divulgacao na home" - Certificado/Comunicacao continuam para
-         * as fases seguintes do plano.
+         * ainda nao implementados nesta fase). Fase 50 (correcao de
+         * arquitetura): "Divulgacao na home" (Fase 40) foi removida -
+         * Concurso e Evento passaram a ter paginas publicas totalmente
+         * separadas, sem integracao cruzada. No lugar entraram Cabecalho/
+         * Slideshow/Faixas/Blocos de conteudo, proprios de cada evento.
+         * Certificado/Comunicacao continuam para as fases seguintes do
+         * plano.
          */
         'evento' => [
             ['tipo' => 'evento', 'rotulo' => 'Dados Gerais', 'rota' => 'eventos/editar'],
-            ['tipo' => 'eventoDivulgacao', 'rotulo' => 'Divulgação na home', 'rota' => 'eventos/divulgacao'],
+            ['tipo' => 'eventoCabecalho', 'rotulo' => 'Cabeçalho', 'rota' => 'eventoCabecalho/cabecalho'],
+            ['tipo' => 'eventoSlides', 'rotulo' => 'Quadros de apresentação', 'rota' => 'eventoSlides/index'],
+            ['tipo' => 'eventoBanners', 'rotulo' => 'Faixas', 'rota' => 'eventoBanners/index'],
+            ['tipo' => 'eventoBlocos', 'rotulo' => 'Blocos de conteúdo', 'rota' => 'eventoBlocos/index'],
+            // Fase 51: ordem, liga/desliga e menu de todas as secoes da
+            // pagina publica, mais o cadastro dos componentes novos.
+            ['tipo' => 'eventoSecoes', 'rotulo' => 'Seções da página', 'rota' => 'eventoSecoes/index'],
+            ['tipo' => 'atividadeTipos', 'rotulo' => 'Tipos de atividade', 'rota' => 'atividadeTipos/index'],
             ['tipo' => 'eventoFormulario', 'rotulo' => 'Formulário de inscrição', 'rota' => 'eventoFormulario/index'],
             ['tipo' => 'eventoInscritos', 'rotulo' => 'Inscritos', 'rota' => 'eventos/inscritos'],
             // Fase 48 (correcao pos-teste de fumaca): perfis da equipe de
@@ -121,6 +138,8 @@ class NavegacaoService
             // próprios (mesmo status de Critérios) - ganharam aba própria.
             ['tipo' => 'trabalhosEixos', 'rotulo' => 'Eixos temáticos', 'rota' => 'trabalhos/eixos'],
             ['tipo' => 'trabalhosNaturezas', 'rotulo' => 'Naturezas do trabalho', 'rota' => 'trabalhos/naturezas'],
+            // Fase 51: declaracoes que o autor aceita ao submeter, por evento.
+            ['tipo' => 'trabalhosTermos', 'rotulo' => 'Declarações', 'rota' => 'trabalhos/termos'],
             ['tipo' => 'trabalhosCriterios', 'rotulo' => 'Critérios de avaliação', 'rota' => 'trabalhos/criterios'],
             // Fase 49B (achado do usuário): regra de desempate não tem
             // relação direta com critério de nota (é sobre COMO decidir
@@ -158,6 +177,7 @@ class NavegacaoService
         'trilha' => 'trilha',
         'temas' => 'trilha',
         'inscritos' => 'trilha',
+        'desempate' => 'trilha',
         'apuracao' => 'trilha',
         'etapa' => 'etapa',
         'criterios' => 'etapa',
@@ -184,7 +204,12 @@ class NavegacaoService
         'perfilTema' => 'perfil',
         'perfilVisualizar' => 'perfil',
         'evento' => 'evento',
-        'eventoDivulgacao' => 'evento',
+        'eventoCabecalho' => 'evento',
+        'eventoSlides' => 'evento',
+        'eventoBanners' => 'evento',
+        'eventoBlocos' => 'evento',
+        'eventoSecoes' => 'evento',
+        'atividadeTipos' => 'evento',
         'eventoFormulario' => 'evento',
         'eventoInscritos' => 'evento',
         'eventoPerfis' => 'evento',
@@ -196,6 +221,7 @@ class NavegacaoService
         'trabalhos' => 'trabalhos',
         'trabalhosEixos' => 'trabalhos',
         'trabalhosNaturezas' => 'trabalhos',
+        'trabalhosTermos' => 'trabalhos',
         'trabalhosCriterios' => 'trabalhos',
         'trabalhosDesempate' => 'trabalhos',
         'trabalhosAvaliadores' => 'trabalhos',

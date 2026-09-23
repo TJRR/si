@@ -28,7 +28,14 @@
                 <?php endif; ?>
             </td>
             <td><?php echo htmlspecialchars($trabalho['submetido_em'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><a href="<?php echo url('trabalhos/recebidoVer/' . (int) $trabalho['id']); ?>">Ver</a></td>
+            <td>
+                <a href="<?php echo url('trabalhos/recebidoVer/' . (int) $trabalho['id']); ?>" class="btn-icone" title="Ver">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </a>
+            </td>
         </tr>
         <?php endforeach; ?>
     </table>

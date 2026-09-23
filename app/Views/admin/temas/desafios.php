@@ -50,8 +50,8 @@
                 <?php endif; ?>
             </div>
             <div class="reordenar-botoes">
-                <button type="button" data-mover="cima" aria-label="Mover para cima" <?php echo $indice === 0 ? 'disabled' : ''; ?>>▲</button>
-                <button type="button" data-mover="baixo" aria-label="Mover para baixo" <?php echo $indice === count($desafios) - 1 ? 'disabled' : ''; ?>>▼</button>
+                <button type="button" class="btn-icone" data-mover="cima" aria-label="Mover para cima" <?php echo $indice === 0 ? 'disabled' : ''; ?>>▲</button>
+                <button type="button" class="btn-icone" data-mover="baixo" aria-label="Mover para baixo" <?php echo $indice === count($desafios) - 1 ? 'disabled' : ''; ?>>▼</button>
             </div>
         </li>
         <?php endforeach; ?>

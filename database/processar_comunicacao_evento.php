@@ -28,6 +28,7 @@ define('SI_BOOT', true);
 require __DIR__ . '/../vendor/autoload.php';
 
 use App\Repositories\EventoComunicacaoRepository;
+use App\Repositories\SemanaInovacaoRepository;
 use App\Services\NotificacaoService;
 
 // Quantos destinatarios processar por execucao - o "lote" exigido pela
@@ -60,6 +61,8 @@ if (!flock($trava, LOCK_EX | LOCK_NB)) {
 
 $comunicacoes = new EventoComunicacaoRepository();
 $notificacoes = new NotificacaoService();
+$eventos = new SemanaInovacaoRepository();
+$eventosEmCache = [];
 
 $pendentes = $comunicacoes->proximosPendentes($limitePorExecucao);
 
@@ -72,12 +75,43 @@ foreach ($pendentes as $destinatario) {
     $sucesso = false;
 
     try {
-        $sucesso = $notificacoes->avisoIndividualEvento(
-            $destinatario['usuario_email'],
-            ['id' => $destinatario['evento_id']],
-            $destinatario['assunto'],
-            $destinatario['corpo_html']
-        );
+        // Fase 51: a fila deixou de levar so' o aviso em massa. O tipo da
+        // campanha diz qual texto montar, e o convite do autor importado
+        // monta o endereco de definir senha a partir do token guardado no
+        // destinatario (o endereco nunca fica pronto no banco).
+        $tipo = isset($destinatario['tipo']) ? $destinatario['tipo'] : 'comunicado';
+
+        if ($tipo === 'convite_autor_importado' || $tipo === 'aviso_autor_importado') {
+            $eventoId = (int) $destinatario['evento_id'];
+
+            if (!isset($eventosEmCache[$eventoId])) {
+                $eventosEmCache[$eventoId] = $eventos->buscarPorId($eventoId);
+            }
+
+            $evento = $eventosEmCache[$eventoId];
+        }
+
+        if ($tipo === 'convite_autor_importado' && !empty($destinatario['token_senha'])) {
+            $sucesso = $notificacoes->conviteAutorTrabalhoImportado(
+                $destinatario['usuario_email'],
+                $destinatario['usuario_nome'],
+                $evento,
+                urlAbsoluta('auth/definirSenha/' . $destinatario['token_senha'])
+            );
+        } elseif ($tipo === 'aviso_autor_importado') {
+            $sucesso = $notificacoes->avisoAutorTrabalhoImportado(
+                $destinatario['usuario_email'],
+                $destinatario['usuario_nome'],
+                $evento
+            );
+        } else {
+            $sucesso = $notificacoes->avisoIndividualEvento(
+                $destinatario['usuario_email'],
+                ['id' => $destinatario['evento_id']],
+                $destinatario['assunto'],
+                $destinatario['corpo_html']
+            );
+        }
     } catch (\Throwable $e) {
         fwrite(STDERR, registrar('Destinatario #' . $destinatario['destinatario_id'] . ' -> ERRO: ' . $e->getMessage()));
     }

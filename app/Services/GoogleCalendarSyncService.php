@@ -28,6 +28,7 @@ class GoogleCalendarSyncService
     const ESCOPOS = [
         'https://www.googleapis.com/auth/calendar.events',
         'https://www.googleapis.com/auth/calendar.calendars',
+        'https://www.googleapis.com/auth/calendar.calendarlist.readonly',
     ];
 
     // Sem fila/cron no projeto - throttle evita bater no Google de novo a
@@ -73,7 +74,7 @@ class GoogleCalendarSyncService
             'google_calendar_id' => $calendarId,
             'meet_link' => $resultado['meet_link'],
             'meet_link_origem' => $resultado['meet_link'] !== null ? 'google_auto' : null,
-            'meet_pendente' => $resultado['meet_status'] === 'pending',
+            'meet_pendente' => (int) ($resultado['meet_status'] === 'pending'),
             'google_conference_id' => $resultado['conference_id'],
             'google_sincronizado_em' => date('Y-m-d H:i:s'),
         ];
@@ -195,7 +196,7 @@ class GoogleCalendarSyncService
         $colunas = [
             'meet_link' => $resultado['meet_link'],
             'meet_link_origem' => $resultado['meet_link'] !== null ? 'google_auto' : $horario['meet_link_origem'],
-            'meet_pendente' => $resultado['meet_status'] === 'pending',
+            'meet_pendente' => (int) ($resultado['meet_status'] === 'pending'),
             'google_sincronizado_em' => date('Y-m-d H:i:s'),
         ];
 

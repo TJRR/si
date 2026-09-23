@@ -25,6 +25,7 @@ use App\Services\ArquivoPrivadoService;
 use App\Services\ModeloDocumentoService;
 use App\Services\PdfService;
 use App\Services\PermissaoParticipanteService;
+use App\Services\RequerimentoElegibilidadeService;
 use App\Validation\UploadPdfValidador;
 
 /**
@@ -51,6 +52,7 @@ class RequerimentoController extends Controller
     private $notificacoes;
     private $perfis;
     private $modeloDocumentoService;
+    private $elegibilidade;
 
     public function __construct()
     {
@@ -67,6 +69,7 @@ class RequerimentoController extends Controller
         $this->notificacoes = new NotificacaoPainelRepository();
         $this->perfis = new PerfilRepository();
         $this->modeloDocumentoService = new ModeloDocumentoService();
+        $this->elegibilidade = new RequerimentoElegibilidadeService();
     }
 
     public function index()
@@ -335,17 +338,7 @@ class RequerimentoController extends Controller
 
     private function modelosDisponiveis(array $equipe, array $trilha)
     {
-        $disponiveis = [];
-
-        foreach ($this->modelos->listarAtivosPorTrilha($trilha['id']) as $modelo) {
-            $etapaDoModelo = $this->etapas->buscarPorId($modelo['etapa_id']);
-
-            if ($this->acessoEtapa->motivoBloqueio($etapaDoModelo, $equipe['id']) === null) {
-                $disponiveis[] = $modelo;
-            }
-        }
-
-        return $disponiveis;
+        return $this->elegibilidade->listarDisponiveis($equipe, $trilha);
     }
 
     private function modeloDisponivelOuAbortar($modeloDocumentoId, array $equipe)

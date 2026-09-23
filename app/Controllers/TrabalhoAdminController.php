@@ -10,6 +10,7 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
+use App\Repositories\EventoTrabalhoTermoRepository;
 use App\Repositories\SemanaInovacaoRepository;
 use App\Repositories\TrabalhoAutorRepository;
 use App\Repositories\TrabalhoAvaliadorRepository;
@@ -47,6 +48,7 @@ class TrabalhoAdminController extends Controller
     private $autores;
     private $designacoes;
     private $notas;
+    private $termos;
 
     public function __construct()
     {
@@ -58,6 +60,7 @@ class TrabalhoAdminController extends Controller
         $this->criterios = new TrabalhoCriterioRepository();
         $this->desempate = new TrabalhoRegraDesempateRepository();
         $this->avaliadores = new TrabalhoAvaliadorRepository();
+        $this->termos = new EventoTrabalhoTermoRepository();
         $this->trabalhos = new TrabalhoRepository();
         $this->autores = new TrabalhoAutorRepository();
         $this->designacoes = new TrabalhoDesignacaoRepository();
@@ -147,6 +150,99 @@ class TrabalhoAdminController extends Controller
             'evento' => $evento,
             'naturezas' => $this->naturezas->listarPorEvento($eventoId),
         ], 'Naturezas do trabalho: ' . $evento['nome'], ['tipo' => 'trabalhosNaturezas', 'id' => (int) $eventoId]);
+    }
+
+    /**
+     * Fase 51: declaracoes que o autor aceita ao submeter (normas do edital,
+     * tratamento de dados pessoais, autorizacao de publicacao nos Anais...).
+     * Sao dados do evento, nao texto fixo de codigo: cada edicao cadastra os
+     * seus, e o que foi aceito fica congelado em trabalho_termos_aceitos.
+     */
+    public function termos($eventoId)
+    {
+        $evento = $this->buscarEventoOu404($eventoId);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            RoleMiddleware::exigir(['administrador']);
+            $this->termos->criar($eventoId, [
+                'rotulo' => trim($_POST['rotulo']),
+                'texto_html' => isset($_POST['texto_html']) ? sanitizarHtmlRico($_POST['texto_html']) : '',
+                'obrigatorio' => isset($_POST['obrigatorio']) ? 1 : 0,
+                'ativo' => isset($_POST['ativo']) ? 1 : 0,
+            ]);
+            flashSucesso('Declaração cadastrada.');
+            $this->redirecionar('trabalhos/termos/' . $eventoId);
+            return;
+        }
+
+        $this->renderizar('admin/trabalhos/termos', [
+            'evento' => $evento,
+            'termos' => $this->termos->listar($eventoId),
+        ], 'Declarações: ' . $evento['nome'], ['tipo' => 'trabalhosTermos', 'id' => (int) $eventoId]);
+    }
+
+    public function termoEditar($id)
+    {
+        RoleMiddleware::exigir(['administrador']);
+        $termo = $this->termos->buscarPorId($id);
+
+        if ($termo === null) {
+            http_response_code(404);
+            exit('Declaração não encontrada.');
+        }
+
+        $eventoId = (int) $termo['evento_id'];
+        $evento = $this->buscarEventoOu404($eventoId);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->termos->atualizar($eventoId, $id, [
+                'rotulo' => trim($_POST['rotulo']),
+                'texto_html' => isset($_POST['texto_html']) ? sanitizarHtmlRico($_POST['texto_html']) : '',
+                'obrigatorio' => isset($_POST['obrigatorio']) ? 1 : 0,
+                'ativo' => isset($_POST['ativo']) ? 1 : 0,
+            ]);
+            flashSucesso('Declaração atualizada.');
+            $this->redirecionar('trabalhos/termos/' . $eventoId);
+            return;
+        }
+
+        $this->renderizar('admin/trabalhos/termo_form', [
+            'evento' => $evento,
+            'termo' => $termo,
+        ], 'Editar declaração: ' . $evento['nome'], ['tipo' => 'trabalhosTermos', 'id' => $eventoId]);
+    }
+
+    public function termoRemover($id)
+    {
+        RoleMiddleware::exigir(['administrador']);
+        $eventoId = isset($_POST['evento_id']) ? (int) $_POST['evento_id'] : 0;
+        $termo = $this->termos->buscarDoEvento($eventoId, $id);
+
+        if ($termo !== null) {
+            if ($this->termos->possuiAceites($id)) {
+                flashAlerta('Esta declaração já foi aceita em submissões e não pode ser removida. Desative-a para não aparecer em novas submissões.');
+            } else {
+                $this->termos->remover($eventoId, $id);
+                flashSucesso('Declaração removida.');
+            }
+        }
+
+        $this->redirecionar('trabalhos/termos/' . $eventoId);
+    }
+
+    public function termoReordenar($eventoId)
+    {
+        RoleMiddleware::exigir(['administrador']);
+        $ids = isset($_POST['ids']) && is_array($_POST['ids']) ? $_POST['ids'] : [];
+        $this->termos->reordenar($eventoId, $ids);
+
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => true]);
+            return;
+        }
+
+        $this->redirecionar('trabalhos/termos/' . $eventoId);
     }
 
     private function salvarConfig($eventoId)
@@ -261,16 +357,17 @@ class TrabalhoAdminController extends Controller
         ], 'Regras de desempate: ' . $evento['nome'], ['tipo' => 'trabalhosDesempate', 'id' => (int) $eventoId]);
     }
 
-    public function criterioMover($id, $direcao)
+    public function criterioReordenar($eventoId)
     {
         RoleMiddleware::exigir(['administrador']);
-        $criterio = $this->criterios->buscarPorId($id);
 
-        if ($criterio !== null) {
-            $this->criterios->mover($id, $direcao === 'cima' ? 'cima' : 'baixo');
-        }
+        header('Content-Type: application/json; charset=utf-8');
+        $corpo = json_decode((string) file_get_contents('php://input'), true);
+        $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
 
-        $this->redirecionar('trabalhos/criterios/' . ($criterio !== null ? $criterio['evento_id'] : ''));
+        $this->criterios->reordenar($eventoId, $ids);
+
+        echo json_encode(['ok' => true]);
     }
 
     public function criterioRemover($id)

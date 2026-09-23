@@ -25,7 +25,8 @@ use App\Validation\CpfValidador;
  * evento de agenda do Google (Mentoria/Oficina), ver decisao de arquitetura
  * do plano da funcionalidade. Renomeado na Fase 40 de "SemanaInovacaoController"
  * (nome especifico do evento atual) para este nome generico, coerente com N
- * eventos simultaneos (ver EventoDivulgacaoRepository::listarAtivosParaHome()).
+ * eventos simultaneos podendo existir ao mesmo tempo (ver
+ * SemanaInovacaoRepository::listar()).
  *
  * Qualquer conta ja' aprovada (equipe, avaliador, colaborador, inscrito ou
  * visitante sem nenhum perfil) pode se inscrever - por isso a checagem aqui e'

@@ -3,7 +3,7 @@
     exit('Acesso negado');
 } ?>
 <?php if (!empty($banners)): ?>
-<section class="site-banners" aria-label="Avisos">
+<section class="site-banners" aria-label="Avisos"<?php echo isset($ancoraSecao) ? ' id="' . htmlspecialchars($ancoraSecao, ENT_QUOTES, 'UTF-8') . '"' : ''; ?>>
     <?php foreach ($banners as $banner): ?>
     <div class="site-banner"
          <?php if (!empty($banner['imagem_desktop_path'])): ?>

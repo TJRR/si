@@ -20,7 +20,7 @@ $rotulosTipo = [
 <?php if (empty($documentos)): ?>
     <p>Nenhum documento cadastrado ainda.</p>
 <?php else: ?>
-    <ul class="reordenar-lista" data-reordenar-rota="documentos/reordenar">
+    <ul class="reordenar-lista" data-reordenar-rota="<?php echo 'documentos/reordenar/' . (int) $concurso['id']; ?>">
         <?php foreach ($documentos as $indice => $documento): ?>
         <li class="reordenar-item" draggable="true" data-id="<?php echo (int) $documento['id']; ?>">
             <span class="reordenar-alca" aria-hidden="true" title="Arraste para reordenar">⠿</span>
@@ -87,8 +87,8 @@ $rotulosTipo = [
                 </form>
             </div>
             <div class="reordenar-botoes">
-                <button type="button" data-mover="cima" aria-label="Mover para cima" <?php echo $indice === 0 ? 'disabled' : ''; ?>>▲</button>
-                <button type="button" data-mover="baixo" aria-label="Mover para baixo" <?php echo $indice === count($documentos) - 1 ? 'disabled' : ''; ?>>▼</button>
+                <button type="button" class="btn-icone" data-mover="cima" aria-label="Mover para cima" <?php echo $indice === 0 ? 'disabled' : ''; ?>>▲</button>
+                <button type="button" class="btn-icone" data-mover="baixo" aria-label="Mover para baixo" <?php echo $indice === count($documentos) - 1 ? 'disabled' : ''; ?>>▼</button>
             </div>
         </li>
         <?php endforeach; ?>

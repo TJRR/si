@@ -80,7 +80,7 @@ class EventoFormularioAdminController extends Controller
             'erro' => $erro,
             'evento' => $evento,
             'campo' => $campo,
-        ], 'Novo campo: ' . $evento['nome']);
+        ], 'Novo campo: ' . $evento['nome'], ['tipo' => 'eventoFormulario', 'id' => (int) $evento['id']]);
     }
 
     public function editar($id)
@@ -112,18 +112,20 @@ class EventoFormularioAdminController extends Controller
             'erro' => $erro,
             'evento' => $evento,
             'campo' => $campo,
-        ], 'Editar campo: ' . $evento['nome']);
+        ], 'Editar campo: ' . $evento['nome'], ['tipo' => 'eventoFormulario', 'id' => (int) $evento['id']]);
     }
 
-    public function mover()
+    public function reordenar($eventoId)
     {
         RoleMiddleware::exigir(['administrador']);
-        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
-        $eventoId = (int) (isset($_POST['evento_id']) ? $_POST['evento_id'] : 0);
-        $direcao = isset($_POST['direcao']) && $_POST['direcao'] === 'baixo' ? 'baixo' : 'cima';
 
-        $this->campos->mover($id, $direcao);
-        $this->redirecionar('eventoFormulario/index/' . $eventoId);
+        header('Content-Type: application/json; charset=utf-8');
+        $corpo = json_decode((string) file_get_contents('php://input'), true);
+        $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
+
+        $this->campos->reordenar($eventoId, $ids);
+
+        echo json_encode(['ok' => true]);
     }
 
     public function remover()

@@ -38,7 +38,7 @@ class CampoAdminController extends Controller
         $this->renderizar('admin/formularios/campos', [
             'formulario' => $formulario,
             'campos' => $lista,
-        ], 'Campos de ' . $formulario['nome']);
+        ], 'Campos de ' . $formulario['nome'], ['tipo' => 'formularios', 'id' => (int) $formulario['concurso_id']]);
     }
 
     public function novo($formularioId)
@@ -75,7 +75,7 @@ class CampoAdminController extends Controller
             'formulario' => $formulario,
             'campo' => null,
             'tipos' => CampoDinamicoService::TIPOS,
-        ], 'Novo campo');
+        ], 'Novo campo', ['tipo' => 'formularios', 'id' => (int) $formulario['concurso_id']]);
     }
 
     public function editar($id)
@@ -114,22 +114,26 @@ class CampoAdminController extends Controller
             'formulario' => $formulario,
             'campo' => $campo,
             'tipos' => CampoDinamicoService::TIPOS,
-        ], 'Editar campo');
+        ], 'Editar campo', ['tipo' => 'formularios', 'id' => (int) $formulario['concurso_id']]);
     }
 
-    public function mover()
+    public function reordenar($formularioId)
     {
-        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
-        $direcao = isset($_POST['direcao']) ? $_POST['direcao'] : 'cima';
-        $formularioId = (int) (isset($_POST['formulario_id']) ? $_POST['formulario_id'] : 0);
+        header('Content-Type: application/json; charset=utf-8');
+        $corpo = json_decode((string) file_get_contents('php://input'), true);
+        $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
 
-        $resultado = (new CampoDinamicoService())->mover($id, $direcao);
+        $resultado = (new CampoDinamicoService())->reordenar($formularioId, $ids);
 
         if (!$resultado['sucesso']) {
-            flashErro($resultado['mensagem']);
+            // reordenar-arrastar.js so' trata como falha quando o HTTP nao e'
+            // 2xx (checa resposta.ok do fetch, nunca o corpo) - sem isso, o
+            // JS assumiria sucesso e deixaria a tela reordenada visualmente
+            // mesmo com o formulario publicado bloqueando a gravacao.
+            http_response_code(422);
         }
 
-        $this->redirecionar('campos/index/' . $formularioId);
+        echo json_encode($resultado['sucesso'] ? ['ok' => true] : ['ok' => false, 'mensagem' => $resultado['mensagem']]);
     }
 
     public function remover()

@@ -11,6 +11,7 @@ use App\Core\Auth;
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\ConcursoRepository;
+use App\Repositories\MidiaPastaRepository;
 use App\Repositories\MidiaRepository;
 use App\Services\ArquivoService;
 use App\Services\ImagemService;
@@ -22,6 +23,7 @@ use App\Services\ImagemService;
 class MidiaAdminController extends Controller
 {
     private $midias;
+    private $pastas;
     private $concursos;
     private $imagens;
     private $arquivos;
@@ -30,6 +32,7 @@ class MidiaAdminController extends Controller
     {
         RoleMiddleware::exigir(['administrador']);
         $this->midias = new MidiaRepository();
+        $this->pastas = new MidiaPastaRepository();
         $this->concursos = new ConcursoRepository();
         $this->imagens = new ImagemService();
         $this->arquivos = new ArquivoService();
@@ -38,11 +41,92 @@ class MidiaAdminController extends Controller
     public function index()
     {
         $tipo = !empty($_GET['tipo']) ? $_GET['tipo'] : null;
+        $pastaId = !empty($_GET['pasta']) ? (int) $_GET['pasta'] : null;
+        $pastaAtual = $pastaId !== null ? $this->pastas->buscarPorId($pastaId) : null;
+
+        if ($pastaId !== null && $pastaAtual === null) {
+            $pastaId = null;
+        }
 
         $this->renderizar('admin/midia/index', [
-            'midias' => $this->midias->listar($tipo),
+            'midias' => $this->midias->listar($tipo, $pastaId),
             'tipoFiltro' => $tipo,
+            'pastaAtual' => $pastaAtual,
+            'subpastas' => $this->pastas->listarFilhas($pastaId),
+            'caminho' => $pastaId !== null ? $this->pastas->caminho($pastaId) : [],
+            'todasAsPastas' => $this->pastas->listarTodas(),
         ], 'Biblioteca de mídia', ['tipo' => 'configuracaoMidia', 'id' => null]);
+    }
+
+    /**
+     * Fase 51: pastas da biblioteca. Tudo volta para a mesma tela, na pasta
+     * onde a pessoa estava, para nao perder o lugar da navegacao.
+     */
+    public function pastaNova()
+    {
+        $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
+        $paiId = !empty($_POST['pasta_pai_id']) ? (int) $_POST['pasta_pai_id'] : null;
+
+        if ($nome === '') {
+            flashErro('Informe o nome da pasta.');
+        } else {
+            $this->pastas->criar($nome, $paiId, Auth::usuarioId());
+            flashSucesso('Pasta criada.');
+        }
+
+        $this->redirecionar('midia/index' . ($paiId !== null ? '?pasta=' . $paiId : ''));
+    }
+
+    public function pastaRenomear()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
+        $pasta = $this->pastas->buscarPorId($id);
+
+        if ($pasta === null || $nome === '') {
+            flashErro('Não foi possível renomear a pasta.');
+        } else {
+            $this->pastas->renomear($id, $nome);
+            flashSucesso('Pasta renomeada.');
+        }
+
+        $this->redirecionar('midia/index' . ($pasta !== null && $pasta['pasta_pai_id'] !== null ? '?pasta=' . (int) $pasta['pasta_pai_id'] : ''));
+    }
+
+    public function pastaRemover()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $pasta = $this->pastas->buscarPorId($id);
+
+        if ($pasta === null) {
+            $this->redirecionar('midia/index');
+            return;
+        }
+
+        $conteudo = $this->pastas->contarConteudo($id);
+
+        if ($conteudo['subpastas'] > 0 || $conteudo['midias'] > 0) {
+            flashAlerta('Esta pasta ainda tem conteúdo dentro. Mova ou remova o conteúdo antes de apagar a pasta.');
+        } else {
+            $this->pastas->remover($id);
+            flashSucesso('Pasta removida.');
+        }
+
+        $this->redirecionar('midia/index' . ($pasta['pasta_pai_id'] !== null ? '?pasta=' . (int) $pasta['pasta_pai_id'] : ''));
+    }
+
+    public function mover()
+    {
+        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
+        $destino = !empty($_POST['pasta_id']) ? (int) $_POST['pasta_id'] : null;
+        $origem = !empty($_POST['pasta_atual']) ? (int) $_POST['pasta_atual'] : null;
+
+        if ($this->midias->buscarPorId($id) !== null) {
+            $this->midias->moverPara($id, $destino);
+            flashSucesso('Mídia movida.');
+        }
+
+        $this->redirecionar('midia/index' . ($origem !== null ? '?pasta=' . $origem : ''));
     }
 
     public function novo()
@@ -61,6 +145,8 @@ class MidiaAdminController extends Controller
         $this->renderizar('admin/midia/form', [
             'erro' => $erro,
             'concursos' => $this->concursos->listar(),
+            'todasAsPastas' => $this->pastas->listarTodas(),
+            'pastaSelecionada' => !empty($_GET['pasta']) ? (int) $_GET['pasta'] : null,
         ], 'Nova mídia');
     }
 
@@ -117,9 +203,11 @@ class MidiaAdminController extends Controller
         }
 
         $concursoId = !empty($_POST['concurso_id']) ? (int) $_POST['concurso_id'] : null;
+        $pastaId = !empty($_POST['pasta_id']) ? (int) $_POST['pasta_id'] : null;
 
         $this->midias->criar([
             'concurso_id' => $concursoId,
+            'pasta_id' => $pastaId,
             'arquivo_path' => $caminho,
             'tipo' => $tipo,
             'alt_text' => $tipo === 'imagem' ? $altText : null,

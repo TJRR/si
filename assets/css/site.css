@@ -4469,20 +4469,14 @@ body.admin-page button.campo-cor-limpar::after {
 .reordenar-botoes {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 0.3rem;
 }
 
-.reordenar-botoes button {
-    background: none;
-    border: 1px solid var(--cor-borda);
-    border-radius: 4px;
-    width: 1.6rem;
-    height: 1.4rem;
-    cursor: pointer;
-    font-size: 0.7rem;
-    line-height: 1;
-}
-
+/* Fase 50: os botoes de mover ganharam class="btn-icone" (mesmo padrao
+   quadrado usado em toda a area admin) - antes caiam na regra generica
+   "body.admin-page button" (pill grande com borda em degrade, pensada pra
+   botao de acao tipo "Salvar"), por nao terem nenhuma classe propria. So
+   resta aqui o estado desabilitado, que btn-icone nao define. */
 .reordenar-botoes button:disabled {
     opacity: 0.35;
     cursor: default;
@@ -4925,6 +4919,36 @@ body.app-evento-page {
     color: var(--cor-destaque-app-texto);
     padding: 0;
     cursor: pointer;
+}
+
+/* Fase 50: botao flutuante de contato por WhatsApp dentro do aplicativo
+   instalavel do Evento - mesmo dado/helper do .site-whatsapp-flutuante da
+   home publica (ver assets/css/site.css ~linha 1050), classe propria porque
+   aqui a cor fica fixa de proposito (verde da marca, nao segue o tema do
+   evento) e o z-index precisa ficar ABAIXO dos overlays de tela cheia do
+   proprio app (.overlay-brilho-qr z-index:200, .app-menu-backdrop z-index:49,
+   .site-painel-lateral z-index:40) - diferente da home, que nao tem esses
+   overlays e por isso usa z-index:500 sem esse cuidado. */
+.app-whatsapp-flutuante {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 30;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 999px;
+    background: #25D366;
+    color: var(--cor-branco);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    transition: transform 0.15s ease;
+}
+
+.app-whatsapp-flutuante:hover {
+    transform: scale(1.08);
+    color: var(--cor-branco);
 }
 
 /* Fase 48B (correcao pos-teste de fumaca): antes o card so' arredondava os
@@ -5400,4 +5424,376 @@ body.app-evento-page .site-form-page .admin-card .cartao-credenciamento-dados li
 
 .busca-usuario-resultados li:hover {
     background: #f2f2f2;
+}
+
+/* ==========================================================================
+   Fase 51: componentes da página pública do Evento (contagem regressiva,
+   cronograma, cartões, destaques, programação, local) e os ajustes que eles
+   pediram nos quadros de apresentação e nos blocos de conteúdo. Tudo escrito
+   para funcionar com as cores que o Admin cadastra em cada seção, sem tema
+   fixo, e sem nenhuma dependência externa.
+   ========================================================================== */
+
+.evento-secao-etiqueta {
+    font-size: .8rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 .35rem;
+    opacity: .75;
+}
+
+.site-slide-etiqueta {
+    display: inline-block;
+    padding: .25rem .7rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    background: #141413;
+    color: #fff;
+    margin-bottom: .75rem;
+}
+
+.site-slide-cta-secundario {
+    background: transparent;
+    border: 2px solid currentColor;
+    margin-left: .5rem;
+}
+
+/* Contagem regressiva */
+.evento-contagem {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: center;
+}
+
+.evento-contagem-relogio {
+    text-align: center;
+}
+
+.evento-contagem-circulo {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: #141413;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.evento-contagem-circulo strong {
+    font-size: 2.6rem;
+    line-height: 1;
+}
+
+.evento-contagem-circulo span {
+    font-size: .75rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+}
+
+.evento-contagem-hora {
+    margin: .6rem 0 0;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+.evento-contagem-datas,
+.evento-cronograma {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: .6rem;
+}
+
+.evento-contagem-datas li,
+.evento-cronograma li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .5rem;
+}
+
+.evento-marcador {
+    width: .7rem;
+    height: .7rem;
+    border-radius: 50%;
+    background: currentColor;
+    display: inline-block;
+    flex: 0 0 auto;
+}
+
+.evento-cronograma li strong {
+    min-width: 12rem;
+}
+
+/* Cartões */
+.evento-cartoes {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.evento-cartoes-colunas-1 { grid-template-columns: 1fr; }
+.evento-cartoes-colunas-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.evento-cartoes-colunas-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.evento-cartoes-colunas-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+.evento-cartao {
+    border: 1px solid rgba(0, 0, 0, .12);
+    border-top: 5px solid var(--cor-cartao, var(--cor-secundaria, #006699));
+    border-radius: 10px;
+    padding: 1rem;
+    background: #fff;
+    color: #141413;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.evento-cartao summary {
+    cursor: pointer;
+    list-style: none;
+    display: grid;
+    gap: .35rem;
+}
+
+.evento-cartao summary::-webkit-details-marker {
+    display: none;
+}
+
+.evento-cartao-etiqueta {
+    font-size: .7rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--cor-cartao, var(--cor-secundaria, #006699));
+}
+
+.evento-cartao-resumo {
+    font-size: .9rem;
+    opacity: .85;
+}
+
+.evento-cartao-detalhe {
+    margin-top: .75rem;
+    font-size: .92rem;
+}
+
+.evento-efeito-hover-elevar .evento-cartao:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0, 0, 0, .12); }
+.evento-efeito-hover-escala .evento-cartao:hover { transform: scale(1.02); }
+.evento-efeito-hover-borda .evento-cartao:hover { border-color: var(--cor-cartao, var(--cor-secundaria, #006699)); }
+
+@media (prefers-reduced-motion: no-preference) {
+    .evento-efeito-abrir-deslizar .evento-cartao[open] .evento-cartao-detalhe { animation: evento-deslizar .25s ease; }
+    .evento-efeito-abrir-desvanecer .evento-cartao[open] .evento-cartao-detalhe { animation: evento-desvanecer .25s ease; }
+}
+
+@keyframes evento-deslizar {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes evento-desvanecer {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Destaques */
+.evento-destaques {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.evento-destaque {
+    background: #fff;
+    color: #141413;
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+}
+
+.evento-destaque h3 {
+    margin: .4rem 0 .3rem;
+    font-size: 1.05rem;
+}
+
+.evento-destaque-quando,
+.evento-destaque-local {
+    margin: 0;
+    font-size: .85rem;
+    opacity: .8;
+}
+
+.evento-etiqueta-tipo {
+    display: inline-block;
+    padding: .15rem .6rem;
+    border-radius: 999px;
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    background: var(--cor-secundaria, #006699);
+    color: #fff;
+}
+
+/* Programação */
+.evento-programacao-abas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: 1rem;
+}
+
+.evento-programacao-aba {
+    border: 1px solid rgba(0, 0, 0, .15);
+    background: transparent;
+    color: inherit;
+    border-radius: 999px;
+    padding: .45rem 1rem;
+    cursor: pointer;
+    font: inherit;
+}
+
+.evento-programacao-aba.ativo {
+    background: var(--cor-secundaria, #006699);
+    border-color: var(--cor-secundaria, #006699);
+    color: #fff;
+}
+
+.evento-programacao-painel:not([hidden]) {
+    display: block;
+}
+
+.evento-programacao-turno {
+    margin: 1rem 0 .5rem;
+    font-size: .85rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    opacity: .75;
+}
+
+.evento-programacao-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: .6rem;
+}
+
+.evento-programacao-lista li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .5rem;
+    padding-bottom: .6rem;
+    border-bottom: 1px solid rgba(0, 0, 0, .08);
+}
+
+.evento-programacao-hora {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+}
+
+.evento-programacao-local,
+.evento-programacao-descricao {
+    font-size: .85rem;
+    opacity: .8;
+}
+
+/* Local e acesso */
+.evento-local-mapa {
+    position: relative;
+    width: 100%;
+    padding-top: 42%;
+    margin: 1rem 0;
+}
+
+.evento-local-mapa iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 10px;
+}
+
+.evento-local-imagem {
+    max-width: 100%;
+    border-radius: 10px;
+    margin: 1rem 0;
+}
+
+.evento-local-endereco {
+    font-weight: 600;
+}
+
+/* Declarações no formulário de submissão de trabalho */
+.trabalho-termos {
+    margin: 1.5rem 0;
+    display: grid;
+    gap: .75rem;
+}
+
+.trabalho-termo {
+    display: flex;
+    gap: .6rem;
+    align-items: flex-start;
+    font-size: .92rem;
+}
+
+.trabalho-termo-obrigatorio {
+    font-size: .8rem;
+    opacity: .75;
+}
+
+/* Linha de formulário dentro das listas reordenáveis do painel */
+.secao-linha-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    align-items: flex-end;
+    margin-top: .4rem;
+}
+
+.secao-linha-form label {
+    font-size: .8rem;
+    display: grid;
+    gap: .2rem;
+}
+
+/* Fase 51: navegação por pastas na biblioteca de mídia */
+.midia-caminho {
+    font-size: .9rem;
+    margin: .5rem 0 1rem;
+}
+
+.midia-pastas {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    display: grid;
+    gap: .5rem;
+}
+
+.midia-pastas li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .75rem;
+    padding: .5rem .75rem;
+    border: 1px solid rgba(0, 0, 0, .12);
+    border-radius: 8px;
+}
+
+.midia-pastas li > a {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-weight: 600;
 }

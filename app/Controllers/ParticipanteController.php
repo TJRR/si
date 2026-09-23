@@ -30,6 +30,7 @@ use App\Repositories\UsuarioParticipanteRepository;
 use App\Services\AcessoEtapaService;
 use App\Services\EventoEtapaService;
 use App\Services\PermissaoParticipanteService;
+use App\Services\RequerimentoElegibilidadeService;
 use App\Services\ResultadoEtapaService;
 use App\Validation\CpfValidador;
 
@@ -138,6 +139,7 @@ class ParticipanteController extends Controller
         }
 
         $eventoEtapa = new EventoEtapaService();
+        $elegibilidadeRequerimento = new RequerimentoElegibilidadeService();
 
         // Fase 38B (correcao pos-teste de fumaca): faltava qualquer link de
         // navegacao ate' a tela de apresentacao de pitch - o botao so'
@@ -164,17 +166,28 @@ class ParticipanteController extends Controller
             'ehLider' => $vinculoAtual !== null && $vinculoAtual['papel'] === 'lider',
             'homologado' => $homologado,
             'etapas' => $etapas,
-            // Fase 34: nao basta existir horario no concurso - com vinculo de
-            // etapa, o botao levaria a equipe pra uma tela vazia. Consulta so'
-            // as etapas DISTINTAS vinculadas (poucas, e NULL = aberto a todos),
-            // em vez de carregar e filtrar as listagens inteiras aqui.
-            'mentoriaDisponivel' => $this->mentorias->existeParaConcurso($trilha['concurso_id'])
-                && $eventoEtapa->algumHorarioVisivel($this->mentorias->etapasVinculadasNoConcurso($trilha['concurso_id']), $equipe),
-            'oficinaDisponivel' => $this->oficinas->existeParaConcurso($trilha['concurso_id'])
-                && $eventoEtapa->algumHorarioVisivel($this->oficinas->etapasVinculadasNoConcurso($trilha['concurso_id']), $equipe),
+            // Fase 50: nao basta existir horario cadastrado no concurso (podem
+            // ser todos do passado) - o botao so' acende se sobrar pelo menos
+            // um horario futuro que a equipe pode ver, mesma consulta usada
+            // nas telas reais de Oficina/Mentoria (listarFuturasPorConcurso/
+            // listarVagosPorConcurso), pra nunca acender um botao pra uma tela
+            // que viria vazia.
+            'mentoriaDisponivel' => !empty($eventoEtapa->apenasVisiveis(
+                $this->mentorias->listarVagosPorConcurso($trilha['concurso_id']),
+                $equipe
+            )),
+            'oficinaDisponivel' => !empty($eventoEtapa->apenasVisiveis(
+                $this->oficinas->listarFuturasPorConcurso($trilha['concurso_id']),
+                $equipe
+            )),
             'apresentacaoPitchEtapaId' => $apresentacaoPitchEtapaId,
             'apresentacaoPitchDisponivel' => $apresentacaoPitchEtapaId !== null
                 && $eventoEtapa->podeParticipar(['etapa_id' => $apresentacaoPitchEtapaId], $equipe),
+            // Fase 50: "Requerimentos" so' aparece pro lider se existir pelo
+            // menos um modelo de documento ativo e disponivel agora, mesma
+            // checagem que RequerimentoController::index() faz pra listar os
+            // modelos clicaveis (RequerimentoElegibilidadeService).
+            'requerimentoDisponivel' => $elegibilidadeRequerimento->existeDisponivel($equipe, $trilha),
         ], 'Minha inscrição');
     }
 

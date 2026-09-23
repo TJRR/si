@@ -75,21 +75,26 @@ class ModeloDocumentoRepository
      * Grava a nova ordem em lote (índice do array = nova posição) - mesmo
      * padrão de DocumentoRepository::reordenar() (Fase 29, arrastar-e-soltar
      * de Documentos), usado pela lista de Modelos de Documento.
+     * Fase 50 (achado de seguranca): WHERE passou a incluir etapa_id, nao
+     * so' id - sem isso, um id de modelo de OUTRA etapa seria aceito e
+     * teria sua ordem alterada, sem checagem de posse (o controller ja
+     * confirmava que o admin pode mexer NAQUELA etapa via
+     * etapaAutorizada(), mas nao que os ids recebidos pertencem a ela).
      */
-    public function reordenar(array $ids)
+    public function reordenar($etapaId, array $ids)
     {
         $pdo = Database::conexao();
         $pdo->beginTransaction();
 
         try {
-            $stmt = $pdo->prepare('UPDATE modelos_documento SET ordem = :ordem WHERE id = :id');
+            $stmt = $pdo->prepare('UPDATE modelos_documento SET ordem = :ordem WHERE id = :id AND etapa_id = :etapa_id');
 
             foreach ($ids as $indice => $id) {
-                $stmt->execute(['ordem' => $indice, 'id' => (int) $id]);
+                $stmt->execute(['ordem' => $indice, 'id' => (int) $id, 'etapa_id' => $etapaId]);
             }
 
             $pdo->commit();
-            Auditoria::registrar('reordenar', 'modelos_documento', null, null, ['ids' => $ids]);
+            Auditoria::registrar('reordenar', 'modelos_documento', null, null, ['etapa_id' => $etapaId, 'ids' => $ids]);
         } catch (\Exception $e) {
             $pdo->rollBack();
             throw $e;

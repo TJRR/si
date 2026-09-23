@@ -234,7 +234,7 @@ class ModeloDocumentoAdminController extends Controller
         $corpo = json_decode((string) file_get_contents('php://input'), true);
         $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
 
-        $this->modelos->reordenar($ids);
+        $this->modelos->reordenar($etapaId, $ids);
 
         echo json_encode(['ok' => true]);
     }

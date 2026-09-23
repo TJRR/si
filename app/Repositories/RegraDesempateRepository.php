@@ -120,43 +120,33 @@ class RegraDesempateRepository
         Auditoria::registrar('remover', 'regras_desempate', $id, $antes, null);
     }
 
-    public function mover($id, $direcao)
+    /**
+     * Fase 50: renumera pela posicao no array recebido - quem chama
+     * (view + JS de arrastar-e-soltar) sempre agrupa por etapa (cada
+     * "<ul>" so' contem ids de uma etapa), tanto na tela dedicada de
+     * Desempate quanto na secao "Desempate" dentro do resumo de Apuracao
+     * (que junta varias etapas na mesma tela, mas em listas separadas).
+     * Fase 50 (achado de seguranca): WHERE inclui etapa_id, nao so' id -
+     * sem isso, um id de regra de OUTRA etapa seria aceito e teria sua
+     * ordem alterada, sem checagem de posse.
+     */
+    public function reordenar($etapaId, array $ids)
     {
         $pdo = Database::conexao();
-        $regra = $this->buscarPorId($id);
-
-        if ($regra === null) {
-            return;
-        }
-
-        $operador = $direcao === 'cima' ? '<' : '>';
-        $ordenacao = $direcao === 'cima' ? 'DESC' : 'ASC';
-
-        $stmtVizinho = $pdo->prepare(
-            "SELECT * FROM regras_desempate
-             WHERE trilha_id = :trilha_id AND etapa_id = :etapa_id AND ordem {$operador} :ordem
-             ORDER BY ordem {$ordenacao} LIMIT 1"
-        );
-        $stmtVizinho->execute(['trilha_id' => $regra['trilha_id'], 'etapa_id' => $regra['etapa_id'], 'ordem' => $regra['ordem']]);
-        $vizinho = $stmtVizinho->fetch();
-
-        if ($vizinho === false) {
-            return;
-        }
-
         $pdo->beginTransaction();
 
         try {
-            $atualizarOrdem = $pdo->prepare('UPDATE regras_desempate SET ordem = :ordem WHERE id = :id');
-            $atualizarOrdem->execute(['ordem' => $vizinho['ordem'], 'id' => $regra['id']]);
-            $atualizarOrdem->execute(['ordem' => $regra['ordem'], 'id' => $vizinho['id']]);
+            $stmt = $pdo->prepare('UPDATE regras_desempate SET ordem = :ordem WHERE id = :id AND etapa_id = :etapa_id');
+
+            foreach ($ids as $indice => $id) {
+                $stmt->execute(['ordem' => $indice, 'id' => (int) $id, 'etapa_id' => $etapaId]);
+            }
 
             $pdo->commit();
+            Auditoria::registrar('reordenar', 'regras_desempate', null, null, ['etapa_id' => $etapaId, 'ids' => $ids]);
         } catch (\Exception $e) {
             $pdo->rollBack();
             throw $e;
         }
-
-        Auditoria::registrar('mover', 'regras_desempate', $id, ['ordem' => $regra['ordem']], ['ordem' => $vizinho['ordem'], 'trocado_com_id' => $vizinho['id']]);
     }
 }

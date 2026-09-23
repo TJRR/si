@@ -3,7 +3,12 @@
     exit('Acesso negado');
 } ?>
 <?php if (!empty($slides)): ?>
-<section class="site-slideshow" id="slideshow-principal" aria-roledescription="carrossel" aria-label="Destaques">
+<?php
+// Fase 51: o avanco automatico passou a ser opcional por evento. A home do
+// Concurso nao passa a variavel e continua avancando sozinha, como sempre.
+$avancoAutomatico = !isset($avancoAutomaticoQuadros) || $avancoAutomaticoQuadros;
+?>
+<section class="site-slideshow" id="<?php echo isset($ancoraSecao) ? htmlspecialchars($ancoraSecao, ENT_QUOTES, 'UTF-8') : 'slideshow-principal'; ?>" aria-roledescription="carrossel" aria-label="Destaques" data-avanco-automatico="<?php echo $avancoAutomatico ? '1' : '0'; ?>">
     <div class="site-slideshow-trilho">
         <?php foreach ($slides as $indice => $slide): ?>
         <div class="site-slide site-slide-efeito-<?php echo htmlspecialchars($slide['efeito_transicao'], ENT_QUOTES, 'UTF-8'); ?><?php echo $indice === 0 ? ' ativo' : ''; ?>"
@@ -31,6 +36,9 @@
                 <div class="site-slide-overlay site-slide-overlay-<?php echo htmlspecialchars($slide['overlay_efeito'], ENT_QUOTES, 'UTF-8'); ?>" style="<?php echo $estiloOverlay; ?>" aria-hidden="true"></div>
             <?php endif; ?>
             <div class="site-slide-conteudo">
+                <?php if (!empty($slide['etiqueta_texto'])): ?>
+                    <span class="site-slide-etiqueta" style="<?php echo !empty($slide['etiqueta_cor_fundo']) ? 'background-color:' . htmlspecialchars($slide['etiqueta_cor_fundo'], ENT_QUOTES, 'UTF-8') . ';' : ''; ?><?php echo !empty($slide['etiqueta_cor_texto']) ? 'color:' . htmlspecialchars($slide['etiqueta_cor_texto'], ENT_QUOTES, 'UTF-8') . ';' : ''; ?>"><?php echo htmlspecialchars($slide['etiqueta_texto'], ENT_QUOTES, 'UTF-8'); ?></span>
+                <?php endif; ?>
                 <div class="site-slide-titulo"><?php echo $slide['titulo_html']; ?></div>
                 <?php if (!empty($slide['separador_cor'])): ?>
                     <div class="site-slide-separador" style="background-color:<?php echo htmlspecialchars($slide['separador_cor'], ENT_QUOTES, 'UTF-8'); ?>"></div>
@@ -42,6 +50,15 @@
                        class="site-slide-cta site-slide-cta-<?php echo htmlspecialchars($slide['cta_tamanho'], ENT_QUOTES, 'UTF-8'); ?> efeito-<?php echo htmlspecialchars($slide['cta_efeito_hover'], ENT_QUOTES, 'UTF-8'); ?>"
                        style="<?php echo $slide['cta_cor_fundo'] ? 'background-color:' . htmlspecialchars($slide['cta_cor_fundo'], ENT_QUOTES, 'UTF-8') . ';' : ''; ?><?php echo $slide['cta_cor_texto'] ? 'color:' . htmlspecialchars($slide['cta_cor_texto'], ENT_QUOTES, 'UTF-8') . ';' : ''; ?>">
                         <?php echo htmlspecialchars($slide['cta_titulo'], ENT_QUOTES, 'UTF-8'); ?>
+                    </a>
+                <?php endif; ?>
+                <?php if (!empty($slide['cta2_titulo']) && !empty($slide['cta2_link'])): ?>
+                    <a href="<?php echo htmlspecialchars($slide['cta2_link'], ENT_QUOTES, 'UTF-8'); ?>"
+                       target="<?php echo htmlspecialchars($slide['cta2_target'], ENT_QUOTES, 'UTF-8'); ?>"
+                       <?php echo $slide['cta2_target'] === '_blank' ? 'rel="noopener"' : ''; ?>
+                       class="site-slide-cta site-slide-cta-secundario site-slide-cta-<?php echo htmlspecialchars($slide['cta_tamanho'], ENT_QUOTES, 'UTF-8'); ?>"
+                       style="<?php echo !empty($slide['cta2_cor_fundo']) ? 'background-color:' . htmlspecialchars($slide['cta2_cor_fundo'], ENT_QUOTES, 'UTF-8') . ';' : ''; ?><?php echo !empty($slide['cta2_cor_texto']) ? 'color:' . htmlspecialchars($slide['cta2_cor_texto'], ENT_QUOTES, 'UTF-8') . ';' : ''; ?>">
+                        <?php echo htmlspecialchars($slide['cta2_titulo'], ENT_QUOTES, 'UTF-8'); ?>
                     </a>
                 <?php endif; ?>
             </div>

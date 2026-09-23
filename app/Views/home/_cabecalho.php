@@ -33,10 +33,10 @@ $temLogoClara = $temImagemCabecalho && $logoClaroSrc !== null;
     <div class="site-header-nav" id="site-header-nav">
         <div class="site-header-inner">
             <?php if ($temImagemCabecalho && $logoClaroSrc !== null): ?>
-                <img src="<?php echo htmlspecialchars($logoClaroSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars('Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="site-logo site-logo-claro">
+                <img src="<?php echo htmlspecialchars($logoClaroSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(isset($altLogoTexto) ? $altLogoTexto : 'Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="site-logo site-logo-claro">
             <?php endif; ?>
-            <img src="<?php echo htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars('Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="site-logo site-logo-solido">
-            <span class="site-edicao-indicador"><?php echo htmlspecialchars($concursoAtivo['nome'], ENT_QUOTES, 'UTF-8'); ?></span>
+            <img src="<?php echo htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(isset($altLogoTexto) ? $altLogoTexto : 'Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="site-logo site-logo-solido">
+            <span class="site-edicao-indicador"><?php echo htmlspecialchars(isset($concursoAtivo) ? $concursoAtivo['nome'] : $evento['nome'], ENT_QUOTES, 'UTF-8'); ?></span>
             <button type="button" class="site-menu-toggle" aria-expanded="false" aria-controls="site-nav-principal" aria-label="Abrir menu">
                 <span aria-hidden="true">☰</span>
             </button>
@@ -48,6 +48,7 @@ $temLogoClara = $temImagemCabecalho && $logoClaroSrc !== null;
                         <a href="#<?php echo htmlspecialchars($item['ancora'], ENT_QUOTES, 'UTF-8'); ?>" data-scrollspy-alvo="<?php echo htmlspecialchars($item['ancora'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($item['rotulo'], ENT_QUOTES, 'UTF-8'); ?></a>
                     <?php endif; ?>
                 <?php endforeach; ?>
+                <?php if (isset($concursoAtivo)): ?>
                 <button type="button" class="site-header-icone" data-abrir-painel="painel-cronograma" aria-label="Ver cronograma" title="Ver cronograma">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <rect x="3" y="4" width="18" height="18" rx="2"></rect>
@@ -56,6 +57,7 @@ $temLogoClara = $temImagemCabecalho && $logoClaroSrc !== null;
                         <line x1="3" y1="10" x2="21" y2="10"></line>
                     </svg>
                 </button>
+                <?php endif; ?>
                 <?php if (isset($ajudaHtml) && $ajudaHtml !== null): ?>
                 <button type="button" class="site-header-icone" data-abrir-painel="painel-ajuda" aria-label="Ajuda desta página" title="Ajuda desta página">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -65,7 +67,25 @@ $temLogoClara = $temImagemCabecalho && $logoClaroSrc !== null;
                     </svg>
                 </button>
                 <?php endif; ?>
-                <a href="<?php echo url('auth/login'); ?>" class="btn btn-bordered">Entrar</a>
+                <?php
+                // Correcao (pos-teste de fumaca): no Concurso, "Entrar" sempre
+                // levou ao login generico. Na pagina do Evento, precisa levar
+                // direto ao ponto de entrada do aplicativo daquele evento
+                // (eventoApp/index/{id}) - esse controller ja decide sozinho
+                // entre mostrar o painel (autenticado) ou mandar para o login
+                // preservando o retorno ao evento certo (nao autenticado).
+                $urlEntrar = isset($concursoAtivo) ? url('auth/login') : url('eventoApp/index/' . (int) $evento['id']);
+                ?>
+                <?php if (!isset($concursoAtivo)): ?>
+                    <?php
+                    // Fase 51: na pagina do Evento os dois botoes convivem -
+                    // "Inscreva-se" em destaque, para quem ainda nao se
+                    // inscreveu, e "Entrar" discreto, para quem ja e' inscrito
+                    // e quer abrir o aplicativo do evento.
+                    ?>
+                    <a href="<?php echo url('eventoInscricao/index/' . (int) $evento['id']); ?>" class="btn btn-cta">Inscreva-se</a>
+                <?php endif; ?>
+                <a href="<?php echo $urlEntrar; ?>" class="btn btn-bordered">Entrar</a>
             </nav>
         </div>
     </div>

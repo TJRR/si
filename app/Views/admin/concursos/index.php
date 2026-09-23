@@ -31,9 +31,15 @@
                 <?php endif; ?>
             </td>
             <td>
-                <a href="<?php echo url('trilhas/index/' . (int) $concurso['id']); ?>">Trilhas</a>
-                <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
                 <div class="acoes-icones">
+                    <a href="<?php echo url('trilhas/index/' . (int) $concurso['id']); ?>" class="btn-icone" title="Trilhas">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <polyline points="2 17 12 22 22 17"></polyline>
+                            <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg>
+                    </a>
+                    <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
                     <a href="<?php echo url('concursos/editar/' . (int) $concurso['id']); ?>" class="btn-icone" title="Editar">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>

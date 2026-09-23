@@ -44,44 +44,30 @@
 <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
 <p><a href="<?php echo url('desempate/index/' . (int) $trilha['id']); ?>">Gerenciar regras de desempate (por etapa)</a></p>
 <?php endif; ?>
-<p>Ordem de aplicação em caso de empate na Nota Final (1ª linha tem prioridade). Esta lista junta as regras de todas as etapas da trilha, na ordem em que se aplicam à Nota Final:</p>
+<p>Ordem de aplicação em caso de empate na Nota Final (1ª linha de cada etapa tem prioridade; o desempate de uma etapa nunca usa critérios de outra). Esta seção junta as regras de todas as etapas da trilha, na ordem em que se aplicam à Nota Final:</p>
 
 <?php if (empty($regras)): ?>
     <p>Nenhuma regra de desempate cadastrada.</p>
 <?php else: ?>
-    <table border="1" cellpadding="6">
-        <tr><th>Ordem</th><th>Etapa</th><th>Critério</th><th>Direção</th><th>Ações</th></tr>
-        <?php foreach ($regras as $regra): ?>
-        <tr>
-            <td><?php echo (int) $regra['ordem']; ?></td>
-            <td><?php echo htmlspecialchars($regra['etapa_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo $regra['tipo'] === 'data_submissao' ? 'Data de inscrição (quem enviou primeiro)' : htmlspecialchars($regra['criterio_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo $regra['direcao'] === 'asc' ? 'Crescente (menor valor vence)' : 'Decrescente (maior valor vence)'; ?></td>
-            <td>
-                <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
+    <?php foreach ($etapasDaTrilha as $etapaDaRegra): ?>
+        <?php $regrasDaEtapa = array_values(array_filter($regras, function ($regra) use ($etapaDaRegra) {
+            return (int) $regra['etapa_id'] === (int) $etapaDaRegra['id'];
+        })); ?>
+        <?php if (empty($regrasDaEtapa)): ?>
+            <?php continue; ?>
+        <?php endif; ?>
+        <h4><?php echo htmlspecialchars($etapaDaRegra['nome'], ENT_QUOTES, 'UTF-8'); ?></h4>
+        <?php if (\App\Core\Auth::possuiPerfil('administrador')): ?>
+        <ul class="reordenar-lista" data-reordenar-rota="<?php echo 'desempate/reordenar/' . (int) $etapaDaRegra['id']; ?>">
+            <?php foreach ($regrasDaEtapa as $indice => $regra): ?>
+            <li class="reordenar-item" draggable="true" data-id="<?php echo (int) $regra['id']; ?>">
+                <span class="reordenar-alca" aria-hidden="true" title="Arraste para reordenar">⠿</span>
+                <div class="reordenar-conteudo">
+                    <strong><?php echo ($indice + 1) . 'º'; ?>: <?php echo $regra['tipo'] === 'data_submissao' ? 'Data de inscrição (quem enviou primeiro)' : htmlspecialchars($regra['criterio_nome'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                    <br>
+                    <span><?php echo $regra['direcao'] === 'asc' ? 'Crescente (menor valor vence)' : 'Decrescente (maior valor vence)'; ?></span>
+                </div>
                 <div class="acoes-icones">
-                    <form method="post" action="<?php echo url('desempate/mover'); ?>"><?= campoCsrf() ?>
-                        <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
-                        <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                        <input type="hidden" name="direcao" value="cima">
-                        <button type="submit" class="btn-icone" title="Mover para cima">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <line x1="12" y1="19" x2="12" y2="5"></line>
-                                <polyline points="5 12 12 5 19 12"></polyline>
-                            </svg>
-                        </button>
-                    </form>
-                    <form method="post" action="<?php echo url('desempate/mover'); ?>"><?= campoCsrf() ?>
-                        <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
-                        <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                        <input type="hidden" name="direcao" value="baixo">
-                        <button type="submit" class="btn-icone" title="Mover para baixo">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <polyline points="19 12 12 19 5 12"></polyline>
-                            </svg>
-                        </button>
-                    </form>
                     <form method="post" action="<?php echo url('desempate/remover'); ?>"><?= campoCsrf() ?>
                         <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
                         <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
@@ -96,13 +82,27 @@
                         </button>
                     </form>
                 </div>
-                <?php else: ?>
-                    Não informado
-                <?php endif; ?>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </table>
+                <div class="reordenar-botoes">
+                    <button type="button" class="btn-icone" data-mover="cima" aria-label="Mover para cima" <?php echo $indice === 0 ? 'disabled' : ''; ?>>▲</button>
+                    <button type="button" class="btn-icone" data-mover="baixo" aria-label="Mover para baixo" <?php echo $indice === count($regrasDaEtapa) - 1 ? 'disabled' : ''; ?>>▼</button>
+                </div>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+        <?php else: ?>
+        <ul class="reordenar-lista">
+            <?php foreach ($regrasDaEtapa as $indice => $regra): ?>
+            <li class="reordenar-item">
+                <div class="reordenar-conteudo">
+                    <strong><?php echo ($indice + 1) . 'º'; ?>: <?php echo $regra['tipo'] === 'data_submissao' ? 'Data de inscrição (quem enviou primeiro)' : htmlspecialchars($regra['criterio_nome'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                    <br>
+                    <span><?php echo $regra['direcao'] === 'asc' ? 'Crescente (menor valor vence)' : 'Decrescente (maior valor vence)'; ?></span>
+                </div>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+        <?php endif; ?>
+    <?php endforeach; ?>
 <?php endif; ?>
 
 <h2>Resultado final</h2>
@@ -143,12 +143,19 @@
     </p>
 
     <table border="1" cellpadding="6">
-        <tr><th>Colocação</th><th>Equipe</th><th>NF</th><?php echo ($publicado && \App\Core\Auth::possuiPerfil('administrador')) ? '<th>Destaque público</th>' : ''; ?></tr>
+        <tr><th>Colocação</th><th>Equipe</th><th>NF</th><th>Desempate</th><?php echo ($publicado && \App\Core\Auth::possuiPerfil('administrador')) ? '<th>Destaque público</th>' : ''; ?></tr>
         <?php foreach ($ranking as $linha): ?>
         <tr>
             <td><?php echo (int) $linha['colocacao']; ?></td>
             <td><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : 'Não informado', ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo number_format((float) $linha['nf'], $casasDecimais, ',', '.'); ?></td>
+            <?php
+            // Fase 51: só as linhas que empataram na Nota Final com a equipe
+            // de cima têm critério de desempate; nas demais a coluna fica
+            // vazia de propósito, para não sugerir empate onde não houve.
+            $criterioDesempate = isset($linha['desempate_criterio']) ? (string) $linha['desempate_criterio'] : '';
+            ?>
+            <td><?php echo $criterioDesempate !== '' ? htmlspecialchars($criterioDesempate, ENT_QUOTES, 'UTF-8') : '&mdash;'; ?></td>
             <?php if ($publicado && \App\Core\Auth::possuiPerfil('administrador')): ?>
             <td>
                 <a href="<?php echo url('resultados/editarDestaque/' . (int) $linha['id']); ?>" class="btn-icone" title="Editar resumo/imagem de destaque">

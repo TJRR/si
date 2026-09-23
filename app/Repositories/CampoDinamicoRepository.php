@@ -103,44 +103,32 @@ class CampoDinamicoRepository
         Auditoria::registrar('remover', 'campos_dinamicos', $id, $antes, null);
     }
 
-    public function mover($id, $direcao)
+    /**
+     * Fase 50 (achado de seguranca): WHERE inclui formulario_id, nao so' id -
+     * sem isso, um id de campo de OUTRO formulario (de outra etapa/trilha
+     * que o mesmo administrador nao deveria mexer) seria aceito e teria sua
+     * ordem alterada, sem nenhuma checagem de posse. Mesmo padrao ja usado
+     * por PremioRepository/FaqConcursoRepository/TemaRepository/
+     * DesafioRepository (que ja faziam certo antes desta fase).
+     */
+    public function reordenar($formularioId, array $ids)
     {
         $pdo = Database::conexao();
-        $campo = $this->buscarPorId($id);
-
-        if ($campo === null) {
-            return;
-        }
-
-        $operador = $direcao === 'cima' ? '<' : '>';
-        $ordenacao = $direcao === 'cima' ? 'DESC' : 'ASC';
-
-        $stmtVizinho = $pdo->prepare(
-            "SELECT * FROM campos_dinamicos
-             WHERE formulario_id = :formulario_id AND ordem {$operador} :ordem
-             ORDER BY ordem {$ordenacao} LIMIT 1"
-        );
-        $stmtVizinho->execute(['formulario_id' => $campo['formulario_id'], 'ordem' => $campo['ordem']]);
-        $vizinho = $stmtVizinho->fetch();
-
-        if ($vizinho === false) {
-            return;
-        }
-
         $pdo->beginTransaction();
 
         try {
-            $atualizarOrdem = $pdo->prepare('UPDATE campos_dinamicos SET ordem = :ordem WHERE id = :id');
-            $atualizarOrdem->execute(['ordem' => $vizinho['ordem'], 'id' => $campo['id']]);
-            $atualizarOrdem->execute(['ordem' => $campo['ordem'], 'id' => $vizinho['id']]);
+            $stmt = $pdo->prepare('UPDATE campos_dinamicos SET ordem = :ordem WHERE id = :id AND formulario_id = :formulario_id');
+
+            foreach ($ids as $indice => $id) {
+                $stmt->execute(['ordem' => $indice, 'id' => (int) $id, 'formulario_id' => $formularioId]);
+            }
 
             $pdo->commit();
+            Auditoria::registrar('reordenar', 'campos_dinamicos', null, null, ['formulario_id' => $formularioId, 'ids' => $ids]);
         } catch (\Exception $e) {
             $pdo->rollBack();
             throw $e;
         }
-
-        Auditoria::registrar('mover', 'campos_dinamicos', $id, ['ordem' => $campo['ordem']], ['ordem' => $vizinho['ordem'], 'trocado_com_id' => $vizinho['id']]);
     }
 
     public function copiarTodosParaOutroFormulario($formularioOrigemId, $formularioDestinoId)

@@ -5,7 +5,7 @@
 <footer class="site-footer" id="contato">
     <div class="site-footer-colunas">
         <div class="site-footer-coluna">
-            <img src="<?php echo htmlspecialchars(!empty($configVisual['rodape_logo_path']) ? config('base_path') . '/assets/' . $configVisual['rodape_logo_path'] : $logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars('Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="site-footer-logo">
+            <img src="<?php echo htmlspecialchars(!empty($configVisual['rodape_logo_path']) ? config('base_path') . '/assets/' . $configVisual['rodape_logo_path'] : $logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars(isset($altLogoTexto) ? $altLogoTexto : 'Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="site-footer-logo">
         </div>
 
         <?php if ($contato !== null && !empty($contato['texto_institucional'])): ?>
@@ -113,7 +113,15 @@
 
     <?php if ($contato !== null && !empty($contato['formulario_contato_ativo'])): ?>
         <div class="site-footer-colunas">
-            <form method="post" action="<?php echo url('home/enviarContato/' . (int) $concursoAtivo['id']); ?>" class="site-formulario-contato"><?= campoCsrf() ?>
+            <?php
+            // Fase 50 (correcao): o id na URL nunca era lido de verdade -
+            // HomeController::enviarContato() nao declara nenhum parametro
+            // - entao era so decorativo. Removido para o formulario
+            // funcionar tambem fora do contexto do Concurso (ex.: pagina
+            // publica do Evento, que reaproveita este mesmo rodape e nao
+            // tem $concursoAtivo).
+            ?>
+            <form method="post" action="<?php echo url('home/enviarContato'); ?>" class="site-formulario-contato"><?= campoCsrf() ?>
                 <h3>Fale conosco</h3>
                 <label for="contato-nome">Nome</label>
                 <input type="text" id="contato-nome" name="nome" required>
@@ -130,17 +138,26 @@
     <?php endif; ?>
 
     <div class="site-footer-barra">
-        <p class="site-footer-copyright">© <?php echo date('Y'); ?> <?php echo htmlspecialchars(nomeInstituicaoCompleto(), ENT_QUOTES, 'UTF-8'); ?>: Sistema de Gestão do Prêmio de Inovação.</p>
+        <?php
+        // Fase 51: o rodape e' o mesmo arquivo nas duas paginas, mas os links
+        // e o texto abaixo sao do Concurso. Na pagina publica de um Evento
+        // ($concursoAtivo nao existe la), eles saem: o evento nao leva quem
+        // visita para Edicoes Anteriores, Mentorias ou Oficinas do Premio.
+        $ehPaginaDeConcurso = isset($concursoAtivo);
+        ?>
+        <p class="site-footer-copyright">© <?php echo date('Y'); ?> <?php echo htmlspecialchars(nomeInstituicaoCompleto(), ENT_QUOTES, 'UTF-8'); ?><?php echo $ehPaginaDeConcurso ? ': Sistema de Gestão do Prêmio de Inovação.' : '.'; ?></p>
         <p class="site-footer-links">
             <a href="<?php echo config('base_path'); ?>/politica.php">Política de Privacidade</a>
             &nbsp;|&nbsp;
             <a href="<?php echo config('base_path'); ?>/termos.php">Termos de Serviço</a>
+            <?php if ($ehPaginaDeConcurso): ?>
             &nbsp;|&nbsp;
             <a href="<?php echo url('edicoes/index'); ?>">Edições Anteriores</a>
             &nbsp;|&nbsp;
             <a href="<?php echo url('mentoriaPublica/index'); ?>">Mentorias</a>
             &nbsp;|&nbsp;
             <a href="<?php echo url('oficinaPublica/index'); ?>">Oficinas</a>
+            <?php endif; ?>
         </p>
         <a href="#topo" class="site-footer-topo" aria-label="Voltar ao topo">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15l7-7 7 7"></path></svg>

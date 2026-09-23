@@ -117,21 +117,22 @@ class CampoDinamicoService
         return ['sucesso' => true];
     }
 
-    public function mover($id, $direcao)
+    /**
+     * Fase 50: mesma trava de mover()/remover() (formulario tem que estar
+     * em rascunho) - so' que aqui recebe a lista inteira de ids na nova
+     * ordem (drag-and-drop), nao mais um passo de cada vez. $formularioId
+     * vem explicito porque, com a lista vazia (ex.: JSON malformado), nao
+     * haveria como descobrir de qual formulario se trata a partir de $ids.
+     */
+    public function reordenar($formularioId, array $ids)
     {
-        $campo = $this->campos->buscarPorId($id);
-
-        if ($campo === null) {
-            return ['sucesso' => false, 'mensagem' => 'Campo não encontrado.'];
-        }
-
-        $erro = $this->validarEstruturaEditavel($campo['formulario_id']);
+        $erro = $this->validarEstruturaEditavel($formularioId);
 
         if ($erro !== null) {
             return ['sucesso' => false, 'mensagem' => $erro];
         }
 
-        $this->campos->mover($id, $direcao);
+        $this->campos->reordenar($formularioId, $ids);
 
         return ['sucesso' => true];
     }

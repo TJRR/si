@@ -27,10 +27,12 @@ class TrabalhoRepository
         $stmt = $pdo->prepare(
             'INSERT INTO trabalhos
                 (evento_id, eixo_tematico_id, natureza_id, titulo, telefone_contato, metodo_submissao,
-                 conteudo_html, link_avaliacao, link_publicacao, arquivo_avaliacao_path, arquivo_publicacao_path)
+                 conteudo_html, link_avaliacao, link_publicacao, arquivo_avaliacao_path, arquivo_publicacao_path,
+                 origem, origem_referencia, submetido_em)
              VALUES
                 (:evento_id, :eixo_tematico_id, :natureza_id, :titulo, :telefone_contato, :metodo_submissao,
-                 :conteudo_html, :link_avaliacao, :link_publicacao, :arquivo_avaliacao_path, :arquivo_publicacao_path)'
+                 :conteudo_html, :link_avaliacao, :link_publicacao, :arquivo_avaliacao_path, :arquivo_publicacao_path,
+                 :origem, :origem_referencia, COALESCE(:submetido_em, NOW()))'
         );
         $stmt->execute([
             'evento_id' => $dados['evento_id'],
@@ -44,6 +46,13 @@ class TrabalhoRepository
             'link_publicacao' => isset($dados['link_publicacao']) ? $dados['link_publicacao'] : null,
             'arquivo_avaliacao_path' => isset($dados['arquivo_avaliacao_path']) ? $dados['arquivo_avaliacao_path'] : null,
             'arquivo_publicacao_path' => isset($dados['arquivo_publicacao_path']) ? $dados['arquivo_publicacao_path'] : null,
+            // Fase 51: trabalho recebido por canal alternativo (item 5.2 do
+            // edital) guarda a origem, a referencia da resposta de origem
+            // (trava contra importar duas vezes) e a data/hora ORIGINAL do
+            // envio, que e' criterio de desempate do item 7.6.
+            'origem' => isset($dados['origem']) ? $dados['origem'] : 'sistema',
+            'origem_referencia' => isset($dados['origem_referencia']) ? $dados['origem_referencia'] : null,
+            'submetido_em' => isset($dados['submetido_em']) ? $dados['submetido_em'] : null,
         ]);
         $id = (int) $pdo->lastInsertId();
 
@@ -188,6 +197,33 @@ class TrabalhoRepository
      * lista trabalhos daquele evento para um avaliador. So' e' chamado
      * quando evento_trabalhos_config.sigilo_cego esta ligado.
      */
+    /**
+     * Fase 51: trava de reexecucao da importacao. Uma resposta ja trazida
+     * antes tem a mesma referencia de origem, e o importador a classifica
+     * como "ja importado" em vez de gravar de novo ou convidar de novo.
+     */
+    /**
+     * Fase 51: guarda, no proprio trabalho, qual regra decidiu o empate com
+     * o trabalho imediatamente acima no resultado aplicado.
+     */
+    public function definirDesempateCriterio($id, $criterio)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE trabalhos SET desempate_criterio = :criterio WHERE id = :id');
+        $stmt->execute(['criterio' => $criterio, 'id' => $id]);
+    }
+
+    public function buscarPorOrigemReferencia($eventoId, $referencia)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM trabalhos WHERE evento_id = :evento_id AND origem_referencia = :referencia LIMIT 1');
+        $stmt->execute(['evento_id' => $eventoId, 'referencia' => $referencia]);
+
+        $linha = $stmt->fetch();
+
+        return $linha !== false ? $linha : null;
+    }
+
     public function garantirNumerosSigilo($eventoId)
     {
         $pdo = Database::conexao();

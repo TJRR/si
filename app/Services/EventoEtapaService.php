@@ -86,23 +86,6 @@ class EventoEtapaService
     }
 
     /**
-     * Painel do participante: dado o conjunto de etapas vinculadas aos
-     * horarios de um concurso (com null representando "aberto a todos"),
-     * responde se a equipe enxergaria ao menos um horario. Evita acender o
-     * botao do painel pra uma tela que viria vazia.
-     */
-    public function algumHorarioVisivel(array $etapaIds, array $equipe)
-    {
-        foreach ($etapaIds as $etapaId) {
-            if ($this->podeParticipar(['etapa_id' => $etapaId], $equipe)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Etapas da trilha para o select do admin, cada uma com a chave extra
      * "restringe". Todas sao listadas de proposito - esconder as que nao
      * restringem faria o admin achar que a etapa sumiu do sistema. A tela

@@ -150,7 +150,7 @@ class ApresentacaoPitchAdminController extends Controller
             'erro' => $erro,
             'slot' => $slot,
             'etapa' => $etapa,
-        ], 'Editar horário: ' . $etapa['nome']);
+        ], 'Editar horário: ' . $etapa['nome'], ['tipo' => 'apresentacao_pitch', 'id' => (int) $etapa['id']]);
     }
 
     public function removerSlot()

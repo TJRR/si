@@ -20,8 +20,7 @@ return [
         ],
         [
             'nome' => 'Mover cima/baixo',
-            'icone' => 'mover_cima',
-            'como' => 'Ajusta a ordem de exibição.',
+            'como' => 'Arraste pela alça ⠿ ou use as setas: ajusta a ordem de exibição.',
             'observacao' => 'A ordem aqui só afeta exibição: o cálculo da fórmula usa o código do critério, não a posição.',
         ],
         [

@@ -134,43 +134,28 @@ class CriterioAvaliacaoRepository
         Auditoria::registrar('remover', 'criterios_avaliacao', $id, $antes, null);
     }
 
-    public function mover($id, $direcao)
+    /**
+     * Fase 50 (achado de seguranca): WHERE inclui etapa_id, nao so' id -
+     * sem isso, um id de criterio de OUTRA etapa seria aceito e teria sua
+     * ordem alterada, sem checagem de posse.
+     */
+    public function reordenar($etapaId, array $ids)
     {
         $pdo = Database::conexao();
-        $criterio = $this->buscarPorId($id);
-
-        if ($criterio === null) {
-            return;
-        }
-
-        $operador = $direcao === 'cima' ? '<' : '>';
-        $ordenacao = $direcao === 'cima' ? 'DESC' : 'ASC';
-
-        $stmtVizinho = $pdo->prepare(
-            "SELECT * FROM criterios_avaliacao
-             WHERE etapa_id = :etapa_id AND ordem {$operador} :ordem
-             ORDER BY ordem {$ordenacao} LIMIT 1"
-        );
-        $stmtVizinho->execute(['etapa_id' => $criterio['etapa_id'], 'ordem' => $criterio['ordem']]);
-        $vizinho = $stmtVizinho->fetch();
-
-        if ($vizinho === false) {
-            return;
-        }
-
         $pdo->beginTransaction();
 
         try {
-            $atualizarOrdem = $pdo->prepare('UPDATE criterios_avaliacao SET ordem = :ordem WHERE id = :id');
-            $atualizarOrdem->execute(['ordem' => $vizinho['ordem'], 'id' => $criterio['id']]);
-            $atualizarOrdem->execute(['ordem' => $criterio['ordem'], 'id' => $vizinho['id']]);
+            $stmt = $pdo->prepare('UPDATE criterios_avaliacao SET ordem = :ordem WHERE id = :id AND etapa_id = :etapa_id');
+
+            foreach ($ids as $indice => $id) {
+                $stmt->execute(['ordem' => $indice, 'id' => (int) $id, 'etapa_id' => $etapaId]);
+            }
 
             $pdo->commit();
+            Auditoria::registrar('reordenar', 'criterios_avaliacao', null, null, ['etapa_id' => $etapaId, 'ids' => $ids]);
         } catch (\Exception $e) {
             $pdo->rollBack();
             throw $e;
         }
-
-        Auditoria::registrar('mover', 'criterios_avaliacao', $id, ['ordem' => $criterio['ordem']], ['ordem' => $vizinho['ordem'], 'trocado_com_id' => $vizinho['id']]);
     }
 }

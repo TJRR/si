@@ -52,20 +52,6 @@ class MentoriaRepository
         return $stmt->fetchAll();
     }
 
-    /**
-     * Fase 24: mentoria e' opcional - o botão "Agendar Mentoria" só aparece
-     * no painel do participante se algum mentor já tiver criado ao menos
-     * um horário para o concurso (mesmo que todos já reservados).
-     */
-    public function existeParaConcurso($concursoId)
-    {
-        $pdo = Database::conexao();
-        $stmt = $pdo->prepare('SELECT COUNT(*) FROM mentoria_horarios WHERE concurso_id = :concurso_id');
-        $stmt->execute(['concurso_id' => $concursoId]);
-
-        return (int) $stmt->fetchColumn() > 0;
-    }
-
     public function listarReservasDaEquipe($equipeId)
     {
         $pdo = Database::conexao();
@@ -152,23 +138,6 @@ class MentoriaRepository
         $stmt->execute($dados + ['id' => $id]);
 
         Auditoria::registrar('atualizar', 'mentoria_horarios', $id, $antes, $dados);
-    }
-
-    /**
-     * Fase 34: etapas distintas vinculadas aos horarios do concurso, com
-     * NULL preservado (= horario aberto a todos). O painel do participante
-     * usa isso pra decidir se acende o botao sem precisar carregar e
-     * filtrar a listagem inteira.
-     */
-    public function etapasVinculadasNoConcurso($concursoId)
-    {
-        $pdo = Database::conexao();
-        $stmt = $pdo->prepare('SELECT DISTINCT etapa_id FROM mentoria_horarios WHERE concurso_id = :concurso_id');
-        $stmt->execute(['concurso_id' => $concursoId]);
-
-        return array_map(function ($valor) {
-            return $valor === null ? null : (int) $valor;
-        }, $stmt->fetchAll(\PDO::FETCH_COLUMN));
     }
 
     public function atualizarGoogle($id, array $colunas)

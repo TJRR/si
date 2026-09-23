@@ -10,10 +10,13 @@ if (!defined('SI_BOOT')) {
 use App\Core\Controller;
 use App\Repositories\EtapaRepository;
 use App\Repositories\FormulaPontuacaoRepository;
+use App\Repositories\ResultadoTrilhaRepository;
+use App\Repositories\TrilhaRepository;
 use App\Repositories\ResultadoEtapaRepository;
 use App\Repositories\SubmissaoRepository;
 use App\Services\ConteudoSubmissaoService;
 use App\Services\ResultadoEtapaService;
+use App\Services\ResultadoTrilhaService;
 
 /**
  * Exposicao publica (sem login) do resultado de uma etapa ja publicada pelo
@@ -84,6 +87,57 @@ class ResultadoPublicoController extends Controller
             'equipes' => $equipes,
             'casasDecimais' => FormulaPontuacaoRepository::casasDecimais($this->formulas->buscarPorEtapa($etapaId)),
         ], 'Resultado: ' . $etapa['nome']);
+    }
+
+    /**
+     * Fase 51: resultado FINAL da trilha (Nota Final e colocacao), publico.
+     * Ate aqui so existia resultado publico por etapa, e o "Destaque
+     * publico" (resumo e imagem do case, cadastrado desde a Fase 18) nunca
+     * aparecia em tela nenhuma: a funcionalidade existia pela metade.
+     *
+     * Tres modos, no mesmo espirito do que ja valia por etapa:
+     * oculto (padrao), apenas_destaques (so as colocacoes com destaque
+     * cadastrado) e ranking_completo (todas, com Nota Final).
+     */
+    public function trilha($trilhaId)
+    {
+        $trilha = (new TrilhaRepository())->buscarPorId($trilhaId);
+        $servicoTrilha = new ResultadoTrilhaService();
+
+        if ($trilha === null
+            || !isset($trilha['visibilidade_publica_resultado'])
+            || $trilha['visibilidade_publica_resultado'] === 'oculto'
+            || !$servicoTrilha->jaPublicado($trilhaId)) {
+            http_response_code(404);
+            exit('Resultado nao encontrado ou ainda nao publicado.');
+        }
+
+        $modo = $trilha['visibilidade_publica_resultado'];
+        $linhas = (new ResultadoTrilhaRepository())->listarPorTrilha($trilhaId);
+
+        if ($modo === 'apenas_destaques') {
+            $linhas = array_values(array_filter($linhas, function ($linha) {
+                return trim((string) $linha['resumo_destaque']) !== '' || !empty($linha['imagem_destaque_path']);
+            }));
+        }
+
+        $equipes = array_map(function ($linha) use ($modo) {
+            return [
+                'colocacao' => (int) $linha['colocacao'],
+                'nome_equipe' => $linha['nome_equipe'] !== null ? $linha['nome_equipe'] : 'Equipe #' . $linha['equipe_id'],
+                'nf' => $modo === 'ranking_completo' ? $linha['nf'] : null,
+                'resumo_destaque' => $linha['resumo_destaque'],
+                'imagem_destaque_path' => $linha['imagem_destaque_path'],
+                'imagem_destaque_alt' => $linha['imagem_destaque_alt'],
+            ];
+        }, $linhas);
+
+        $this->renderizar('publico/resultado_trilha', [
+            'trilha' => $trilha,
+            'modo' => $modo,
+            'equipes' => $equipes,
+            'casasDecimais' => FormulaPontuacaoRepository::casasDecimais($this->formulas->buscarPorTrilha($trilhaId)),
+        ], 'Resultado final: ' . $trilha['nome']);
     }
 
     private function materialPublicoDaSubmissao($submissaoId)

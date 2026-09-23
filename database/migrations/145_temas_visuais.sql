@@ -23,6 +23,13 @@ CREATE TABLE IF NOT EXISTS temas_visuais (
 ALTER TABLE usuarios ADD COLUMN tema_visual_id INT UNSIGNED NULL AFTER foto_path;
 ALTER TABLE usuarios ADD CONSTRAINT fk_usuarios_tema_visual FOREIGN KEY (tema_visual_id) REFERENCES temas_visuais (id);
 
+-- Correcao de arquitetura (Fase 50): cor_terciaria/cor_destaque_app nunca
+-- existiram em configuracoes_visuais nesta linha do tempo corrigida (ver
+-- migrations que tinham os numeros 127/128, removidas) - nasceram direto
+-- como colunas de temas_visuais aqui, entao o DROP COLUMN logo abaixo so'
+-- cobre as 3 colunas que de fato vieram de configuracoes_visuais (producao,
+-- migrations 030/036).
+--
 -- 5 temas propostos, carga inicial (nao um limite). cor_primaria_fim
 -- calculada por clareamento de 33% da primaria em direcao ao branco (mesma
 -- proporcao ja observada entre o laranja padrao anterior, #FF6600/#FF9955),
@@ -38,6 +45,4 @@ INSERT INTO temas_visuais (nome, cor_primaria_inicio, cor_primaria_fim, cor_secu
 ALTER TABLE configuracoes_visuais
     DROP COLUMN cor_primaria_inicio,
     DROP COLUMN cor_primaria_fim,
-    DROP COLUMN cor_secundaria,
-    DROP COLUMN cor_terciaria,
-    DROP COLUMN cor_destaque_app;
+    DROP COLUMN cor_secundaria;

@@ -21,55 +21,37 @@
         <?php if (empty($regrasDaEtapa)): ?>
             <p>Nenhuma regra de desempate cadastrada nesta etapa.</p>
         <?php else: ?>
-            <table border="1" cellpadding="6">
-                <tr><th>Ordem</th><th>Critério</th><th>Direção</th><th>Ações</th></tr>
-                <?php foreach ($regrasDaEtapa as $regra): ?>
-                <tr>
-                    <td><?php echo (int) $regra['ordem']; ?></td>
-                    <td><?php echo $regra['tipo'] === 'data_submissao' ? 'Data de inscrição (quem enviou primeiro)' : htmlspecialchars($regra['criterio_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-                    <td><?php echo $regra['direcao'] === 'asc' ? 'Crescente (menor valor vence)' : 'Decrescente (maior valor vence)'; ?></td>
-                    <td>
-                        <div class="acoes-icones">
-                            <form method="post" action="<?php echo url('desempate/mover'); ?>"><?= campoCsrf() ?>
-                                <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
-                                <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                                <input type="hidden" name="direcao" value="cima">
-                                <button type="submit" class="btn-icone" title="Mover para cima">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <line x1="12" y1="19" x2="12" y2="5"></line>
-                                        <polyline points="5 12 12 5 19 12"></polyline>
-                                    </svg>
-                                </button>
-                            </form>
-                            <form method="post" action="<?php echo url('desempate/mover'); ?>"><?= campoCsrf() ?>
-                                <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
-                                <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                                <input type="hidden" name="direcao" value="baixo">
-                                <button type="submit" class="btn-icone" title="Mover para baixo">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                                        <polyline points="19 12 12 19 5 12"></polyline>
-                                    </svg>
-                                </button>
-                            </form>
-                            <form method="post" action="<?php echo url('desempate/remover'); ?>"><?= campoCsrf() ?>
-                                <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
-                                <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
-                                <button type="submit" class="btn-icone" title="Remover">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                        <path d="M10 11v6"></path>
-                                        <path d="M14 11v6"></path>
-                                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
-                                    </svg>
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
+            <ul class="reordenar-lista" data-reordenar-rota="<?php echo 'desempate/reordenar/' . (int) $etapa['id']; ?>">
+                <?php foreach ($regrasDaEtapa as $indice => $regra): ?>
+                <li class="reordenar-item" draggable="true" data-id="<?php echo (int) $regra['id']; ?>">
+                    <span class="reordenar-alca" aria-hidden="true" title="Arraste para reordenar">⠿</span>
+                    <div class="reordenar-conteudo">
+                        <strong><?php echo $regra['tipo'] === 'data_submissao' ? 'Data de inscrição (quem enviou primeiro)' : htmlspecialchars($regra['criterio_nome'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                        <br>
+                        <span><?php echo $regra['direcao'] === 'asc' ? 'Crescente (menor valor vence)' : 'Decrescente (maior valor vence)'; ?></span>
+                    </div>
+                    <div class="acoes-icones">
+                        <form method="post" action="<?php echo url('desempate/remover'); ?>"><?= campoCsrf() ?>
+                            <input type="hidden" name="id" value="<?php echo (int) $regra['id']; ?>">
+                            <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
+                            <button type="submit" class="btn-icone" title="Remover">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                                    <path d="M10 11v6"></path>
+                                    <path d="M14 11v6"></path>
+                                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="reordenar-botoes">
+                        <button type="button" class="btn-icone" data-mover="cima" aria-label="Mover para cima" <?php echo $indice === 0 ? 'disabled' : ''; ?>>▲</button>
+                        <button type="button" class="btn-icone" data-mover="baixo" aria-label="Mover para baixo" <?php echo $indice === count($regrasDaEtapa) - 1 ? 'disabled' : ''; ?>>▼</button>
+                    </div>
+                </li>
                 <?php endforeach; ?>
-            </table>
+            </ul>
         <?php endif; ?>
     <?php endforeach; ?>
 <?php endif; ?>

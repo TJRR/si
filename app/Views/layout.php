@@ -105,7 +105,7 @@ if ($ehPainelAdmin) {
     // "Eventos" e' aba de 1o nivel propria (ver NavegacaoService::
     // filhosDe('raizEvento', ...) e admin/_arvore.php, generalizado para
     // aceitar mais de uma raiz).
-    $modulosArvoreEvento = ['eventos', 'eventoFormulario', 'atividades', 'trabalhos'];
+    $modulosArvoreEvento = ['eventos', 'eventoCabecalho', 'eventoSlides', 'eventoBanners', 'eventoBlocos', 'eventoSecoes', 'atividadeTipos', 'eventoFormulario', 'atividades', 'trabalhos'];
     $ehEscopoArvoreEvento = in_array($moduloAtual, $modulosArvoreEvento, true);
     $ehEscopoArvore = $ehEscopoArvoreConcurso || $ehEscopoArvoreEvento;
 
@@ -368,6 +368,22 @@ if ($ehPainelAdmin) {
     <script src="<?php echo config('base_path'); ?>/assets/js/cabecalho-rolagem.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/cabecalho-rolagem.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/cabecalho-flutuar.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/cabecalho-flutuar.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/painel-lateral.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/painel-lateral.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/contagem-regressiva.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/contagem-regressiva.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/programacao-abas.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/programacao-abas.js'); ?>" defer></script>
+    <?php endif; ?>
+    <?php
+    // Fase 50: pagina publica propria do Evento - mesmo carrossel/efeitos
+    // de cabecalho da home do Concurso (slideshow.js/cabecalho-rolagem.js/
+    // cabecalho-flutuar.js/painel-lateral.js), sem temas-desafios.js (nao
+    // ha Temas/Desafios na pagina do Evento). Bloco aditivo e separado do
+    // de 'home/index' acima - a comparacao de $view e exata, nao por
+    // prefixo, entao sem isto a pagina nova so herdaria o scrollspy.js.
+    ?>
+    <?php if ($view === 'publico/evento_home'): ?>
+    <script src="<?php echo config('base_path'); ?>/assets/js/slideshow.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/slideshow.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/cabecalho-rolagem.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/cabecalho-rolagem.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/cabecalho-flutuar.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/cabecalho-flutuar.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/painel-lateral.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/painel-lateral.js'); ?>" defer></script>
     <?php endif; ?>
     <?php
     // Fase 19 (#107): acesso direto ao suporte pelo WhatsApp. O numero vem de
@@ -400,6 +416,23 @@ if ($ehPainelAdmin) {
          mesmo carregando o script (nunca aparece), entao nao ha motivo pra
          carregar. -->
     <script src="<?php echo config('base_path'); ?>/assets/js/instalar-app.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/instalar-app.js'); ?>" defer></script>
+    <?php
+    // Fase 50: mesmo botao de contato por WhatsApp da home publica (ver
+    // comentario acima, ~linha 373) - existia so' ali, nunca tinha chegado
+    // ao aplicativo instalavel do Evento (pendencia reportada pelo usuario
+    // ainda na Fase 48B). Mesmo dado (contatos_concurso.whatsapp, singleton
+    // global) e mesmo helper linkWhatsApp(); classe CSS propria
+    // (.app-whatsapp-flutuante) porque aqui a cor fica fixa de proposito
+    // (verde da marca WhatsApp, decisao do usuario), em vez de seguir a cor
+    // dinamica do tema do evento como o botao de ajuda (.app-ajuda-card).
+    $contatoSuporteApp = (new \App\Repositories\ContatoConcursoRepository())->buscar();
+    $whatsappSuporteApp = $contatoSuporteApp !== null ? linkWhatsApp($contatoSuporteApp['whatsapp']) : null;
+    ?>
+    <?php if ($whatsappSuporteApp !== null): ?>
+    <a href="<?php echo htmlspecialchars($whatsappSuporteApp, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener" class="app-whatsapp-flutuante" aria-label="<?php echo htmlspecialchars('Falar com o suporte do ' . nomeUnidadeResponsavel() . ' pelo WhatsApp', ENT_QUOTES, 'UTF-8'); ?>">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38a9.9 9.9 0 0 0 4.76 1.21h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.12-2.9-6.99A9.82 9.82 0 0 0 12.04 2Zm0 1.67c2.19 0 4.25.85 5.79 2.4a8.2 8.2 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.13.82.84-3.05-.2-.31a8.18 8.18 0 0 1-1.26-4.37c0-4.55 3.7-8.23 8.24-8.23h.04Z"></path></svg>
+    </a>
+    <?php endif; ?>
     <?php endif; ?>
     <!-- Fase 44: sino de notificacoes agora tambem na app-bar do evento
          (eventoApp/_app_bar.php) - mesmo script usado pelo painel interno. -->

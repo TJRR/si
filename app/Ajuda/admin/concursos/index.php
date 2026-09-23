@@ -15,6 +15,7 @@ return [
         ],
         [
             'nome' => 'Trilhas',
+            'icone' => 'trilhas',
             'como' => 'Abre a lista de trilhas (categorias, ex.: Interna/Externa) daquele concurso.',
         ],
         [

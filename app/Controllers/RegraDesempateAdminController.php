@@ -42,7 +42,7 @@ class RegraDesempateAdminController extends Controller
             'trilha' => $trilha,
             'etapas' => $this->etapas->listarPorTrilha($trilhaId),
             'regras' => $this->regras->listarPorTrilha($trilhaId),
-        ], 'Regras de desempate de ' . $trilha['nome']);
+        ], 'Regras de desempate de ' . $trilha['nome'], ['tipo' => 'desempate', 'id' => (int) $trilhaId]);
     }
 
     public function novo($trilhaId, $etapaId)
@@ -95,14 +95,15 @@ class RegraDesempateAdminController extends Controller
         ], 'Novo critério de desempate', ['tipo' => 'apuracao', 'id' => (int) $trilhaId]);
     }
 
-    public function mover()
+    public function reordenar($etapaId)
     {
-        $id = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
-        $direcao = isset($_POST['direcao']) ? $_POST['direcao'] : 'cima';
-        $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
+        header('Content-Type: application/json; charset=utf-8');
+        $corpo = json_decode((string) file_get_contents('php://input'), true);
+        $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
 
-        $this->regras->mover($id, $direcao);
-        $this->redirecionar('apuracao/index/' . $trilhaId);
+        $this->regras->reordenar($etapaId, $ids);
+
+        echo json_encode(['ok' => true]);
     }
 
     public function remover()

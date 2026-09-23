@@ -19,6 +19,7 @@ return [
         ],
         [
             'nome' => 'Remover',
+            'icone' => 'remover',
             'como' => 'Só funciona se nenhum trabalho já submetido usar esta natureza.',
         ],
     ],

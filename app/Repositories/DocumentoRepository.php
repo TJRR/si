@@ -219,21 +219,25 @@ class DocumentoRepository
      * Fase 29 (Bug 3): ordem manual via drag-and-drop na tela de Documentos,
      * refletida na home - mesmo padrao ja usado em SlideRepository/
      * PremioRepository etc. (assets/js/reordenar-arrastar.js).
+     * Fase 50 (achado de seguranca): WHERE passou a incluir concurso_id,
+     * nao so' id - sem isso, um id de documento de OUTRO concurso seria
+     * aceito e teria sua ordem alterada, sem checagem de posse. Mesmo
+     * padrao ja usado por PremioRepository/FaqConcursoRepository.
      */
-    public function reordenar(array $ids)
+    public function reordenar($concursoId, array $ids)
     {
         $pdo = Database::conexao();
         $pdo->beginTransaction();
 
         try {
-            $stmt = $pdo->prepare('UPDATE documentos SET ordem = :ordem WHERE id = :id');
+            $stmt = $pdo->prepare('UPDATE documentos SET ordem = :ordem WHERE id = :id AND concurso_id = :concurso_id');
 
             foreach ($ids as $indice => $id) {
-                $stmt->execute(['ordem' => $indice, 'id' => (int) $id]);
+                $stmt->execute(['ordem' => $indice, 'id' => (int) $id, 'concurso_id' => $concursoId]);
             }
 
             $pdo->commit();
-            Auditoria::registrar('reordenar', 'documentos', null, null, ['ids' => $ids]);
+            Auditoria::registrar('reordenar', 'documentos', null, null, ['concurso_id' => $concursoId, 'ids' => $ids]);
         } catch (\Exception $e) {
             $pdo->rollBack();
             throw $e;

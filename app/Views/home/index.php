@@ -13,7 +13,6 @@
                 </nav>
             </div>
         </header>
-        <?php include __DIR__ . '/_bloco_evento.php'; ?>
         <section class="site-section" style="text-align:center;padding:4rem 1rem;">
             <h1>Nenhuma edição ativa no momento</h1>
             <p>Consulte o histórico de <a href="<?php echo url('edicoes/index'); ?>">edições anteriores</a> do Prêmio de Inovação.</p>
@@ -53,7 +52,6 @@ $estiloCores = '--cor-primaria-inicio:' . htmlspecialchars($temaAtivo['cor_prima
 
         <?php include __DIR__ . '/_slideshow.php'; ?>
         <?php include __DIR__ . '/_banners.php'; ?>
-        <?php include __DIR__ . '/_bloco_evento.php'; ?>
         <?php
         // Fase 19 (#97): ordem definida pelo Admin (aba "Ordenação") -
         // cada partial ja se auto-esconde quando nao tem dado

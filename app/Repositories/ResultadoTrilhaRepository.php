@@ -99,10 +99,10 @@ class ResultadoTrilhaRepository
 
             $inserir = $pdo->prepare(
                 'INSERT INTO resultados_trilha (
-                    equipe_id, trilha_id, nf, colocacao, publicado_por,
+                    equipe_id, trilha_id, nf, colocacao, desempate_criterio, publicado_por,
                     resumo_destaque, imagem_destaque_path, imagem_destaque_alt
                 ) VALUES (
-                    :equipe_id, :trilha_id, :nf, :colocacao, :publicado_por,
+                    :equipe_id, :trilha_id, :nf, :colocacao, :desempate_criterio, :publicado_por,
                     :resumo_destaque, :imagem_destaque_path, :imagem_destaque_alt
                 )'
             );
@@ -115,6 +115,9 @@ class ResultadoTrilhaRepository
                     'trilha_id' => $trilhaId,
                     'nf' => $linha['nf'],
                     'colocacao' => $linha['colocacao'],
+                    // Fase 51: qual regra decidiu o empate com a equipe de
+                    // cima, congelado junto com o resultado.
+                    'desempate_criterio' => isset($linha['desempate_criterio']) ? $linha['desempate_criterio'] : null,
                     'publicado_por' => $usuarioId,
                     'resumo_destaque' => $antigo !== null ? $antigo['resumo_destaque'] : null,
                     'imagem_destaque_path' => $antigo !== null ? $antigo['imagem_destaque_path'] : null,

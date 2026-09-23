@@ -102,41 +102,27 @@ class EventoCampoInscricaoRepository
     }
 
     /**
-     * Troca a ordem com o vizinho (cima/baixo) dentro do mesmo evento,
-     * mesmo padrao de CampoDinamicoRepository::mover().
+     * Fase 50 (achado de seguranca): WHERE inclui evento_id, nao so' id -
+     * sem isso, um id de campo de OUTRO evento seria aceito e teria sua
+     * ordem alterada, sem checagem de posse.
      */
-    public function mover($id, $direcao)
+    public function reordenar($eventoId, array $ids)
     {
-        $campo = $this->buscarPorId($id);
-
-        if ($campo === null) {
-            return;
-        }
-
         $pdo = Database::conexao();
-        $comparador = $direcao === 'cima' ? '<' : '>';
-        $ordenacao = $direcao === 'cima' ? 'DESC' : 'ASC';
-
-        $stmt = $pdo->prepare(
-            "SELECT * FROM evento_campos_inscricao
-              WHERE evento_id = :evento_id AND ordem $comparador :ordem
-              ORDER BY ordem $ordenacao LIMIT 1"
-        );
-        $stmt->execute(['evento_id' => $campo['evento_id'], 'ordem' => $campo['ordem']]);
-        $vizinho = $stmt->fetch();
-
-        if ($vizinho === false) {
-            return;
-        }
-
         $pdo->beginTransaction();
 
         try {
-            $atualizar = $pdo->prepare('UPDATE evento_campos_inscricao SET ordem = :ordem WHERE id = :id');
-            $atualizar->execute(['ordem' => $vizinho['ordem'], 'id' => $campo['id']]);
-            $atualizar->execute(['ordem' => $campo['ordem'], 'id' => $vizinho['id']]);
+            $stmt = $pdo->prepare('UPDATE evento_campos_inscricao SET ordem = :ordem WHERE id = :id AND evento_id = :evento_id');
+
+            foreach ($ids as $indice => $id) {
+                $stmt->execute(['ordem' => $indice, 'id' => (int) $id, 'evento_id' => $eventoId]);
+            }
 
             $pdo->commit();
+            // Fase 50: mover() nunca tinha auditoria (unico dos 5 repositories
+            // "swap com vizinho" sem isso) - reordenar() ja passa a ter, igual
+            // ao padrao dos demais, nao e' regressao, e' correcao da lacuna.
+            Auditoria::registrar('reordenar', 'evento_campos_inscricao', null, null, ['evento_id' => $eventoId, 'ids' => $ids]);
         } catch (\Exception $e) {
             $pdo->rollBack();
             throw $e;

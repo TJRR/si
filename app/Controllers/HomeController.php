@@ -24,7 +24,6 @@ use App\Repositories\DuvidaRepository;
 use App\Repositories\EquipeRepository;
 use App\Repositories\EtapaRepository;
 use App\Repositories\EventoCronogramaRepository;
-use App\Repositories\EventoDivulgacaoRepository;
 use App\Repositories\FaqConcursoRepository;
 use App\Repositories\FormularioDinamicoRepository;
 use App\Repositories\HomeSecaoOrdemRepository;
@@ -38,6 +37,7 @@ use App\Repositories\TemaRepository;
 use App\Repositories\TrilhaRepository;
 use App\Repositories\UsuarioRepository;
 use App\Services\ResultadoEtapaService;
+use App\Services\ResultadoTrilhaService;
 
 class HomeController extends Controller
 {
@@ -46,18 +46,9 @@ class HomeController extends Controller
         $concursos = new ConcursoRepository();
         $concursoAtivo = $concursos->buscarAtivo();
 
-        // Fase 40: bloco de divulgacao do Evento na home - buscado ANTES do
-        // ramo "sem concurso ativo" de proposito. Evento foi desacoplado de
-        // Concurso justamente pra ter vida propria (pode ocorrer sem nenhum
-        // concurso em andamento) - e' exatamente nesse cenario que a
-        // divulgacao mais precisa aparecer, entao os dois ramos abaixo
-        // recebem $blocosEvento.
-        $blocosEvento = (new EventoDivulgacaoRepository())->listarAtivosParaHome();
-
         if ($concursoAtivo === null) {
             $this->renderizar('home/index', [
                 'concursoAtivo' => null,
-                'blocosEvento' => $blocosEvento,
             ], 'Sistema de Gestão da Semana de Inovação e do Prêmio de Inovação do ' . nomeInstituicao());
             return;
         }
@@ -78,6 +69,10 @@ class HomeController extends Controller
         $temasPorTrilha = [];
         $trilhasComInscricaoAberta = [];
         $etapasComResultadoPublicado = [];
+        // Fase 51: trilhas cujo resultado FINAL (Nota Final e colocacao) o
+        // Admin liberou publicamente - ate aqui so existia resultado publico
+        // por etapa, e o "Destaque publico" cadastrado nunca aparecia.
+        $trilhasComResultadoFinalPublicado = [];
         $trilhasComHomologacaoPublicada = [];
 
         foreach ($trilhasAtivas as $trilha) {
@@ -86,6 +81,15 @@ class HomeController extends Controller
             // tem avaliacao, entao nao entra em $etapasComResultadoPublicado.
             if ($homologacaoPublica->jaPublicado($trilha['id'])) {
                 $trilhasComHomologacaoPublicada[] = [
+                    'trilha_id' => $trilha['id'],
+                    'trilha_nome' => $trilha['nome'],
+                ];
+            }
+
+            if (isset($trilha['visibilidade_publica_resultado'])
+                && $trilha['visibilidade_publica_resultado'] !== 'oculto'
+                && (new ResultadoTrilhaService())->jaPublicado($trilha['id'])) {
+                $trilhasComResultadoFinalPublicado[] = [
                     'trilha_id' => $trilha['id'],
                     'trilha_nome' => $trilha['nome'],
                 ];
@@ -295,7 +299,6 @@ class HomeController extends Controller
                 'menuRodape' => $menuRodape,
                 'slides' => (new SlideRepository())->listarAtivos(),
                 'banners' => (new BannerRepository())->listarAtivos(),
-                'blocosEvento' => $blocosEvento,
                 'blocoSobre' => $blocoSobre,
                 'blocoPremiacao' => $blocoPremiacao,
                 'blocosLivres' => $blocosLivres,
@@ -309,6 +312,7 @@ class HomeController extends Controller
                 'temasPorTrilha' => $temasPorTrilha,
                 'trilhasComInscricaoAberta' => $trilhasComInscricaoAberta,
                 'etapasComResultadoPublicado' => $etapasComResultadoPublicado,
+                'trilhasComResultadoFinalPublicado' => $trilhasComResultadoFinalPublicado,
                 'trilhasComHomologacaoPublicada' => $trilhasComHomologacaoPublicada,
                 'faqAtivas' => $faqAtivas,
                 'contato' => $contato,

@@ -42,12 +42,14 @@
     </p>
 
     <table border="1" cellpadding="6">
-        <tr><th>Colocação</th><th>Equipe</th><th>NF</th><?php echo $publicado ? '<th>Destaque público</th>' : ''; ?></tr>
+        <tr><th>Colocação</th><th>Equipe</th><th>NF</th><th>Desempate</th><?php echo $publicado ? '<th>Destaque público</th>' : ''; ?></tr>
         <?php foreach ($ranking as $linha): ?>
         <tr>
             <td><?php echo (int) $linha['colocacao']; ?></td>
             <td><?php echo htmlspecialchars($linha['nome_equipe'] !== null ? $linha['nome_equipe'] : 'Não informado', ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo number_format((float) $linha['nf'], $casasDecimais, ',', '.'); ?></td>
+            <?php $criterioDesempate = isset($linha['desempate_criterio']) ? (string) $linha['desempate_criterio'] : ''; ?>
+            <td><?php echo $criterioDesempate !== '' ? htmlspecialchars($criterioDesempate, ENT_QUOTES, 'UTF-8') : '&mdash;'; ?></td>
             <?php if ($publicado): ?>
             <td>
                 <a href="<?php echo url('resultados/editarDestaque/' . (int) $linha['id']); ?>" class="btn-icone" title="Editar resumo/imagem de destaque">

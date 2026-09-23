@@ -168,7 +168,8 @@ class TrilhaAdminController extends Controller
             if ($nome === '') {
                 $erro = 'Informe o nome da trilha.';
             } else {
-                $this->trilhas->atualizar($id, $nome, $descricao, $ordem, $ativo, $minimoIntegrantesHomologados);
+                $visibilidadeResultado = isset($_POST['visibilidade_publica_resultado']) ? $_POST['visibilidade_publica_resultado'] : 'oculto';
+                $this->trilhas->atualizar($id, $nome, $descricao, $ordem, $ativo, $minimoIntegrantesHomologados, $visibilidadeResultado);
                 $trilha = $this->trilhas->buscarPorId($id);
             }
         }

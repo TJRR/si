@@ -14,25 +14,35 @@
 <?php if (empty($criterios)): ?>
     <p>Nenhum critério cadastrado ainda.</p>
 <?php else: ?>
-    <table border="1" cellpadding="6">
-        <tr><th>Ordem</th><th>Nome</th><th>Descrição</th><th>Nota máxima</th><th>Ações</th></tr>
-        <?php foreach ($criterios as $criterio): ?>
-        <tr>
-            <td>
-                <form method="post" action="<?php echo url('trabalhos/criterioMover/' . (int) $criterio['id'] . '/cima'); ?>" style="display:inline;"><?= campoCsrf() ?><button type="submit" title="Mover para cima">▲</button></form>
-                <form method="post" action="<?php echo url('trabalhos/criterioMover/' . (int) $criterio['id'] . '/baixo'); ?>" style="display:inline;"><?= campoCsrf() ?><button type="submit" title="Mover para baixo">▼</button></form>
-            </td>
-            <td><?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo htmlspecialchars((string) $criterio['descricao'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo htmlspecialchars($criterio['nota_maxima'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td>
+    <ul class="reordenar-lista" data-reordenar-rota="<?php echo 'trabalhos/criterioReordenar/' . (int) $evento['id']; ?>">
+        <?php foreach ($criterios as $indice => $criterio): ?>
+        <li class="reordenar-item" draggable="true" data-id="<?php echo (int) $criterio['id']; ?>">
+            <span class="reordenar-alca" aria-hidden="true" title="Arraste para reordenar">⠿</span>
+            <div class="reordenar-conteudo">
+                <strong><?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                <br>
+                <span><?php echo htmlspecialchars((string) $criterio['descricao'], ENT_QUOTES, 'UTF-8'); ?> · Nota máxima <?php echo htmlspecialchars($criterio['nota_maxima'], ENT_QUOTES, 'UTF-8'); ?></span>
+            </div>
+            <div class="acoes-icones">
                 <form method="post" action="<?php echo url('trabalhos/criterioRemover/' . (int) $criterio['id']); ?>" onsubmit="return confirm('Remover este critério?');"><?= campoCsrf() ?>
-                    <button type="submit">Remover</button>
+                    <button type="submit" class="btn-icone" title="Remover">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                            <path d="M10 11v6"></path>
+                            <path d="M14 11v6"></path>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                        </svg>
+                    </button>
                 </form>
-            </td>
-        </tr>
+            </div>
+            <div class="reordenar-botoes">
+                <button type="button" class="btn-icone" data-mover="cima" aria-label="Mover para cima" <?php echo $indice === 0 ? 'disabled' : ''; ?>>▲</button>
+                <button type="button" class="btn-icone" data-mover="baixo" aria-label="Mover para baixo" <?php echo $indice === count($criterios) - 1 ? 'disabled' : ''; ?>>▼</button>
+            </div>
+        </li>
         <?php endforeach; ?>
-    </table>
+    </ul>
 <?php endif; ?>
 
 <h2>Novo critério</h2>

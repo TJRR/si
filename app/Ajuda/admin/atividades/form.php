@@ -10,6 +10,14 @@ return [
     'resumo' => 'Cadastro de uma atividade específica do evento (curso, palestra, seminário). Inscrição e certificado são decisões independentes desta atividade. Elas não seguem o que está configurado no evento como um todo.',
     'operacoes' => [
         [
+            'nome' => 'Tipo',
+            'como' => 'Etiqueta colorida da atividade nas seções Destaques e Programação da página pública. Os tipos são cadastrados em "Tipos de atividade", por evento.',
+        ],
+        [
+            'nome' => 'Destacar na página pública',
+            'como' => 'Marca a atividade para aparecer na seção Destaques, quando ela estiver no modo vinculado às Atividades.',
+        ],
+        [
             'nome' => 'Modalidade',
             'como' => 'Presencial: só o código impresso (QR) confirma presença. Online: só o código de presença online (5 caracteres) confirma. Híbrido: os dois caminhos coexistem, cada participante usa o que corresponde à sua forma real de participação.',
         ],

@@ -12,7 +12,7 @@ return [
         ['nome' => '+ Nova atividade', 'como' => 'Abre o formulário de uma atividade nova (Dados Gerais).'],
         ['nome' => 'Editar', 'icone' => 'editar', 'como' => 'Abre a atividade para edição.'],
         ['nome' => 'Remover', 'icone' => 'remover', 'como' => 'Só funciona se a atividade ainda não tiver inscrições.'],
-        ['nome' => 'Inscritos', 'como' => 'Lista de quem se inscreveu, separada em confirmados e lista de espera.'],
+        ['nome' => 'Inscritos', 'icone' => 'inscritos', 'como' => 'Lista de quem se inscreveu, separada em confirmados e lista de espera.'],
         ['nome' => 'Coluna "Vagas"', 'como' => 'Mostra "confirmadas / limite" quando há limite configurado, "Ilimitada" quando a atividade exige inscrição sem limite, ou um traço simples quando não exige inscrição.'],
     ],
     'conceitos' => [],

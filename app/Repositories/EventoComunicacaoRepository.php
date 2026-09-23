@@ -67,6 +67,63 @@ class EventoComunicacaoRepository
         return $comunicacaoId;
     }
 
+    /**
+     * Fase 51: campanha para destinatarios avulsos, isto e, pessoas que
+     * ainda nao tem inscricao no evento - o caso dos autores trazidos do
+     * formulario externo, que ganham conta mas nunca se inscreveram. Mesma
+     * fila, mesmo lote de 10 por execucao do agendador: e' isso que evita
+     * repetir o problema que a fila foi criada para resolver, disparando
+     * dezenas de e-mails de uma vez pelo canal institucional.
+     *
+     * $destinatarios: lista de ['usuario_id', 'email', 'nome',
+     * 'token_senha_id' (opcional, para o convite com link de definir senha)].
+     */
+    public function criarCampanhaAvulsa(array $dados, array $destinatarios)
+    {
+        $pdo = Database::conexao();
+        $pdo->beginTransaction();
+
+        try {
+            $stmt = $pdo->prepare(
+                'INSERT INTO evento_comunicacoes (evento_id, autor_usuario_id, tipo, assunto, corpo_html, total_destinatarios)
+                 VALUES (:evento_id, :autor_usuario_id, :tipo, :assunto, :corpo_html, :total_destinatarios)'
+            );
+            $stmt->execute([
+                'evento_id' => $dados['evento_id'],
+                'autor_usuario_id' => $dados['autor_usuario_id'],
+                'tipo' => $dados['tipo'],
+                'assunto' => $dados['assunto'],
+                'corpo_html' => $dados['corpo_html'],
+                'total_destinatarios' => count($destinatarios),
+            ]);
+            $comunicacaoId = (int) $pdo->lastInsertId();
+
+            $stmtDestinatario = $pdo->prepare(
+                'INSERT INTO evento_comunicacao_destinatarios (comunicacao_id, usuario_id, email, nome, token_senha_id)
+                 VALUES (:comunicacao_id, :usuario_id, :email, :nome, :token_senha_id)'
+            );
+
+            foreach ($destinatarios as $destinatario) {
+                $stmtDestinatario->execute([
+                    'comunicacao_id' => $comunicacaoId,
+                    'usuario_id' => isset($destinatario['usuario_id']) ? $destinatario['usuario_id'] : null,
+                    'email' => $destinatario['email'],
+                    'nome' => isset($destinatario['nome']) ? $destinatario['nome'] : null,
+                    'token_senha_id' => isset($destinatario['token_senha_id']) ? $destinatario['token_senha_id'] : null,
+                ]);
+            }
+
+            $pdo->commit();
+        } catch (\Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+
+        Auditoria::registrar('criar', 'evento_comunicacoes', $comunicacaoId, null, $dados + ['destinatarios' => count($destinatarios)]);
+
+        return $comunicacaoId;
+    }
+
     public function buscarPorId($id)
     {
         $pdo = Database::conexao();
@@ -103,12 +160,17 @@ class EventoComunicacaoRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT ecd.id AS destinatario_id, ec.id AS comunicacao_id, ec.assunto, ec.corpo_html,
-                    ec.evento_id, u.nome AS usuario_nome, u.email AS usuario_email
+            'SELECT ecd.id AS destinatario_id, ec.id AS comunicacao_id, ec.tipo, ec.assunto, ec.corpo_html,
+                    ec.evento_id,
+                    COALESCE(ua.nome, ui.nome, ecd.nome) AS usuario_nome,
+                    COALESCE(ua.email, ui.email, ecd.email) AS usuario_email,
+                    ts.token AS token_senha
              FROM evento_comunicacao_destinatarios ecd
              JOIN evento_comunicacoes ec ON ec.id = ecd.comunicacao_id
-             JOIN evento_inscricoes ei ON ei.id = ecd.evento_inscricao_id
-             JOIN usuarios u ON u.id = ei.usuario_id
+             LEFT JOIN evento_inscricoes ei ON ei.id = ecd.evento_inscricao_id
+             LEFT JOIN usuarios ui ON ui.id = ei.usuario_id
+             LEFT JOIN usuarios ua ON ua.id = ecd.usuario_id
+             LEFT JOIN tokens_senha ts ON ts.id = ecd.token_senha_id
              WHERE ecd.status = "pendente"
              ORDER BY ec.criado_em ASC, ecd.id ASC
              LIMIT ' . (int) $limite

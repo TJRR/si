@@ -40,7 +40,7 @@
                 <?php if (!empty($trilha['descricao'])): ?>
                     <p><?php echo nl2br(htmlspecialchars($trilha['descricao'], ENT_QUOTES, 'UTF-8')); ?></p>
                 <?php endif; ?>
-                <?php if (!empty($etapasDaTrilha) || $homologacaoDaTrilha !== null || !empty($resultadosDaTrilha)): ?>
+                <?php if (!empty($etapasDaTrilha) || $homologacaoDaTrilha !== null || !empty($resultadosDaTrilha) || !empty($trilhasComResultadoFinalPublicado)): ?>
                     <ul class="site-trilha-links">
                         <?php foreach ($etapasDaTrilha as $etapaItem): ?>
                             <li class="site-trilha-link-item">
@@ -67,6 +67,30 @@
                                     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                                 </svg>
                                 <a href="<?php echo url('homologacaoPublica/trilha/' . (int) $homologacaoDaTrilha['trilha_id']); ?>">Ver equipes homologadas</a>
+                            </li>
+                        <?php endif; ?>
+                        <?php
+                        // Fase 51: resultado FINAL da trilha (Nota Final e
+                        // colocacao), liberado por trilha pelo Admin.
+                        $resultadoFinalDaTrilha = null;
+
+                        foreach ($trilhasComResultadoFinalPublicado as $itemFinal) {
+                            if ((int) $itemFinal['trilha_id'] === (int) $trilha['id']) {
+                                $resultadoFinalDaTrilha = $itemFinal;
+                                break;
+                            }
+                        }
+                        ?>
+                        <?php if ($resultadoFinalDaTrilha !== null): ?>
+                            <li class="site-trilha-link-item">
+                                <svg class="site-trilha-link-icone" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M8 21h8"></path>
+                                    <path d="M12 17v4"></path>
+                                    <path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path>
+                                    <path d="M17 6h3a3 3 0 0 1-3 3"></path>
+                                    <path d="M7 6H4a3 3 0 0 0 3 3"></path>
+                                </svg>
+                                <a href="<?php echo url('resultadosPublicos/trilha/' . (int) $trilha['id']); ?>">Ver resultado final</a>
                             </li>
                         <?php endif; ?>
                         <?php foreach ($resultadosDaTrilha as $item): ?>

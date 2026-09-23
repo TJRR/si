@@ -134,6 +134,25 @@
                 </div>
             </div>
 
+            <?php if (!empty($termos)): ?>
+                <div class="trabalho-termos">
+                    <h3>Declarações</h3>
+                    <?php foreach ($termos as $termo): ?>
+                        <label class="trabalho-termo">
+                            <input type="checkbox" name="termos_aceitos[]" value="<?php echo (int) $termo['id']; ?>"
+                                <?php echo in_array((int) $termo['id'], array_map('intval', $termosMarcados), true) ? 'checked' : ''; ?>
+                                <?php echo (int) $termo['obrigatorio'] === 1 ? 'required' : ''; ?>>
+                            <span class="trabalho-termo-texto">
+                                <?php echo $termo['texto_html']; ?>
+                                <?php if ((int) $termo['obrigatorio'] === 1): ?>
+                                    <strong class="trabalho-termo-obrigatorio">(obrigatório)</strong>
+                                <?php endif; ?>
+                            </span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
             <button type="submit" class="btn">Enviar trabalho</button>
         </form>
     </div>

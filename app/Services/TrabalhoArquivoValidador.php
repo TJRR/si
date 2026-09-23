@@ -133,6 +133,42 @@ class TrabalhoArquivoValidador
         return $caminhoRelativo;
     }
 
+    /**
+     * Fase 51: mesma gravacao de salvar(), para arquivo que ja esta no disco
+     * do servidor (importacao de trabalho recebido por canal alternativo).
+     * move_uploaded_file() nao serve aqui, porque so aceita arquivo que veio
+     * de um envio HTTP desta mesma requisicao.
+     */
+    public static function salvarArquivoLocal($caminhoOrigem, $extensao, $trabalhoId)
+    {
+        $pastaBase = __DIR__ . '/../../storage/uploads/trabalhos';
+        $pastaFisica = $pastaBase . '/' . (int) $trabalhoId;
+
+        if (!is_file($caminhoOrigem)) {
+            throw new \RuntimeException('Arquivo de origem não encontrado: ' . $caminhoOrigem);
+        }
+
+        if (!is_dir($pastaFisica) && !mkdir($pastaFisica, 0755, true) && !is_dir($pastaFisica)) {
+            throw new \RuntimeException('Não foi possível criar a pasta de destino do arquivo.');
+        }
+
+        $nomeArquivo = bin2hex(random_bytes(16)) . '.' . $extensao;
+        $caminhoRelativo = (int) $trabalhoId . '/' . $nomeArquivo;
+
+        $baseReal = realpath($pastaBase);
+        $pastaReal = realpath($pastaFisica);
+
+        if ($baseReal === false || $pastaReal === false || strpos($pastaReal, $baseReal) !== 0) {
+            throw new \RuntimeException('Caminho de destino fora da área permitida.');
+        }
+
+        if (!copy($caminhoOrigem, $pastaBase . '/' . $caminhoRelativo)) {
+            throw new \RuntimeException('Falha ao copiar o arquivo para o servidor.');
+        }
+
+        return $caminhoRelativo;
+    }
+
     public static function caminhoFisico($caminhoRelativo)
     {
         $pastaBase = __DIR__ . '/../../storage/uploads/trabalhos';

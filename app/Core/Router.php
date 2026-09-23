@@ -11,6 +11,7 @@ use App\Controllers\ApresentacaoPitchAdminController;
 use App\Controllers\ApresentacaoPitchController;
 use App\Controllers\ApuracaoAdminController;
 use App\Controllers\AtividadeAdminController;
+use App\Controllers\AtividadeTipoAdminController;
 use App\Controllers\AuditoriaAdminController;
 use App\Controllers\AuthController;
 use App\Controllers\AvaliacaoController;
@@ -34,8 +35,14 @@ use App\Controllers\EditorMidiaAdminController;
 use App\Controllers\EtapaAdminController;
 use App\Controllers\EventoAdminController;
 use App\Controllers\EventoAppController;
+use App\Controllers\EventoBannerAdminController;
+use App\Controllers\EventoBlocoConteudoAdminController;
+use App\Controllers\EventoConfiguracaoVisualAdminController;
 use App\Controllers\EventoCronogramaAdminController;
 use App\Controllers\EventoFormularioAdminController;
+use App\Controllers\EventoPublicoController;
+use App\Controllers\EventoSecaoAdminController;
+use App\Controllers\EventoSlideAdminController;
 use App\Controllers\FaqAdminController;
 use App\Controllers\FaqConcursoAdminController;
 use App\Controllers\FormulaPontuacaoAdminController;
@@ -147,8 +154,15 @@ class Router
         'eventoInscricao' => EventoInscricaoPublicaController::class,
         'eventoApp' => EventoAppController::class,
         'eventos' => EventoAdminController::class,
+        'evento' => EventoPublicoController::class,
         'atividades' => AtividadeAdminController::class,
         'eventoFormulario' => EventoFormularioAdminController::class,
+        'eventoCabecalho' => EventoConfiguracaoVisualAdminController::class,
+        'eventoSlides' => EventoSlideAdminController::class,
+        'eventoBanners' => EventoBannerAdminController::class,
+        'eventoBlocos' => EventoBlocoConteudoAdminController::class,
+        'eventoSecoes' => EventoSecaoAdminController::class,
+        'atividadeTipos' => AtividadeTipoAdminController::class,
         'trabalhos' => TrabalhoAdminController::class,
         'trabalho' => TrabalhoController::class,
         'avaliacaoTrabalhos' => TrabalhoAvaliacaoController::class,

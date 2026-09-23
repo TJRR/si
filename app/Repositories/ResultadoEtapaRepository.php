@@ -12,6 +12,13 @@ use App\Core\Database;
 
 class ResultadoEtapaRepository
 {
+    /**
+     * Fase 51: o desempate entra na ordenacao pelo id, que e' a ordem em que
+     * as linhas foram inseridas na publicacao (ou seja, a classificacao ja
+     * desempatada). Sem isso, duas notas iguais podiam aparecer em ordem
+     * diferente da publicada, bem na tela que agora explica qual regra
+     * decidiu aquele empate.
+     */
     public function listarPorEtapa($etapaId)
     {
         $pdo = Database::conexao();
@@ -21,7 +28,7 @@ class ResultadoEtapaRepository
              INNER JOIN submissoes s ON s.id = re.submissao_id
              LEFT JOIN equipes eq ON eq.id = s.equipe_id
              WHERE re.etapa_id = :etapa_id
-             ORDER BY re.ne DESC'
+             ORDER BY re.ne DESC, re.id ASC'
         );
         $stmt->execute(['etapa_id' => $etapaId]);
 
@@ -60,8 +67,8 @@ class ResultadoEtapaRepository
             $remover->execute(['etapa_id' => $etapaId]);
 
             $inserir = $pdo->prepare(
-                'INSERT INTO resultados_etapa (submissao_id, etapa_id, ne, classificado, publicado_por)
-                 VALUES (:submissao_id, :etapa_id, :ne, :classificado, :publicado_por)'
+                'INSERT INTO resultados_etapa (submissao_id, etapa_id, ne, classificado, desempate_criterio, publicado_por)
+                 VALUES (:submissao_id, :etapa_id, :ne, :classificado, :desempate_criterio, :publicado_por)'
             );
 
             foreach ($linhas as $linha) {
@@ -74,6 +81,9 @@ class ResultadoEtapaRepository
                     'etapa_id' => $etapaId,
                     'ne' => $linha['ne'],
                     'classificado' => $linha['classificado'] ? 1 : 0,
+                    // Fase 51: regra que decidiu o empate com a submissao de
+                    // cima, congelada junto com o resultado publicado.
+                    'desempate_criterio' => isset($linha['desempate_criterio']) ? $linha['desempate_criterio'] : null,
                     'publicado_por' => $usuarioId,
                 ]);
             }

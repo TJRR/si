@@ -16,18 +16,40 @@ use App\Core\Database;
  */
 class MidiaRepository
 {
-    public function listar($tipo = null)
+    /**
+     * Fase 51: a listagem passou a ser por pasta. $pastaId nulo significa a
+     * raiz da biblioteca, que e' onde continua tudo o que existia antes das
+     * pastas (a coluna nasce nula).
+     */
+    public function listar($tipo = null, $pastaId = null)
     {
         $pdo = Database::conexao();
+        $condicoes = [$pastaId === null ? 'pasta_id IS NULL' : 'pasta_id = :pasta_id'];
+        $parametros = [];
 
-        if ($tipo !== null) {
-            $stmt = $pdo->prepare('SELECT * FROM midias WHERE tipo = :tipo ORDER BY criado_em DESC');
-            $stmt->execute(['tipo' => $tipo]);
-        } else {
-            $stmt = $pdo->query('SELECT * FROM midias ORDER BY criado_em DESC');
+        if ($pastaId !== null) {
+            $parametros['pasta_id'] = $pastaId;
         }
 
+        if ($tipo !== null) {
+            $condicoes[] = 'tipo = :tipo';
+            $parametros['tipo'] = $tipo;
+        }
+
+        $stmt = $pdo->prepare('SELECT * FROM midias WHERE ' . implode(' AND ', $condicoes) . ' ORDER BY criado_em DESC');
+        $stmt->execute($parametros);
+
         return $stmt->fetchAll();
+    }
+
+    public function moverPara($id, $pastaId)
+    {
+        $antes = $this->buscarPorId($id);
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE midias SET pasta_id = :pasta_id WHERE id = :id');
+        $stmt->execute(['pasta_id' => $pastaId, 'id' => $id]);
+
+        Auditoria::registrar('atualizar', 'midias', $id, $antes, ['pasta_id' => $pastaId]);
     }
 
     public function buscarPorId($id)
@@ -45,8 +67,8 @@ class MidiaRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'INSERT INTO midias (concurso_id, arquivo_path, tipo, alt_text, titulo, descricao, criado_por)
-             VALUES (:concurso_id, :arquivo_path, :tipo, :alt_text, :titulo, :descricao, :criado_por)'
+            'INSERT INTO midias (concurso_id, pasta_id, arquivo_path, tipo, alt_text, titulo, descricao, criado_por)
+             VALUES (:concurso_id, :pasta_id, :arquivo_path, :tipo, :alt_text, :titulo, :descricao, :criado_por)'
         );
         $stmt->execute($dados);
         $id = (int) $pdo->lastInsertId();

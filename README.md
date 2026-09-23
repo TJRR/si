@@ -223,8 +223,8 @@ por confirmação explícita do Administrador.
 
 **Semana de Inovação** é uma entidade nova, com o mesmo status estrutural do
 Concurso (cadastro próprio, sem nenhum vínculo com a edição em andamento do
-Prêmio de Inovação), divulgação em destaque na home e inscrição pública com
-acesso próprio — quem ainda não tem conta entra com Google ou cria um
+Prêmio de Inovação), página pública de entrada própria, separada da home do
+Concurso, e inscrição pública com acesso próprio — quem ainda não tem conta entra com Google ou cria um
 cadastro dedicado, ambos com liberação imediata, sem espera por aprovação
 manual (adequado ao volume de um evento aberto ao público). Quem se inscreve
 passa a acessar o evento por um **aplicativo web instalável** — mesmo link,
@@ -373,10 +373,10 @@ garantias.
 
 ## Histórico de evolução
 
-Quase cinquenta fases, a maioria já publicada em produção durante uma edição
-real do prêmio; o bloco de Eventos/Trabalhos (Fases 39 a 49) foi desenvolvido
-e testado localmente ao longo do caminho, com o primeiro deploy de tudo esse
-bloco de uma vez, junto com a Fase 49.
+Mais de cinquenta fases, a maioria já publicada em produção durante uma
+edição real do prêmio; o bloco de Eventos/Trabalhos (Fases 39 em diante) foi
+desenvolvido e testado localmente ao longo do caminho, com o primeiro deploy
+de tudo esse bloco de uma vez, junto com a Fase 51.
 
 | Fase | Entrega |
 |---|---|
@@ -428,6 +428,8 @@ bloco de uma vez, junto com a Fase 49.
 | 47 | **Confirmação de presença por atividade**, com código fixo próprio para o espaço físico, lido sempre pelo próprio participante |
 | 48 | **Atividades também em modalidade online e híbrida**, com código próprio de confirmação de presença online; **exportação de inscritos no formato exigido por sistemas parceiros**; cadastro de **Facilitadores** (instrutor, professor, palestrante) por atividade; **acesso próprio ao aplicativo de Evento**, separado do painel do Concurso; **temas de cor personalizáveis**, escolhidos por cada usuário |
 | 49 | **Trabalhos**: submissão e avaliação de artigos e resumos expandidos de um Evento, com motor próprio (sem relação com o Concurso), avaliação às cegas por avaliadores avulsos, cálculo de resultado com desempate configurável |
+| 50 | **Página pública própria para cada Evento**, separada da home do Concurso, com Cabeçalho, Quadros de apresentação, Faixas e Blocos de conteúdo exclusivos, e controle de quando cada uma fica publicada |
+| 51 | **Página do evento montada por seções**: ordem, liga e desliga e menu definidos pela organização, com componentes novos (contagem regressiva, cronograma, cartões, destaques, programação por dia, perguntas frequentes, local com mapa); **declarações de aceite configuráveis** na submissão de trabalhos; **importação de trabalhos recebidos por outro canal**, com convite de acesso aos autores pela fila de envio; **qual regra decidiu cada empate** no resultado; **divulgação pública do resultado final da trilha**; pastas na biblioteca de mídia |
 
 ---
 

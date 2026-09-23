@@ -21,8 +21,7 @@ return [
         ],
         [
             'nome' => 'Mover cima/baixo',
-            'icone' => 'mover_cima',
-            'como' => 'Ajusta a ordem de exibição dos campos.',
+            'como' => 'Arraste pela alça ⠿ ou use as setas: ajusta a ordem de exibição dos campos.',
         ],
         [
             'nome' => 'Remover',

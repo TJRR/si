@@ -157,13 +157,13 @@ class DocumentoAdminController extends Controller
         $this->redirecionar('documentos/index/' . $documento['concurso_id']);
     }
 
-    public function reordenar()
+    public function reordenar($concursoId)
     {
         header('Content-Type: application/json; charset=utf-8');
         $corpo = json_decode((string) file_get_contents('php://input'), true);
         $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
 
-        $this->documentos->reordenar($ids);
+        $this->documentos->reordenar($concursoId, $ids);
 
         echo json_encode(['ok' => true]);
     }
