@@ -33,7 +33,7 @@ class EventoSecaoCartoesRepository extends EventoSecaoRepositorioBase
 
     protected function colunasItens()
     {
-        return ['eixo_tematico_id', 'etiqueta', 'titulo', 'resumo', 'detalhe_html', 'cor'];
+        return ['eixo_tematico_id', 'etiqueta', 'titulo', 'resumo', 'detalhe_html', 'cor', 'cor_fundo'];
     }
 
     /**

@@ -4,3 +4,4 @@
 } ?>
     </div>
 </section>
+<?php $cabecalhoProprio = false; ?>

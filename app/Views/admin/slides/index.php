@@ -3,7 +3,7 @@
     exit('Acesso negado');
 } ?>
 <div class="pagina-titulo-acoes">
-    <h1>Apresentação de slides</h1>
+    <h1>Carrossel</h1>
     <div class="pagina-titulo-botoes">
         <a href="<?php echo url('slides/novo'); ?>" class="btn-acao">+ Novo quadro</a>
     </div>

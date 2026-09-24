@@ -152,7 +152,19 @@ class EventoConfiguracaoVisualAdminController extends Controller
             'cabecalho_efeito_entrada' => $efeitoEntrada,
             'logo_path' => $logoPath,
             'logo_alt' => isset($_POST['logo_alt']) && trim($_POST['logo_alt']) !== '' ? trim($_POST['logo_alt']) : null,
-            'quadros_avanco_automatico' => isset($_POST['quadros_avanco_automatico']) ? 1 : 0,
+            'fonte_titulo' => $this->fonteEscolhida('fonte_titulo'),
+            'fonte_texto' => $this->fonteEscolhida('fonte_texto'),
         ]);
+    }
+
+    /**
+     * So' aceita fonte da lista fechada; qualquer outro valor vira "fonte do
+     * site" (nulo), nunca um nome arbitrario enviado ao servico de fontes.
+     */
+    private function fonteEscolhida($campo)
+    {
+        $valor = isset($_POST[$campo]) ? $_POST[$campo] : '';
+
+        return isset(EventoConfiguracaoVisualRepository::FONTES[$valor]) ? $valor : null;
     }
 }

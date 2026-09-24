@@ -19,7 +19,7 @@ return [
         ],
         [
             'nome' => 'Confirmar inscrição',
-            'como' => 'Grava documento (obrigatório, estrutural) e os demais campos definidos pelo Administrador para este evento. Quando "Tipo de documento" for CPF, o número recebe máscara automática e é validado (dígito verificador) antes de salvar. Ao concluir, você já cai direto no painel do aplicativo.',
+            'como' => 'Grava o "Número do Documento de Identificação" (obrigatório, estrutural) e os demais campos definidos pelo Administrador para este evento. O "Tipo de Documento de Identificação" vem antes do número; quando for CPF, o número recebe máscara automática desde a primeira tecla e é validado (dígito verificador) antes de salvar. Ao concluir, você já cai direto no painel do aplicativo.',
         ],
     ],
     'conceitos' => [],

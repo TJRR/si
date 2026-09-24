@@ -30,9 +30,10 @@ class EventoBlocoConteudoRepository extends EventoConteudoRepositorioBase
     protected function colunas()
     {
         return [
-            'titulo', 'conteudo_html', 'imagem_path', 'imagem_alt', 'imagem_posicao',
-            'cor_fundo', 'cor_texto',
-            'cta_titulo', 'cta_link', 'cta_alinhamento', 'cta2_titulo', 'cta2_link',
+            'etiqueta', 'etiqueta_cor', 'titulo', 'conteudo_html', 'imagem_path', 'imagem_alt', 'imagem_posicao',
+            'cor_fundo', 'cor_texto', 'usar_cor_rodape',
+            'cta_titulo', 'cta_link', 'cta_cor_fundo', 'cta_cor_texto', 'cta_alinhamento',
+            'cta2_titulo', 'cta2_link', 'cta2_cor_fundo', 'cta2_cor_texto',
             'secao_ancora', 'ativo',
         ];
     }

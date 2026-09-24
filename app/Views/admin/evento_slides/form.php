@@ -12,7 +12,7 @@
     <fieldset>
         <legend>Imagem</legend>
 
-        <label>Imagem de fundo (opcional: 1440×800; o sistema gera a versão para celular automaticamente) <?php echo $slide !== null ? '(deixe em branco para manter a atual)' : ''; ?>:
+        <label>Imagem de fundo (opcional: 1920×560, mesma altura do carrossel; o sistema gera a versão para celular automaticamente) <?php echo $slide !== null ? '(deixe em branco para manter a atual)' : ''; ?>:
             <input type="file" name="imagem" accept="image/*">
         </label><br>
         <?php if ($slide !== null && !empty($slide['imagem_desktop_path'])): ?>

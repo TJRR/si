@@ -28,7 +28,7 @@ class SlideAdminController extends Controller
     {
         $this->renderizar('admin/slides/index', [
             'slides' => $this->slides->listar(),
-        ], 'Slideshow', ['tipo' => 'configuracaoSlides', 'id' => null]);
+        ], 'Carrossel', ['tipo' => 'configuracaoSlides', 'id' => null]);
     }
 
     public function novo()

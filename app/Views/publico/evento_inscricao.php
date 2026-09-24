@@ -19,6 +19,7 @@
      */
     $eventoId = isset($evento) && $evento !== null ? $evento['id'] : null;
     $tituloTopo = $evento !== null ? $evento['nome'] : 'Semana de Inovação';
+    $urlVoltar = $evento !== null ? urlPaginaEvento($evento['id']) : null;
     require __DIR__ . '/../eventoApp/_app_bar.php';
     ?>
     <?php else: ?>
@@ -45,7 +46,8 @@
                     </svg>
                 </button>
                 <?php endif; ?>
-                <a href="<?php echo url('home/index'); ?>" class="btn">Voltar ao início</a>
+                <?php // Reabertura da Fase 51 (item 1): volta a pagina do proprio evento, nunca a home do Concurso. ?>
+                <a href="<?php echo htmlspecialchars(urlPaginaEvento(isset($evento) && $evento !== null ? $evento['id'] : null), ENT_QUOTES, 'UTF-8'); ?>" class="btn">Voltar à página do evento</a>
             </nav>
         </div>
     </header>
@@ -82,7 +84,7 @@
 
         <h3>Acesso</h3>
         <a href="<?php echo url('auth/google') . '&contexto=evento'; ?>" class="btn btn-bordered">Entrar com o Google</a>
-        <a href="<?php echo url('auth/loginEvento'); ?>" class="btn btn-bordered">Entrar com e-mail e senha</a>
+        <a href="<?php echo url('auth/loginEvento/' . (int) $evento['id']); ?>" class="btn btn-bordered">Entrar com e-mail e senha</a>
     </div>
     </div>
 </div>
@@ -95,22 +97,28 @@
 
 <form method="post" action="<?php echo url('eventoInscricao/inscrever'); ?>"><?= campoCsrf() ?>
     <input type="hidden" name="evento_id" value="<?php echo (int) $evento['id']; ?>">
-    <fieldset style="margin-bottom:1em;">
-        <label>
-            Documento *
-            <input type="text" id="campo-documento" name="documento" value="<?php echo htmlspecialchars(isset($dados['documento']) ? $dados['documento'] : '', ENT_QUOTES, 'UTF-8'); ?>" required>
-        </label>
-        <?php if (isset($erros['documento'])): ?>
-            <br><span style="color:red;"><?php echo htmlspecialchars($erros['documento'], ENT_QUOTES, 'UTF-8'); ?></span>
-        <?php endif; ?>
-    </fieldset>
+    <?php
+    // Reabertura da Fase 51 (achado da equipe de Teste Cego): o tipo do
+    // documento vem antes do numero (a mascara de CPF vale desde a primeira
+    // tecla) e os dois rotulos dizem "Documento de Identificacao". O campo
+    // do tipo e' o configuravel achado pelo rotulo (constante do repositorio).
+    $campoTipoDocumento = null;
+    $demaisCampos = [];
 
-    <?php foreach ($campos as $campo): ?>
-        <?php
+    foreach ($campos as $campo) {
+        if ($campoTipoDocumento === null && $campo['rotulo'] === \App\Repositories\EventoCampoInscricaoRepository::ROTULO_TIPO_DOCUMENTO) {
+            $campoTipoDocumento = $campo;
+        } else {
+            $demaisCampos[] = $campo;
+        }
+    }
+
+    $renderizarCampo = function ($campo) use ($dados, $erros) {
         $nomePost = 'campo_' . $campo['id'];
         $valorAtual = isset($dados[$nomePost]) ? $dados[$nomePost] : '';
         $config = $campo['config_json'] !== null ? json_decode($campo['config_json'], true) : null;
         $opcoes = $config !== null && isset($config['opcoes']) ? $config['opcoes'] : [];
+        $ehTipoDocumento = $campo['rotulo'] === \App\Repositories\EventoCampoInscricaoRepository::ROTULO_TIPO_DOCUMENTO;
         ?>
         <fieldset style="margin-bottom:1em;">
             <label>
@@ -118,7 +126,7 @@
                 <?php echo $campo['obrigatorio'] ? '*' : ''; ?>
 
                 <?php if ($campo['tipo'] === 'lista_opcoes'): ?>
-                    <select name="<?php echo $nomePost; ?>" data-rotulo-campo="<?php echo htmlspecialchars($campo['rotulo'], ENT_QUOTES, 'UTF-8'); ?>" <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
+                    <select name="<?php echo $nomePost; ?>"<?php echo $ehTipoDocumento ? ' data-campo-tipo-documento' : ''; ?> <?php echo $campo['obrigatorio'] ? 'required' : ''; ?>>
                         <option value="">Selecione...</option>
                         <?php foreach ($opcoes as $opcao): ?>
                             <option value="<?php echo htmlspecialchars($opcao, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $valorAtual === $opcao ? 'selected' : ''; ?>><?php echo htmlspecialchars($opcao, ENT_QUOTES, 'UTF-8'); ?></option>
@@ -137,7 +145,23 @@
                 <br><span style="color:red;"><?php echo htmlspecialchars($erros[$nomePost], ENT_QUOTES, 'UTF-8'); ?></span>
             <?php endif; ?>
         </fieldset>
-    <?php endforeach; ?>
+        <?php
+    };
+    ?>
+
+    <?php if ($campoTipoDocumento !== null) { $renderizarCampo($campoTipoDocumento); } ?>
+
+    <fieldset style="margin-bottom:1em;">
+        <label>
+            <?php echo htmlspecialchars(\App\Repositories\EventoCampoInscricaoRepository::ROTULO_NUMERO_DOCUMENTO, ENT_QUOTES, 'UTF-8'); ?> *
+            <input type="text" id="campo-documento" name="documento" value="<?php echo htmlspecialchars(isset($dados['documento']) ? $dados['documento'] : '', ENT_QUOTES, 'UTF-8'); ?>" required>
+        </label>
+        <?php if (isset($erros['documento'])): ?>
+            <br><span style="color:red;"><?php echo htmlspecialchars($erros['documento'], ENT_QUOTES, 'UTF-8'); ?></span>
+        <?php endif; ?>
+    </fieldset>
+
+    <?php foreach ($demaisCampos as $campo) { $renderizarCampo($campo); } ?>
 
     <button type="submit" class="btn btn-bordered">Confirmar inscrição</button>
 </form>

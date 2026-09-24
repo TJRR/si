@@ -104,7 +104,7 @@ class TrabalhoAutorRepository
     /**
      * Usado por EventoAppController::index() para desviar, antes do
      * fallback de "sem inscricao", quem ganhou o perfil `inscrito` so' por
-     * ser autor principal de algum trabalho - mesmo padrao ja resolvido
+     * ser autor (principal ou coautor) de algum trabalho - mesmo padrao ja resolvido
      * para o Facilitador na Fase 48
      * (EventoAtividadeFacilitadorRepository::listarPorUsuarioEmQualquerEvento()).
      */
@@ -112,7 +112,7 @@ class TrabalhoAutorRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT COUNT(*) FROM trabalho_autores WHERE usuario_id = :usuario_id AND eh_autor_principal = 1'
+            'SELECT COUNT(*) FROM trabalho_autores WHERE usuario_id = :usuario_id'
         );
         $stmt->execute(['usuario_id' => $usuarioId]);
 
@@ -173,11 +173,11 @@ class TrabalhoAutorRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT t.*, ev.nome AS evento_nome
+            'SELECT t.*, ev.nome AS evento_nome, a.eh_autor_principal AS sou_autor_principal
              FROM trabalho_autores a
              INNER JOIN trabalhos t ON t.id = a.trabalho_id
              INNER JOIN eventos ev ON ev.id = t.evento_id
-             WHERE a.usuario_id = :usuario_id AND a.eh_autor_principal = 1
+             WHERE a.usuario_id = :usuario_id
              ORDER BY t.submetido_em DESC'
         );
         $stmt->execute(['usuario_id' => $usuarioId]);

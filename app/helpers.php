@@ -21,6 +21,98 @@ function url($rota)
     return config('base_path') . '/index.php?r=' . $rota;
 }
 
+/**
+ * Reabertura da Fase 51: destino de botao e link digitado pelo Admin nas
+ * telas da pagina do Evento (quadros, faixas, blocos, secoes). Aceita tres
+ * formatos: ancora da propria pagina (#programacao), endereco completo
+ * (https://..., mailto:, tel:, /caminho, index.php?...) ou rota interna do
+ * sistema (trabalho/formulario/1), que passa por url() para nunca virar
+ * endereco relativo inexistente. Endereco comecando por www. ganha https://.
+ */
+function linkPublico($valor)
+{
+    $valor = trim((string) $valor);
+
+    if ($valor === '') {
+        return '';
+    }
+
+    if (preg_match('#^(\#|https?://|mailto:|tel:|/|index\.php)#i', $valor) === 1) {
+        return $valor;
+    }
+
+    if (stripos($valor, 'www.') === 0) {
+        return 'https://' . $valor;
+    }
+
+    return url(ltrim($valor, '/'));
+}
+
+/**
+ * Reabertura da Fase 51: diz se uma cor de fundo (#rrggbb) e' clara o
+ * bastante para receber a etiqueta na cor de destaque do tema; em fundo
+ * forte (laranja, verde), a etiqueta usa a propria cor do texto. Cor vazia
+ * ou invalida conta como fundo branco.
+ */
+function corEhClara($hex, $limite = 0.85)
+{
+    if (!is_string($hex) || preg_match('/^#([0-9a-f]{6})$/i', trim($hex), $partes) !== 1) {
+        return true;
+    }
+
+    $canais = array_map(function ($par) {
+        $valor = hexdec($par) / 255;
+
+        return $valor <= 0.03928 ? $valor / 12.92 : pow(($valor + 0.055) / 1.055, 2.4);
+    }, str_split($partes[1], 2));
+
+    $luminancia = 0.2126 * $canais[0] + 0.7152 * $canais[1] + 0.0722 * $canais[2];
+
+    return $luminancia >= $limite;
+}
+
+/**
+ * Reabertura da Fase 51: atributo style com fundo e cor de texto
+ * cadastrados pelo Admin nas telas da pagina do Evento, ja escapado. Cor
+ * que nao seja #rrggbb e' ignorada (nunca vai crua para o atributo).
+ * $extra recebe pares propriedade => cor para variaveis CSS proprias
+ * (ex.: ['--cor-fita' => '#cbd744']).
+ */
+function estiloDeCores($corFundo = null, $corTexto = null, array $extra = [])
+{
+    $pares = ['background' => $corFundo, 'color' => $corTexto] + $extra;
+    $estilo = '';
+
+    foreach ($pares as $propriedade => $cor) {
+        if (is_string($cor) && preg_match('/^#[0-9a-f]{6}$/i', trim($cor)) === 1) {
+            $estilo .= $propriedade . ':' . trim($cor) . ';';
+        }
+    }
+
+    return htmlspecialchars($estilo, ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Reabertura da Fase 51 (achado do teste de fumaca, item 1): destino dos
+ * botoes "Voltar" nas telas do fluxo do Evento (inscricao, cadastro,
+ * entrada). Leva a pagina publica do proprio evento quando ela esta
+ * publicada; antes disso, a inscricao do evento. Nunca a home do Concurso.
+ */
+function urlPaginaEvento($eventoId)
+{
+    $eventoId = (int) $eventoId;
+
+    if ($eventoId <= 0) {
+        return url('eventoInscricao/index');
+    }
+
+    $configuracao = (new \App\Repositories\EventoConfiguracaoVisualRepository())->buscarPorEvento($eventoId);
+
+    return ($configuracao !== null && (int) $configuracao['publicado'] === 1)
+        ? url('evento/index/' . $eventoId)
+        : url('eventoInscricao/index/' . $eventoId);
+}
+
 function urlAbsoluta($rota)
 {
     $esquema = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
@@ -220,6 +312,30 @@ function telefoneComCodigoPais($numero)
     }
 
     return null;
+}
+
+/**
+ * Reabertura da Fase 51 (achado da equipe de Teste Cego): telefone
+ * brasileiro com DDD, fixo (10 digitos, "(12) 3456-7890") ou celular (11
+ * digitos, "(98) 76543-2100"), devolvido no formato de exibicao. Devolve
+ * null quando nao tem 10 ou 11 digitos ou quando o DDD comeca com zero.
+ * A mascara do navegador (assets/js/telefone-mascara.js) faz a mesma coisa
+ * enquanto a pessoa digita; esta e' a validacao que decide, no servidor.
+ */
+function formatarTelefoneBr($valor)
+{
+    $digitos = preg_replace('/\D/', '', (string) $valor);
+    $tamanho = strlen($digitos);
+
+    if (($tamanho !== 10 && $tamanho !== 11) || $digitos[0] === '0') {
+        return null;
+    }
+
+    $ddd = substr($digitos, 0, 2);
+
+    return $tamanho === 10
+        ? '(' . $ddd . ') ' . substr($digitos, 2, 4) . '-' . substr($digitos, 6)
+        : '(' . $ddd . ') ' . substr($digitos, 2, 5) . '-' . substr($digitos, 7);
 }
 
 /**

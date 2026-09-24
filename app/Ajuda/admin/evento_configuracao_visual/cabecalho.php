@@ -14,8 +14,9 @@ return [
             'como' => 'Enviada aqui, vale na página pública deste evento e no rodapé dela, sem depender do tema de cor escolhido por quem visita. Sem logo enviada, continua valendo a do tema.',
         ],
         [
-            'nome' => 'Quadros de apresentação',
-            'como' => 'Desmarcando a troca automática, o carrossel deste evento só muda de quadro pelas setas e pelos marcadores. A home do Concurso não muda com isso.',
+            'nome' => 'Fontes da página pública',
+            'como' => 'Escolha a fonte dos títulos e a fonte do texto da página pública deste evento, numa lista fechada. Sem escolha, a página usa as fontes padrão do sistema.',
+            'observacao' => 'O tempo e o efeito de troca do carrossel ficam em cada quadro, na sub-aba Carrossel, exatamente como na página inicial do Concurso.',
         ],
         [
             'nome' => 'Publicar esta página',

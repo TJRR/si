@@ -3,22 +3,49 @@
     exit('Acesso negado');
 } ?>
 <?php
-// Fase 51: programacao com uma aba por dia. No modo vinculado, os itens sao
-// Atividades do evento e o agrupamento (dia e turno) sai da data de inicio
-// de cada uma, sem o Admin precisar repetir nada; no modo digitado, sai do
-// que foi cadastrado na propria secao.
+// Fase 51, refeita na reabertura: programacao com uma aba por dia e, dentro
+// de cada dia, uma coluna por turno (Manha, Tarde e, se houver, Noite). No
+// modo vinculado, os itens sao Atividades do evento e o dia e o turno saem
+// da data de inicio de cada uma; no modo digitado, saem do que foi
+// cadastrado na secao.
+//
+// A faixa de horario do cabecalho de cada turno ("MANHA · 08h30 as 12h30")
+// sai sozinha dos horarios dos itens daquele turno naquele dia: do mais cedo
+// ao mais tarde. Quando todos os itens do turno tem o mesmo horario, ele vai
+// so' para o cabecalho e nao se repete em cada cartao.
 $vinculado = $dadosSecao['fonte'] === 'atividades';
 $porDia = [];
+
+$paraMinutos = function ($texto) {
+    preg_match_all('/(\d{1,2})h(\d{2})?/', (string) $texto, $achados, PREG_SET_ORDER);
+
+    return array_map(function ($achado) {
+        return ((int) $achado[1]) * 60 + (isset($achado[2]) && $achado[2] !== '' ? (int) $achado[2] : 0);
+    }, $achados);
+};
+
+$paraTexto = function ($minutos) {
+    $horas = intdiv($minutos, 60);
+    $resto = $minutos % 60;
+
+    return str_pad((string) $horas, 2, '0', STR_PAD_LEFT) . 'h' . ($resto > 0 ? str_pad((string) $resto, 2, '0', STR_PAD_LEFT) : '');
+};
 
 foreach ($itensSecao as $item) {
     if ($vinculado) {
         $dia = substr($item['data_inicio'], 0, 10);
         $hora = (int) substr($item['data_inicio'], 11, 2);
         $turno = $hora < 12 ? 'manha' : ($hora < 18 ? 'tarde' : 'noite');
+        $inicio = $paraTexto((int) substr($item['data_inicio'], 11, 2) * 60 + (int) substr($item['data_inicio'], 14, 2));
+        $horario = $inicio;
+
+        if (!empty($item['data_fim']) && substr($item['data_fim'], 0, 10) === $dia) {
+            $horario .= ' às ' . $paraTexto((int) substr($item['data_fim'], 11, 2) * 60 + (int) substr($item['data_fim'], 14, 2));
+        }
+
         $linha = [
-            'horario' => date('H\hi', strtotime($item['data_inicio'])),
+            'horario' => $horario,
             'tipo' => (string) $item['tipo_nome'],
-            'cor_tipo' => $item['tipo_cor'],
             'titulo' => $item['nome'],
             'local' => (string) $item['local'],
             'descricao' => '',
@@ -29,61 +56,89 @@ foreach ($itensSecao as $item) {
         $linha = [
             'horario' => (string) $item['horario_texto'],
             'tipo' => (string) $item['tipo_texto'],
-            'cor_tipo' => null,
             'titulo' => (string) $item['titulo'],
             'local' => (string) $item['local'],
             'descricao' => (string) $item['descricao'],
         ];
     }
 
-    $porDia[$dia]['manha'] = isset($porDia[$dia]['manha']) ? $porDia[$dia]['manha'] : [];
-    $porDia[$dia]['tarde'] = isset($porDia[$dia]['tarde']) ? $porDia[$dia]['tarde'] : [];
-    $porDia[$dia]['noite'] = isset($porDia[$dia]['noite']) ? $porDia[$dia]['noite'] : [];
+    if (!isset($porDia[$dia])) {
+        $porDia[$dia] = ['manha' => [], 'tarde' => [], 'noite' => []];
+    }
+
     $porDia[$dia][$turno][] = $linha;
 }
 
 ksort($porDia);
 $rotulosTurno = ['manha' => 'Manhã', 'tarde' => 'Tarde', 'noite' => 'Noite'];
+
+$faixaDoTurno = function (array $linhas) use ($paraMinutos, $paraTexto) {
+    $horarios = array_values(array_unique(array_map(function ($linha) {
+        return trim($linha['horario']);
+    }, $linhas)));
+
+    if (count($horarios) === 1) {
+        return ['faixa' => $horarios[0], 'repetir' => false];
+    }
+
+    $todos = [];
+
+    foreach ($horarios as $horario) {
+        $todos = array_merge($todos, $paraMinutos($horario));
+    }
+
+    if (count($todos) < 2) {
+        return ['faixa' => '', 'repetir' => true];
+    }
+
+    return ['faixa' => $paraTexto(min($todos)) . ' às ' . $paraTexto(max($todos)), 'repetir' => true];
+};
 ?>
 <?php include __DIR__ . '/_secao_abre.php'; ?>
         <?php if (!empty($porDia)): ?>
             <div class="evento-programacao" data-programacao>
-                <div class="evento-programacao-abas" role="tablist">
+                <div class="evento-programacao-abas" role="tablist" aria-label="Dias do evento">
                     <?php $numeroDia = 0; ?>
                     <?php foreach ($porDia as $dia => $turnos): ?>
                         <?php $numeroDia++; ?>
                         <button type="button" class="evento-programacao-aba" role="tab" aria-selected="false" data-programacao-aba="<?php echo htmlspecialchars($dia, ENT_QUOTES, 'UTF-8'); ?>">
-                            Dia <?php echo $numeroDia; ?><?php echo $dia !== '' ? ' · ' . htmlspecialchars(formatarData($dia), ENT_QUOTES, 'UTF-8') : ''; ?>
+                            Dia <?php echo $numeroDia; ?><?php echo $dia !== '' ? ' · ' . htmlspecialchars(date('d/m', strtotime($dia)), ENT_QUOTES, 'UTF-8') : ''; ?>
                         </button>
                     <?php endforeach; ?>
                 </div>
 
                 <?php foreach ($porDia as $dia => $turnos): ?>
-                    <div class="evento-programacao-painel" role="tabpanel" data-programacao-painel="<?php echo htmlspecialchars($dia, ENT_QUOTES, 'UTF-8'); ?>" hidden>
-                        <?php foreach ($rotulosTurno as $chaveTurno => $rotuloTurno): ?>
-                            <?php if (empty($turnos[$chaveTurno])): ?>
-                                <?php continue; ?>
-                            <?php endif; ?>
-                            <h3 class="evento-programacao-turno"><?php echo $rotuloTurno; ?></h3>
-                            <ul class="evento-programacao-lista">
-                                <?php foreach ($turnos[$chaveTurno] as $linha): ?>
-                                    <li>
-                                        <?php if ($linha['tipo'] !== ''): ?>
-                                            <span class="evento-etiqueta-tipo" style="<?php echo $linha['cor_tipo'] !== null ? 'background:' . htmlspecialchars($linha['cor_tipo'], ENT_QUOTES, 'UTF-8') . ';' : ''; ?>"><?php echo htmlspecialchars($linha['tipo'], ENT_QUOTES, 'UTF-8'); ?></span>
+                    <?php $turnosComItens = array_filter($turnos); ?>
+                    <div class="evento-programacao-painel evento-programacao-colunas-<?php echo count($turnosComItens); ?>" role="tabpanel" data-programacao-painel="<?php echo htmlspecialchars($dia, ENT_QUOTES, 'UTF-8'); ?>" hidden>
+                        <?php foreach ($turnosComItens as $chaveTurno => $linhas): ?>
+                            <?php $faixa = $faixaDoTurno($linhas); ?>
+                            <div class="evento-programacao-turno evento-turno-<?php echo $chaveTurno; ?>">
+                                <h3 class="evento-programacao-turno-titulo">
+                                    <?php echo $rotulosTurno[$chaveTurno]; ?><?php echo $faixa['faixa'] !== '' ? ' · ' . htmlspecialchars($faixa['faixa'], ENT_QUOTES, 'UTF-8') : ''; ?>
+                                </h3>
+                                <?php foreach ($linhas as $linha): ?>
+                                    <?php
+                                    $rotuloCartao = implode(' · ', array_filter([
+                                        $linha['tipo'],
+                                        $faixa['repetir'] ? $linha['horario'] : '',
+                                    ], function ($parte) {
+                                        return trim((string) $parte) !== '';
+                                    }));
+                                    ?>
+                                    <article class="evento-programacao-cartao">
+                                        <?php if ($rotuloCartao !== ''): ?>
+                                            <p class="evento-programacao-rotulo"><?php echo htmlspecialchars($rotuloCartao, ENT_QUOTES, 'UTF-8'); ?></p>
                                         <?php endif; ?>
-                                        <?php if ($linha['horario'] !== ''): ?>
-                                            <span class="evento-programacao-hora"><?php echo htmlspecialchars($linha['horario'], ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <?php endif; ?>
-                                        <strong><?php echo htmlspecialchars($linha['titulo'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                                        <h4><?php echo htmlspecialchars($linha['titulo'], ENT_QUOTES, 'UTF-8'); ?></h4>
                                         <?php if ((int) $dadosSecao['mostrar_local'] === 1 && $linha['local'] !== ''): ?>
-                                            <span class="evento-programacao-local"><?php echo htmlspecialchars($linha['local'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <p class="evento-programacao-local"><?php echo htmlspecialchars($linha['local'], ENT_QUOTES, 'UTF-8'); ?></p>
                                         <?php endif; ?>
                                         <?php if ($linha['descricao'] !== ''): ?>
-                                            <span class="evento-programacao-descricao"><?php echo htmlspecialchars($linha['descricao'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <p class="evento-programacao-descricao"><?php echo htmlspecialchars($linha['descricao'], ENT_QUOTES, 'UTF-8'); ?></p>
                                         <?php endif; ?>
-                                    </li>
+                                    </article>
                                 <?php endforeach; ?>
-                            </ul>
+                            </div>
                         <?php endforeach; ?>
                     </div>
                 <?php endforeach; ?>

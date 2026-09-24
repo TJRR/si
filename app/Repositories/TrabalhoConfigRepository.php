@@ -67,6 +67,9 @@ class TrabalhoConfigRepository
             'metodos_submissao_json', 'extensoes_editavel_json', 'tamanho_maximo_mb',
             'exige_telefone_contato', 'nota_corte_aprovacao', 'regra_selecao_tipo',
             'regra_selecao_valor', 'status',
+            // Reabertura da Fase 51: inscricao automatica dos autores ao
+            // submeter e texto editavel do e-mail de recebimento.
+            'inscrever_autores_ao_submeter', 'mensagem_recebimento_html',
         ];
 
         $colunas = implode(', ', $campos);

@@ -7,6 +7,8 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
+
 /**
  * Fase 49: validacao e armazenamento de arquivo de Trabalhos - classe
  * NOVA e isolada, inspirada no padrao de
@@ -61,44 +63,174 @@ class TrabalhoArquivoValidador
         return array_keys(self::$mimesPorExtensao);
     }
 
-    public static function validar(array $arquivo, array $extensoesPermitidas, $limiteBytes)
+    /**
+     * Tipo de conteudo que identifica, sem ambiguidade, cada formato aceito:
+     * usado para decidir pelo CONTEUDO quando o nome do arquivo nao traz uma
+     * extensao aceita. Tipos ambiguos (application/zip, octet-stream) ficam
+     * de fora de proposito: so' valem quando a extensao do nome confirma.
+     */
+    private static $extensaoPeloTipo = [
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+        'application/msword' => 'doc',
+        'application/pdf' => 'pdf',
+        'application/vnd.oasis.opendocument.text' => 'odt',
+        'text/rtf' => 'rtf',
+        'application/rtf' => 'rtf',
+    ];
+
+    /**
+     * Reabertura da Fase 51 (achados da equipe de Teste Cego):
+     *
+     * 1. O tipo devolvido pelo finfo e' dividido nos pontos onde comeca um
+     *    novo tipo (application/ ou text/) e a checagem vale para QUALQUER
+     *    parte: com certos arquivos Word a biblioteca do servidor devolve o
+     *    mesmo tipo escrito duas vezes seguidas, e a comparacao exata
+     *    recusava um .docx verdadeiro ("o conteudo nao corresponde a
+     *    extensao").
+     * 2. Quando o nome nao traz uma extensao aceita (seletores de arquivo de
+     *    celular entregam documentos da nuvem sem extensao ou com outro
+     *    nome), a decisao passa a ser pelo conteudo: se e' inequivocamente
+     *    Word ou PDF e o formato esta entre os aceitos, o arquivo entra e e'
+     *    gravado com a extensao certa. Continua exigindo conteudo valido.
+     * 3. Toda recusa fica na auditoria (nome, extensao lida, tipos
+     *    detectados, tamanho, campo), para a proxima queixa ter fatos.
+     */
+    public static function validar(array $arquivo, array $extensoesPermitidas, $limiteBytes, $campo = null)
     {
         if (!isset($arquivo['error']) || $arquivo['error'] === UPLOAD_ERR_NO_FILE) {
             return ['valido' => false, 'mensagem' => 'Nenhum arquivo enviado.'];
         }
 
+        $contexto = [
+            'campo' => $campo,
+            'nome_original' => self::nomeLimpo(isset($arquivo['name']) ? $arquivo['name'] : ''),
+            'tamanho' => isset($arquivo['size']) ? (int) $arquivo['size'] : null,
+            'extensoes_aceitas' => array_values($extensoesPermitidas),
+        ];
+
         if ($arquivo['error'] !== UPLOAD_ERR_OK) {
-            return ['valido' => false, 'mensagem' => 'Falha no envio do arquivo.'];
+            $contexto['codigo_erro_envio'] = (int) $arquivo['error'];
+
+            return self::rejeitar('Falha no envio do arquivo. Tente novamente; se continuar, envie um arquivo menor.', $contexto);
         }
 
         if (!is_uploaded_file($arquivo['tmp_name'])) {
-            return ['valido' => false, 'mensagem' => 'Arquivo inválido.'];
+            return self::rejeitar('Arquivo inválido.', $contexto);
         }
 
         if ($arquivo['size'] > $limiteBytes) {
             $limiteMb = (int) round($limiteBytes / 1024 / 1024);
 
-            return ['valido' => false, 'mensagem' => "Arquivo maior que o limite de {$limiteMb}MB."];
+            return self::rejeitar("Arquivo maior que o limite de {$limiteMb}MB.", $contexto);
         }
 
-        $extensaoEnviada = strtolower(pathinfo($arquivo['name'], PATHINFO_EXTENSION));
+        $extensaoEnviada = strtolower(pathinfo($contexto['nome_original'], PATHINFO_EXTENSION));
+        $tipos = self::tiposDetectados($arquivo['tmp_name']);
+        $contexto['extensao_lida'] = $extensaoEnviada;
+        $contexto['tipos_detectados'] = $tipos;
 
-        if (!in_array($extensaoEnviada, $extensoesPermitidas, true)) {
-            return ['valido' => false, 'mensagem' => 'Extensão de arquivo não aceita para esta submissão.'];
+        $nomeExibido = "'" . $contexto['nome_original'] . "'";
+        $aceitas = self::rotuloExtensoes($extensoesPermitidas);
+
+        if (in_array($extensaoEnviada, $extensoesPermitidas, true)) {
+            if (!isset(self::$mimesPorExtensao[$extensaoEnviada])) {
+                return self::rejeitar('Extensão de arquivo não suportada pelo sistema.', $contexto);
+            }
+
+            if (count(array_intersect($tipos, self::$mimesPorExtensao[$extensaoEnviada])) > 0) {
+                return ['valido' => true, 'mensagem' => null, 'extensao' => $extensaoEnviada];
+            }
+
+            $porConteudo = self::extensaoPeloConteudo($tipos, $extensoesPermitidas);
+
+            if ($porConteudo !== null) {
+                return ['valido' => true, 'mensagem' => null, 'extensao' => $porConteudo];
+            }
+
+            return self::rejeitar(
+                "O conteúdo do arquivo {$nomeExibido} não corresponde à extensão .{$extensaoEnviada}. Abra o arquivo no editor de textos, salve novamente no formato aceito ({$aceitas}) e envie de novo.",
+                $contexto
+            );
         }
 
-        if (!isset(self::$mimesPorExtensao[$extensaoEnviada])) {
-            return ['valido' => false, 'mensagem' => 'Extensão de arquivo não suportada pelo sistema.'];
+        $porConteudo = self::extensaoPeloConteudo($tipos, $extensoesPermitidas);
+
+        if ($porConteudo !== null) {
+            return ['valido' => true, 'mensagem' => null, 'extensao' => $porConteudo];
         }
 
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $mimeReal = $finfo->file($arquivo['tmp_name']);
+        $descricaoExtensao = $extensaoEnviada !== '' ? "tem a extensão .{$extensaoEnviada}" : 'não tem extensão';
 
-        if (!in_array($mimeReal, self::$mimesPorExtensao[$extensaoEnviada], true)) {
-            return ['valido' => false, 'mensagem' => 'O conteúdo do arquivo não corresponde à extensão informada.'];
+        return self::rejeitar("O arquivo {$nomeExibido} {$descricaoExtensao}; são aceitas: {$aceitas}.", $contexto);
+    }
+
+    /**
+     * Tipos que o finfo reconheceu, ja separados: o mesmo tipo repetido, ou
+     * dois tipos grudados, viram itens distintos.
+     */
+    private static function tiposDetectados($caminho)
+    {
+        $bruto = (new \finfo(FILEINFO_MIME_TYPE))->file($caminho);
+
+        if (!is_string($bruto) || $bruto === '') {
+            return [];
         }
 
-        return ['valido' => true, 'mensagem' => null, 'extensao' => $extensaoEnviada];
+        $partes = preg_split('#(?=(?:application|text)/)#', $bruto, -1, PREG_SPLIT_NO_EMPTY);
+        $tipos = [];
+
+        foreach ($partes as $parte) {
+            $parte = trim($parte);
+
+            if ($parte !== '') {
+                $tipos[$parte] = true;
+            }
+        }
+
+        return array_keys($tipos);
+    }
+
+    /**
+     * Extensao inequivoca do conteudo, se ela estiver entre as aceitas.
+     */
+    private static function extensaoPeloConteudo(array $tipos, array $extensoesPermitidas)
+    {
+        foreach ($tipos as $tipo) {
+            if (isset(self::$extensaoPeloTipo[$tipo]) && in_array(self::$extensaoPeloTipo[$tipo], $extensoesPermitidas, true)) {
+                return self::$extensaoPeloTipo[$tipo];
+            }
+        }
+
+        return null;
+    }
+
+    private static function rotuloExtensoes(array $extensoes)
+    {
+        return implode(', ', array_map(function ($extensao) {
+            return '.' . $extensao;
+        }, $extensoes));
+    }
+
+    /**
+     * Nome do arquivo pronto para aparecer em mensagem e na auditoria: sem
+     * caracteres de controle, sem bytes invalidos, no maximo 80 caracteres.
+     */
+    private static function nomeLimpo($nome)
+    {
+        $nome = (string) $nome;
+        $convertido = @iconv('UTF-8', 'UTF-8//IGNORE', $nome);
+        $nome = $convertido !== false ? $convertido : '';
+        $nome = preg_replace('/[\x00-\x1f\x7f]/u', '', $nome);
+        $nome = $nome !== null ? $nome : '';
+
+        return mb_strlen($nome, 'UTF-8') > 80 ? mb_substr($nome, 0, 77, 'UTF-8') . '...' : $nome;
+    }
+
+    private static function rejeitar($mensagem, array $contexto)
+    {
+        Auditoria::registrar('arquivo_trabalho_rejeitado', 'trabalhos', null, null, $contexto, $mensagem);
+
+        return ['valido' => false, 'mensagem' => $mensagem];
     }
 
     /**

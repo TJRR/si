@@ -1,6 +1,12 @@
 -- Fase 50 (correcao de arquitetura): faixas (Banner/Hero) proprias de cada
 -- Evento, tabela dedicada (evento_id NOT NULL). Mesmas colunas de `banners`
 -- apos a migration 078, com evento_id no lugar de concurso_id.
+--
+-- Reabertura da Fase 51 (colunas acrescentadas na origem, premissa 8 de
+-- Premissas.md): cor_texto, porque o texto da faixa era sempre branco e
+-- sumia sobre fundo claro; formato 'bandeirinha' desenha o conteudo como a
+-- fita da identidade visual (retangulo com ponta triangular a direita, na
+-- cor de fundo cadastrada), sobre fundo branco.
 CREATE TABLE IF NOT EXISTS evento_banners (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     evento_id INT UNSIGNED NOT NULL,
@@ -10,6 +16,8 @@ CREATE TABLE IF NOT EXISTS evento_banners (
     cor_fundo VARCHAR(7) NULL,
     conteudo_html TEXT NULL,
     conteudo_alinhamento ENUM('esquerda','centro','direita') NOT NULL DEFAULT 'centro',
+    cor_texto VARCHAR(7) NULL,
+    formato ENUM('retangulo','bandeirinha') NOT NULL DEFAULT 'retangulo',
     cta_titulo VARCHAR(150) NULL,
     cta_destino_tipo ENUM('link_interno','externo','ancora','arquivo','video') NULL,
     cta_destino_valor VARCHAR(255) NULL,

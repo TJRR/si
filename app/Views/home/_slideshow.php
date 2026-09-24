@@ -3,12 +3,7 @@
     exit('Acesso negado');
 } ?>
 <?php if (!empty($slides)): ?>
-<?php
-// Fase 51: o avanco automatico passou a ser opcional por evento. A home do
-// Concurso nao passa a variavel e continua avancando sozinha, como sempre.
-$avancoAutomatico = !isset($avancoAutomaticoQuadros) || $avancoAutomaticoQuadros;
-?>
-<section class="site-slideshow" id="<?php echo isset($ancoraSecao) ? htmlspecialchars($ancoraSecao, ENT_QUOTES, 'UTF-8') : 'slideshow-principal'; ?>" aria-roledescription="carrossel" aria-label="Destaques" data-avanco-automatico="<?php echo $avancoAutomatico ? '1' : '0'; ?>">
+<section class="site-slideshow" id="<?php echo isset($ancoraSecao) ? htmlspecialchars($ancoraSecao, ENT_QUOTES, 'UTF-8') : 'slideshow-principal'; ?>" aria-roledescription="carrossel" aria-label="Destaques">
     <div class="site-slideshow-trilho">
         <?php foreach ($slides as $indice => $slide): ?>
         <div class="site-slide site-slide-efeito-<?php echo htmlspecialchars($slide['efeito_transicao'], ENT_QUOTES, 'UTF-8'); ?><?php echo $indice === 0 ? ' ativo' : ''; ?>"
@@ -44,7 +39,7 @@ $avancoAutomatico = !isset($avancoAutomaticoQuadros) || $avancoAutomaticoQuadros
                     <div class="site-slide-separador" style="background-color:<?php echo htmlspecialchars($slide['separador_cor'], ENT_QUOTES, 'UTF-8'); ?>"></div>
                 <?php endif; ?>
                 <?php if (!empty($slide['cta_titulo']) && !empty($slide['cta_link'])): ?>
-                    <a href="<?php echo htmlspecialchars($slide['cta_link'], ENT_QUOTES, 'UTF-8'); ?>"
+                    <a href="<?php echo htmlspecialchars(linkPublico($slide['cta_link']), ENT_QUOTES, 'UTF-8'); ?>"
                        target="<?php echo htmlspecialchars($slide['cta_target'], ENT_QUOTES, 'UTF-8'); ?>"
                        <?php echo $slide['cta_target'] === '_blank' ? 'rel="noopener"' : ''; ?>
                        class="site-slide-cta site-slide-cta-<?php echo htmlspecialchars($slide['cta_tamanho'], ENT_QUOTES, 'UTF-8'); ?> efeito-<?php echo htmlspecialchars($slide['cta_efeito_hover'], ENT_QUOTES, 'UTF-8'); ?>"
@@ -53,7 +48,7 @@ $avancoAutomatico = !isset($avancoAutomaticoQuadros) || $avancoAutomaticoQuadros
                     </a>
                 <?php endif; ?>
                 <?php if (!empty($slide['cta2_titulo']) && !empty($slide['cta2_link'])): ?>
-                    <a href="<?php echo htmlspecialchars($slide['cta2_link'], ENT_QUOTES, 'UTF-8'); ?>"
+                    <a href="<?php echo htmlspecialchars(linkPublico($slide['cta2_link']), ENT_QUOTES, 'UTF-8'); ?>"
                        target="<?php echo htmlspecialchars($slide['cta2_target'], ENT_QUOTES, 'UTF-8'); ?>"
                        <?php echo $slide['cta2_target'] === '_blank' ? 'rel="noopener"' : ''; ?>
                        class="site-slide-cta site-slide-cta-secundario site-slide-cta-<?php echo htmlspecialchars($slide['cta_tamanho'], ENT_QUOTES, 'UTF-8'); ?>"

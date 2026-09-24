@@ -23,6 +23,7 @@ class EventoBannerRepository extends EventoConteudoRepositorioBase
     ];
     public const CTA_EFEITOS_HOVER = ['nenhum', 'escurecer', 'clarear', 'escala', 'borda', 'iluminar', 'inverter'];
     public const CONTEUDO_ALINHAMENTOS = ['esquerda', 'centro', 'direita'];
+    public const FORMATOS = ['retangulo', 'bandeirinha'];
 
     protected function tabela()
     {
@@ -32,7 +33,7 @@ class EventoBannerRepository extends EventoConteudoRepositorioBase
     protected function colunas()
     {
         return [
-            'imagem_desktop_path', 'imagem_mobile_path', 'imagem_alt', 'cor_fundo',
+            'imagem_desktop_path', 'imagem_mobile_path', 'imagem_alt', 'cor_fundo', 'cor_texto', 'formato',
             'conteudo_html', 'conteudo_alinhamento', 'cta_titulo', 'cta_destino_tipo', 'cta_destino_valor',
             'cta_posicao', 'cta_efeito_hover', 'ativo',
         ];

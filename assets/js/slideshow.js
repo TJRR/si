@@ -36,13 +36,8 @@
     function proximo() { irPara(indiceAtual + 1); }
     function anterior() { irPara(indiceAtual - 1); }
 
-    // Fase 51: a pagina do Evento pode desligar o avanco automatico
-    // (data-avanco-automatico="0"); a home do Concurso nunca manda o
-    // atributo e continua avancando sozinha.
-    var avancoAutomaticoLigado = secao.getAttribute('data-avanco-automatico') !== '0';
-
     function iniciarAutoAvanco() {
-        if (!avancoAutomaticoLigado || reduzirMovimento || slides.length < 2) {
+        if (reduzirMovimento || slides.length < 2) {
             return;
         }
 

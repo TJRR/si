@@ -3,17 +3,19 @@
     exit('Acesso negado');
 } ?>
 <?php
-// Fase 51: destaques da programacao. No modo vinculado os itens sao
-// Atividades do proprio evento (nome, data e local vem de la); no modo
-// digitado, sao os itens cadastrados na secao. O que foi digitado no item
-// sempre vence o dado da atividade, para a chamada da pagina poder ser
-// diferente do nome oficial.
+// Fase 51, refeita na reabertura: destaques da programacao em cartoes
+// brancos com icone num quadrado colorido, titulo, quando e onde, e a
+// descricao. No modo vinculado os itens sao Atividades do proprio evento;
+// no modo digitado, sao os itens cadastrados na secao (o que foi digitado
+// no item sempre vence o dado da atividade). Os cartoes entram em
+// sequencia quando aparecem na tela (evento-pagina.js).
 $vinculado = $dadosSecao['fonte'] === 'atividades';
+$icones = \App\Repositories\EventoSecaoDestaquesRepository::ICONES;
 ?>
 <?php include __DIR__ . '/_secao_abre.php'; ?>
         <?php if (!empty($itensSecao)): ?>
-            <div class="evento-destaques evento-cartoes-colunas-<?php echo (int) $dadosSecao['colunas']; ?>">
-                <?php foreach ($itensSecao as $item): ?>
+            <div class="evento-destaques evento-colunas-<?php echo (int) $dadosSecao['colunas']; ?>">
+                <?php foreach ($itensSecao as $indiceItem => $item): ?>
                     <?php
                     $titulo = $vinculado
                         ? $item['nome']
@@ -24,22 +26,23 @@ $vinculado = $dadosSecao['fonte'] === 'atividades';
                     $local = $vinculado
                         ? (string) $item['local']
                         : (!empty($item['local']) ? $item['local'] : (string) $item['atividade_local']);
-                    $tipoNome = !empty($item['tipo_nome']) ? $item['tipo_nome'] : (!$vinculado && !empty($item['tipo_texto']) ? $item['tipo_texto'] : '');
-                    $corTipo = !empty($item['tipo_cor']) ? $item['tipo_cor'] : null;
+                    $linhaQuando = implode(' · ', array_filter([$quando, $local], function ($parte) {
+                        return trim((string) $parte) !== '';
+                    }));
+                    $chaveIcone = !$vinculado && !empty($item['icone']) && isset($icones[$item['icone']]) ? $item['icone'] : null;
                     ?>
-                    <article class="evento-destaque">
-                        <?php if ($tipoNome !== ''): ?>
-                            <span class="evento-etiqueta-tipo" style="<?php echo $corTipo !== null ? 'background:' . htmlspecialchars($corTipo, ENT_QUOTES, 'UTF-8') . ';' : ''; ?>"><?php echo htmlspecialchars($tipoNome, ENT_QUOTES, 'UTF-8'); ?></span>
+                    <article class="evento-destaque" data-evento-entrada style="--ordem-entrada:<?php echo (int) $indiceItem; ?>;">
+                        <?php if ($chaveIcone !== null): ?>
+                            <span class="evento-destaque-icone" style="<?php echo estiloDeCores(!empty($item['icone_cor']) ? $item['icone_cor'] : null, corEhClara(!empty($item['icone_cor']) ? $item['icone_cor'] : null, 0.2) ? '#141413' : '#ffffff'); ?>" aria-hidden="true">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><?php echo $icones[$chaveIcone]['svg']; ?></svg>
+                            </span>
                         <?php endif; ?>
                         <h3><?php echo htmlspecialchars((string) $titulo, ENT_QUOTES, 'UTF-8'); ?></h3>
-                        <?php if ($quando !== ''): ?>
-                            <p class="evento-destaque-quando"><?php echo htmlspecialchars($quando, ENT_QUOTES, 'UTF-8'); ?></p>
-                        <?php endif; ?>
-                        <?php if ($local !== ''): ?>
-                            <p class="evento-destaque-local"><?php echo htmlspecialchars($local, ENT_QUOTES, 'UTF-8'); ?></p>
+                        <?php if ($linhaQuando !== ''): ?>
+                            <p class="evento-destaque-quando"><?php echo htmlspecialchars($linhaQuando, ENT_QUOTES, 'UTF-8'); ?></p>
                         <?php endif; ?>
                         <?php if (!$vinculado && !empty($item['descricao'])): ?>
-                            <p><?php echo htmlspecialchars($item['descricao'], ENT_QUOTES, 'UTF-8'); ?></p>
+                            <p class="evento-destaque-descricao"><?php echo htmlspecialchars($item['descricao'], ENT_QUOTES, 'UTF-8'); ?></p>
                         <?php endif; ?>
                     </article>
                 <?php endforeach; ?>

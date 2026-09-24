@@ -17,6 +17,11 @@
 -- ON DELETE CASCADE: quem apaga um bloco ou um componente tambem apaga a
 -- linha de ordem correspondente (EventoSecaoOrdemRepository::removerItem()),
 -- sempre na mesma transacao.
+--
+-- Reabertura da Fase 51 (coluna acrescentada na origem, premissa 8 de
+-- Premissas.md): ancora, o nome editavel do destino de rolagem da secao
+-- (o que vai depois do # nos links do menu, dos quadros e dos botoes).
+-- Vazia, vale o nome montado automaticamente (ou a ancora do proprio bloco).
 CREATE TABLE IF NOT EXISTS evento_secoes_ordem (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     evento_id INT UNSIGNED NOT NULL,
@@ -29,6 +34,7 @@ CREATE TABLE IF NOT EXISTS evento_secoes_ordem (
     ativo TINYINT(1) NOT NULL DEFAULT 1,
     mostrar_no_menu TINYINT(1) NOT NULL DEFAULT 0,
     rotulo_menu VARCHAR(60) NULL,
+    ancora VARCHAR(60) NULL,
     CONSTRAINT fk_evento_secoes_ordem_evento FOREIGN KEY (evento_id) REFERENCES eventos (id),
     UNIQUE KEY uq_evento_secoes_ordem_item (evento_id, tipo, referencia_id),
     INDEX idx_evento_secoes_ordem_evento (evento_id, ordem)

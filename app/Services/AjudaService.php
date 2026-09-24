@@ -22,7 +22,14 @@ if (!defined('SI_BOOT')) {
  */
 class AjudaService
 {
-    public static function paraView($view)
+    /**
+     * $dadosDaTela (opcional): os dados que o controller entregou a' tela.
+     * Um arquivo de ajuda pode devolver, em vez do array fixo, uma FUNCAO que
+     * recebe esses dados e monta o texto conforme o que a tela realmente
+     * mostra (ex.: so' as formas de envio habilitadas naquele evento). Os
+     * arquivos em formato de array continuam funcionando sem mudanca.
+     */
+    public static function paraView($view, array $dadosDaTela = [])
     {
         $caminho = __DIR__ . '/../Ajuda/' . $view . '.php';
 
@@ -31,6 +38,10 @@ class AjudaService
         }
 
         $dados = require $caminho;
+
+        if ($dados instanceof \Closure) {
+            $dados = $dados($dadosDaTela);
+        }
         $dados['conceitos'] = array_map(
             static function ($slug) {
                 return self::conceito($slug);

@@ -42,6 +42,7 @@ use App\Controllers\EventoCronogramaAdminController;
 use App\Controllers\EventoFormularioAdminController;
 use App\Controllers\EventoPublicoController;
 use App\Controllers\EventoSecaoAdminController;
+use App\Controllers\EventoDocumentoAdminController;
 use App\Controllers\EventoSlideAdminController;
 use App\Controllers\FaqAdminController;
 use App\Controllers\FaqConcursoAdminController;
@@ -162,11 +163,19 @@ class Router
         'eventoBanners' => EventoBannerAdminController::class,
         'eventoBlocos' => EventoBlocoConteudoAdminController::class,
         'eventoSecoes' => EventoSecaoAdminController::class,
+        'eventoDocumentos' => EventoDocumentoAdminController::class,
         'atividadeTipos' => AtividadeTipoAdminController::class,
         'trabalhos' => TrabalhoAdminController::class,
         'trabalho' => TrabalhoController::class,
         'avaliacaoTrabalhos' => TrabalhoAvaliacaoController::class,
     ];
+
+    /**
+     * Reabertura da Fase 51: modulos do fluxo do Evento em que sessao
+     * vencida vira visitante sem sessao, em vez de ir para o login do
+     * Concurso (ver despachar()).
+     */
+    private static $modulosFluxoEvento = ['evento', 'eventoInscricao', 'eventoApp', 'trabalho'];
 
     public function despachar($r)
     {
@@ -225,10 +234,28 @@ class Router
 
         if (Auth::autenticado()) {
             if (!Auth::validarAtividade($timeoutMinutos * 60)) {
-                header('Location: ' . url('auth/login') . '&expirado=1');
-                exit;
+                // Reabertura da Fase 51 (achado do teste de fumaca, item 4):
+                // sessao vencida numa rota do fluxo do Evento (pagina
+                // publica, inscricao, aplicativo, submissao de trabalho)
+                // nao pode cair no login do Concurso, que depois leva ao
+                // painel administrativo. Nesses modulos a pessoa segue como
+                // visitante sem sessao, e cada controller ja sabe o que
+                // fazer com visitante (mostrar a pagina, pedir cadastro ou
+                // entrada pelo fluxo do evento, guardando o retorno). A
+                // sessao antiga ja foi destruida por validarAtividade();
+                // abre-se uma nova, com identificador novo e token novo.
+                if (in_array($modulo, self::$modulosFluxoEvento, true)) {
+                    session_start();
+                    session_regenerate_id(true);
+                    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+                } else {
+                    header('Location: ' . url('auth/login') . '&expirado=1');
+                    exit;
+                }
             }
+        }
 
+        if (Auth::autenticado()) {
             // Fase 17 (Melhoria 2): durante "visualizar como outro usuario",
             // so' leitura (GET) e' permitida - qualquer outra requisicao e'
             // bloqueada, exceto a propria rota de sair da visualizacao.

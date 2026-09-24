@@ -3,10 +3,13 @@
     exit('Acesso negado');
 } ?>
 <?php
-$logoSrc = logoAtual();
+// Reabertura da Fase 51 (item 1): tela do fluxo do Evento, com a logo do
+// Evento e o "Voltar" levando a pagina do proprio evento, nao a home do
+// Concurso.
+$logoSrc = logoAtual(true);
 ?>
 <div class="guest-card">
-    <img src="<?php echo htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars('Prêmio de Inovação ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?>" class="guest-logo">
+    <img src="<?php echo htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8'); ?>" class="guest-logo">
 
     <h1 class="guest-titulo">Criar cadastro</h1>
     <p class="guest-subtitulo">Cadastre-se para se inscrever em <?php echo htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8'); ?>.</p>
@@ -34,5 +37,5 @@ $logoSrc = logoAtual();
     <p class="guest-cadastro"><a href="<?php echo url('eventoInscricao/index/' . (int) $evento['id']); ?>">Voltar</a></p>
 </div>
 
-<a href="<?php echo config('base_path'); ?>/" class="guest-voltar">&larr; Voltar ao início</a>
+<a href="<?php echo htmlspecialchars(urlPaginaEvento($evento['id']), ENT_QUOTES, 'UTF-8'); ?>" class="guest-voltar">&larr; Voltar à página do evento</a>
 <p class="guest-copyright">&copy; <?php echo date('Y'); ?> Poder Judiciário de Roraima</p>

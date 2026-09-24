@@ -323,6 +323,102 @@ class NotificacaoService
     }
 
     /**
+     * Reabertura da Fase 51 (achados da equipe de Teste Cego): UM e-mail por
+     * pessoa, com o recebimento do trabalho e, quando o evento inscreve os
+     * autores ao submeter, a inscricao no evento. Nunca sai um segundo
+     * e-mail so' da inscricao: quem chama este metodo nao chama
+     * confirmarInscricaoEvento(). Devolve se o envio deu certo (o resultado
+     * fica registrado em notificacoes de qualquer jeito).
+     *
+     * $pessoa: papel (principal|coautor), nome, email, usuario_id,
+     * conta_nova, token_senha, inscricao (nova|ja_inscrito|nao_inscrito|
+     * nao_aplicavel). $trabalho: id, titulo, recebido_em. $config: linha de
+     * evento_trabalhos_config (mensagem_recebimento_html, texto editavel).
+     */
+    public function recebimentoTrabalho(array $pessoa, array $trabalho, array $evento, array $config, $nomePrincipal, $inscricaoAutomatica, $modoCredenciamento)
+    {
+        $inscrito = in_array($pessoa['inscricao'], ['nova', 'ja_inscrito'], true);
+        $assunto = ($inscrito ? 'Trabalho recebido e inscrição registrada: ' : 'Trabalho recebido: ') . $evento['nome'];
+        $corpo = $this->montarCorpoRecebimentoTrabalho($pessoa, $trabalho, $evento, $config, $nomePrincipal, $inscrito, $modoCredenciamento);
+
+        $id = $this->notificacoes->criar(
+            'trabalho_recebido',
+            'recebimento_trabalho',
+            $pessoa['email'],
+            $assunto,
+            $corpo
+        );
+
+        try {
+            $resultado = Mailer::enviar($pessoa['email'], $assunto, $corpo);
+        } catch (\Exception $e) {
+            $resultado = ['sucesso' => false, 'erro' => $e->getMessage()];
+        }
+
+        if ($resultado['sucesso']) {
+            $this->notificacoes->marcarEnviada($id);
+        } else {
+            $this->notificacoes->marcarFalhou($id);
+        }
+
+        return (bool) $resultado['sucesso'];
+    }
+
+    private function montarCorpoRecebimentoTrabalho(array $pessoa, array $trabalho, array $evento, array $config, $nomePrincipal, $inscrito, $modoCredenciamento)
+    {
+        $esc = function ($texto) {
+            return htmlspecialchars((string) $texto, ENT_QUOTES, 'UTF-8');
+        };
+
+        $partes = ['<p>Olá, ' . $esc($pessoa['nome']) . ',</p>'];
+
+        if ($pessoa['papel'] === 'coautor') {
+            $partes[] = '<p>' . $esc($nomePrincipal) . ' enviou o trabalho <strong>' . $esc($trabalho['titulo'])
+                . '</strong> para o evento <strong>' . $esc($evento['nome']) . '</strong> e indicou você como coautor(a).</p>';
+        } else {
+            $partes[] = '<p>Recebemos o trabalho <strong>' . $esc($trabalho['titulo'])
+                . '</strong> para o evento <strong>' . $esc($evento['nome']) . '</strong>.</p>';
+        }
+
+        $momento = strtotime($trabalho['recebido_em']);
+        $partes[] = '<p>Protocolo: <strong>nº ' . (int) $trabalho['id'] . '</strong>. Recebido em '
+            . date('d/m/Y', $momento) . ' às ' . date('H:i', $momento) . '.</p>';
+
+        if ($inscrito) {
+            $periodo = !empty($evento['data_inicio']) && !empty($evento['data_fim'])
+                ? ' (' . formatarData($evento['data_inicio']) . ' a ' . formatarData($evento['data_fim']) . ')'
+                : '';
+            $textoInscricao = 'Você também está inscrito(a) no evento' . $periodo . '.';
+
+            if ($modoCredenciamento !== 'automatico' && $pessoa['inscricao'] === 'nova') {
+                $textoInscricao .= ' A sua inscrição será confirmada pela organização.';
+            }
+
+            $partes[] = '<p>' . $textoInscricao . '</p>';
+        }
+
+        if (!empty($pessoa['conta_nova']) && !empty($pessoa['token_senha'])) {
+            $endereco = urlAbsoluta('auth/definirSenha/' . $pessoa['token_senha']);
+            $partes[] = '<p>Criamos um acesso para você no sistema do evento. Defina a sua senha neste endereço (vale por 7 dias) para acompanhar o trabalho e a sua participação:<br>'
+                . '<a href="' . $esc($endereco) . '">' . $esc($endereco) . '</a></p>';
+        } else {
+            $endereco = $inscrito
+                ? urlAbsoluta('eventoApp/index/' . (int) $evento['id'])
+                : urlAbsoluta('trabalho/meusTrabalhos');
+            $partes[] = '<p>Acompanhe a situação do trabalho'
+                . ($inscrito ? ' e a sua participação no evento' : '')
+                . ' entrando com o seu e-mail e a sua senha (ou com a sua conta Google):<br>'
+                . '<a href="' . $esc($endereco) . '">' . $esc($endereco) . '</a></p>';
+        }
+
+        $partes[] = !empty($config['mensagem_recebimento_html'])
+            ? $config['mensagem_recebimento_html']
+            : '<p>Guarde o número do protocolo. A avaliação segue o cronograma do edital, e o resultado será divulgado pela organização do evento.</p>';
+
+        return implode('', $partes) . $this->assinaturaContato();
+    }
+
+    /**
      * Fase 51: mesma situacao do metodo acima, para quem JA tinha conta no
      * sistema - sem endereco de definir senha, sem mencao a criar conta.
      */

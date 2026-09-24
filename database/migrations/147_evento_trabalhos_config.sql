@@ -36,6 +36,15 @@ CREATE TABLE IF NOT EXISTS evento_trabalhos_config (
     -- a tela de avaliacao usa um resumo montado a partir de
     -- trabalho_criterios como reserva enquanto isso.
     criterios_resumo_html MEDIUMTEXT NULL,
+    -- Reabertura da Fase 51 (achado da equipe de Teste Cego): quando ligada,
+    -- o autor principal e cada coautor sao inscritos no evento no ato da
+    -- submissao do trabalho (conta criada para quem ainda nao tem) e recebem
+    -- UM e-mail com o recebimento do trabalho e a inscricao.
+    -- mensagem_recebimento_html e' o texto que entra nesse e-mail depois do
+    -- protocolo e dos dados de acesso, que o sistema monta sozinho; em
+    -- branco, vale um texto padrao.
+    inscrever_autores_ao_submeter TINYINT(1) NOT NULL DEFAULT 0,
+    mensagem_recebimento_html MEDIUMTEXT NULL,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_evento_trabalhos_config_evento FOREIGN KEY (evento_id) REFERENCES eventos (id),

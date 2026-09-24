@@ -2,7 +2,8 @@
  * Fase 42 (correcao pos-teste de fumaca): o campo "Documento" da inscricao
  * publica do Evento (publico/evento_inscricao.php) e' texto livre - o TIPO
  * (RG/CPF/RNE/Passaporte) e' escolhido num campo configuravel separado
- * (Tipo de documento, EventoCampoInscricaoRepository). So' faz sentido
+ * (Tipo de Documento de Identificação, EventoCampoInscricaoRepository;
+ * marcado na tela com data-campo-tipo-documento). So' faz sentido
  * aplicar a mascara/validacao de CPF (assets/js/cpf-validador.js, ja usada
  * em outros formularios do sistema) quando "CPF" estiver selecionado - nos
  * demais tipos, o campo continua texto livre sem mascara.
@@ -12,7 +13,7 @@
 
     function atualizar() {
         var campoDocumento = document.getElementById('campo-documento');
-        var campoTipo = document.querySelector('[data-rotulo-campo="Tipo de documento"]');
+        var campoTipo = document.querySelector('[data-campo-tipo-documento]');
 
         if (!campoDocumento || !campoTipo) { return; }
 
@@ -29,13 +30,13 @@
 
         // O listener de mascara em tempo real (cpf-validador.js) so reage a
         // TECLAS novas digitadas (evento 'input') - um valor que ja estava
-        // no campo (reload apos erro de validacao, ou "Documento" preenchido
-        // antes de escolher "Tipo de documento", que e' a ordem natural
-        // deste formulario) nunca seria reformatado sozinho. Disparar um
-        // evento sintetico de 'input' aqui forca o mesmo listener a rodar
-        // imediatamente sobre o valor ja existente (achado real de teste:
-        // o usuario preencheu Documento antes do Tipo, e a mascara nunca
-        // apareceu nem depois de escolher CPF).
+        // no campo (reload apos erro de validacao, ou numero digitado antes
+        // de trocar o tipo para CPF) nunca seria reformatado sozinho.
+        // Disparar um evento sintetico de 'input' aqui forca o mesmo
+        // listener a rodar imediatamente sobre o valor ja existente (achado
+        // real de teste da Fase 42: a mascara nunca aparecia depois de
+        // escolher CPF). Desde a reabertura da Fase 51 a tela pede o tipo
+        // antes do numero, mas o caso continua valendo.
         campoDocumento.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
@@ -45,7 +46,7 @@
     atualizar();
 
     document.addEventListener('change', function (evento) {
-        if (evento.target.matches && evento.target.matches('[data-rotulo-campo="Tipo de documento"]')) {
+        if (evento.target.matches && evento.target.matches('[data-campo-tipo-documento]')) {
             atualizar();
         }
     });

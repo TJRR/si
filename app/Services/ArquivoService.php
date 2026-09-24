@@ -21,6 +21,12 @@ if (!defined('SI_BOOT')) {
  * do proprio php.ini (upload_max_filesize/post_max_size), conforme pedido
  * explicito do requisito. So' pra cima ou igual ao limite fixo anterior nos
  * usos ja existentes (Documentos/Midia) - sem regressao.
+ *
+ * Reabertura da Fase 51 (segunda rodada): Documentos do Evento precisam
+ * aceitar tambem documento editavel (modelo do resumo expandido, em Word).
+ * Como este servico e' compartilhado com Documentos do Concurso, Midia e
+ * Tira-Duvidas, a ampliacao e' opt-in por chamada ($aceitarDocumentosEditaveis
+ * em salvar()): quem nao pede continua aceitando exatamente o que aceitava.
  */
 class ArquivoService
 {
@@ -31,6 +37,24 @@ class ArquivoService
         'image/jpeg' => 'jpg',
         'image/png' => 'png',
     ];
+
+    /**
+     * Documentos editaveis aceitos so' quando a chamada pede (Documentos do
+     * Evento). O tipo vem do CONTEUDO (finfo), nunca do nome; o arquivo e'
+     * gravado com a extensao decidida aqui, com nome aleatorio.
+     */
+    private const TIPOS_DOCUMENTO_EDITAVEL = [
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+        'application/msword' => 'doc',
+        'application/vnd.oasis.opendocument.text' => 'odt',
+    ];
+
+    /**
+     * .docx e .odt sao ZIP por dentro e algumas versoes da biblioteca de
+     * deteccao devolvem so' application/zip para eles: esse tipo generico so'
+     * vale quando a extensao do nome do arquivo confirma um dos dois.
+     */
+    private const EXTENSOES_ZIP_DOCUMENTO_EDITAVEL = ['docx', 'odt'];
 
     /**
      * Menor entre upload_max_filesize e post_max_size do php.ini em vigor -
@@ -69,7 +93,7 @@ class ArquivoService
         return $numero;
     }
 
-    public function salvar(array $arquivo, $pasta)
+    public function salvar(array $arquivo, $pasta, $aceitarDocumentosEditaveis = false)
     {
         if (!preg_match('/^[a-z0-9_\-]+$/', $pasta)) {
             throw new \RuntimeException('Chave de destino inválida.');
@@ -86,8 +110,16 @@ class ArquivoService
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
         $mime = $finfo->file($arquivo['tmp_name']);
 
-        if (!isset(self::TIPOS_PERMITIDOS[$mime])) {
-            throw new \RuntimeException('Formato de arquivo não suportado (use PDF, imagem ou MP4).');
+        $extensao = isset(self::TIPOS_PERMITIDOS[$mime]) ? self::TIPOS_PERMITIDOS[$mime] : null;
+
+        if ($extensao === null && $aceitarDocumentosEditaveis) {
+            $extensao = self::extensaoDeDocumentoEditavel($mime, isset($arquivo['name']) ? $arquivo['name'] : '');
+        }
+
+        if ($extensao === null) {
+            throw new \RuntimeException($aceitarDocumentosEditaveis
+                ? 'Formato de arquivo não suportado (use PDF, documento do Word ou do LibreOffice, imagem ou MP4).'
+                : 'Formato de arquivo não suportado (use PDF, imagem ou MP4).');
         }
 
         $pastaBase = __DIR__ . '/../../assets/uploads/arquivos';
@@ -108,7 +140,6 @@ class ArquivoService
             throw new \RuntimeException('Caminho de destino fora da área permitida.');
         }
 
-        $extensao = self::TIPOS_PERMITIDOS[$mime];
         $nomeArquivo = bin2hex(random_bytes(16));
         $caminhoRelativo = 'uploads/arquivos/' . $pasta . '/' . $nomeArquivo . '.' . $extensao;
 
@@ -117,6 +148,33 @@ class ArquivoService
         }
 
         return $caminhoRelativo;
+    }
+
+    /**
+     * Extensao de um documento editavel a partir do tipo detectado, ou nulo.
+     * O tipo e' dividido nos pontos onde comeca um novo tipo (application/ ou
+     * text/): com certos arquivos Word a biblioteca do servidor devolve o
+     * mesmo tipo escrito duas vezes seguidas, e a comparacao exata recusaria
+     * um .docx verdadeiro (mesmo defeito tratado em TrabalhoArquivoValidador).
+     */
+    private static function extensaoDeDocumentoEditavel($mime, $nomeOriginal)
+    {
+        $tipos = preg_split('#(?=(?:application|text)/)#', (string) $mime, -1, PREG_SPLIT_NO_EMPTY);
+        $tipos = array_map('trim', $tipos);
+
+        foreach ($tipos as $tipo) {
+            if (isset(self::TIPOS_DOCUMENTO_EDITAVEL[$tipo])) {
+                return self::TIPOS_DOCUMENTO_EDITAVEL[$tipo];
+            }
+        }
+
+        $extensaoDoNome = strtolower(pathinfo((string) $nomeOriginal, PATHINFO_EXTENSION));
+
+        if (in_array('application/zip', $tipos, true) && in_array($extensaoDoNome, self::EXTENSOES_ZIP_DOCUMENTO_EDITAVEL, true)) {
+            return $extensaoDoNome;
+        }
+
+        return null;
     }
 
     public function remover($caminhoRelativo)

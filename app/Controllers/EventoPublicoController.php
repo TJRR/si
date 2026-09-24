@@ -14,6 +14,7 @@ use App\Repositories\ContatoConcursoRepository;
 use App\Repositories\EventoBannerRepository;
 use App\Repositories\EventoBlocoConteudoRepository;
 use App\Repositories\EventoConfiguracaoVisualRepository;
+use App\Repositories\EventoDocumentoRepository;
 use App\Repositories\EventoSecaoOrdemRepository;
 use App\Repositories\EventoSecaoCartoesRepository;
 use App\Repositories\EventoSecaoContagemRepository;
@@ -128,7 +129,10 @@ class EventoPublicoController extends Controller
             'temaAtivo' => $temaAtivo,
             'logoSrc' => $logoSrc,
             'altLogoTexto' => !empty($configuracaoVisualEvento['logo_alt']) ? $configuracaoVisualEvento['logo_alt'] : $evento['nome'],
-            'avancoAutomaticoQuadros' => (int) $configuracaoVisualEvento['quadros_avanco_automatico'] === 1,
+            'temLogoEvento' => !empty($configuracaoVisualEvento['logo_path']),
+            'urlFontesEvento' => EventoConfiguracaoVisualRepository::urlFontes($configuracaoVisualEvento),
+            'fonteTituloEvento' => !empty($configuracaoVisualEvento['fonte_titulo']) ? $configuracaoVisualEvento['fonte_titulo'] : null,
+            'fonteTextoEvento' => !empty($configuracaoVisualEvento['fonte_texto']) ? $configuracaoVisualEvento['fonte_texto'] : null,
             'configVisual' => $configVisual,
             'contato' => $contato,
         ], $evento['nome']);
@@ -182,6 +186,10 @@ class EventoPublicoController extends Controller
                 $secao['itens'] = $dados['fonte'] === 'atividades'
                     ? $repositorio->listarAtividadesDoEvento($eventoId)
                     : $repositorio->listarItens((int) $secao['referencia_id']);
+            } elseif ($tipo === 'cronograma') {
+                $secao['itens'] = $repositorio->listarItens((int) $secao['referencia_id']);
+                $secao['dados']['botao1_url'] = $this->destinoBotaoDocumento($eventoId, $dados, 'botao1');
+                $secao['dados']['botao3_url'] = $this->destinoBotaoDocumento($eventoId, $dados, 'botao3');
             } elseif ($tipo === 'faq') {
                 $secao['itens'] = $repositorio->listarItensAtivos((int) $secao['referencia_id']);
             } elseif ($tipo !== 'local') {
@@ -192,5 +200,23 @@ class EventoPublicoController extends Controller
         }
 
         return $resolvidas;
+    }
+
+    /**
+     * Reabertura da Fase 51: destino de um botao com documento da secao de
+     * submissao ($prefixo 'botao1' ou 'botao3'). Com documento escolhido,
+     * abre a versao vigente e publicada dele (retificacao nova entra
+     * sozinha); documento despublicado ou removido esconde o botao, em vez de
+     * cair no endereco digitado. Sem documento, vale o endereco digitado.
+     */
+    private function destinoBotaoDocumento($eventoId, array $dados, $prefixo = 'botao1')
+    {
+        if (!empty($dados[$prefixo . '_documento_id'])) {
+            $documento = (new EventoDocumentoRepository())->buscarVigentePublicado($eventoId, (int) $dados[$prefixo . '_documento_id']);
+
+            return $documento !== null ? config('base_path') . '/assets/' . $documento['arquivo_path'] : '';
+        }
+
+        return linkPublico(isset($dados[$prefixo . '_link']) ? $dados[$prefixo . '_link'] : '');
     }
 }

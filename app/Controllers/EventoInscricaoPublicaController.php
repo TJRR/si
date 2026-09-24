@@ -164,7 +164,12 @@ class EventoInscricaoPublicaController extends Controller
     public function inscrever()
     {
         if (!Auth::autenticado()) {
-            $this->redirecionar('auth/login');
+            // Reabertura da Fase 51: sem sessao (ou com a sessao vencida no
+            // meio do preenchimento), volta para a inscricao do proprio
+            // evento, que oferece cadastro e entrada pelo fluxo do evento,
+            // nunca para o login do Concurso.
+            $eventoIdPost = (int) (isset($_POST['evento_id']) ? $_POST['evento_id'] : 0);
+            $this->redirecionar('eventoInscricao/index' . ($eventoIdPost > 0 ? '/' . $eventoIdPost : ''));
             return;
         }
 
@@ -213,7 +218,7 @@ class EventoInscricaoPublicaController extends Controller
             $dados[$nomePost] = $valor;
             $respostas[$campo['id']] = $valor !== '' ? $valor : null;
 
-            if ($campo['rotulo'] === 'Tipo de documento') {
+            if ($campo['rotulo'] === EventoCampoInscricaoRepository::ROTULO_TIPO_DOCUMENTO) {
                 $tipoDocumentoEscolhido = $valor !== '' ? $valor : null;
             } elseif ($campo['rotulo'] === 'Cargo') {
                 $cargoEscolhido = $valor !== '' ? $valor : null;
@@ -229,7 +234,7 @@ class EventoInscricaoPublicaController extends Controller
         // App\Validation\CpfValidador) quando "CPF" foi o tipo escolhido.
         // Gravado so' com digitos, mesmo padrao ja usado la'.
         if ($documento === '') {
-            $erros['documento'] = 'Informe o número do documento.';
+            $erros['documento'] = 'Informe o número do documento de identificação.';
         } elseif ($tipoDocumentoEscolhido === 'CPF') {
             if (!CpfValidador::valido($documento)) {
                 $erros['documento'] = 'CPF inválido.';

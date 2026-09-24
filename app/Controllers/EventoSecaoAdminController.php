@@ -9,6 +9,7 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
+use App\Repositories\EventoDocumentoRepository;
 use App\Repositories\EventoSecaoCartoesRepository;
 use App\Repositories\EventoSecaoContagemRepository;
 use App\Repositories\EventoSecaoCronogramaRepository;
@@ -53,7 +54,7 @@ class EventoSecaoAdminController extends Controller
     ];
 
     private static $rotulosFixos = [
-        'quadros' => 'Quadros de apresentação',
+        'quadros' => 'Carrossel',
         'faixas' => 'Faixas',
         'bloco' => 'Bloco de conteúdo',
     ];
@@ -147,6 +148,7 @@ class EventoSecaoAdminController extends Controller
             'ativo' => isset($_POST['ativo']) ? 1 : 0,
             'mostrar_no_menu' => isset($_POST['mostrar_no_menu']) ? 1 : 0,
             'rotulo_menu' => isset($_POST['rotulo_menu']) ? $_POST['rotulo_menu'] : null,
+            'ancora' => isset($_POST['ancora']) ? $_POST['ancora'] : null,
         ]);
 
         flashSucesso('Seção atualizada.');
@@ -191,7 +193,7 @@ class EventoSecaoAdminController extends Controller
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $repositorio->atualizar($eventoId, (int) $secaoId, $this->dadosDoFormulario($tipo, $secao));
+            $repositorio->atualizar($eventoId, (int) $secaoId, $this->dadosDoFormulario($eventoId, $tipo, $secao));
             flashSucesso('Seção salva.');
             $this->redirecionar('eventoSecoes/editar/' . $eventoId . '/' . $tipo . '/' . (int) $secaoId);
             return;
@@ -207,6 +209,10 @@ class EventoSecaoAdminController extends Controller
 
         if ($tipo === 'cartoes') {
             $dadosView['eixos'] = (new TrabalhoEixoTematicoRepository())->listarPorEvento($eventoId);
+        }
+
+        if ($tipo === 'cronograma') {
+            $dadosView['documentos'] = (new EventoDocumentoRepository())->listarAtivos($eventoId);
         }
 
         if ($tipo === 'destaques' || $tipo === 'programacao') {
@@ -278,7 +284,9 @@ class EventoSecaoAdminController extends Controller
 
         switch ($tipo) {
             case 'contagem':
-                return array_merge($comuns, ['data_alvo', 'cor_circulo']);
+                return array_merge($comuns, ['data_alvo', 'cor_circulo', 'cor_anel_1', 'cor_anel_2', 'cor_anel_3']);
+            case 'cronograma':
+                return array_merge($comuns, ['titulo_quadro', 'botao1_titulo', 'botao1_documento_id', 'botao1_link', 'botao2_titulo', 'botao2_link', 'botao3_titulo', 'botao3_documento_id', 'botao3_link', 'mostrar_contato']);
             case 'cartoes':
                 return array_merge($comuns, ['colunas', 'efeito_hover', 'efeito_abrir', 'efeito_fechar']);
             case 'destaques':
@@ -298,6 +306,7 @@ class EventoSecaoAdminController extends Controller
             'colunas' => 4,
             'fonte' => 'atividades',
             'mostrar_local' => 1,
+            'mostrar_contato' => 0,
             'efeito_hover' => 'elevar',
             'efeito_abrir' => 'deslizar',
             'efeito_fechar' => 'deslizar',
@@ -307,12 +316,28 @@ class EventoSecaoAdminController extends Controller
         return isset($padroes[$coluna]) ? $padroes[$coluna] : null;
     }
 
-    private function dadosDoFormulario($tipo, array $secaoAtual)
+    private function dadosDoFormulario($eventoId, $tipo, array $secaoAtual)
     {
         $dados = [];
 
         foreach ($this->colunasDoFormulario($tipo) as $coluna) {
             $dados[$coluna] = $this->valorEnviado($coluna, $secaoAtual);
+        }
+
+        // O documento do botao precisa ser deste evento: id de documento de
+        // outro evento, enviado num formulario manipulado, vira "sem
+        // documento".
+        if ($tipo === 'cronograma') {
+            foreach (['botao1_documento_id', 'botao3_documento_id'] as $colunaDocumento) {
+                if ($dados[$colunaDocumento] === null) {
+                    continue;
+                }
+
+                $documento = (new EventoDocumentoRepository())->buscarPorId((int) $dados[$colunaDocumento]);
+                $dados[$colunaDocumento] = ($documento !== null && (int) $documento['evento_id'] === (int) $eventoId)
+                    ? (int) $documento['id']
+                    : null;
+            }
         }
 
         if ($tipo === 'local') {
@@ -336,8 +361,12 @@ class EventoSecaoAdminController extends Controller
             return $bruto !== null ? sanitizarHtmlRico($bruto) : null;
         }
 
-        if ($coluna === 'mostrar_local') {
-            return isset($_POST['mostrar_local']) ? 1 : 0;
+        if ($coluna === 'mostrar_local' || $coluna === 'mostrar_contato') {
+            return isset($_POST[$coluna]) ? 1 : 0;
+        }
+
+        if ($coluna === 'botao1_documento_id' || $coluna === 'botao3_documento_id') {
+            return !empty($bruto) ? (int) $bruto : null;
         }
 
         if ($coluna === 'colunas') {
@@ -368,6 +397,24 @@ class EventoSecaoAdminController extends Controller
     private function validarEnderecoDeMapa($endereco)
     {
         if (empty($endereco)) {
+            return null;
+        }
+
+        // Reabertura da Fase 51 (teste de fumaca, item 9): o Google Maps
+        // entrega, na opcao "Incorporar um mapa", o codigo HTML inteiro
+        // (<iframe src="...">), nao so o endereco. Colado assim, o campo
+        // nunca era aceito. Aproveita-se so' o endereco do atributo src; o
+        // resto do codigo e' descartado, e o endereco passa pela mesma
+        // conferencia de origem abaixo.
+        if (preg_match('/src\s*=\s*["\']([^"\']+)["\']/i', $endereco, $partesIframe) === 1) {
+            $endereco = html_entity_decode($partesIframe[1], ENT_QUOTES, 'UTF-8');
+        }
+
+        $endereco = trim($endereco);
+
+        if (strlen($endereco) > 500) {
+            flashAlerta('O endereço do mapa foi ignorado: passou do tamanho máximo aceito.');
+
             return null;
         }
 
@@ -437,6 +484,7 @@ class EventoSecaoAdminController extends Controller
                     'resumo' => !empty($_POST['resumo']) ? trim($_POST['resumo']) : null,
                     'detalhe_html' => isset($_POST['detalhe_html']) ? sanitizarHtmlRico($_POST['detalhe_html']) : null,
                     'cor' => !empty($_POST['cor']) ? $_POST['cor'] : null,
+                    'cor_fundo' => !empty($_POST['cor_fundo']) ? $_POST['cor_fundo'] : null,
                 ];
             case 'destaques':
                 return [
@@ -445,7 +493,8 @@ class EventoSecaoAdminController extends Controller
                     'quando_texto' => !empty($_POST['quando_texto']) ? trim($_POST['quando_texto']) : null,
                     'local' => !empty($_POST['local']) ? trim($_POST['local']) : null,
                     'descricao' => !empty($_POST['descricao']) ? trim($_POST['descricao']) : null,
-                    'icone' => !empty($_POST['icone']) ? trim($_POST['icone']) : null,
+                    'icone' => isset($_POST['icone'], EventoSecaoDestaquesRepository::ICONES[$_POST['icone']]) ? $_POST['icone'] : null,
+                    'icone_cor' => !empty($_POST['icone_cor']) ? $_POST['icone_cor'] : null,
                 ];
             case 'programacao':
                 return [

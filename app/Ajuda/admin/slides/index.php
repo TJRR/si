@@ -6,7 +6,7 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Carrossel de imagens',
+    'titulo' => 'Carrossel',
     'resumo' => 'Carrossel de imagens no topo da home pública.',
     'operacoes' => [
         [

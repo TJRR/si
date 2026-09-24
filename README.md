@@ -253,7 +253,9 @@ exigido por sistemas parceiros de certificação.
 Dentro da Semana de Inovação, **Trabalhos** organiza a submissão e a
 avaliação de artigos e resumos expandidos, com motor próprio (sem nenhuma
 relação com o Concurso): o autor envia o texto pelo próprio aplicativo do
-evento, com autor principal e coautores; a organização define os critérios
+evento, com autor principal e coautores (que, se a organização quiser, já
+saem inscritos no evento no ato do envio, com um único e-mail de confirmação);
+a organização define os critérios
 de nota e convida avaliadores avulsos, que analisam cada trabalho às cegas
 (sem saber quem é o autor) e lançam a nota por critério; o sistema calcula
 o resultado final, aplica desempate quando necessário e seleciona os
@@ -429,7 +431,7 @@ de tudo esse bloco de uma vez, junto com a Fase 51.
 | 48 | **Atividades também em modalidade online e híbrida**, com código próprio de confirmação de presença online; **exportação de inscritos no formato exigido por sistemas parceiros**; cadastro de **Facilitadores** (instrutor, professor, palestrante) por atividade; **acesso próprio ao aplicativo de Evento**, separado do painel do Concurso; **temas de cor personalizáveis**, escolhidos por cada usuário |
 | 49 | **Trabalhos**: submissão e avaliação de artigos e resumos expandidos de um Evento, com motor próprio (sem relação com o Concurso), avaliação às cegas por avaliadores avulsos, cálculo de resultado com desempate configurável |
 | 50 | **Página pública própria para cada Evento**, separada da home do Concurso, com Cabeçalho, Quadros de apresentação, Faixas e Blocos de conteúdo exclusivos, e controle de quando cada uma fica publicada |
-| 51 | **Página do evento montada por seções**: ordem, liga e desliga e menu definidos pela organização, com componentes novos (contagem regressiva, cronograma, cartões, destaques, programação por dia, perguntas frequentes, local com mapa); **declarações de aceite configuráveis** na submissão de trabalhos; **importação de trabalhos recebidos por outro canal**, com convite de acesso aos autores pela fila de envio; **qual regra decidiu cada empate** no resultado; **divulgação pública do resultado final da trilha**; pastas na biblioteca de mídia |
+| 51 | **Página do evento montada por seções**: ordem, liga e desliga e menu definidos pela organização, com componentes novos (contagem regressiva, cronograma, cartões, destaques, programação por dia, perguntas frequentes, local com mapa), fontes escolhidas por evento e **documentos do evento** (edital, anexos, retificações, com versões); **declarações de aceite configuráveis** na submissão de trabalhos, com formulário que aponta o campo com problema e **inscrição automática dos autores** (opcional, por evento); **importação de trabalhos recebidos por outro canal**, com convite de acesso aos autores pela fila de envio; **qual regra decidiu cada empate** no resultado; **divulgação pública do resultado final da trilha**; pastas na biblioteca de mídia |
 
 ---
 

@@ -114,6 +114,22 @@
     </fieldset>
 
     <fieldset>
+        <legend>Recebimento do trabalho e inscrição dos autores</legend>
+        <label>
+            <input type="checkbox" name="inscrever_autores_ao_submeter" <?php echo ($config !== null && !empty($config['inscrever_autores_ao_submeter'])) ? 'checked' : ''; ?>>
+            Inscrever automaticamente os autores no evento ao submeter o trabalho
+        </label>
+        <p style="color:#555;font-size:0.9em;">Ligada: o autor principal e cada coautor são inscritos no evento no ato da submissão (coautor sem conta ganha uma, com endereço para definir a senha) e cada um recebe um único e-mail, com o recebimento do trabalho e a inscrição. Desligada: só o autor principal recebe o e-mail de recebimento, e a inscrição no evento continua sendo um passo à parte.</p>
+        <p>Texto do e-mail de recebimento (aparece depois do protocolo e dos dados de acesso; em branco, vale um texto padrão):</p>
+        <?php
+        $nome = 'mensagem_recebimento_html';
+        $valor = $config !== null && !empty($config['mensagem_recebimento_html']) ? (string) $config['mensagem_recebimento_html'] : '';
+        $rotulo = null;
+        include __DIR__ . '/../_editor_rico.php';
+        ?>
+    </fieldset>
+
+    <fieldset>
         <legend>Situação</legend>
         <label>
             <select name="situacao">

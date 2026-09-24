@@ -56,7 +56,8 @@
                     <label>Título (vazio usa o nome do eixo): <input type="text" name="titulo" maxlength="150" value="<?php echo htmlspecialchars((string) $item['titulo'], ENT_QUOTES, 'UTF-8'); ?>"></label>
                     <label>Resumo curto: <input type="text" name="resumo" maxlength="255" value="<?php echo htmlspecialchars((string) $item['resumo'], ENT_QUOTES, 'UTF-8'); ?>"></label>
                     <label>Texto completo (vazio usa a descrição do eixo): <textarea name="detalhe_html" rows="3"><?php echo htmlspecialchars((string) $item['detalhe_html'], ENT_QUOTES, 'UTF-8'); ?></textarea></label>
-                    <label>Cor: <input type="text" name="cor" maxlength="7" value="<?php echo htmlspecialchars((string) $item['cor'], ENT_QUOTES, 'UTF-8'); ?>"></label>
+                    <label>Cor da etiqueta: <input type="text" name="cor" maxlength="7" value="<?php echo htmlspecialchars((string) $item['cor'], ENT_QUOTES, 'UTF-8'); ?>"></label>
+                    <label>Cor de fundo do cartão: <input type="text" name="cor_fundo" maxlength="7" value="<?php echo htmlspecialchars((string) (isset($item['cor_fundo']) ? $item['cor_fundo'] : ''), ENT_QUOTES, 'UTF-8'); ?>"></label>
                     <button type="submit" class="btn-acao">Salvar</button>
                 </form>
             </div>
@@ -90,6 +91,7 @@
     <label>Título: <input type="text" name="titulo" maxlength="150"></label>
     <label>Resumo curto: <input type="text" name="resumo" maxlength="255"></label>
     <label>Texto completo: <textarea name="detalhe_html" rows="3"></textarea></label>
-    <label>Cor: <input type="text" name="cor" maxlength="7" placeholder="#cbd744"></label>
+    <label>Cor da etiqueta: <input type="text" name="cor" maxlength="7" placeholder="#ea5a43"></label>
+    <label>Cor de fundo do cartão: <input type="text" name="cor_fundo" maxlength="7" placeholder="#fff3f1"></label>
     <button type="submit">Adicionar</button>
 </form>

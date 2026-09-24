@@ -14,10 +14,11 @@
     </label>
 
     <label>Endereço de incorporação do mapa (Google Maps ou OpenStreetMap):
-        <input type="url" name="mapa_embed_url" maxlength="500" value="<?php echo htmlspecialchars((string) $secao['mapa_embed_url'], ENT_QUOTES, 'UTF-8'); ?>">
+        <textarea name="mapa_embed_url" rows="3"><?php echo htmlspecialchars((string) $secao['mapa_embed_url'], ENT_QUOTES, 'UTF-8'); ?></textarea>
     </label>
+    <p style="color:#555;font-size:0.9em;">No Google Maps, abra o local, clique em "Compartilhar", depois em "Incorporar um mapa" e copie o código mostrado. Pode colar o código inteiro aqui: o sistema guarda só o endereço do mapa. O endereço curto de compartilhamento (maps.app.goo.gl) não serve para incorporar.</p>
 
-    <label>Endereço do botão "Abrir no mapa" (opcional):
+    <label>Endereço do botão "Abrir no mapa" (opcional; em branco, usa o endereço do mapa de Configurações, Contato):
         <input type="url" name="mapa_link" maxlength="500" value="<?php echo htmlspecialchars((string) $secao['mapa_link'], ENT_QUOTES, 'UTF-8'); ?>">
     </label>
 

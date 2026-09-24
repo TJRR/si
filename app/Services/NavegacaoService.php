@@ -66,7 +66,7 @@ class NavegacaoService
             ['tipo' => 'configuracaoMidia', 'rotulo' => 'Mídia', 'rota' => 'midia/index'],
             ['tipo' => 'configuracaoCabecalho', 'rotulo' => 'Cabeçalho', 'rota' => 'tema/cabecalho'],
             ['tipo' => 'configuracaoRodape', 'rotulo' => 'Rodapé', 'rota' => 'tema/rodape'],
-            ['tipo' => 'configuracaoSlides', 'rotulo' => 'Apresentação de slides', 'rota' => 'slides/index'],
+            ['tipo' => 'configuracaoSlides', 'rotulo' => 'Carrossel', 'rota' => 'slides/index'],
             ['tipo' => 'configuracaoBanners', 'rotulo' => 'Faixas', 'rota' => 'banners/index'],
             ['tipo' => 'configuracaoBlocos', 'rotulo' => 'Blocos de conteúdo', 'rota' => 'blocos/index'],
             ['tipo' => 'configuracaoContato', 'rotulo' => 'Contato', 'rota' => 'contatosConcurso/index'],
@@ -95,12 +95,15 @@ class NavegacaoService
         'evento' => [
             ['tipo' => 'evento', 'rotulo' => 'Dados Gerais', 'rota' => 'eventos/editar'],
             ['tipo' => 'eventoCabecalho', 'rotulo' => 'Cabeçalho', 'rota' => 'eventoCabecalho/cabecalho'],
-            ['tipo' => 'eventoSlides', 'rotulo' => 'Quadros de apresentação', 'rota' => 'eventoSlides/index'],
+            ['tipo' => 'eventoSlides', 'rotulo' => 'Carrossel', 'rota' => 'eventoSlides/index'],
             ['tipo' => 'eventoBanners', 'rotulo' => 'Faixas', 'rota' => 'eventoBanners/index'],
             ['tipo' => 'eventoBlocos', 'rotulo' => 'Blocos de conteúdo', 'rota' => 'eventoBlocos/index'],
             // Fase 51: ordem, liga/desliga e menu de todas as secoes da
             // pagina publica, mais o cadastro dos componentes novos.
             ['tipo' => 'eventoSecoes', 'rotulo' => 'Seções da página', 'rota' => 'eventoSecoes/index'],
+            // Reabertura da Fase 51: documentos do evento (edital, anexos,
+            // retificacoes), copia da funcao de Documentos do Concurso.
+            ['tipo' => 'eventoDocumentos', 'rotulo' => 'Documentos', 'rota' => 'eventoDocumentos/index'],
             ['tipo' => 'atividadeTipos', 'rotulo' => 'Tipos de atividade', 'rota' => 'atividadeTipos/index'],
             ['tipo' => 'eventoFormulario', 'rotulo' => 'Formulário de inscrição', 'rota' => 'eventoFormulario/index'],
             ['tipo' => 'eventoInscritos', 'rotulo' => 'Inscritos', 'rota' => 'eventos/inscritos'],
@@ -209,6 +212,7 @@ class NavegacaoService
         'eventoBanners' => 'evento',
         'eventoBlocos' => 'evento',
         'eventoSecoes' => 'evento',
+        'eventoDocumentos' => 'evento',
         'atividadeTipos' => 'evento',
         'eventoFormulario' => 'evento',
         'eventoInscritos' => 'evento',

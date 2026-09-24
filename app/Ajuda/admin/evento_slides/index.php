@@ -6,7 +6,7 @@ if (!defined('SI_BOOT')) {
 }
 
 return [
-    'titulo' => 'Quadros de apresentação do Evento',
+    'titulo' => 'Carrossel do Evento',
     'resumo' => 'Carrossel do topo da página pública deste evento, independente do carrossel do Concurso e de qualquer outro evento.',
     'operacoes' => [
         ['nome' => '+ Novo quadro', 'como' => 'Abre o formulário de um novo quadro do carrossel deste evento.'],

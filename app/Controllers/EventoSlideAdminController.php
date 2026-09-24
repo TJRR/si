@@ -202,7 +202,7 @@ class EventoSlideAdminController extends Controller
                     return 'Informe o texto alternativo (alt) da imagem.';
                 }
 
-                $caminhoDesktop = $this->imagens->salvar($_FILES['imagem'], 'evento-slides', 1440, 800);
+                $caminhoDesktop = $this->imagens->salvar($_FILES['imagem'], 'evento-slides', 1920, 560);
                 $caminhoMobile = $this->imagens->salvar($_FILES['imagem'], 'evento-slides', 768, 800);
             }
         } catch (\RuntimeException $e) {
@@ -242,7 +242,7 @@ class EventoSlideAdminController extends Controller
                     return 'Informe o texto alternativo (alt) da imagem.';
                 }
 
-                $caminhoDesktop = $this->imagens->salvar($_FILES['imagem'], 'evento-slides', 1440, 800);
+                $caminhoDesktop = $this->imagens->salvar($_FILES['imagem'], 'evento-slides', 1920, 560);
                 $caminhoMobile = $this->imagens->salvar($_FILES['imagem'], 'evento-slides', 768, 800);
                 $this->imagens->remover($slideAtual['imagem_desktop_path']);
                 $this->imagens->remover($slideAtual['imagem_mobile_path']);

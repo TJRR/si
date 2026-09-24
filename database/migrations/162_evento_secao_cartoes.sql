@@ -8,6 +8,10 @@
 -- copiar o texto oficial do edital para um segundo lugar) OU carrega titulo e
 -- texto proprios, para cartao que nao seja eixo. Cor e resumo curto ficam
 -- sempre no item: sao decisao de pagina, nao dado de eixo.
+--
+-- Reabertura da Fase 51 (coluna acrescentada na origem, premissa 8 de
+-- Premissas.md): cor_fundo do item, o tom pastel do cartao; `cor` continua
+-- sendo a cor de destaque da etiqueta.
 CREATE TABLE IF NOT EXISTS evento_secao_cartoes (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     evento_id INT UNSIGNED NOT NULL,
@@ -35,6 +39,7 @@ CREATE TABLE IF NOT EXISTS evento_secao_cartoes_itens (
     resumo VARCHAR(255) NULL,
     detalhe_html TEXT NULL,
     cor VARCHAR(7) NULL,
+    cor_fundo VARCHAR(7) NULL,
     ordem INT UNSIGNED NOT NULL DEFAULT 0,
     CONSTRAINT fk_evento_secao_cartoes_itens_secao FOREIGN KEY (secao_id) REFERENCES evento_secao_cartoes (id) ON DELETE CASCADE,
     CONSTRAINT fk_evento_secao_cartoes_itens_eixo FOREIGN KEY (eixo_tematico_id) REFERENCES trabalho_eixos_tematicos (id),

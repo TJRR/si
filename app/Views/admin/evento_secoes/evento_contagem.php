@@ -4,7 +4,7 @@
 } ?>
 <?php include __DIR__ . '/_cabecalho_secao.php'; ?>
 
-<p style="color:#555;font-size:0.9em;">Mostra quanto falta para a data escolhida e, ao lado, as datas que você quiser destacar. Sem data informada, a contagem usa a data de início do evento.</p>
+<p style="color:#555;font-size:0.9em;">Mostra quanto falta para a data escolhida e, ao lado, as datas que você quiser destacar. Sem data informada, a contagem usa a data de início do evento. Em cada data em destaque, o texto aparece como foi digitado; a data, quando informada, aparece depois dele.</p>
 
 <form method="post" action="<?php echo url('eventoSecoes/editar/' . (int) $evento['id'] . '/contagem/' . (int) $secao['id']); ?>"><?= campoCsrf() ?>
     <?php include __DIR__ . '/_campos_comuns.php'; ?>
@@ -16,6 +16,13 @@
     <label>Cor do círculo da contagem:
         <input type="text" name="cor_circulo" maxlength="7" placeholder="#141413" value="<?php echo htmlspecialchars((string) $secao['cor_circulo'], ENT_QUOTES, 'UTF-8'); ?>">
     </label>
+
+    <p style="color:#555;font-size:0.9em;">Três anéis pulsam em volta do círculo, um de cada cor, em sequência. Em branco, valem laranja, azul e verde.</p>
+    <?php foreach ([1 => '#ea5a43', 2 => '#006699', 3 => '#cbd744'] as $numeroAnel => $corSugerida): ?>
+        <label>Cor do anel <?php echo $numeroAnel; ?>:
+            <input type="text" name="cor_anel_<?php echo $numeroAnel; ?>" maxlength="7" placeholder="<?php echo $corSugerida; ?>" value="<?php echo htmlspecialchars((string) (isset($secao['cor_anel_' . $numeroAnel]) ? $secao['cor_anel_' . $numeroAnel] : ''), ENT_QUOTES, 'UTF-8'); ?>">
+        </label>
+    <?php endforeach; ?>
 
     <button type="submit">Salvar seção</button>
 </form>

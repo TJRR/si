@@ -10,6 +10,10 @@
 --
 -- data_alvo nula significa "usar a data de inicio do evento" (eventos.data_inicio
 -- as 00h00), para o componente funcionar sem configuracao extra.
+--
+-- Reabertura da Fase 51 (colunas acrescentadas na origem, premissa 8 de
+-- Premissas.md): cor_anel_1/2/3, as cores dos tres aneis pulsantes em volta
+-- do circulo da contagem; vazias, valem laranja, azul e verde da identidade.
 CREATE TABLE IF NOT EXISTS evento_secao_contagem (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     evento_id INT UNSIGNED NOT NULL,
@@ -20,6 +24,9 @@ CREATE TABLE IF NOT EXISTS evento_secao_contagem (
     cor_fundo VARCHAR(7) NULL,
     cor_texto VARCHAR(7) NULL,
     cor_circulo VARCHAR(7) NULL,
+    cor_anel_1 VARCHAR(7) NULL,
+    cor_anel_2 VARCHAR(7) NULL,
+    cor_anel_3 VARCHAR(7) NULL,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_evento_secao_contagem_evento FOREIGN KEY (evento_id) REFERENCES eventos (id),

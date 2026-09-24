@@ -36,6 +36,19 @@
         include __DIR__ . '/../_editor_rico.php';
         ?>
 
+        <?php $nome = 'cor_texto'; $valor = $faixa !== null && isset($faixa['cor_texto']) ? $faixa['cor_texto'] : null; $rotulo = 'Cor do texto (sem cor, o texto sai branco)'; $padrao = '#141413'; ?>
+        <?php include __DIR__ . '/../_campo_cor.php'; ?>
+
+        <label>Formato:
+            <select name="formato">
+                <?php $formatos = ['retangulo' => 'Retângulo (faixa de borda a borda)', 'bandeirinha' => 'Balão de diálogo (sobre fundo branco)']; ?>
+                <?php foreach ($formatos as $valorOpcao => $rotuloOpcao): ?>
+                    <option value="<?php echo $valorOpcao; ?>" <?php echo (($faixa !== null && isset($faixa['formato']) ? $faixa['formato'] : 'retangulo') === $valorOpcao) ? 'selected' : ''; ?>><?php echo $rotuloOpcao; ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <p style="color:#555;font-size:0.9em;">No formato balão de diálogo, o primeiro parágrafo do texto vira o balão da identidade visual (borda escura, ponta no canto superior direito e sombra escura), na cor de fundo escolhida acima, e os demais parágrafos aparecem abaixo dele, em letra menor e discreta.</p>
+
         <label>Alinhamento do conteúdo:
             <select name="conteudo_alinhamento">
                 <?php $alinhamentos = ['esquerda' => 'Esquerda', 'centro' => 'Centro', 'direita' => 'Direita']; ?>

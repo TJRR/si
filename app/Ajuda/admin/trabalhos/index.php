@@ -26,6 +26,11 @@ return [
             'como' => 'Quais dos métodos de envio ficam disponíveis (texto direto, endereço eletrônico, documento editável, documento em PDF), extensões aceitas e tamanho máximo do arquivo.',
         ],
         [
+            'nome' => 'Recebimento do trabalho e inscrição dos autores',
+            'como' => 'Com "Inscrever automaticamente os autores" ligada, o autor principal e cada coautor são inscritos no evento no ato da submissão e recebem um único e-mail, com o recebimento do trabalho e a inscrição. Coautor sem conta no sistema ganha uma, com endereço para definir a senha (vale por 7 dias). Com a opção desligada, só o autor principal recebe o e-mail de recebimento.',
+            'observacao' => 'O texto do e-mail vem depois do protocolo e dos dados de acesso, que o sistema monta sozinho. Em branco, vale um texto padrão. O formulário de submissão avisa quando a inscrição automática está ligada.',
+        ],
+        [
             'nome' => 'Situação',
             'como' => 'Rascunho (formulário indisponível), Publicado (submissão aberta a quem estiver no prazo) ou Encerrado.',
         ],

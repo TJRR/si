@@ -20,7 +20,7 @@ class EventoSecaoContagemRepository extends EventoSecaoRepositorioBase
 
     protected function colunas()
     {
-        return ['etiqueta', 'titulo', 'descricao_html', 'data_alvo', 'cor_fundo', 'cor_texto', 'cor_circulo'];
+        return ['etiqueta', 'titulo', 'descricao_html', 'data_alvo', 'cor_fundo', 'cor_texto', 'cor_circulo', 'cor_anel_1', 'cor_anel_2', 'cor_anel_3'];
     }
 
     protected function tabelaItens()

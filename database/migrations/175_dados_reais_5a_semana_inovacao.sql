@@ -83,13 +83,13 @@ INSERT INTO evento_trabalhos_config (
     quantidade_maxima_autores, permite_multiplos_trabalhos_por_pessoa, quantidade_avaliadores_por_trabalho,
     sigilo_cego, metodo_agregacao_nota, metodos_submissao_json, extensoes_editavel_json, tamanho_maximo_mb,
     exige_telefone_contato, nota_corte_aprovacao, regra_selecao_tipo, regra_selecao_valor, status,
-    criterios_resumo_html
+    criterios_resumo_html, inscrever_autores_ao_submeter
 ) VALUES (
     1, '2026-09-22 00:00:00', '2026-10-16 23:59:00', '2026-10-19 00:00:00', '2026-10-26 23:59:00',
     2, 0, 2,
     1, 'media_aritmetica', '["documento_editavel"]', '["doc","docx"]', 15,
     1, 6.00, 'numero_fixo', 24, 'publicado',
-    @criterios_resumo_html
+    @criterios_resumo_html, 1
 ) ON DUPLICATE KEY UPDATE
     data_abertura_submissao = VALUES(data_abertura_submissao),
     data_fim_submissao = VALUES(data_fim_submissao),
@@ -108,7 +108,8 @@ INSERT INTO evento_trabalhos_config (
     regra_selecao_tipo = VALUES(regra_selecao_tipo),
     regra_selecao_valor = VALUES(regra_selecao_valor),
     status = VALUES(status),
-    criterios_resumo_html = VALUES(criterios_resumo_html);
+    criterios_resumo_html = VALUES(criterios_resumo_html),
+    inscrever_autores_ao_submeter = VALUES(inscrever_autores_ao_submeter);
 
 -- ---------------------------------------------------------------------------
 -- Fase 51: conteudo real da pagina publica da 5a Semana de Inovacao.
@@ -127,9 +128,9 @@ INSERT INTO evento_trabalhos_config (
 -- Cabecalho, depois de conferir o conteudo.
 -- ---------------------------------------------------------------------------
 
-INSERT INTO evento_configuracao_visual (evento_id, publicado, cabecalho_titulo_html, quadros_avanco_automatico)
-VALUES (1, 0, '<p>5ª Semana de Inovação do Poder Judiciário de Roraima</p>', 0)
-ON DUPLICATE KEY UPDATE quadros_avanco_automatico = VALUES(quadros_avanco_automatico);
+INSERT INTO evento_configuracao_visual (evento_id, publicado, cabecalho_titulo_html, fonte_titulo, fonte_texto)
+VALUES (1, 0, '<p>5ª Semana de Inovação do Poder Judiciário de Roraima</p>', 'Fredoka', 'Montserrat')
+ON DUPLICATE KEY UPDATE fonte_titulo = VALUES(fonte_titulo), fonte_texto = VALUES(fonte_texto);
 
 -- Tipos de atividade (etiquetas coloridas da programacao).
 DELETE FROM evento_atividade_tipos WHERE evento_id = 1;
@@ -142,29 +143,38 @@ INSERT INTO evento_atividade_tipos (evento_id, nome, cor, ordem) VALUES
 (1, 'Apresentação', '#0f8a5f', 5),
 (1, 'Sessão de banners', '#b8860b', 6);
 
--- Quadros de apresentacao (carrossel), item 3 da especificacao.
+-- Quadros de apresentacao (carrossel), item 3 da especificacao. Mesmo metodo
+-- da home do Concurso: cada quadro com o proprio tempo e efeito de troca. A
+-- arte de fundo (textura, numeral, seta e xadrez da identidade visual) e'
+-- enviada pelo Admin em cada quadro, ver DeployFase51.md, secao 4; sem ela,
+-- o quadro usa a cor verde cadastrada aqui. Os links usam as ancoras fixas
+-- da pagina (evento_secoes_ordem.ancora, no fim deste arquivo) e rotas
+-- internas, que a pagina resolve pelo endereco do proprio sistema.
 DELETE FROM evento_slides WHERE evento_id = 1;
 INSERT INTO evento_slides
     (evento_id, cor_fundo, duracao_ms, efeito_transicao, etiqueta_texto, etiqueta_cor_fundo, etiqueta_cor_texto,
      titulo_html, cta_titulo, cta_link, cta_cor_fundo, cta_cor_texto, cta2_titulo, cta2_link, ordem, ativo)
 VALUES
-(1, '#cbd744', 9000, 'fade', 'ABERTURA · 04/11', '#141413', '#ffffff',
- '<p>A inovação continua transformando a forma de fazer Justiça.</p><p>Venha experimentar, aprender e cocriar soluções que unem tecnologia, inovação e humanização para uma Justiça mais próxima do cidadão.</p>',
- 'Confira a programação', '#secao-programacao', '#141413', '#ffffff', NULL, NULL, 0, 1),
-(1, '#cbd744', 9000, 'fade', 'PRAZO ATÉ 16/10', '#ea5a43', '#ffffff',
+(1, '#cbd744', 12000, 'slide', 'ABERTURA · 04/11', '#141413', '#ffffff',
+ '<p>A <span style="color:#006699">inovação</span> continua transformando a forma de fazer Justiça.</p><p>Venha experimentar, aprender e cocriar soluções que unem tecnologia, inovação e humanização para uma Justiça mais próxima do cidadão.</p>',
+ 'Confira a programação', '#programacao', '#ea5a43', '#141413', NULL, NULL, 0, 1),
+(1, '#cbd744', 12000, 'slide', 'PRAZO ATÉ 16/10', '#ea5a43', '#141413',
  '<p>Submeta seu trabalho para a 5ª Semana de Inovação</p><p>Resumos expandidos aprovados são apresentados em banner durante o evento e publicados nos Anais digitais.</p>',
- 'Enviar meu trabalho', 'trabalho/formulario/1', '#141413', '#ffffff', NULL, NULL, 1, 1),
-(1, '#cbd744', 9000, 'fade', '05/11 · 10H30', '#006699', '#ffffff',
+ 'Enviar meu trabalho', 'trabalho/formulario/1', '#ea5a43', '#141413', NULL, NULL, 1, 1),
+(1, '#cbd744', 12000, 'slide', '05/11 · 10H30', '#006699', '#ffffff',
  '<p>Conheça os vencedores do 5º Prêmio de Inovação</p><p>Divulgação do resultado e apresentação dos três primeiros colocados.</p>',
- 'Ver destaques do dia', '#secao-destaques', '#141413', '#ffffff', NULL, NULL, 2, 1),
-(1, '#cbd744', 9000, 'fade', 'ATIVIDADES', '#141413', '#ffffff',
+ 'Ver programação do dia', '#destaques', '#ea5a43', '#141413', NULL, NULL, 2, 1),
+(1, '#cbd744', 12000, 'slide', 'ATIVIDADES', '#ffffff', '#141413',
  '<p>Karaokê, Batalha de Prompts e muito mais</p><p>Duas manhãs e duas tardes de aprendizado, troca e diversão na EJURR.</p>',
- 'Ver a programação', '#secao-programacao', '#141413', '#ffffff', 'Inscreva-se', 'eventoInscricao/index/1', 3, 1);
+ 'Ver todas as atividades', '#programacao', '#ea5a43', '#141413', 'Inscreva-se', 'eventoInscricao/index/1', 3, 1);
 
--- Faixa de respiro visual (item 4 da especificacao).
+-- Faixa de respiro visual com a frase do tema (item 4 da especificacao), no
+-- formato de bandeirinha (o balao de dialogo da identidade visual, em
+-- vermelho para contrastar com o verde do carrossel): o primeiro paragrafo
+-- vira o balao, o restante aparece como linha discreta abaixo dele.
 DELETE FROM evento_banners WHERE evento_id = 1;
-INSERT INTO evento_banners (evento_id, cor_fundo, conteudo_html, conteudo_alinhamento, ordem, ativo)
-VALUES (1, '#ffffff',
+INSERT INTO evento_banners (evento_id, cor_fundo, cor_texto, formato, conteudo_html, conteudo_alinhamento, ordem, ativo)
+VALUES (1, '#ea5a43', '#141413', 'bandeirinha',
  '<p><strong>TECNOLOGIA E INOVAÇÃO: ENTRE ALGORITMOS E EMPATIA</strong></p><p>5ª Semana de Inovação do Poder Judiciário de Roraima · NPI</p>',
  'centro', 0, 1);
 
@@ -181,86 +191,89 @@ DELETE FROM evento_secao_faq WHERE evento_id = 1;
 DELETE FROM evento_secao_local WHERE evento_id = 1;
 DELETE FROM evento_blocos_conteudo WHERE evento_id = 1;
 
--- Contagem regressiva (item 5 da especificacao).
-INSERT INTO evento_secao_contagem (evento_id, etiqueta, titulo, data_alvo, cor_fundo, cor_texto, cor_circulo)
-VALUES (1, 'CONTAGEM REGRESSIVA', 'Faltam poucos dias para a 5ª Semana de Inovação', '2026-11-04 08:30:00', '#f4f7d9', '#141413', '#141413');
+-- Contagem regressiva (item 5 da especificacao). As datas em destaque
+-- trazem o texto inteiro, como na identidade visual aprovada.
+INSERT INTO evento_secao_contagem (evento_id, etiqueta, titulo, data_alvo, cor_fundo, cor_texto, cor_circulo, cor_anel_1, cor_anel_2, cor_anel_3)
+VALUES (1, 'CONTAGEM REGRESSIVA', 'Faltam poucos dias para a 5ª Semana de Inovação', '2026-11-04 08:00:00', '#f7f9ec', '#141413', '#141413', '#ea5a43', '#006699', '#cbd744');
 SET @secao_contagem = LAST_INSERT_ID();
 
 INSERT INTO evento_secao_contagem_itens (secao_id, texto, data_referencia, cor_marcador, ordem) VALUES
-(@secao_contagem, 'Submissões abertas até', '2026-10-16', '#ea5a43', 0),
-(@secao_contagem, 'Início da Semana de Inovação', '2026-11-04', '#006699', 1),
-(@secao_contagem, 'Entrega do Prêmio de Inovação', '2026-11-06', '#cbd744', 2);
+(@secao_contagem, 'Submissões abertas até 16/10/2026', NULL, '#ea5a43', 0),
+(@secao_contagem, 'Início da Semana de Inovação · 04/11/2026', NULL, '#006699', 1),
+(@secao_contagem, 'Entrega do Prêmio de Inovação · 06/11/2026', NULL, '#cbd744', 2);
 
--- Bloco de destaque da submissao (item 6 da especificacao).
-INSERT INTO evento_blocos_conteudo
-    (evento_id, titulo, conteudo_html, cor_fundo, cor_texto, cta_titulo, cta_link, cta_alinhamento, cta2_titulo, cta2_link, secao_ancora, ordem, ativo)
-VALUES (1, 'Submeta seu trabalho para a 5ª Semana de Inovação',
- '<p>A submissão é aberta a qualquer pessoa interessada, do quadro do Tribunal ou não. Os trabalhos aprovados são apresentados presencialmente em banner e publicados nos Anais digitais do evento.</p><p>Dúvidas: npi@tjrr.jus.br</p>',
- '#ea5a43', '#141413', 'Enviar meu trabalho', 'trabalho/formulario/1', 'esquerda', NULL, NULL, 'submissao', 0, 1);
-SET @bloco_submissao = LAST_INSERT_ID();
-
--- Cronograma de submissao (item 11 do edital).
-INSERT INTO evento_secao_cronograma (evento_id, etiqueta, titulo, cor_fundo, cor_texto)
-VALUES (1, 'EDITAL NPI Nº 10/2026', 'Cronograma de submissão', '#ffffff', '#141413');
+-- Submissao de trabalhos e cronograma (itens 6 da especificacao e 11 do
+-- edital), numa secao so': texto e botoes a esquerda, quadro branco com a
+-- linha do tempo a direita. O botao do edital aponta para um Documento do
+-- Evento, que o Admin envia pela tela (arquivo nao e' versionado): ate la,
+-- o botao fica escondido. O terceiro botao (modelo do resumo expandido, em
+-- Word) segue a mesma regra: so' o titulo e' semeado; o arquivo
+-- 5SI_TemplateResumoExpandido.docx e' enviado em Evento, Documentos, e
+-- escolhido no botao 3 do Cronograma (ver DeployFase51.md, secao 4).
+INSERT INTO evento_secao_cronograma
+    (evento_id, etiqueta, titulo, descricao_html, titulo_quadro, botao1_titulo, botao1_documento_id, botao1_link,
+     botao2_titulo, botao2_link, botao3_titulo, mostrar_contato, cor_fundo, cor_texto)
+VALUES (1, 'EDITAL NPI Nº 10/2026', 'Submeta seu trabalho para a 5ª Semana de Inovação',
+ '<p>A submissão é aberta a qualquer pessoa interessada, do quadro do Tribunal ou não. Os trabalhos aprovados são apresentados presencialmente em banner e publicados nos Anais digitais do evento.</p>',
+ 'Cronograma de submissão', 'Acessar o Edital completo', NULL, NULL,
+ 'Enviar meu trabalho', 'trabalho/formulario/1', 'Baixar o modelo do resumo expandido', 1, '#ea5a43', '#141413');
 SET @secao_cronograma = LAST_INSERT_ID();
 
 INSERT INTO evento_secao_cronograma_itens (secao_id, periodo_texto, descricao, data_referencia, cor, ordem) VALUES
-(@secao_cronograma, '22/09/2026', 'Publicação do edital e abertura das submissões', '2026-09-22', '#cbd744', 0),
+(@secao_cronograma, '22/09/2026', 'Publicação do edital e abertura das submissões', '2026-09-22', '#ea5a43', 0),
 (@secao_cronograma, '16/10/2026, até 23h59', 'Prazo final para submissão dos trabalhos', '2026-10-16', '#ea5a43', 1),
-(@secao_cronograma, '19 a 26/10/2026', 'Avaliação dos trabalhos', '2026-10-19', '#006699', 2),
-(@secao_cronograma, '27/10/2026', 'Divulgação do resultado e do modelo de banner', '2026-10-27', '#006699', 3),
-(@secao_cronograma, 'Até 03/11/2026', 'Confirmação de participação pelos autores aprovados', '2026-11-03', '#141413', 4),
-(@secao_cronograma, '04 a 06/11/2026', 'Apresentação dos banners durante o evento', '2026-11-04', '#cbd744', 5);
+(@secao_cronograma, '19 a 26/10/2026', 'Avaliação dos trabalhos', '2026-10-19', '#cbd744', 2),
+(@secao_cronograma, '27/10/2026', 'Divulgação do resultado e do modelo de banner', '2026-10-27', '#cbd744', 3),
+(@secao_cronograma, 'Até 03/11/2026', 'Confirmação de participação pelos autores aprovados', '2026-11-03', '#006699', 4),
+(@secao_cronograma, '04 a 06/11/2026', 'Apresentação dos banners durante o evento', '2026-11-04', '#006699', 5);
 
--- Bloco "Sobre" (item 7 da especificacao).
-INSERT INTO evento_blocos_conteudo
-    (evento_id, titulo, conteudo_html, cor_fundo, cor_texto, cta_alinhamento, secao_ancora, ordem, ativo)
-VALUES (1, 'Sobre a Semana de Inovação',
- '<p>Credenciamento, atividades, trabalho em rede e submissão de artigo científico. A iniciativa do Núcleo de Projetos e Inovação busca estimular a produção e o compartilhamento de conhecimento sobre inovação no setor público, aproximando o sistema de justiça da academia, de outras instituições e da sociedade.</p>',
- '#ffffff', '#141413', 'esquerda', 'sobre', 1, 1);
-SET @bloco_sobre = LAST_INSERT_ID();
-
--- Cartoes dos eixos tematicos: cada cartao aponta para o eixo ja cadastrado,
--- entao o texto completo continua vindo de um lugar so'.
-INSERT INTO evento_secao_cartoes (evento_id, etiqueta, titulo, colunas, efeito_hover, efeito_abrir, efeito_fechar, cor_fundo, cor_texto)
-VALUES (1, 'EIXOS TEMÁTICOS', 'Quatro caminhos para o seu trabalho', 4, 'elevar', 'deslizar', 'deslizar', '#ffffff', '#141413');
+-- Sobre o evento e eixos tematicos (item 7 da especificacao), numa secao
+-- so': o texto do "Sobre" e' o cabecalho da propria secao de cartoes. Cada
+-- cartao aponta para o eixo ja cadastrado, entao o texto completo continua
+-- vindo de um lugar so'. `cor` e' a cor da etiqueta; cor_fundo, o tom pastel.
+INSERT INTO evento_secao_cartoes (evento_id, etiqueta, titulo, descricao_html, colunas, efeito_hover, efeito_abrir, efeito_fechar, cor_fundo, cor_texto)
+VALUES (1, 'SOBRE O EVENTO', 'Semana de Inovação do TJRR',
+ '<p>Credenciamento, atividades, trabalho em rede e submissão de artigo científico. A iniciativa do Núcleo de Projetos e Inovação (NPI) busca estimular a produção e o compartilhamento de conhecimento sobre inovação no setor público, aproximando o sistema de justiça da academia, de outras instituições e da sociedade.</p>',
+ 4, 'elevar', 'deslizar', 'deslizar', '#ffffff', '#141413');
 SET @secao_cartoes = LAST_INSERT_ID();
 
-INSERT INTO evento_secao_cartoes_itens (secao_id, eixo_tematico_id, etiqueta, titulo, resumo, cor, ordem)
+INSERT INTO evento_secao_cartoes_itens (secao_id, eixo_tematico_id, etiqueta, titulo, resumo, cor, cor_fundo, ordem)
 SELECT @secao_cartoes, e.id, 'EIXO 1', 'Tecnologia, Algoritmos e IA',
-       'Inteligência artificial, ciência de dados e automação na transformação digital.', '#006699', 0
+       'Inteligência artificial, ciência de dados e automação na transformação digital.', '#ea5a43', '#fff3f1', 0
 FROM trabalho_eixos_tematicos e WHERE e.evento_id = 1 AND e.nome LIKE 'Eixo 1%' LIMIT 1;
 
-INSERT INTO evento_secao_cartoes_itens (secao_id, eixo_tematico_id, etiqueta, titulo, resumo, cor, ordem)
+INSERT INTO evento_secao_cartoes_itens (secao_id, eixo_tematico_id, etiqueta, titulo, resumo, cor, cor_fundo, ordem)
 SELECT @secao_cartoes, e.id, 'EIXO 2', 'Ética e Direitos Fundamentais',
-       'Privacidade, proteção de dados, acesso à Justiça, acessibilidade e inclusão.', '#ea5a43', 1
+       'Privacidade, proteção de dados, acesso à Justiça, acessibilidade e inclusão.', '#006699', '#f2f8fb', 1
 FROM trabalho_eixos_tematicos e WHERE e.evento_id = 1 AND e.nome LIKE 'Eixo 2%' LIMIT 1;
 
-INSERT INTO evento_secao_cartoes_itens (secao_id, eixo_tematico_id, etiqueta, titulo, resumo, cor, ordem)
+INSERT INTO evento_secao_cartoes_itens (secao_id, eixo_tematico_id, etiqueta, titulo, resumo, cor, cor_fundo, ordem)
 SELECT @secao_cartoes, e.id, 'EIXO 3', 'Desafios da Amazônia',
-       'Sustentabilidade, territórios, povos originários e comunidades tradicionais.', '#0f8a5f', 2
+       'Sustentabilidade, territórios, povos originários e comunidades tradicionais.', '#8f9a1f', '#f7f9ec', 2
 FROM trabalho_eixos_tematicos e WHERE e.evento_id = 1 AND e.nome LIKE 'Eixo 3%' LIMIT 1;
 
-INSERT INTO evento_secao_cartoes_itens (secao_id, eixo_tematico_id, etiqueta, titulo, resumo, cor, ordem)
+INSERT INTO evento_secao_cartoes_itens (secao_id, eixo_tematico_id, etiqueta, titulo, resumo, cor, cor_fundo, ordem)
 SELECT @secao_cartoes, e.id, 'EIXO 4', 'Inovação, Sociedade e Transformação',
-       'Inovação pública e social, gestão, educação, cultura e empreendedorismo.', '#cbd744', 3
+       'Inovação pública e social, gestão, educação, cultura e empreendedorismo.', '#141413', '#f4f4f4', 3
 FROM trabalho_eixos_tematicos e WHERE e.evento_id = 1 AND e.nome LIKE 'Eixo 4%' LIMIT 1;
 
 -- Destaques da programacao (item 8 da especificacao). Modo digitado: as
 -- Atividades ainda serao cadastradas pela equipe, e a pagina nao pode
 -- depender disso para ir ao ar. Depois de cadastradas, basta trocar a fonte
--- da secao para "Atividades" na tela.
+-- da secao para "Atividades" na tela. Icones da lista fechada de
+-- EventoSecaoDestaquesRepository::ICONES.
 INSERT INTO evento_secao_destaques (evento_id, etiqueta, titulo, fonte, colunas, cor_fundo, cor_texto)
-VALUES (1, 'NÃO PERCA', 'Destaques da programação', 'itens', 4, '#ffffff', '#141413');
+VALUES (1, 'NÃO PERCA', 'Destaques da programação', 'itens', 4, '#faf9f5', '#141413');
 SET @secao_destaques = LAST_INSERT_ID();
 
-INSERT INTO evento_secao_destaques_itens (secao_id, titulo, quando_texto, local, descricao, ordem) VALUES
-(@secao_destaques, '5º Prêmio de Inovação', '05/11 · 10h30 às 12h30', 'Sala 415 EJURR', 'Divulgação do resultado e apresentação dos três primeiros colocados.', 0),
-(@secao_destaques, 'Karaokê', '05/11 · 10h às 10h30', 'Hall da EJURR', 'Experiência para descontrair entre as atividades da manhã.', 1),
-(@secao_destaques, 'Batalha de Prompts', '05/11 · 16h às 16h30', 'Hall da EJURR', 'Desafio prático de inteligência artificial entre participantes.', 2),
-(@secao_destaques, 'Sessão Solene de Abertura', '04/11 · a partir das 16h', NULL, 'Lançamento do Projeto de Inteligência Artificial do Comitê de IA.', 3);
+INSERT INTO evento_secao_destaques_itens (secao_id, titulo, quando_texto, local, descricao, icone, icone_cor, ordem) VALUES
+(@secao_destaques, '5º Prêmio de Inovação', '05/11 · 10h30 às 12h30', 'Sala 415 EJURR', 'Divulgação do resultado e apresentação dos três primeiros colocados.', 'trofeu', '#ea5a43', 0),
+(@secao_destaques, 'Karaokê', '05/11 · 10h às 10h30', 'Hall da EJURR', 'Experiência para descontrair entre as atividades da manhã.', 'musica', '#cbd744', 1),
+(@secao_destaques, 'Batalha de Prompts', '05/11 · 16h às 16h30', 'Hall da EJURR', 'Desafio prático de inteligência artificial entre participantes.', 'raio', '#006699', 2),
+(@secao_destaques, 'Sessão Solene de Abertura', '04/11 · a partir das 16h', NULL, 'Lançamento do Projeto de Inteligência Artificial do Comitê de IA.', 'predio', '#141413', 3);
 
 -- Programacao completa (item 9 da especificacao), tambem no modo digitado.
+-- A faixa de horario de cada turno sai sozinha dos horarios dos itens.
 INSERT INTO evento_secao_programacao (evento_id, etiqueta, titulo, fonte, mostrar_local, cor_fundo, cor_texto)
 VALUES (1, 'PROGRAMAÇÃO', 'Confira a programação completa', 'itens', 1, '#ffffff', '#141413');
 SET @secao_programacao = LAST_INSERT_ID();
@@ -284,8 +297,8 @@ INSERT INTO evento_secao_programacao_itens (secao_id, dia, turno, horario_texto,
 -- mapa fica em branco: quem cadastra escolhe se quer mapa de terceiros na
 -- pagina, pela tela.
 INSERT INTO evento_secao_local (evento_id, etiqueta, titulo, endereco, descricao_html, cor_fundo, cor_texto)
-VALUES (1, 'LOCAL E ACESSO', 'Sede Administrativa e EJURR',
- 'Av. Cap. Ene Garcez, nº 1696, Bairro Centro, Boa Vista/RR',
+VALUES (1, 'LOCAL E ACESSO', 'Sede Administrativa do TJRR e EJURR',
+ 'Av. Cap. Ene Garcez, nº 1696, Bairro Centro, Boa Vista/RR.',
  '<p>Contato: npi@tjrr.jus.br</p>', '#cbd744', '#141413');
 SET @secao_local = LAST_INSERT_ID();
 
@@ -301,29 +314,30 @@ INSERT INTO evento_secao_faq_itens (secao_id, pergunta, resposta_html, ativo, or
 (@secao_faq, 'Até quando confirmo minha participação?', '<p>Até 3 de novembro de 2026. A ausência de confirmação é considerada desistência.</p>', 1, 3),
 (@secao_faq, 'Com quem falo em caso de dúvida?', '<p>Pelo endereço npi@tjrr.jus.br, conforme o item 12.6 do edital.</p>', 1, 4);
 
--- Chamada final de inscricao (item 12 da especificacao).
+-- Chamada final de inscricao (item 12 da especificacao), com a cor do
+-- rodape e encostada nele.
 INSERT INTO evento_blocos_conteudo
-    (evento_id, titulo, conteudo_html, cor_fundo, cor_texto, cta_titulo, cta_link, cta_alinhamento, secao_ancora, ordem, ativo)
-VALUES (1, 'Inscreva-se na 5ª Semana de Inovação',
+    (evento_id, etiqueta, etiqueta_cor, titulo, conteudo_html, cor_fundo, cor_texto, usar_cor_rodape,
+     cta_titulo, cta_link, cta_cor_fundo, cta_cor_texto, cta_alinhamento, secao_ancora, ordem, ativo)
+VALUES (1, 'GARANTA SUA VAGA', '#cbd744', 'Inscreva-se na 5ª Semana de Inovação',
  '<p>Participação gratuita, aberta ao público em geral.</p>',
- '#141413', '#ffffff', 'Inscreva-se agora', 'eventoInscricao/index/1', 'centro', 'inscricao', 2, 1);
+ NULL, '#ffffff', 1, 'Inscreva-se agora', 'eventoInscricao/index/1', '#ea5a43', '#141413', 'centro', 'inscricao', 0, 1);
 SET @bloco_inscricao = LAST_INSERT_ID();
 
--- Ordem da pagina, liga/desliga e menu do cabecalho (item 1 da
--- especificacao: a ordem dos blocos, de cima para baixo).
-INSERT INTO evento_secoes_ordem (evento_id, tipo, referencia_id, ordem, ativo, mostrar_no_menu, rotulo_menu) VALUES
-(1, 'quadros', NULL, 0, 1, 0, NULL),
-(1, 'faixas', NULL, 1, 1, 0, NULL),
-(1, 'contagem', @secao_contagem, 2, 1, 0, NULL),
-(1, 'bloco', @bloco_submissao, 3, 1, 1, 'Submeta seu Trabalho'),
-(1, 'cronograma', @secao_cronograma, 4, 1, 0, NULL),
-(1, 'bloco', @bloco_sobre, 5, 1, 1, 'Sobre'),
-(1, 'cartoes', @secao_cartoes, 6, 1, 0, NULL),
-(1, 'destaques', @secao_destaques, 7, 1, 1, 'Prêmio de Inovação'),
-(1, 'programacao', @secao_programacao, 8, 1, 1, 'Programação'),
-(1, 'local', @secao_local, 9, 1, 0, NULL),
-(1, 'faq', @secao_faq, 10, 1, 0, NULL),
-(1, 'bloco', @bloco_inscricao, 11, 1, 0, NULL);
+-- Ordem da pagina, liga/desliga, menu do cabecalho e ancoras fixas (item 1
+-- da especificacao: a ordem dos blocos, de cima para baixo). As ancoras sao
+-- as que os links dos quadros usam.
+INSERT INTO evento_secoes_ordem (evento_id, tipo, referencia_id, ordem, ativo, mostrar_no_menu, rotulo_menu, ancora) VALUES
+(1, 'quadros', NULL, 0, 1, 0, NULL, 'inicio'),
+(1, 'faixas', NULL, 1, 1, 0, NULL, NULL),
+(1, 'contagem', @secao_contagem, 2, 1, 0, NULL, 'contagem'),
+(1, 'cronograma', @secao_cronograma, 3, 1, 1, 'Submeta seu Trabalho', 'submissao'),
+(1, 'cartoes', @secao_cartoes, 4, 1, 1, 'Sobre', 'sobre'),
+(1, 'destaques', @secao_destaques, 5, 1, 0, NULL, 'destaques'),
+(1, 'programacao', @secao_programacao, 6, 1, 1, 'Programação', 'programacao'),
+(1, 'local', @secao_local, 7, 1, 0, NULL, 'local'),
+(1, 'faq', @secao_faq, 8, 1, 0, NULL, 'perguntas'),
+(1, 'bloco', @bloco_inscricao, 9, 1, 0, NULL, NULL);
 
 -- Declaracoes que o autor aceita ao submeter (Fase 51). A primeira repete o
 -- aceite do canal alternativo; as outras duas separam o que o edital trata

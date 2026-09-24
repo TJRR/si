@@ -64,7 +64,7 @@ class EventoSecaoOrdemRepository
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'SELECT o.id AS secao_id, o.tipo, o.referencia_id, o.ordem, o.ativo,
-                    o.mostrar_no_menu, o.rotulo_menu,
+                    o.mostrar_no_menu, o.rotulo_menu, o.ancora,
                     COALESCE(b.titulo, ct.titulo, cr.titulo, ca.titulo, de.titulo, pr.titulo, fa.titulo, lo.titulo) AS titulo_item,
                     b.secao_ancora AS bloco_ancora
              FROM evento_secoes_ordem o
@@ -132,6 +132,13 @@ class EventoSecaoOrdemRepository
      */
     public static function ancoraDaSecao(array $secao)
     {
+        // Reabertura da Fase 51: ancora digitada na tela "Secoes da pagina"
+        // vence as automaticas - e' o nome que os links dos quadros e dos
+        // botoes usam (#programacao, #submissao).
+        if (!empty($secao['ancora'])) {
+            return $secao['ancora'];
+        }
+
         if ($secao['tipo'] === 'bloco' && !empty($secao['bloco_ancora'])) {
             return $secao['bloco_ancora'];
         }
@@ -141,6 +148,27 @@ class EventoSecaoOrdemRepository
         }
 
         return 'secao-' . $secao['tipo'] . '-' . (int) $secao['referencia_id'];
+    }
+
+    /**
+     * Ancora digitada vira identificador seguro para o atributo id e para o
+     * link: minusculas, sem acento, so' letras, numeros e hifen. Vazia
+     * volta a valer o nome automatico.
+     */
+    public static function normalizarAncora($valor)
+    {
+        $valor = trim((string) $valor);
+
+        if ($valor === '') {
+            return null;
+        }
+
+        $valor = ltrim($valor, '#');
+        $semAcento = iconv('UTF-8', 'ASCII//TRANSLIT', mb_strtolower($valor, 'UTF-8'));
+        $valor = $semAcento !== false ? $semAcento : $valor;
+        $valor = trim(preg_replace('/[^a-z0-9]+/', '-', $valor), '-');
+
+        return $valor !== '' ? substr($valor, 0, 60) : null;
     }
 
     public function buscarPorId($eventoId, $secaoId)
@@ -252,13 +280,14 @@ class EventoSecaoOrdemRepository
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'UPDATE evento_secoes_ordem
-             SET ativo = :ativo, mostrar_no_menu = :mostrar_no_menu, rotulo_menu = :rotulo_menu
+             SET ativo = :ativo, mostrar_no_menu = :mostrar_no_menu, rotulo_menu = :rotulo_menu, ancora = :ancora
              WHERE id = :id AND evento_id = :evento_id'
         );
         $stmt->execute([
             'ativo' => !empty($dados['ativo']) ? 1 : 0,
             'mostrar_no_menu' => !empty($dados['mostrar_no_menu']) ? 1 : 0,
             'rotulo_menu' => isset($dados['rotulo_menu']) && trim((string) $dados['rotulo_menu']) !== '' ? trim($dados['rotulo_menu']) : null,
+            'ancora' => self::normalizarAncora(isset($dados['ancora']) ? $dados['ancora'] : null),
             'id' => $secaoId,
             'evento_id' => $eventoId,
         ]);

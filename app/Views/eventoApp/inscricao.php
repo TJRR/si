@@ -7,6 +7,7 @@
     <?php
     $eventoId = $evento['id'];
     $tituloTopo = $evento['nome'];
+    $urlVoltar = url('eventoApp/index/' . (int) $eventoId);
     require __DIR__ . '/_app_bar.php';
     ?>
 
@@ -17,7 +18,7 @@
         // (fonte única da pessoa), trazidos por JOIN em
         // EventoInscricaoRepository::buscarPorEventoEUsuario().
         $tipoDocumento = $inscricao['perfil_tipo_documento'];
-        $rotuloDocumento = $tipoDocumento !== null ? $tipoDocumento : 'Documento';
+        $rotuloDocumento = $tipoDocumento !== null ? $tipoDocumento : \App\Repositories\EventoCampoInscricaoRepository::ROTULO_NUMERO_DOCUMENTO;
         $documentoExibicao = $tipoDocumento === 'CPF'
             ? \App\Validation\CpfValidador::formatar((string) $inscricao['perfil_documento'])
             : (string) $inscricao['perfil_documento'];
@@ -54,7 +55,7 @@
             <ul class="cartao-credenciamento-dados">
                 <li><strong><?php echo htmlspecialchars($rotuloDocumento, ENT_QUOTES, 'UTF-8'); ?>:</strong> <?php echo htmlspecialchars($documentoExibicao, ENT_QUOTES, 'UTF-8'); ?></li>
                 <?php foreach ($campos as $campo): ?>
-                    <?php if ($campo['rotulo'] === 'Tipo de documento') { continue; } ?>
+                    <?php if ($campo['rotulo'] === \App\Repositories\EventoCampoInscricaoRepository::ROTULO_TIPO_DOCUMENTO) { continue; } ?>
                     <?php $valor = isset($respostas[$campo['id']]) ? $respostas[$campo['id']] : null; ?>
                     <?php if (!empty($valor)): ?>
                         <li><strong><?php echo htmlspecialchars($campo['rotulo'], ENT_QUOTES, 'UTF-8'); ?>:</strong> <?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?></li>

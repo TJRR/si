@@ -39,7 +39,8 @@
                     <label>Quando: <input type="text" name="quando_texto" maxlength="120" value="<?php echo htmlspecialchars((string) $item['quando_texto'], ENT_QUOTES, 'UTF-8'); ?>"></label>
                     <label>Local: <input type="text" name="local" maxlength="150" value="<?php echo htmlspecialchars((string) $item['local'], ENT_QUOTES, 'UTF-8'); ?>"></label>
                     <label>Descrição: <input type="text" name="descricao" maxlength="255" value="<?php echo htmlspecialchars((string) $item['descricao'], ENT_QUOTES, 'UTF-8'); ?>"></label>
-                    <label>Ícone: <input type="text" name="icone" maxlength="40" value="<?php echo htmlspecialchars((string) $item['icone'], ENT_QUOTES, 'UTF-8'); ?>"></label>
+                    <label>Ícone: <select name="icone"><option value="">Sem ícone</option><?php foreach (\App\Repositories\EventoSecaoDestaquesRepository::ICONES as $chaveIcone => $icone): ?><option value="<?php echo $chaveIcone; ?>" <?php echo (string) $item['icone'] === $chaveIcone ? 'selected' : ''; ?>><?php echo htmlspecialchars($icone['rotulo'], ENT_QUOTES, 'UTF-8'); ?></option><?php endforeach; ?></select></label>
+                    <label>Cor do quadrado do ícone: <input type="text" name="icone_cor" maxlength="7" value="<?php echo htmlspecialchars((string) (isset($item['icone_cor']) ? $item['icone_cor'] : ''), ENT_QUOTES, 'UTF-8'); ?>"></label>
                     <button type="submit" class="btn-acao">Salvar</button>
                 </form>
             </div>
@@ -73,6 +74,7 @@
     <label>Quando: <input type="text" name="quando_texto" maxlength="120" placeholder="05/11 · 10h30 às 12h30"></label>
     <label>Local: <input type="text" name="local" maxlength="150"></label>
     <label>Descrição: <input type="text" name="descricao" maxlength="255"></label>
-    <label>Ícone: <input type="text" name="icone" maxlength="40"></label>
+    <label>Ícone: <select name="icone"><option value="">Sem ícone</option><?php foreach (\App\Repositories\EventoSecaoDestaquesRepository::ICONES as $chaveIcone => $icone): ?><option value="<?php echo $chaveIcone; ?>"><?php echo htmlspecialchars($icone['rotulo'], ENT_QUOTES, 'UTF-8'); ?></option><?php endforeach; ?></select></label>
+    <label>Cor do quadrado do ícone: <input type="text" name="icone_cor" maxlength="7" placeholder="#ea5a43"></label>
     <button type="submit">Adicionar</button>
 </form>

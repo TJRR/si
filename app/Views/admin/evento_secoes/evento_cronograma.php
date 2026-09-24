@@ -4,10 +4,70 @@
 } ?>
 <?php include __DIR__ . '/_cabecalho_secao.php'; ?>
 
-<p style="color:#555;font-size:0.9em;">Linha do tempo de marcos, na ordem em que aparecem. Use o texto do período como ele deve ser lido, por exemplo "19 a 26/10/2026" ou "16/10/2026, até 23h59".</p>
+<p style="color:#555;font-size:0.9em;">Seção em duas colunas: à esquerda, a etiqueta, o título, o texto, até três botões e a linha de contato; à direita, um quadro branco com a linha do tempo dos marcos, na ordem em que aparecem. Use o texto do período como ele deve ser lido, por exemplo "19 a 26/10/2026" ou "16/10/2026, até 23h59".</p>
 
 <form method="post" action="<?php echo url('eventoSecoes/editar/' . (int) $evento['id'] . '/cronograma/' . (int) $secao['id']); ?>"><?= campoCsrf() ?>
     <?php include __DIR__ . '/_campos_comuns.php'; ?>
+
+    <label>Título do quadro da linha do tempo:
+        <input type="text" name="titulo_quadro" maxlength="150" placeholder="Cronograma de submissão" value="<?php echo htmlspecialchars((string) (isset($secao['titulo_quadro']) ? $secao['titulo_quadro'] : ''), ENT_QUOTES, 'UTF-8'); ?>">
+    </label>
+
+    <fieldset>
+        <legend>Botão principal (opcional)</legend>
+        <p style="color:#555;font-size:0.9em;">Escolha um documento do evento (sub-aba Documentos) ou digite um destino. Com documento escolhido, o botão abre sempre a versão atual dele e some da página se o documento for despublicado.</p>
+        <label>Texto do botão:
+            <input type="text" name="botao1_titulo" maxlength="150" placeholder="Acessar o Edital completo" value="<?php echo htmlspecialchars((string) (isset($secao['botao1_titulo']) ? $secao['botao1_titulo'] : ''), ENT_QUOTES, 'UTF-8'); ?>">
+        </label>
+        <label>Documento do evento:
+            <select name="botao1_documento_id">
+                <option value="">Nenhum (usar o destino digitado)</option>
+                <?php foreach ($documentos as $documento): ?>
+                    <option value="<?php echo (int) $documento['id']; ?>" <?php echo (int) (isset($secao['botao1_documento_id']) ? $secao['botao1_documento_id'] : 0) === (int) $documento['id'] ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($documento['titulo'], ENT_QUOTES, 'UTF-8'); ?><?php echo (int) $documento['publicado'] === 1 ? '' : ' (despublicado)'; ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <label>Destino digitado:
+            <input type="text" name="botao1_link" maxlength="255" value="<?php echo htmlspecialchars((string) (isset($secao['botao1_link']) ? $secao['botao1_link'] : ''), ENT_QUOTES, 'UTF-8'); ?>">
+        </label>
+    </fieldset>
+
+    <fieldset>
+        <legend>Botão secundário (opcional)</legend>
+        <label>Texto do botão:
+            <input type="text" name="botao2_titulo" maxlength="150" placeholder="Enviar meu trabalho" value="<?php echo htmlspecialchars((string) (isset($secao['botao2_titulo']) ? $secao['botao2_titulo'] : ''), ENT_QUOTES, 'UTF-8'); ?>">
+        </label>
+        <label>Destino:
+            <input type="text" name="botao2_link" maxlength="255" placeholder="trabalho/formulario/<?php echo (int) $evento['id']; ?>" value="<?php echo htmlspecialchars((string) (isset($secao['botao2_link']) ? $secao['botao2_link'] : ''), ENT_QUOTES, 'UTF-8'); ?>">
+        </label>
+    </fieldset>
+
+    <fieldset>
+        <legend>Terceiro botão (opcional)</legend>
+        <p style="color:#555;font-size:0.9em;">Usado, por exemplo, para oferecer o modelo do resumo expandido para baixar. Funciona como o botão principal: escolha um documento do evento (sub-aba Documentos) ou digite um destino. O botão só aparece na página quando tem texto e um destino válido.</p>
+        <label>Texto do botão:
+            <input type="text" name="botao3_titulo" maxlength="150" placeholder="Baixar o modelo do resumo expandido" value="<?php echo htmlspecialchars((string) (isset($secao['botao3_titulo']) ? $secao['botao3_titulo'] : ''), ENT_QUOTES, 'UTF-8'); ?>">
+        </label>
+        <label>Documento do evento:
+            <select name="botao3_documento_id">
+                <option value="">Nenhum (usar o destino digitado)</option>
+                <?php foreach ($documentos as $documento): ?>
+                    <option value="<?php echo (int) $documento['id']; ?>" <?php echo (int) (isset($secao['botao3_documento_id']) ? $secao['botao3_documento_id'] : 0) === (int) $documento['id'] ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($documento['titulo'], ENT_QUOTES, 'UTF-8'); ?><?php echo (int) $documento['publicado'] === 1 ? '' : ' (despublicado)'; ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <label>Destino digitado:
+            <input type="text" name="botao3_link" maxlength="255" value="<?php echo htmlspecialchars((string) (isset($secao['botao3_link']) ? $secao['botao3_link'] : ''), ENT_QUOTES, 'UTF-8'); ?>">
+        </label>
+    </fieldset>
+
+    <p style="color:#555;font-size:0.9em;">Destinos aceitos nos três botões: âncora da própria página ("#programacao"), endereço completo ("https://...") ou endereço interno do sistema ("trabalho/formulario/<?php echo (int) $evento['id']; ?>").</p>
+
+    <label><input type="checkbox" name="mostrar_contato" value="1" <?php echo !empty($secao['mostrar_contato']) ? 'checked' : ''; ?>> Mostrar e-mail e WhatsApp de contato abaixo dos botões (vêm de Configurações, aba Contato)</label>
 
     <button type="submit">Salvar seção</button>
 </form>

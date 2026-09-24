@@ -14,9 +14,16 @@
 -- mostrar_no_menu saiu daqui, porque o menu do cabecalho passou a ser
 -- montado a partir de evento_secoes_ordem (migration 158), onde TODAS as
 -- secoes da pagina, nao so' os blocos, decidem se entram no menu.
+--
+-- Reabertura da Fase 51 (mesma premissa): etiqueta colorida acima do
+-- titulo, cores proprias de cada um dos dois botoes e usar_cor_rodape, que
+-- faz o bloco herdar a cor de fundo do rodape e encostar nele (chamada final
+-- de inscricao integrada ao rodape, como na identidade visual aprovada).
 CREATE TABLE IF NOT EXISTS evento_blocos_conteudo (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     evento_id INT UNSIGNED NOT NULL,
+    etiqueta VARCHAR(60) NULL,
+    etiqueta_cor VARCHAR(7) NULL,
     titulo VARCHAR(150) NOT NULL,
     conteudo_html TEXT NULL,
     imagem_path VARCHAR(255) NULL,
@@ -24,11 +31,16 @@ CREATE TABLE IF NOT EXISTS evento_blocos_conteudo (
     imagem_posicao ENUM('esquerda','direita') NOT NULL DEFAULT 'esquerda',
     cor_fundo VARCHAR(7) NULL,
     cor_texto VARCHAR(7) NULL,
+    usar_cor_rodape TINYINT(1) NOT NULL DEFAULT 0,
     cta_titulo VARCHAR(150) NULL,
     cta_link VARCHAR(255) NULL,
+    cta_cor_fundo VARCHAR(7) NULL,
+    cta_cor_texto VARCHAR(7) NULL,
     cta_alinhamento ENUM('esquerda','centro','direita') NOT NULL DEFAULT 'esquerda',
     cta2_titulo VARCHAR(150) NULL,
     cta2_link VARCHAR(255) NULL,
+    cta2_cor_fundo VARCHAR(7) NULL,
+    cta2_cor_texto VARCHAR(7) NULL,
     secao_ancora VARCHAR(60) NOT NULL,
     ordem INT UNSIGNED NOT NULL DEFAULT 0,
     ativo TINYINT(1) NOT NULL DEFAULT 1,

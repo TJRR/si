@@ -49,12 +49,28 @@
     </fieldset>
 
     <fieldset>
-        <legend>Quadros de apresentação</legend>
+        <legend>Fontes da página pública</legend>
+        <p>Valem só na página pública deste evento. Sem escolha, a página usa as fontes padrão do sistema.</p>
+        <?php $fontesDisponiveis = array_keys(\App\Repositories\EventoConfiguracaoVisualRepository::FONTES); ?>
         <label>
-            <input type="checkbox" name="quadros_avanco_automatico" value="1" <?php echo (!isset($configuracaoVisual['quadros_avanco_automatico']) || (int) $configuracaoVisual['quadros_avanco_automatico'] === 1) ? 'checked' : ''; ?>>
-            Trocar de quadro sozinho, depois do tempo configurado em cada um
+            Fonte dos títulos:
+            <select name="fonte_titulo">
+                <option value="">Fonte padrão do sistema</option>
+                <?php foreach ($fontesDisponiveis as $fonte): ?>
+                    <option value="<?php echo htmlspecialchars($fonte, ENT_QUOTES, 'UTF-8'); ?>" <?php echo (isset($configuracaoVisual['fonte_titulo']) && $configuracaoVisual['fonte_titulo'] === $fonte) ? 'selected' : ''; ?> style="font-family:'<?php echo htmlspecialchars($fonte, ENT_QUOTES, 'UTF-8'); ?>'"><?php echo htmlspecialchars($fonte, ENT_QUOTES, 'UTF-8'); ?></option>
+                <?php endforeach; ?>
+            </select>
         </label>
-        <p>Desmarcado, a troca de quadro acontece só pelas setas e pelos marcadores. A home do Concurso não muda com isto.</p>
+        <br>
+        <label>
+            Fonte do texto:
+            <select name="fonte_texto">
+                <option value="">Fonte padrão do sistema</option>
+                <?php foreach ($fontesDisponiveis as $fonte): ?>
+                    <option value="<?php echo htmlspecialchars($fonte, ENT_QUOTES, 'UTF-8'); ?>" <?php echo (isset($configuracaoVisual['fonte_texto']) && $configuracaoVisual['fonte_texto'] === $fonte) ? 'selected' : ''; ?>><?php echo htmlspecialchars($fonte, ENT_QUOTES, 'UTF-8'); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
     </fieldset>
 
     <fieldset>

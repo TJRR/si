@@ -23,6 +23,17 @@ if ($contextoEvento) {
 }
 
 $urlGoogle = url('auth/google') . ($contextoEvento ? '&contexto=evento' : '');
+
+// Reabertura da Fase 51 (item 1 do teste de fumaca): na porta do Evento,
+// "Cadastre-se" e "Voltar" levam ao cadastro e a pagina do proprio evento.
+$eventoIdContexto = $contextoEvento && !empty($eventoIdContexto) ? (int) $eventoIdContexto : null;
+$urlAcaoLogin = $contextoEvento
+    ? url('auth/loginEvento' . ($eventoIdContexto !== null ? '/' . $eventoIdContexto : ''))
+    : url('auth/login');
+$urlCadastro = $contextoEvento
+    ? url($eventoIdContexto !== null ? 'eventoInscricao/cadastrar/' . $eventoIdContexto : 'eventoInscricao/cadastrar')
+    : url('cadastro/index');
+$urlVoltar = $contextoEvento ? urlPaginaEvento($eventoIdContexto) : config('base_path') . '/';
 ?>
 <div class="guest-card">
     <?php if (isset($ajudaHtml) && $ajudaHtml !== null): ?>
@@ -64,7 +75,7 @@ $urlGoogle = url('auth/google') . ($contextoEvento ? '&contexto=evento' : '');
 
     <div class="guest-divisor">ou acesse com e-mail</div>
 
-    <form method="post" action="<?php echo url($contextoEvento ? 'auth/loginEvento' : 'auth/login'); ?>"><?= campoCsrf() ?>
+    <form method="post" action="<?php echo $urlAcaoLogin; ?>"><?= campoCsrf() ?>
         <label>
             E-mail
             <input type="email" name="email" required autocomplete="username">
@@ -77,8 +88,8 @@ $urlGoogle = url('auth/google') . ($contextoEvento ? '&contexto=evento' : '');
     </form>
 
     <p class="guest-cadastro"><a href="<?php echo url('auth/esqueciSenha'); ?>">Esqueci minha senha</a></p>
-    <p class="guest-cadastro">Ainda não tem cadastro? <a href="<?php echo url('cadastro/index'); ?>">Cadastre-se</a></p>
+    <p class="guest-cadastro">Ainda não tem cadastro? <a href="<?php echo $urlCadastro; ?>">Cadastre-se</a></p>
 </div>
 
-<a href="<?php echo config('base_path'); ?>/" class="guest-voltar">&larr; Voltar ao portal</a>
+<a href="<?php echo htmlspecialchars($urlVoltar, ENT_QUOTES, 'UTF-8'); ?>" class="guest-voltar">&larr; <?php echo $contextoEvento ? 'Voltar à página do evento' : 'Voltar ao portal'; ?></a>
 <p class="guest-copyright">&copy; <?php echo date('Y'); ?> Poder Judiciário de Roraima</p>

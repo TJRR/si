@@ -105,7 +105,7 @@ if ($ehPainelAdmin) {
     // "Eventos" e' aba de 1o nivel propria (ver NavegacaoService::
     // filhosDe('raizEvento', ...) e admin/_arvore.php, generalizado para
     // aceitar mais de uma raiz).
-    $modulosArvoreEvento = ['eventos', 'eventoCabecalho', 'eventoSlides', 'eventoBanners', 'eventoBlocos', 'eventoSecoes', 'atividadeTipos', 'eventoFormulario', 'atividades', 'trabalhos'];
+    $modulosArvoreEvento = ['eventos', 'eventoCabecalho', 'eventoSlides', 'eventoBanners', 'eventoBlocos', 'eventoSecoes', 'eventoDocumentos', 'atividadeTipos', 'eventoFormulario', 'atividades', 'trabalhos'];
     $ehEscopoArvoreEvento = in_array($moduloAtual, $modulosArvoreEvento, true);
     $ehEscopoArvore = $ehEscopoArvoreConcurso || $ehEscopoArvoreEvento;
 
@@ -173,6 +173,14 @@ if ($ehPainelAdmin) {
     <?php endif; ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <?php
+    // Reabertura da Fase 51: fontes escolhidas para a pagina publica de um
+    // evento (aba Cabecalho do evento, lista fechada). Endereco montado por
+    // EventoConfiguracaoVisualRepository::urlFontes(), nunca digitado.
+    ?>
+    <?php if (!empty($dados['urlFontesEvento'])): ?>
+    <link href="<?php echo htmlspecialchars($dados['urlFontesEvento'], ENT_QUOTES, 'UTF-8'); ?>" rel="stylesheet">
+    <?php endif; ?>
     <link rel="stylesheet" href="<?php echo config('base_path'); ?>/assets/css/site.css?v=<?php echo filemtime(__DIR__ . '/../../assets/css/site.css'); ?>">
     <style>
         :root {
@@ -368,8 +376,6 @@ if ($ehPainelAdmin) {
     <script src="<?php echo config('base_path'); ?>/assets/js/cabecalho-rolagem.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/cabecalho-rolagem.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/cabecalho-flutuar.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/cabecalho-flutuar.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/painel-lateral.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/painel-lateral.js'); ?>" defer></script>
-    <script src="<?php echo config('base_path'); ?>/assets/js/contagem-regressiva.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/contagem-regressiva.js'); ?>" defer></script>
-    <script src="<?php echo config('base_path'); ?>/assets/js/programacao-abas.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/programacao-abas.js'); ?>" defer></script>
     <?php endif; ?>
     <?php
     // Fase 50: pagina publica propria do Evento - mesmo carrossel/efeitos
@@ -384,6 +390,17 @@ if ($ehPainelAdmin) {
     <script src="<?php echo config('base_path'); ?>/assets/js/cabecalho-rolagem.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/cabecalho-rolagem.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/cabecalho-flutuar.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/cabecalho-flutuar.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/painel-lateral.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/painel-lateral.js'); ?>" defer></script>
+    <?php
+    // Reabertura da Fase 51 (achado do teste de fumaca): contagem regressiva
+    // e abas da programacao so' existem na pagina do Evento, mas estavam
+    // incluidas no bloco da home do Concurso - na pagina do Evento o relogio
+    // nao contava e as abas nao abriam. evento-pagina.js cuida da distancia
+    // de rolagem das ancoras (altura do cabecalho fixo) e da entrada animada
+    // dos cartoes.
+    ?>
+    <script src="<?php echo config('base_path'); ?>/assets/js/contagem-regressiva.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/contagem-regressiva.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/programacao-abas.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/programacao-abas.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/evento-pagina.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/evento-pagina.js'); ?>" defer></script>
     <?php endif; ?>
     <?php
     // Fase 19 (#107): acesso direto ao suporte pelo WhatsApp. O numero vem de

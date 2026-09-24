@@ -13,9 +13,11 @@
 -- logo_path/logo_alt sao a logo oficial daquele evento, que vence a logo do
 -- tema de cor dentro da pagina publica dele (identidade visual aprovada nao
 -- pode variar conforme o tema escolhido por quem visita); sem logo
--- cadastrada, a do tema continua valendo. quadros_avanco_automatico permite
--- desligar a troca automatica do carrossel por evento, sem tocar na home do
--- Concurso, que continua sempre avancando sozinha.
+-- cadastrada, a do tema continua valendo. fonte_titulo/fonte_texto sao as
+-- fontes da pagina publica daquele evento (lista fechada, ver
+-- EventoConfiguracaoVisualRepository::FONTES); vazias, vale a fonte do site.
+-- O carrossel do Evento segue exatamente o metodo da home do Concurso
+-- (tempo e efeito por quadro, sempre avancando): nao ha opcao propria aqui.
 CREATE TABLE IF NOT EXISTS evento_configuracao_visual (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     evento_id INT UNSIGNED NOT NULL,
@@ -33,7 +35,8 @@ CREATE TABLE IF NOT EXISTS evento_configuracao_visual (
     cabecalho_efeito_entrada ENUM('nenhum','fade','subir','zoom') NOT NULL DEFAULT 'nenhum',
     logo_path VARCHAR(255) NULL,
     logo_alt VARCHAR(255) NULL,
-    quadros_avanco_automatico TINYINT(1) NOT NULL DEFAULT 1,
+    fonte_titulo VARCHAR(40) NULL,
+    fonte_texto VARCHAR(40) NULL,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_evento_configuracao_visual_evento FOREIGN KEY (evento_id) REFERENCES eventos (id),

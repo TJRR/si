@@ -14,6 +14,12 @@
  * deste design (aparencia de aplicativo, nao de pagina web). $tituloTopo e
  * $eventoId sao definidos pela view antes de incluir este parcial.
  *
+ * Reabertura da Fase 51 (achado da equipe de Teste Cego): $urlVoltar,
+ * quando a view o define, mostra uma seta de voltar antes do icone, para
+ * quem usa o aplicativo instalado (sem barra do navegador) nao ficar sem
+ * caminho de volta. O painel do evento e a selecao de eventos nao definem
+ * e ficam sem a seta.
+ *
  * O menu (_menu_painel.php) e' incluido AQUI DENTRO, como filho deste
  * <header> - .app-menu-lateral usa position:absolute ancorado no ancestral
  * posicionado mais proximo (.app-bar e' position:relative); um "position:
@@ -24,6 +30,14 @@
  */
 ?>
 <header class="app-bar">
+    <?php if (!empty($urlVoltar)): ?>
+        <a href="<?php echo htmlspecialchars($urlVoltar, ENT_QUOTES, 'UTF-8'); ?>" class="app-bar-botao app-bar-voltar" aria-label="Voltar" title="Voltar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        </a>
+    <?php endif; ?>
     <img src="<?php echo htmlspecialchars(iconeAppUrl('icon-192.png'), ENT_QUOTES, 'UTF-8'); ?>" alt="Ícone do aplicativo" class="app-bar-icone">
     <h1 class="app-bar-titulo"><?php echo htmlspecialchars($tituloTopo, ENT_QUOTES, 'UTF-8'); ?></h1>
     <?php

@@ -7,8 +7,12 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Meu trabalho',
-    'resumo' => 'Acompanhamento do trabalho que você submeteu - situação atual e dados de autoria.',
+    'resumo' => 'Acompanhamento do trabalho em que você é autor ou coautor: número do protocolo, situação atual e dados de autoria. A tela é somente para leitura.',
     'operacoes' => [
+        [
+            'nome' => 'Protocolo',
+            'como' => 'Número que identifica o trabalho, o mesmo informado na tela e no e-mail depois do envio. Use-o ao falar com a organização do evento.',
+        ],
         [
             'nome' => 'Situação',
             'como' => 'Submetido (aguardando avaliação), Desclassificado (com o motivo, se houver), Aprovado ou Reprovado - as duas últimas só aparecem depois do resultado sair.',

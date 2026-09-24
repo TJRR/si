@@ -4893,6 +4893,16 @@ body.app-evento-page {
     cursor: pointer;
 }
 
+/* Reabertura da Fase 51: seta de voltar da app-bar (link, nao botao). */
+.app-bar-voltar {
+    text-decoration: none;
+}
+
+.app-bar-voltar:hover,
+.app-bar-voltar:focus-visible {
+    background: rgba(255, 255, 255, 0.32);
+}
+
 /* Fase 48B (correcao pos-teste de fumaca): icone de ajuda ancorado no canto
    do CARTAO de conteudo (.site-form-page, que ganha position:relative
    abaixo) - mesmo mecanismo de posicionamento da tela de login
@@ -5427,22 +5437,20 @@ body.app-evento-page .site-form-page .admin-card .cartao-credenciamento-dados li
 }
 
 /* ==========================================================================
-   Fase 51: componentes da página pública do Evento (contagem regressiva,
-   cronograma, cartões, destaques, programação, local) e os ajustes que eles
-   pediram nos quadros de apresentação e nos blocos de conteúdo. Tudo escrito
-   para funcionar com as cores que o Admin cadastra em cada seção, sem tema
-   fixo, e sem nenhuma dependência externa.
+   Fase 51, refeito na reabertura: pagina publica do Evento
+   (publico/evento_home.php e publico/evento/_*.php), fiel a identidade
+   visual aprovada. Tudo escopado por .evento-pagina, para a home do
+   Concurso nao mudar em nada.
+
+   Principio da reabertura: toda secao tem fundo de borda a borda e o
+   conteudo fica num conteiner de 1240px (.evento-conteudo), a mesma largura
+   do cabecalho, do carrossel e do rodape. As cores vem do que o Admin
+   cadastrou em cada secao; as daqui sao so o padrao quando nada foi
+   cadastrado.
    ========================================================================== */
 
-.evento-secao-etiqueta {
-    font-size: .8rem;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    font-weight: 700;
-    margin: 0 0 .35rem;
-    opacity: .75;
-}
-
+/* Etiqueta e botao secundario do carrossel: valem tambem na home do
+   Concurso, que simplesmente nao cadastra etiqueta nem segundo botao. */
 .site-slide-etiqueta {
     display: inline-block;
     padding: .25rem .7rem;
@@ -5462,104 +5470,631 @@ body.app-evento-page .site-form-page .admin-card .cartao-credenciamento-dados li
     margin-left: .5rem;
 }
 
-/* Contagem regressiva */
-.evento-contagem {
+.evento-pagina {
+    --evento-destaque: var(--cor-primaria-inicio, #ea5a43);
+    --evento-texto: #141413;
+    --evento-texto-suave: #5a5a5a;
+    --evento-texto-apagado: #888;
+    --evento-borda: #ececec;
+    font-family: var(--fonte-corpo);
+    color: var(--evento-texto);
+    background: #fff;
+}
+
+.evento-pagina [id] {
+    scroll-margin-top: var(--evento-altura-cabecalho, 96px);
+}
+
+.evento-conteudo {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 24px;
+    box-sizing: border-box;
+}
+
+/* Cabecalho: mesma largura das secoes, logo, menu e botoes na mesma linha */
+.evento-pagina .site-header-inner {
+    max-width: 1240px;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 0 8px;
+    box-sizing: border-box;
+}
+
+.evento-pagina .site-logo {
+    height: 46px;
+    width: auto;
+}
+
+.evento-pagina.evento-com-logo .site-edicao-indicador {
+    display: none;
+}
+
+.evento-pagina .site-nav {
+    gap: 8px 20px;
+    font-size: 12px;
+}
+
+.evento-pagina .site-nav .btn {
+    font-size: 12px;
+}
+
+.evento-pagina .site-nav a:not(.btn) {
+    font-weight: 600;
+    padding: 8px 4px;
+    border-bottom: 2px solid transparent;
+}
+
+.evento-pagina .site-nav a:not(.btn):hover {
+    color: inherit;
+    border-bottom-color: var(--evento-destaque);
+}
+
+/* Rodape: mesma largura das secoes */
+.evento-pagina .site-footer-colunas {
+    max-width: 1240px;
+}
+
+/* Secoes: fundo de borda a borda, cabecalho comum */
+.evento-secao {
+    padding: 88px 0;
+}
+
+.evento-secao-cabecalho {
+    max-width: 760px;
+    margin-bottom: 48px;
+}
+
+.evento-secao-cabecalho:last-child {
+    margin-bottom: 0;
+}
+
+.evento-secao-etiqueta {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+    color: var(--evento-destaque);
+}
+
+.evento-fundo-forte .evento-secao-etiqueta {
+    color: inherit;
+    opacity: .75;
+}
+
+/* Etiqueta com cor cadastrada (blocos) vale inteira, sem esmaecer. */
+.evento-fundo-forte .evento-secao-etiqueta[style*="color"] {
+    opacity: 1;
+}
+
+.evento-secao-titulo {
+    font-family: var(--fonte-titulo);
+    font-size: 36px;
+    line-height: 1.2;
+    margin: 0 0 20px;
+    color: inherit;
+}
+
+.evento-secao-texto {
+    font-size: 17px;
+    line-height: 1.7;
+    opacity: .85;
+}
+
+.evento-secao-texto p {
+    margin: 0 0 12px;
+}
+
+.evento-secao-texto p:last-child {
+    margin-bottom: 0;
+}
+
+/* Botoes das secoes */
+.evento-botoes {
     display: flex;
     flex-wrap: wrap;
-    gap: 2rem;
+    gap: 16px;
+    margin-top: 28px;
+}
+
+.evento-botao {
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    padding: 14px 28px;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    font-family: var(--fonte-corpo);
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: transform .2s ease, filter .2s ease, background-color .2s ease, color .2s ease;
 }
 
-.evento-contagem-relogio {
-    text-align: center;
+.evento-botao:hover {
+    transform: translateY(-2px);
 }
 
-.evento-contagem-circulo {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
+.evento-botao-escuro {
     background: #141413;
     color: #fff;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+}
+
+.evento-botao-escuro:hover {
+    filter: brightness(1.25);
+}
+
+.evento-botao-destaque {
+    background: var(--evento-destaque);
+    color: #141413;
+}
+
+.evento-botao-destaque:hover {
+    filter: brightness(.93);
+}
+
+.evento-botao-contorno {
+    background: transparent;
+    border-color: currentColor;
+    color: inherit;
+}
+
+.evento-botao-contorno:hover {
+    background: rgba(20, 20, 19, .08);
+}
+
+.evento-fundo-forte.evento-bloco-rodape .evento-botao-contorno:hover {
+    background: rgba(255, 255, 255, .12);
+}
+
+/* Carrossel: fundo de borda a borda da janela, como as faixas; o texto, as
+   setas e os marcadores ficam dentro da largura util das secoes (1240px).
+   --carrossel-margem e' a distancia da borda da janela ate a borda da area
+   util: calculada sobre a largura do proprio quadro (o % de left e de
+   padding e' relativo a ela). */
+.evento-carrossel .site-slideshow {
+    height: 560px;
+    --carrossel-margem: max(24px, calc((100% - 1240px) / 2 + 24px));
+}
+
+.evento-carrossel .site-slide {
     align-items: center;
+    background-color: #cbd744;
 }
 
-.evento-contagem-circulo strong {
-    font-size: 2.6rem;
-    line-height: 1;
+.evento-carrossel .site-slide-conteudo {
+    background: none;
+    color: var(--evento-texto);
+    width: auto;
+    max-width: 680px;
+    padding: 64px 96px 64px calc(max(24px, (100% - 1240px) / 2 + 24px) + 72px);
 }
 
-.evento-contagem-circulo span {
-    font-size: .75rem;
-    letter-spacing: .18em;
+.evento-carrossel .site-slide-etiqueta {
+    font-size: 13px;
+    letter-spacing: .04em;
+    padding: 6px 14px;
+    margin-bottom: 20px;
+}
+
+.evento-carrossel .site-slide-titulo {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #3a3a3a;
+    margin: 0 0 32px;
+}
+
+.evento-carrossel .site-slide-titulo p {
+    margin: 0;
+}
+
+.evento-carrossel .site-slide-titulo p:first-child {
+    font-family: var(--fonte-titulo);
+    font-size: 48px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: var(--evento-texto);
+    margin: 0 0 20px;
+}
+
+.evento-carrossel .site-slide-cta {
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 700;
+    border: 2px solid transparent;
+    background: var(--evento-destaque);
+    color: #141413;
+    margin: 0 14px 14px 0;
+}
+
+.evento-carrossel .site-slide-cta-secundario {
+    background: transparent;
+    border-color: #141413;
+    color: #141413;
+    margin-left: 0;
+}
+
+.evento-carrossel .site-slideshow-seta {
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: 2px solid rgba(20, 20, 19, .35);
+    color: #141413;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.evento-carrossel .site-slideshow-seta:hover {
+    background: rgba(20, 20, 19, .12);
+}
+
+.evento-carrossel .site-slideshow-seta-anterior { left: var(--carrossel-margem); }
+.evento-carrossel .site-slideshow-seta-proxima { right: var(--carrossel-margem); }
+
+.evento-carrossel .site-slideshow-marcadores {
+    bottom: 24px;
+    gap: 10px;
+}
+
+.evento-carrossel .site-slideshow-marcador {
+    width: 10px;
+    height: 10px;
+    background: rgba(255, 255, 255, .6);
+}
+
+.evento-carrossel .site-slideshow-marcador.ativo {
+    background: var(--evento-destaque);
+}
+
+/* Faixas */
+.evento-alinhar-esquerda { text-align: left; }
+.evento-alinhar-centro { text-align: center; }
+.evento-alinhar-direita { text-align: right; }
+
+.evento-alinhar-centro .evento-botoes { justify-content: center; }
+.evento-alinhar-direita .evento-botoes { justify-content: flex-end; }
+
+.evento-faixa-bandeirinha {
+    padding: 56px 0;
+    background: #fff;
+}
+
+/* Formato "bandeirinha": o balao de dialogo da identidade visual (arquivo
+   5SI_Dialogo_vermelho.png): retangulo arredondado com borda escura, a
+   ponta saindo para cima do canto superior direito e sombra escura solida
+   embaixo e a direita, exatamente como a equipe de marketing desenhou -
+   voltado a esta versao no teste de fumaca da reabertura, depois de uma
+   tentativa de sombra so' embaixo (mais discreta, porem menos fiel ao
+   original). O primeiro paragrafo do conteudo vira o balao, na cor de
+   fundo cadastrada; o resto vira a linha discreta abaixo dele. */
+.evento-fita-conteudo > :first-child {
+    position: relative;
+    display: inline-block;
+    margin: 14px 10px 10px 0;
+    padding: 16px 44px;
+    border: 2px solid #141413;
+    border-radius: 10px;
+    background: var(--cor-fita, #ea5a43);
+    box-shadow: 8px 8px 0 #141413;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: .12em;
     text-transform: uppercase;
 }
 
-.evento-contagem-hora {
-    margin: .6rem 0 0;
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
+/* Ponta do balao: triangulo escuro (a borda) com um triangulo menor na cor
+   do balao por cima, para a borda contornar a ponta. */
+.evento-fita-conteudo > :first-child::before,
+.evento-fita-conteudo > :first-child::after {
+    content: "";
+    position: absolute;
+    border-style: solid;
+    border-color: transparent;
 }
 
-.evento-contagem-datas,
-.evento-cronograma {
+.evento-fita-conteudo > :first-child::before {
+    right: 18px;
+    bottom: 100%;
+    border-width: 0 0 16px 16px;
+    border-bottom-color: #141413;
+}
+
+.evento-fita-conteudo > :first-child::after {
+    right: 20px;
+    bottom: calc(100% - 3px);
+    border-width: 0 0 13px 13px;
+    border-bottom-color: var(--cor-fita, #ea5a43);
+}
+
+.evento-fita-conteudo > * + * {
+    margin: 20px 0 0;
+    font-size: 14px;
+    opacity: .55;
+}
+
+.evento-faixa-retangulo {
+    padding: 56px 0;
+    color: #fff;
+    background-size: cover;
+    background-position: center;
+}
+
+.evento-faixa-texto p {
+    margin: 0 0 8px;
+}
+
+/* Contagem regressiva */
+.evento-secao-contagem {
+    padding: 72px 0;
+}
+
+.evento-contagem {
+    display: grid;
+    grid-template-columns: .9fr 1.1fr;
+    gap: 56px;
+    align-items: center;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.evento-contagem-relogio {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    justify-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.evento-contagem-anel {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 3px solid var(--cor-anel-1, #ea5a43);
+    opacity: 0;
+    animation: evento-pulsar 2.4s ease-out infinite;
+}
+
+.evento-contagem-anel-2 {
+    border-color: var(--cor-anel-2, #006699);
+    animation-delay: .8s;
+}
+
+.evento-contagem-anel-3 {
+    border-color: var(--cor-anel-3, #cbd744);
+    animation-delay: 1.6s;
+}
+
+@keyframes evento-pulsar {
+    0% { transform: scale(.75); opacity: .8; }
+    70% { transform: scale(1.5); opacity: 0; }
+    100% { opacity: 0; }
+}
+
+.evento-contagem-circulo {
+    position: relative;
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    background: var(--cor-circulo, #141413);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.evento-contagem-circulo strong {
+    font-family: var(--fonte-titulo);
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.evento-contagem-rotulo-dias {
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--cor-anel-3, #cbd744);
+}
+
+.evento-contagem-hora {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #aaa;
+    font-variant-numeric: tabular-nums;
+}
+
+.evento-contagem-texto .evento-secao-cabecalho {
+    margin-bottom: 24px;
+}
+
+.evento-contagem-texto .evento-secao-titulo {
+    font-size: 30px;
+    margin-bottom: 0;
+}
+
+.evento-contagem-datas {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    gap: .6rem;
+    gap: 16px;
 }
 
-.evento-contagem-datas li,
-.evento-cronograma li {
+.evento-contagem-datas li {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: .5rem;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 .evento-marcador {
-    width: .7rem;
-    height: .7rem;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    background: currentColor;
-    display: inline-block;
+    background: var(--evento-destaque);
     flex: 0 0 auto;
 }
 
-.evento-cronograma li strong {
-    min-width: 12rem;
-}
-
-/* Cartões */
-.evento-cartoes {
+/* Submissao: texto e botoes a esquerda, linha do tempo a direita */
+.evento-duas-colunas {
     display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: 1.1fr .9fr;
+    gap: 56px;
+    align-items: start;
 }
 
-.evento-cartoes-colunas-1 { grid-template-columns: 1fr; }
-.evento-cartoes-colunas-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-.evento-cartoes-colunas-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-.evento-cartoes-colunas-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.evento-submissao .evento-secao-cabecalho {
+    margin-bottom: 0;
+}
 
-.evento-cartao {
-    border: 1px solid rgba(0, 0, 0, .12);
-    border-top: 5px solid var(--cor-cartao, var(--cor-secundaria, #006699));
-    border-radius: 10px;
-    padding: 1rem;
+/* Reabertura da Fase 51: tres botoes na coluna do texto (edital, envio e
+   modelo do resumo) - espacamento e preenchimento menores para caberem, e
+   quebram em duas linhas so' quando falta largura. */
+.evento-submissao .evento-botoes {
+    gap: 10px;
+}
+
+.evento-submissao .evento-botao {
+    padding: 12px 20px;
+    font-size: 15px;
+    text-align: center;
+}
+
+.evento-contato-icones {
+    list-style: none;
+    margin: 24px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    font-size: 14px;
+}
+
+.evento-contato-icones a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: inherit;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.evento-contato-icones a:hover span {
+    text-decoration: underline;
+}
+
+.evento-quadro-branco {
     background: #fff;
-    color: #141413;
-    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    color: var(--evento-texto);
+    border-radius: 20px;
+    padding: 32px;
+}
+
+.evento-quadro-titulo {
+    font-family: var(--fonte-corpo);
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 20px;
+}
+
+.evento-linha-tempo {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.evento-linha-tempo li {
+    position: relative;
+    padding: 0 0 18px 24px;
+}
+
+.evento-linha-tempo li:last-child {
+    padding-bottom: 0;
+}
+
+.evento-linha-tempo li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 14px;
+    bottom: -4px;
+    width: 2px;
+    background: #e6e6e6;
+}
+
+.evento-linha-tempo li:last-child::before {
+    display: none;
+}
+
+.evento-linha-tempo-marcador {
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--evento-destaque);
+}
+
+.evento-linha-tempo strong {
+    display: block;
+    font-size: 14px;
+}
+
+.evento-linha-tempo span {
+    display: block;
+    font-size: 13px;
+    color: #666;
+}
+
+/* Grades de cartoes (eixos, destaques) */
+.evento-cartoes,
+.evento-destaques {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.evento-colunas-1 { grid-template-columns: minmax(0, 1fr); }
+.evento-colunas-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.evento-colunas-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.evento-colunas-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.evento-colunas-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.evento-colunas-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+.evento-cartao,
+.evento-destaque,
+.evento-programacao-cartao {
+    background: #fff;
+    color: var(--evento-texto);
+    border: 1px solid var(--evento-borda);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, .05);
+    box-sizing: border-box;
+}
+
+/* Cartoes que abrem */
+.evento-cartao {
+    transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 
 .evento-cartao summary {
     cursor: pointer;
     list-style: none;
-    display: grid;
-    gap: .35rem;
+    display: block;
 }
 
 .evento-cartao summary::-webkit-details-marker {
@@ -5567,26 +6102,50 @@ body.app-evento-page .site-form-page .admin-card .cartao-credenciamento-dados li
 }
 
 .evento-cartao-etiqueta {
-    font-size: .7rem;
-    letter-spacing: .12em;
-    text-transform: uppercase;
+    display: block;
+    font-size: 13px;
     font-weight: 700;
-    color: var(--cor-cartao, var(--cor-secundaria, #006699));
+    letter-spacing: .02em;
+    color: var(--cor-cartao, var(--evento-destaque));
+    margin-bottom: 10px;
+}
+
+.evento-cartao-titulo {
+    display: block;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 8px;
 }
 
 .evento-cartao-resumo {
-    font-size: .9rem;
-    opacity: .85;
+    display: block;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--evento-texto-suave);
+}
+
+.evento-cartao-abrir {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cor-cartao, var(--evento-destaque));
+}
+
+.evento-cartao[open] .evento-cartao-abrir {
+    display: none;
 }
 
 .evento-cartao-detalhe {
-    margin-top: .75rem;
-    font-size: .92rem;
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--evento-texto-suave);
 }
 
-.evento-efeito-hover-elevar .evento-cartao:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0, 0, 0, .12); }
+.evento-efeito-hover-elevar .evento-cartao:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0, 0, 0, .1); }
 .evento-efeito-hover-escala .evento-cartao:hover { transform: scale(1.02); }
-.evento-efeito-hover-borda .evento-cartao:hover { border-color: var(--cor-cartao, var(--cor-secundaria, #006699)); }
+.evento-efeito-hover-borda .evento-cartao:hover { border-color: var(--cor-cartao, var(--evento-destaque)); }
 
 @media (prefers-reduced-motion: no-preference) {
     .evento-efeito-abrir-deslizar .evento-cartao[open] .evento-cartao-detalhe { animation: evento-deslizar .25s ease; }
@@ -5603,134 +6162,363 @@ body.app-evento-page .site-form-page .admin-card .cartao-credenciamento-dados li
     to { opacity: 1; }
 }
 
-/* Destaques */
-.evento-destaques {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+/* Destaques: icone em quadrado colorido, entrada em sequencia */
+.evento-destaque {
+    transition: transform .25s ease, box-shadow .25s ease;
 }
 
-.evento-destaque {
-    background: #fff;
+.evento-destaque:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, .1);
+}
+
+.evento-destaque-icone {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--evento-destaque);
     color: #141413;
-    border-radius: 10px;
-    padding: 1rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
 }
 
 .evento-destaque h3 {
-    margin: .4rem 0 .3rem;
-    font-size: 1.05rem;
-}
-
-.evento-destaque-quando,
-.evento-destaque-local {
-    margin: 0;
-    font-size: .85rem;
-    opacity: .8;
-}
-
-.evento-etiqueta-tipo {
-    display: inline-block;
-    padding: .15rem .6rem;
-    border-radius: 999px;
-    font-size: .7rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
+    font-family: var(--fonte-corpo);
+    font-size: 16px;
     font-weight: 700;
-    background: var(--cor-secundaria, #006699);
-    color: #fff;
+    margin: 0 0 6px;
 }
 
-/* Programação */
+.evento-destaque-quando {
+    font-size: 13px;
+    color: var(--evento-texto-apagado);
+    margin: 0 0 10px;
+}
+
+.evento-destaque-descricao {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--evento-texto-suave);
+    margin: 0;
+}
+
+.evento-entrada-ativa [data-evento-entrada] {
+    opacity: 0;
+}
+
+.evento-entrada-ativa [data-evento-entrada].evento-entrou {
+    animation: evento-entrar .6s ease both;
+    animation-delay: calc(var(--ordem-entrada, 0) * 120ms);
+}
+
+@keyframes evento-entrar {
+    from { opacity: 0; translate: 0 24px; }
+    to { opacity: 1; translate: 0 0; }
+}
+
+/* Programacao: abas em pilula, uma coluna por turno */
 .evento-programacao-abas {
     display: flex;
     flex-wrap: wrap;
-    gap: .5rem;
-    margin-bottom: 1rem;
+    gap: 12px;
+    margin-bottom: 32px;
 }
 
 .evento-programacao-aba {
-    border: 1px solid rgba(0, 0, 0, .15);
-    background: transparent;
-    color: inherit;
+    padding: 12px 22px;
     border-radius: 999px;
-    padding: .45rem 1rem;
+    border: 2px solid #141413;
+    background: #fff;
+    color: #141413;
+    font-family: var(--fonte-corpo);
+    font-weight: 700;
+    font-size: 15px;
     cursor: pointer;
-    font: inherit;
 }
 
 .evento-programacao-aba.ativo {
-    background: var(--cor-secundaria, #006699);
-    border-color: var(--cor-secundaria, #006699);
+    background: #141413;
     color: #fff;
 }
 
+.evento-programacao-painel[hidden] {
+    display: none;
+}
+
 .evento-programacao-painel:not([hidden]) {
-    display: block;
-}
-
-.evento-programacao-turno {
-    margin: 1rem 0 .5rem;
-    font-size: .85rem;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    opacity: .75;
-}
-
-.evento-programacao-lista {
-    list-style: none;
-    margin: 0;
-    padding: 0;
     display: grid;
-    gap: .6rem;
+    gap: 40px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.evento-programacao-lista li {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: .5rem;
-    padding-bottom: .6rem;
-    border-bottom: 1px solid rgba(0, 0, 0, .08);
+.evento-programacao-painel.evento-programacao-colunas-1:not([hidden]) {
+    grid-template-columns: minmax(0, 640px);
 }
 
-.evento-programacao-hora {
-    font-variant-numeric: tabular-nums;
+.evento-programacao-painel.evento-programacao-colunas-3:not([hidden]) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.evento-programacao-turno-titulo {
+    font-family: var(--fonte-corpo);
+    font-size: 15px;
     font-weight: 700;
+    text-transform: uppercase;
+    margin: 0 0 16px;
+    color: #141413;
+}
+
+.evento-turno-manha .evento-programacao-turno-titulo { color: #ea5a43; }
+.evento-turno-tarde .evento-programacao-turno-titulo { color: #006699; }
+
+.evento-programacao-cartao {
+    margin-bottom: 16px;
+}
+
+.evento-programacao-cartao:last-child {
+    margin-bottom: 0;
+}
+
+.evento-programacao-rotulo {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--evento-texto-apagado);
+    margin: 0 0 6px;
+}
+
+.evento-programacao-cartao h4 {
+    font-family: var(--fonte-corpo);
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 6px;
 }
 
 .evento-programacao-local,
 .evento-programacao-descricao {
-    font-size: .85rem;
-    opacity: .8;
+    font-size: 13px;
+    color: var(--evento-texto-apagado);
+    margin: 0;
 }
 
 /* Local e acesso */
-.evento-local-mapa {
-    position: relative;
-    width: 100%;
-    padding-top: 42%;
-    margin: 1rem 0;
+/* Teste de fumaca da reabertura, item 9: mapa em destaque, ocupando 60% da
+   largura da secao. Altura em pixel exato, a pedido do usuario: faixa
+   inteira (a secao, com o fundo colorido) com 576px, mapa com 536px,
+   sobrando exatamente 20px acima e 20px abaixo dele (536 + 20 + 20 = 576).
+
+   Como o mapa usa a faixa quase toda, o espaco interno padrao de cima e de
+   baixo das secoes (88px) sai daqui e a altura passa a ser a da grade. No
+   celular, a regra geral de espaco interno das secoes volta a valer (mais
+   abaixo, no bloco de 860px). */
+.evento-secao-local {
+    padding: 0;
 }
 
-.evento-local-mapa iframe {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    border-radius: 10px;
+.evento-local {
+    grid-template-columns: 2fr 3fr;
+    gap: 48px;
+    align-items: center;
+    height: 576px;
 }
 
-.evento-local-imagem {
-    max-width: 100%;
-    border-radius: 10px;
-    margin: 1rem 0;
+.evento-local-sem-mapa {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.evento-local .evento-secao-titulo {
+    font-size: 32px;
 }
 
 .evento-local-endereco {
-    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.7;
+    margin: 0 0 8px;
+    opacity: .85;
+}
+
+.evento-local-apoio {
+    font-size: 14px;
+    opacity: .85;
+}
+
+.evento-local-apoio p {
+    margin: 0;
+}
+
+.evento-local-mapa {
+    background: #fff;
+    border-radius: 20px;
+    height: 536px;
+    margin: 20px 0;
+    overflow: hidden;
+    box-shadow: 0 24px 48px rgba(20, 20, 19, .35);
+}
+
+.evento-local-mapa iframe,
+.evento-local-mapa img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: cover;
+}
+
+/* Perguntas frequentes: largura de leitura */
+.evento-secao-faq .evento-conteudo {
+    max-width: 888px;
+}
+
+/* Blocos de conteudo */
+.evento-bloco-corpo {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+}
+
+.evento-bloco-imagem-direita {
+    flex-direction: row-reverse;
+}
+
+.evento-bloco-imagem {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 20px;
+}
+
+.evento-bloco-texto {
+    flex: 1 1 auto;
+}
+
+.evento-bloco-centralizado .evento-bloco-texto {
+    text-align: center;
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.evento-bloco-centralizado .evento-secao-cabecalho {
+    margin: 0 auto;
+}
+
+.evento-bloco-centralizado .evento-botoes,
+.evento-alinhar-botoes-centro .evento-botoes {
+    justify-content: center;
+}
+
+.evento-alinhar-botoes-direita .evento-botoes {
+    justify-content: flex-end;
+}
+
+.evento-bloco-centralizado .evento-secao-titulo {
+    font-size: 32px;
+}
+
+/* Chamada integrada ao rodape: mesma cor e sem espaco entre os dois */
+.evento-bloco-rodape {
+    background: var(--cor-escura);
+    color: #fff;
+    padding: 72px 0 56px;
+}
+
+.evento-bloco-rodape + * {
+    margin-top: 0;
+}
+
+.evento-pagina main:has(> .evento-bloco-rodape:last-child) + .site-footer {
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .evento-contagem-anel {
+        animation: none;
+        opacity: .35;
+    }
+
+    .evento-destaque,
+    .evento-cartao,
+    .evento-botao {
+        transition: none;
+    }
+}
+
+@media (max-width: 1024px) {
+    .evento-colunas-4,
+    .evento-colunas-5,
+    .evento-colunas-6 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 860px) {
+    .evento-secao {
+        padding: 64px 0;
+    }
+
+    .evento-secao-titulo {
+        font-size: 28px;
+    }
+
+    .evento-duas-colunas,
+    .evento-local,
+    .evento-contagem,
+    .evento-programacao-painel:not([hidden]),
+    .evento-programacao-painel.evento-programacao-colunas-3:not([hidden]) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* Empilhado, o mapa volta a ter altura propria em pixels: a faixa deixa
+       de ter altura fixa (o texto acima dele manda no tamanho da secao). */
+    .evento-local {
+        height: auto;
+    }
+
+    .evento-local-mapa {
+        height: 320px;
+        margin: 24px 0 0;
+    }
+
+    .evento-colunas-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .evento-carrossel .site-slideshow {
+        height: 520px;
+    }
+
+    .evento-carrossel .site-slide-conteudo {
+        padding: 40px 24px 64px;
+    }
+
+    .evento-carrossel .site-slide-titulo p:first-child {
+        font-size: 34px;
+    }
+
+    .evento-carrossel .site-slideshow-seta {
+        display: none;
+    }
+
+    .evento-bloco-corpo,
+    .evento-bloco-imagem-direita {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 640px) {
+    .evento-colunas-2,
+    .evento-colunas-3,
+    .evento-colunas-4,
+    .evento-colunas-5,
+    .evento-colunas-6 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .evento-conteudo {
+        padding: 0 16px;
+    }
 }
 
 /* Declarações no formulário de submissão de trabalho */
@@ -5750,6 +6538,107 @@ body.app-evento-page .site-form-page .admin-card .cartao-credenciamento-dados li
 .trabalho-termo-obrigatorio {
     font-size: .8rem;
     opacity: .75;
+}
+
+/* Reabertura da Fase 51 (achados da equipe de Teste Cego): formulario de
+   submissao com obrigatorios marcados, erro em caixa e por campo, limite de
+   coautores. Cor do erro = a mesma do aviso de erro do aplicativo. */
+.trabalho-legenda {
+    margin: 0 0 1rem;
+    font-size: .85rem;
+    opacity: .85;
+}
+
+.obrigatorio {
+    color: #a3242c;
+    font-weight: 700;
+}
+
+.opcional {
+    font-size: .8rem;
+    font-weight: 400;
+    opacity: .7;
+}
+
+.trabalho-erro-caixa {
+    width: auto;
+    max-width: none;
+    margin: 0 0 1.25rem;
+    align-items: flex-start;
+    background: #fdecee;
+    border: 2px solid #a3242c;
+    border-left-width: 6px;
+    font-weight: 400;
+}
+
+.trabalho-erro-caixa strong {
+    display: block;
+    font-size: 1.05rem;
+    margin-bottom: .2rem;
+}
+
+.trabalho-erro-texto,
+.trabalho-erro-orientacao {
+    display: block;
+}
+
+.trabalho-erro-orientacao {
+    margin-top: .35rem;
+    font-size: .9rem;
+    color: #5f1a1f;
+}
+
+.campo-com-erro input,
+.campo-com-erro select,
+.campo-com-erro textarea {
+    border-color: #a3242c;
+    box-shadow: 0 0 0 2px rgba(163, 36, 44, .25);
+}
+
+.campo-erro-msg {
+    display: block;
+    margin-top: .3rem;
+    font-size: .85rem;
+    font-weight: 600;
+    color: #a3242c;
+}
+
+.campo-erro-msg.campo-aviso-msg {
+    color: #a0630d;
+}
+
+div.campo-com-erro {
+    border-radius: 8px;
+    outline: 2px solid #a3242c;
+    outline-offset: 4px;
+}
+
+.trabalho-coautores-info {
+    margin: 0 0 .75rem;
+    font-size: .9rem;
+}
+
+.trabalho-coautores-limite {
+    margin: .5rem 0;
+    font-size: .85rem;
+    font-weight: 600;
+    color: #a0630d;
+}
+
+.trabalho-coautor-item {
+    margin: 0 0 1rem;
+    padding: .75rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+}
+
+.trabalho-aviso-inscricao {
+    margin: 1rem 0;
+    padding: .65rem .85rem;
+    font-size: .9rem;
+    border-left: 4px solid var(--cor-terciaria);
+    background: rgba(0, 0, 0, .04);
+    border-radius: 6px;
 }
 
 /* Linha de formulário dentro das listas reordenáveis do painel */

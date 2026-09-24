@@ -268,6 +268,10 @@ class TrabalhoAdminController extends Controller
             'regra_selecao_tipo' => in_array($_POST['regra_selecao_tipo'], ['numero_fixo', 'percentual', 'todos_aprovados'], true) ? $_POST['regra_selecao_tipo'] : 'todos_aprovados',
             'regra_selecao_valor' => $_POST['regra_selecao_valor'] !== '' ? (float) $_POST['regra_selecao_valor'] : null,
             'status' => in_array($_POST['situacao'], ['rascunho', 'publicado', 'encerrado'], true) ? $_POST['situacao'] : 'rascunho',
+            'inscrever_autores_ao_submeter' => isset($_POST['inscrever_autores_ao_submeter']) ? 1 : 0,
+            'mensagem_recebimento_html' => isset($_POST['mensagem_recebimento_html']) && trim(strip_tags($_POST['mensagem_recebimento_html'])) !== ''
+                ? sanitizarHtmlRico($_POST['mensagem_recebimento_html'])
+                : null,
         ]);
     }
 

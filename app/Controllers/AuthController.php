@@ -43,9 +43,10 @@ class AuthController extends Controller
      * sempre eventoApp/index, mesmo para quem tambem e' Administrador ou
      * participante do Concurso (ver entrarComResultado()).
      */
-    public function loginEvento()
+    public function loginEvento($id = null)
     {
         $erro = null;
+        $eventoIdContexto = $this->eventoDoContexto($id);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = trim(isset($_POST['email']) ? $_POST['email'] : '');
@@ -59,7 +60,26 @@ class AuthController extends Controller
             }
         }
 
-        $this->renderizar('auth/login', ['erro' => $erro, 'contextoEvento' => true], 'Entrar - Evento');
+        $this->renderizar('auth/login', ['erro' => $erro, 'contextoEvento' => true, 'eventoIdContexto' => $eventoIdContexto], 'Entrar - Evento');
+    }
+
+    /**
+     * Reabertura da Fase 51 (achado do teste de fumaca, item 1): evento de
+     * onde a pessoa veio, para os links "Cadastre-se" e "Voltar" da porta de
+     * entrada do Evento levarem ao cadastro e a pagina daquele evento, e nao
+     * ao cadastro e a home do Concurso. Vem do endereco (auth/loginEvento/3)
+     * ou, sem ele, do retorno guardado na sessao (eventoInscricao/index/3,
+     * trabalho/formulario/3, eventoApp/index/3).
+     */
+    private function eventoDoContexto($id)
+    {
+        if ($id !== null && (int) $id > 0) {
+            return (int) $id;
+        }
+
+        $retorno = isset($_SESSION['retorno_apos_login']['destino']) ? (string) $_SESSION['retorno_apos_login']['destino'] : '';
+
+        return preg_match('#/([1-9][0-9]*)$#', $retorno, $partes) === 1 ? (int) $partes[1] : null;
     }
 
     /**

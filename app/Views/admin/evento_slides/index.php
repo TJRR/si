@@ -3,7 +3,7 @@
     exit('Acesso negado');
 } ?>
 <div class="pagina-titulo-acoes">
-    <h1>Quadros de apresentação: <?php echo htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
+    <h1>Carrossel: <?php echo htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
     <div class="pagina-titulo-botoes">
         <a href="<?php echo url('eventoSlides/novo/' . (int) $evento['id']); ?>" class="btn-acao">+ Novo quadro</a>
     </div>

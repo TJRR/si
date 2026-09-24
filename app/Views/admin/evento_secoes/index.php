@@ -9,7 +9,7 @@
     </div>
 </div>
 
-<p style="color:#555;font-size:0.9em;">Esta lista é a página pública do evento, de cima para baixo. Arraste para mudar a ordem, desmarque "Na página" para esconder uma seção sem apagá-la, e marque "No menu" para a seção virar item do menu do cabeçalho.</p>
+<p style="color:#555;font-size:0.9em;">Esta lista é a página pública do evento, de cima para baixo. Arraste para mudar a ordem, desmarque "Na página" para esconder uma seção sem apagá-la, e marque "No menu" para a seção virar item do menu do cabeçalho. A âncora é o nome usado nos botões e itens de menu que levam até a seção: com a âncora "programacao", um botão com o destino "#programacao" rola a página até ela. Em branco, vale o nome mostrado em cinza.</p>
 
 <?php if (empty($secoes)): ?>
     <p>Nenhuma seção ainda.</p>
@@ -31,6 +31,7 @@
                     <label><input type="checkbox" name="ativo" value="1" <?php echo (int) $secao['ativo'] === 1 ? 'checked' : ''; ?>> Na página</label>
                     <label><input type="checkbox" name="mostrar_no_menu" value="1" <?php echo (int) $secao['mostrar_no_menu'] === 1 ? 'checked' : ''; ?>> No menu</label>
                     <label>Rótulo no menu: <input type="text" name="rotulo_menu" maxlength="60" value="<?php echo htmlspecialchars((string) $secao['rotulo_menu'], ENT_QUOTES, 'UTF-8'); ?>"></label>
+                    <label>Âncora (destino de rolagem): <input type="text" name="ancora" maxlength="60" placeholder="<?php echo htmlspecialchars(\App\Repositories\EventoSecaoOrdemRepository::ancoraDaSecao(['ancora' => null] + $secao), ENT_QUOTES, 'UTF-8'); ?>" value="<?php echo htmlspecialchars((string) (isset($secao['ancora']) ? $secao['ancora'] : ''), ENT_QUOTES, 'UTF-8'); ?>"></label>
                     <button type="submit" class="btn-acao">Salvar</button>
                 </form>
             </div>
@@ -61,7 +62,7 @@
                         </svg>
                     </a>
                 <?php elseif ($secao['tipo'] === 'quadros'): ?>
-                    <a href="<?php echo url('eventoSlides/index/' . (int) $evento['id']); ?>" class="btn-icone" title="Abrir Quadros de apresentação">
+                    <a href="<?php echo url('eventoSlides/index/' . (int) $evento['id']); ?>" class="btn-icone" title="Abrir Carrossel">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <rect x="2" y="3" width="20" height="14" rx="2"></rect>
                             <path d="M8 21h8"></path>

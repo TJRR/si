@@ -33,12 +33,17 @@ CREATE TABLE IF NOT EXISTS evento_campos_inscricao (
 ALTER TABLE evento_inscricoes
     ADD COLUMN respostas_json JSON NULL;
 
+-- Reabertura da Fase 51 (achado da equipe de Teste Cego): o rotulo do primeiro
+-- campo e' "Tipo de Documento de Identificação" (o codigo o encontra por esse
+-- texto, constante EventoCampoInscricaoRepository::ROTULO_TIPO_DOCUMENTO) e
+-- o campo estrutural que recebe o numero chama-se "Número do Documento de
+-- Identificação" nas telas de inscricao.
 -- Semeia os campos configuraveis do evento 1 (5a Semana de Inovacao) com
 -- os dados reais que o usuario forneceu para esta edicao - totalmente
 -- editavel depois pela tela administrativa nova, mesmo precedente ja
 -- aceito para o cadastro do proprio evento (migration 119).
 INSERT IGNORE INTO evento_campos_inscricao (id, evento_id, ordem, rotulo, tipo, obrigatorio, texto_ajuda, config_json) VALUES
-    (1, 1, 1, 'Tipo de documento', 'lista_opcoes', 1, 'Selecione o tipo do documento informado acima.', JSON_OBJECT('opcoes', JSON_ARRAY('RG', 'CPF', 'RNE', 'Passaporte'))),
+    (1, 1, 1, 'Tipo de Documento de Identificação', 'lista_opcoes', 1, 'Selecione o tipo do documento de identificação que você vai informar.', JSON_OBJECT('opcoes', JSON_ARRAY('RG', 'CPF', 'RNE', 'Passaporte'))),
     (2, 1, 2, 'Cargo', 'lista_opcoes', 0, 'Opcional. Selecione a opção que melhor representa seu cargo ou categoria profissional.', JSON_OBJECT('opcoes', JSON_ARRAY('Magistrado', 'Promotor', 'Defensor Público', 'Advogado', 'Analista Judiciário', 'Servidor Público', 'Empresário', 'Prestador de serviço', 'Estagiário', 'Estudante'))),
     (3, 1, 3, 'Órgão de origem', 'texto', 0, 'Opcional. Instituição de onde você vem (ex.: TJRR, MP-RR, DPE-RR, UFRR).', NULL),
     (4, 1, 4, 'Tipo de vínculo', 'lista_opcoes', 0, 'Opcional. Como você participa deste evento.', JSON_OBJECT('opcoes', JSON_ARRAY('Participante', 'Palestrante', 'Expositor', 'Avaliador', 'Apoiador', 'Colaborador')));

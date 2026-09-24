@@ -138,6 +138,16 @@ class EventoBlocoConteudoAdminController extends Controller
         $ancora = Texto::slugify(trim(isset($_POST['secao_ancora']) ? $_POST['secao_ancora'] : ''));
 
         return [
+            // Reabertura da Fase 51: etiqueta colorida acima do titulo, cores
+            // dos botoes e a opcao de herdar a cor do rodape (chamada final
+            // de inscricao encostada nele).
+            'etiqueta' => $this->campoOuNulo('etiqueta'),
+            'etiqueta_cor' => $this->campoOuNulo('etiqueta_cor'),
+            'usar_cor_rodape' => isset($_POST['usar_cor_rodape']) ? 1 : 0,
+            'cta_cor_fundo' => $this->campoOuNulo('cta_cor_fundo'),
+            'cta_cor_texto' => $this->campoOuNulo('cta_cor_texto'),
+            'cta2_cor_fundo' => $this->campoOuNulo('cta2_cor_fundo'),
+            'cta2_cor_texto' => $this->campoOuNulo('cta2_cor_texto'),
             'titulo' => trim(isset($_POST['titulo']) ? $_POST['titulo'] : ''),
             'conteudo_html' => isset($_POST['conteudo_html']) ? sanitizarHtmlRico($_POST['conteudo_html']) : '',
             'imagem_posicao' => $this->valorPermitido('imagem_posicao', EventoBlocoConteudoRepository::IMAGEM_POSICOES, 'esquerda'),

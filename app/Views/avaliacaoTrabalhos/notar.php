@@ -7,6 +7,7 @@
     <?php
     $eventoId = $trabalho['evento_id'];
     $tituloTopo = $trabalho['evento_nome'];
+    $urlVoltar = url('avaliacaoTrabalhos/index');
     require __DIR__ . '/../eventoApp/_app_bar.php';
     ?>
 

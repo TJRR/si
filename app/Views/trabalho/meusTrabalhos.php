@@ -5,6 +5,7 @@
 
 <div class="site-page">
     <?php $tituloTopo = 'Meus trabalhos'; ?>
+    <?php $urlVoltar = url('eventoApp/index'); ?>
     <?php require __DIR__ . '/../eventoApp/_app_bar.php'; ?>
 
     <div class="site-form-page">
@@ -25,7 +26,8 @@
                 }
                 ?>
                 <div class="admin-card">
-                    <p><strong><?php echo htmlspecialchars($trabalho['titulo'], ENT_QUOTES, 'UTF-8'); ?></strong></p>
+                    <p><strong><?php echo htmlspecialchars($trabalho['titulo'], ENT_QUOTES, 'UTF-8'); ?></strong><?php echo isset($trabalho['sou_autor_principal']) && (int) $trabalho['sou_autor_principal'] === 0 ? ' (você é coautor)' : ''; ?></p>
+                    <p>Protocolo nº <?php echo (int) $trabalho['id']; ?></p>
                     <p><?php echo htmlspecialchars($trabalho['evento_nome'], ENT_QUOTES, 'UTF-8'); ?></p>
                     <p><span class="selo-situacao <?php echo $corSituacao; ?>"><?php echo htmlspecialchars($situacaoAtual, ENT_QUOTES, 'UTF-8'); ?></span></p>
                     <p>Submetido em <?php echo htmlspecialchars($trabalho['submetido_em'], ENT_QUOTES, 'UTF-8'); ?></p>

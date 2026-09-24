@@ -5,6 +5,7 @@
 
 <div class="site-page">
     <?php $tituloTopo = 'Trabalhos para avaliar'; ?>
+    <?php $urlVoltar = url('eventoApp/index'); ?>
     <?php require __DIR__ . '/../eventoApp/_app_bar.php'; ?>
 
     <div class="site-form-page">

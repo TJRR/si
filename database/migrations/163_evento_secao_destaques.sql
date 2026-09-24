@@ -8,6 +8,10 @@
 -- destaque que nao corresponde a uma atividade cadastrada. Um item pode
 -- apontar para uma atividade (atividade_id) e ainda assim sobrescrever o
 -- texto, quando a chamada da pagina precisar ser diferente do nome oficial.
+--
+-- Reabertura da Fase 51 (coluna acrescentada na origem, premissa 8 de
+-- Premissas.md): icone_cor, a cor do quadrado atras do icone do item. O
+-- icone em si sai de uma lista fechada (EventoSecaoDestaquesRepository::ICONES).
 CREATE TABLE IF NOT EXISTS evento_secao_destaques (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     evento_id INT UNSIGNED NOT NULL,
@@ -33,6 +37,7 @@ CREATE TABLE IF NOT EXISTS evento_secao_destaques_itens (
     local VARCHAR(150) NULL,
     descricao VARCHAR(255) NULL,
     icone VARCHAR(40) NULL,
+    icone_cor VARCHAR(7) NULL,
     ordem INT UNSIGNED NOT NULL DEFAULT 0,
     CONSTRAINT fk_evento_secao_destaques_itens_secao FOREIGN KEY (secao_id) REFERENCES evento_secao_destaques (id) ON DELETE CASCADE,
     CONSTRAINT fk_evento_secao_destaques_itens_atividade FOREIGN KEY (atividade_id) REFERENCES evento_atividades (id),

@@ -19,6 +19,17 @@ use App\Core\Database;
  */
 class EventoCampoInscricaoRepository
 {
+    /**
+     * Reabertura da Fase 51 (achado da equipe de Teste Cego): rotulos dos dois
+     * campos que dizem que documento a pessoa tem. O codigo encontra o campo
+     * configuravel "tipo" pelo texto do rotulo, entao o texto mora aqui,
+     * numa constante so', usada pelo controller de inscricao, pelas telas e
+     * pela inscricao automatica de autores - nunca repetido a mao. O seed do
+     * evento 1 (migration 121) usa o mesmo texto.
+     */
+    public const ROTULO_TIPO_DOCUMENTO = 'Tipo de Documento de Identificação';
+    public const ROTULO_NUMERO_DOCUMENTO = 'Número do Documento de Identificação';
+
     public function listarPorEvento($eventoId)
     {
         $pdo = Database::conexao();

@@ -11,7 +11,7 @@ class View
 {
     public static function renderizar($view, array $dados = [], $titulo = null, array $noAtual = null)
     {
-        list($ajudaHtml, $ajudaTitulo) = self::resolverAjuda($view);
+        list($ajudaHtml, $ajudaTitulo) = self::resolverAjuda($view, $dados);
         $dados['ajudaHtml'] = $ajudaHtml;
         $dados['ajudaTitulo'] = $ajudaTitulo;
 
@@ -30,7 +30,7 @@ class View
      */
     public static function renderizarParcial($view, array $dados = [], $titulo = null, array $noAtual = null)
     {
-        list($ajudaHtml, $ajudaTitulo) = self::resolverAjuda($view);
+        list($ajudaHtml, $ajudaTitulo) = self::resolverAjuda($view, $dados);
         $dados['ajudaHtml'] = $ajudaHtml;
         $dados['ajudaTitulo'] = $ajudaTitulo;
 
@@ -69,9 +69,9 @@ class View
      * (reload completo) quanto pro JSON do renderizarParcial (navegacao em
      * arvore via AJAX), sem duplicar a logica de resolucao nos dois lugares.
      */
-    private static function resolverAjuda($view)
+    private static function resolverAjuda($view, array $dadosDaTela = [])
     {
-        $ajudaDados = \App\Services\AjudaService::paraView($view);
+        $ajudaDados = \App\Services\AjudaService::paraView($view, $dadosDaTela);
 
         if ($ajudaDados === null) {
             return [null, null];

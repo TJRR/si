@@ -13,6 +13,13 @@
         <input type="text" name="titulo" required value="<?php echo htmlspecialchars($bloco !== null ? (string) $bloco['titulo'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label><br>
 
+    <label>Etiqueta acima do título (opcional, texto curto em caixa alta):
+        <input type="text" name="etiqueta" maxlength="60" placeholder="GARANTA SUA VAGA" value="<?php echo htmlspecialchars($bloco !== null && isset($bloco['etiqueta']) ? (string) $bloco['etiqueta'] : '', ENT_QUOTES, 'UTF-8'); ?>">
+    </label><br>
+    <label>Cor da etiqueta:
+        <input type="text" name="etiqueta_cor" maxlength="7" placeholder="#cbd744" value="<?php echo htmlspecialchars($bloco !== null && isset($bloco['etiqueta_cor']) ? (string) $bloco['etiqueta_cor'] : '', ENT_QUOTES, 'UTF-8'); ?>">
+    </label><br>
+
     <label>Âncora da seção (usada no menu/navegação por rolagem, sem espaços):
         <input type="text" name="secao_ancora" value="<?php echo htmlspecialchars($bloco !== null ? (string) $bloco['secao_ancora'] : '', ENT_QUOTES, 'UTF-8'); ?>">
     </label>
@@ -56,6 +63,10 @@
         </label><br>
         <label>Cor do texto:
             <input type="text" name="cor_texto" maxlength="7" placeholder="#141413" value="<?php echo htmlspecialchars($bloco !== null ? (string) $bloco['cor_texto'] : '', ENT_QUOTES, 'UTF-8'); ?>">
+        </label><br>
+        <label>
+            <input type="checkbox" name="usar_cor_rodape" value="1" <?php echo ($bloco !== null && !empty($bloco['usar_cor_rodape'])) ? 'checked' : ''; ?>>
+            Usar a cor de fundo do rodapé e encostar o bloco nele (ideal para a chamada final, logo antes do rodapé)
         </label>
     </fieldset>
 
@@ -67,7 +78,13 @@
         <label>Hiperlink do botão:
             <input type="text" name="cta_link" value="<?php echo htmlspecialchars($bloco !== null ? (string) $bloco['cta_link'] : '', ENT_QUOTES, 'UTF-8'); ?>">
         </label><br>
-        <label>Alinhamento do botão:
+        <label>Cor de fundo do botão:
+            <input type="text" name="cta_cor_fundo" maxlength="7" placeholder="#ea5a43" value="<?php echo htmlspecialchars($bloco !== null && isset($bloco['cta_cor_fundo']) ? (string) $bloco['cta_cor_fundo'] : '', ENT_QUOTES, 'UTF-8'); ?>">
+        </label><br>
+        <label>Cor do texto do botão:
+            <input type="text" name="cta_cor_texto" maxlength="7" placeholder="#141413" value="<?php echo htmlspecialchars($bloco !== null && isset($bloco['cta_cor_texto']) ? (string) $bloco['cta_cor_texto'] : '', ENT_QUOTES, 'UTF-8'); ?>">
+        </label><br>
+        <label>Alinhamento dos botões:
             <select name="cta_alinhamento">
                 <?php $alinhamentosCta = ['esquerda' => 'Esquerda', 'centro' => 'Centro', 'direita' => 'Direita']; ?>
                 <?php foreach ($alinhamentosCta as $valorOpcao => $rotuloOpcao): ?>
@@ -82,7 +99,14 @@
         </label><br>
         <label>Hiperlink do segundo botão:
             <input type="text" name="cta2_link" value="<?php echo htmlspecialchars($bloco !== null ? (string) $bloco['cta2_link'] : '', ENT_QUOTES, 'UTF-8'); ?>">
+        </label><br>
+        <label>Cor de fundo do segundo botão (em branco: só contorno):
+            <input type="text" name="cta2_cor_fundo" maxlength="7" value="<?php echo htmlspecialchars($bloco !== null && isset($bloco['cta2_cor_fundo']) ? (string) $bloco['cta2_cor_fundo'] : '', ENT_QUOTES, 'UTF-8'); ?>">
+        </label><br>
+        <label>Cor do texto do segundo botão:
+            <input type="text" name="cta2_cor_texto" maxlength="7" value="<?php echo htmlspecialchars($bloco !== null && isset($bloco['cta2_cor_texto']) ? (string) $bloco['cta2_cor_texto'] : '', ENT_QUOTES, 'UTF-8'); ?>">
         </label>
+        <p style="color:#555;font-size:0.9em;">Destinos aceitos nos botões: âncora da própria página ("#programacao"), endereço completo ("https://...") ou endereço interno do sistema ("eventoInscricao/index/<?php echo (int) $evento['id']; ?>").</p>
     </fieldset>
 
     <label>

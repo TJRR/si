@@ -19,6 +19,7 @@ use App\Repositories\TrabalhoNaturezaRepository;
 use App\Repositories\TrabalhoRepository;
 use App\Repositories\UsuarioPerfilRepository;
 use App\Repositories\UsuarioRepository;
+use App\Services\TrabalhoSubmissaoException;
 use App\Services\TrabalhoSubmissaoService;
 
 /**
@@ -71,7 +72,7 @@ class TrabalhoController extends Controller
         // Inovacao no meio do caminho. O retorno para o formulario continua
         // funcionando: AuthController::entrarComResultado() consulta
         // redirecionarPosLogin() antes do destino padrao do contexto.
-        $this->redirecionar('auth/loginEvento');
+        $this->redirecionar('auth/loginEvento/' . (int) $eventoId);
         exit;
     }
 
@@ -118,8 +119,23 @@ class TrabalhoController extends Controller
             return;
         }
 
+        $this->renderizarFormulario($evento, $config);
+    }
+
+    /**
+     * Reabertura da Fase 51 (achados da equipe de Teste Cego): um so' lugar
+     * monta os dados da tela do formulario, tanto na primeira exibicao
+     * quanto na volta depois de um erro. $valores e' o que a pessoa ja
+     * tinha preenchido (a tela mostra tudo de novo; so' os arquivos
+     * precisam ser escolhidos outra vez, limitacao do navegador), e
+     * $erro, quando o erro sabe o campo, faz a tela destacar esse campo.
+     */
+    private function renderizarFormulario(array $evento, array $config, array $valores = [], array $termosMarcados = [], \RuntimeException $erro = null)
+    {
+        $eventoId = $evento['id'];
         $usuario = $this->usuarios->buscarPorId(Auth::usuarioId());
         $perfilPessoa = $this->usuarioPerfil->buscarPorUsuarioId(Auth::usuarioId());
+        $comCampo = $erro instanceof TrabalhoSubmissaoException;
 
         $this->renderizar('trabalho/formulario', [
             'evento' => $evento,
@@ -131,8 +147,11 @@ class TrabalhoController extends Controller
             'usuario' => $usuario,
             'perfilPessoa' => $perfilPessoa,
             'termos' => (new EventoTrabalhoTermoRepository())->listarAtivos($eventoId),
-            'termosMarcados' => [],
-            'erro' => null,
+            'termosMarcados' => $termosMarcados,
+            'valores' => $valores,
+            'erro' => $erro !== null ? $erro->getMessage() : null,
+            'campoErro' => $comCampo ? $erro->campo() : null,
+            'indiceErro' => $comCampo ? $erro->indice() : null,
         ], 'Submeter trabalho: ' . $evento['nome']);
     }
 
@@ -144,11 +163,17 @@ class TrabalhoController extends Controller
             foreach ($_POST['coautor_nome'] as $indice => $nome) {
                 $nome = trim($nome);
 
-                if ($nome === '') {
+                // Bloco de coautor inteiro em branco e' ignorado; com qualquer
+                // dado preenchido, o servico exige nome, CPF e e-mail.
+                $cpfDigitado = isset($_POST['coautor_cpf'][$indice]) ? trim($_POST['coautor_cpf'][$indice]) : '';
+                $emailDigitado = isset($_POST['coautor_email'][$indice]) ? trim($_POST['coautor_email'][$indice]) : '';
+
+                if ($nome === '' && $cpfDigitado === '' && $emailDigitado === '') {
                     continue;
                 }
 
                 $coautores[] = [
+                    'indice' => $indice,
                     'nome' => $nome,
                     'cpf' => isset($_POST['coautor_cpf'][$indice]) ? trim($_POST['coautor_cpf'][$indice]) : '',
                     'email' => isset($_POST['coautor_email'][$indice]) ? trim($_POST['coautor_email'][$indice]) : '',
@@ -193,35 +218,93 @@ class TrabalhoController extends Controller
             $termosAceitos = array_map('intval', $_POST['termos_aceitos']);
         }
 
-        try {
-            $trabalhoId = (new TrabalhoSubmissaoService())->submeter($eventoId, Auth::usuarioId(), $dadosAutorPrincipal, $dadosTrabalho, $coautores, $arquivosEnviados, $termosAceitos);
-            flashSucesso('Trabalho submetido com sucesso.');
-            $this->redirecionar('trabalho/ver/' . $trabalhoId);
-        } catch (\RuntimeException $e) {
-            $evento = $this->eventos->buscarPorId($eventoId);
-            $usuario = $this->usuarios->buscarPorId(Auth::usuarioId());
-            $perfilPessoa = $this->usuarioPerfil->buscarPorUsuarioId(Auth::usuarioId());
+        $servico = new TrabalhoSubmissaoService();
 
-            $this->renderizar('trabalho/formulario', [
-                'evento' => $evento,
-                'config' => $config,
-                'eixos' => $this->eixos->listarPorEvento($eventoId),
-                'naturezas' => $this->naturezas->listarPorEvento($eventoId),
-                'metodosHabilitados' => $this->config->metodosHabilitados($eventoId),
-                'extensoesHabilitadas' => $this->config->extensoesEditavelHabilitadas($eventoId),
-                'usuario' => $usuario,
-                'perfilPessoa' => $perfilPessoa,
-                'termos' => (new EventoTrabalhoTermoRepository())->listarAtivos($eventoId),
-                'termosMarcados' => $termosAceitos,
-                'erro' => $e->getMessage(),
-            ], 'Submeter trabalho: ' . $evento['nome']);
+        try {
+            $trabalhoId = $servico->submeter($eventoId, Auth::usuarioId(), $dadosAutorPrincipal, $dadosTrabalho, $coautores, $arquivosEnviados, $termosAceitos);
+        } catch (\RuntimeException $e) {
+            $this->renderizarFormulario($this->eventos->buscarPorId($eventoId), $config, $_POST, $termosAceitos, $e);
+            return;
         }
+
+        // Um unico aviso na tela, com tudo que aconteceu: recebimento,
+        // inscricao dos autores e e-mail.
+        $aviso = $this->montarAvisoRecebimento($servico->resumoUltimaSubmissao());
+
+        if ($aviso['falhou_email']) {
+            flashAlerta($aviso['mensagem']);
+        } else {
+            flashSucesso($aviso['mensagem']);
+        }
+
+        $this->redirecionar('trabalho/ver/' . $trabalhoId);
+    }
+
+    /**
+     * Texto do aviso unico depois de uma submissao com sucesso. Coautor sem
+     * inscricao automatica (conta em analise, ou opcao desligada) e e-mail
+     * que nao saiu entram na mesma frase, para a pessoa nunca achar que
+     * tudo deu certo quando nao deu.
+     */
+    private function montarAvisoRecebimento($resumo)
+    {
+        $mensagem = 'Trabalho recebido. Protocolo nº ' . (int) $resumo['trabalho_id'] . '.';
+        $pessoas = $resumo['pessoas'];
+        $coautores = array_slice($pessoas, 1);
+
+        if ($resumo['inscricao_automatica']) {
+            $inscritos = [];
+            $semInscricao = [];
+
+            foreach ($coautores as $coautor) {
+                if (in_array($coautor['inscricao'], ['nova', 'ja_inscrito'], true)) {
+                    $inscritos[] = $coautor['nome'];
+                } else {
+                    $semInscricao[] = $coautor['nome'];
+                }
+            }
+
+            if (empty($inscritos)) {
+                $mensagem .= ' Você está inscrito(a) no evento.';
+            } elseif (count($inscritos) === 1) {
+                $mensagem .= ' Você e o(a) coautor(a) ' . $inscritos[0] . ' estão inscritos(as) no evento.';
+            } else {
+                $mensagem .= ' Você e os coautores ' . implode(', ', $inscritos) . ' estão inscritos no evento.';
+            }
+
+            if (!empty($semInscricao)) {
+                $mensagem .= ' A inscrição de ' . implode(', ', $semInscricao) . ' não foi automática (o cadastro dessa pessoa no sistema está em análise): ela deve se inscrever pelo formulário do evento.';
+            }
+        }
+
+        $enviados = [];
+        $falhas = [];
+
+        foreach ($pessoas as $pessoa) {
+            if ($pessoa['email_enviado'] === true) {
+                $enviados[] = $pessoa['email'];
+            } elseif ($pessoa['email_enviado'] === false) {
+                $falhas[] = $pessoa['email'];
+            }
+        }
+
+        if (!empty($enviados)) {
+            $mensagem .= ' Enviamos um e-mail de confirmação para ' . implode(', ', $enviados) . '.';
+        }
+
+        if (!empty($falhas)) {
+            $mensagem .= ' Não foi possível enviar o e-mail de confirmação para ' . implode(', ', $falhas) . ' agora; guarde o número do protocolo.';
+        }
+
+        return ['mensagem' => $mensagem, 'falhou_email' => !empty($falhas)];
     }
 
     public function meusTrabalhos()
     {
         if (!Auth::autenticado()) {
-            $this->redirecionar('auth/login');
+            // Reabertura da Fase 51: autor sem sessao (ou com a sessao
+            // vencida) entra pela porta do Evento, nunca pela do Concurso.
+            $this->redirecionar('auth/loginEvento');
             return;
         }
 
@@ -247,13 +330,17 @@ class TrabalhoController extends Controller
     public function ver($id)
     {
         if (!Auth::autenticado()) {
-            $this->redirecionar('auth/login');
+            // Reabertura da Fase 51: autor sem sessao (ou com a sessao
+            // vencida) entra pela porta do Evento, nunca pela do Concurso.
+            $this->redirecionar('auth/loginEvento');
             return;
         }
 
         $trabalho = $this->trabalhos->buscarComDetalhes($id);
 
-        if ($trabalho === null || (int) $trabalho['autor_principal_usuario_id'] !== (int) Auth::usuarioId()) {
+        // Reabertura da Fase 51: qualquer autor com conta (principal ou
+        // coautor) acompanha o trabalho, somente leitura.
+        if ($trabalho === null || !$this->autores->usuarioEhAutor($id, Auth::usuarioId())) {
             http_response_code(404);
             exit('Trabalho não encontrado.');
         }

@@ -7,6 +7,7 @@
     <?php
     $eventoId = $trabalho['evento_id'];
     $tituloTopo = $trabalho['evento_nome'];
+    $urlVoltar = url('trabalho/meusTrabalhos');
     require __DIR__ . '/../eventoApp/_app_bar.php';
     ?>
 
@@ -28,6 +29,7 @@
             <?php if ($trabalho['foi_desclassificado'] && !empty($trabalho['motivo_desclassificacao'])): ?>
                 <p><strong>Motivo:</strong> <?php echo htmlspecialchars($trabalho['motivo_desclassificacao'], ENT_QUOTES, 'UTF-8'); ?></p>
             <?php endif; ?>
+            <p><strong>Protocolo:</strong> nº <?php echo (int) $trabalho['id']; ?></p>
             <p><strong>Eixo temático:</strong> <?php echo htmlspecialchars((string) $trabalho['eixo_nome'], ENT_QUOTES, 'UTF-8'); ?></p>
             <p><strong>Natureza:</strong> <?php echo htmlspecialchars((string) $trabalho['natureza_nome'], ENT_QUOTES, 'UTF-8'); ?></p>
             <p><strong>Submetido em:</strong> <?php echo htmlspecialchars($trabalho['submetido_em'], ENT_QUOTES, 'UTF-8'); ?></p>

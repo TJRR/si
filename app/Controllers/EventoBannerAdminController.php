@@ -72,6 +72,7 @@ class EventoBannerAdminController extends Controller
             'erro' => $erro,
             'evento' => $evento,
             'banner' => null,
+            'faixa' => null,
         ], 'Nova faixa: ' . $evento['nome'], ['tipo' => 'eventoBanners', 'id' => (int) $eventoId]);
     }
 
@@ -96,6 +97,7 @@ class EventoBannerAdminController extends Controller
             'erro' => $erro,
             'evento' => $evento,
             'banner' => $banner,
+            'faixa' => $banner,
         ], 'Editar faixa: ' . $evento['nome'], ['tipo' => 'eventoBanners', 'id' => (int) $evento['id']]);
     }
 
@@ -138,6 +140,8 @@ class EventoBannerAdminController extends Controller
             'conteudo_html' => isset($_POST['conteudo_html']) ? sanitizarHtmlRico($_POST['conteudo_html']) : '',
             'conteudo_alinhamento' => $this->valorPermitido('conteudo_alinhamento', EventoBannerRepository::CONTEUDO_ALINHAMENTOS, 'centro'),
             'cor_fundo' => $this->campoOuNulo('cor_fundo'),
+            'cor_texto' => $this->campoOuNulo('cor_texto'),
+            'formato' => $this->valorPermitido('formato', EventoBannerRepository::FORMATOS, 'retangulo'),
             'cta_titulo' => $this->campoOuNulo('cta_titulo'),
             'cta_destino_tipo' => $this->valorPermitidoOuNulo('cta_destino_tipo', EventoBannerRepository::CTA_DESTINO_TIPOS),
             'cta_destino_valor' => $this->campoOuNulo('cta_destino_valor'),

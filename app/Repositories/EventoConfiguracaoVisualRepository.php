@@ -27,6 +27,46 @@ class EventoConfiguracaoVisualRepository
         'inferior_esquerda', 'inferior_centro', 'inferior_direita',
     ];
 
+    /**
+     * Reabertura da Fase 51: fontes que o Admin pode escolher para os
+     * titulos e para o texto da pagina publica do evento. Lista fechada
+     * (nunca nome digitado), porque cada nome vira um pedido ao servico de
+     * fontes do Google; a chave e' o nome da familia, o valor e' o trecho
+     * de pesos pedido ao servico.
+     */
+    public const FONTES = [
+        'Poppins' => 'Poppins:wght@400;600;700',
+        'Roboto' => 'Roboto:wght@400;500;700',
+        'Montserrat' => 'Montserrat:wght@400;500;600;700',
+        'Fredoka' => 'Fredoka:wght@500;600;700',
+        'Open Sans' => 'Open+Sans:wght@400;600;700',
+        'Lato' => 'Lato:wght@400;700',
+        'Nunito' => 'Nunito:wght@400;600;700',
+    ];
+
+    /**
+     * Endereco da folha de estilo do Google Fonts com as fontes escolhidas
+     * para o evento, ou null quando nenhuma foi escolhida (vale a do site).
+     */
+    public static function urlFontes(array $configuracao)
+    {
+        $familias = [];
+
+        foreach (['fonte_titulo', 'fonte_texto'] as $coluna) {
+            $nome = isset($configuracao[$coluna]) ? $configuracao[$coluna] : null;
+
+            if ($nome !== null && isset(self::FONTES[$nome])) {
+                $familias[self::FONTES[$nome]] = true;
+            }
+        }
+
+        if (empty($familias)) {
+            return null;
+        }
+
+        return 'https://fonts.googleapis.com/css2?family=' . implode('&family=', array_keys($familias)) . '&display=swap';
+    }
+
     public function buscarPorEvento($eventoId)
     {
         $pdo = Database::conexao();
@@ -53,10 +93,11 @@ class EventoConfiguracaoVisualRepository
             'cabecalho_imagem_posicao' => $dados['cabecalho_imagem_posicao'],
             'cabecalho_efeito_entrada' => $dados['cabecalho_efeito_entrada'],
             // Fase 51: logo oficial do evento (vence a do tema na pagina
-            // publica dele) e avanco automatico dos Quadros de apresentacao.
+            // publica dele) e, desde a reabertura, as fontes da pagina.
             'logo_path' => $dados['logo_path'],
             'logo_alt' => $dados['logo_alt'],
-            'quadros_avanco_automatico' => $dados['quadros_avanco_automatico'],
+            'fonte_titulo' => $dados['fonte_titulo'],
+            'fonte_texto' => $dados['fonte_texto'],
         ];
 
         if ($antes === null) {
@@ -64,11 +105,11 @@ class EventoConfiguracaoVisualRepository
                 'INSERT INTO evento_configuracao_visual (
                     evento_id, publicado, cabecalho_imagem_path, cabecalho_logo_claro_path, cabecalho_titulo_html,
                     cabecalho_efeito_transicao, cabecalho_overlay_opacidade, cabecalho_imagem_posicao, cabecalho_efeito_entrada,
-                    logo_path, logo_alt, quadros_avanco_automatico
+                    logo_path, logo_alt, fonte_titulo, fonte_texto
                 ) VALUES (
                     :evento_id, :publicado, :cabecalho_imagem_path, :cabecalho_logo_claro_path, :cabecalho_titulo_html,
                     :cabecalho_efeito_transicao, :cabecalho_overlay_opacidade, :cabecalho_imagem_posicao, :cabecalho_efeito_entrada,
-                    :logo_path, :logo_alt, :quadros_avanco_automatico
+                    :logo_path, :logo_alt, :fonte_titulo, :fonte_texto
                 )'
             );
             $stmt->execute($parametros);
@@ -87,7 +128,8 @@ class EventoConfiguracaoVisualRepository
                     cabecalho_efeito_entrada = :cabecalho_efeito_entrada,
                     logo_path = :logo_path,
                     logo_alt = :logo_alt,
-                    quadros_avanco_automatico = :quadros_avanco_automatico
+                    fonte_titulo = :fonte_titulo,
+                    fonte_texto = :fonte_texto
                  WHERE id = :id'
             );
             $parametrosAtualizacao = $parametros;

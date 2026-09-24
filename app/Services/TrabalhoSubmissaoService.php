@@ -8,14 +8,19 @@ if (!defined('SI_BOOT')) {
 }
 
 use App\Core\Database;
+use App\Repositories\EventoCampoInscricaoRepository;
+use App\Repositories\EventoInscricaoRepository;
 use App\Repositories\EventoTrabalhoTermoRepository;
 use App\Repositories\PerfilRepository;
 use App\Repositories\TrabalhoAutorRepository;
 use App\Repositories\TrabalhoAvaliadorRepository;
 use App\Repositories\TrabalhoConfigRepository;
 use App\Repositories\TrabalhoRepository;
+use App\Repositories\SemanaInovacaoRepository;
+use App\Repositories\TokenSenhaRepository;
 use App\Repositories\TrabalhoTermoAceiteRepository;
 use App\Repositories\UsuarioPerfilRepository;
+use App\Repositories\UsuarioRepository;
 use App\Validation\CpfValidador;
 
 /**
@@ -41,6 +46,12 @@ class TrabalhoSubmissaoService
     private $usuarioPerfil;
     private $termos;
     private $aceites;
+    private $usuarios;
+    private $tokens;
+    private $inscricoes;
+    private $camposInscricao;
+    private $eventos;
+    private $ultimoResumo = null;
 
     public function __construct()
     {
@@ -52,6 +63,21 @@ class TrabalhoSubmissaoService
         $this->usuarioPerfil = new UsuarioPerfilRepository();
         $this->termos = new EventoTrabalhoTermoRepository();
         $this->aceites = new TrabalhoTermoAceiteRepository();
+        $this->usuarios = new UsuarioRepository();
+        $this->tokens = new TokenSenhaRepository();
+        $this->inscricoes = new EventoInscricaoRepository();
+        $this->camposInscricao = new EventoCampoInscricaoRepository();
+        $this->eventos = new SemanaInovacaoRepository();
+    }
+
+    /**
+     * Reabertura da Fase 51: o que aconteceu na ultima chamada de submeter()
+     * (quem foi inscrito, quem recebeu e-mail), para o controller montar UM
+     * unico aviso na tela. Nulo antes da primeira submissao.
+     */
+    public function resumoUltimaSubmissao()
+    {
+        return $this->ultimoResumo;
     }
 
     /**
@@ -72,29 +98,69 @@ class TrabalhoSubmissaoService
         $config = $this->config->buscarPorEvento($eventoId);
 
         if ($config === null) {
-            throw new \RuntimeException('Este evento ainda não está com a submissão de Trabalhos configurada.');
+            throw new TrabalhoSubmissaoException('Este evento ainda não está com a submissão de Trabalhos configurada.');
         }
 
         $this->validarPrazo($config);
         $this->validarMetodo($config, $dadosTrabalho);
 
+        if (trim((string) $dadosTrabalho['titulo']) === '') {
+            throw new TrabalhoSubmissaoException('Informe o título do trabalho.', 'titulo');
+        }
+
+        if (trim((string) $dadosAutorPrincipal['nome']) === '') {
+            throw new TrabalhoSubmissaoException('Informe o nome completo do autor principal.', 'autor_nome');
+        }
+
         if ((int) $config['exige_telefone_contato'] === 1 && empty($dadosTrabalho['telefone_contato'])) {
-            throw new \RuntimeException('Informe um telefone para contato.');
+            throw new TrabalhoSubmissaoException('Informe um telefone para contato.', 'telefone_contato');
+        }
+
+        // Reabertura da Fase 51: telefone com DDD, 10 (fixo) ou 11 digitos
+        // (celular), gravado sempre no mesmo formato de exibicao.
+        if (!empty($dadosTrabalho['telefone_contato'])) {
+            $telefoneFormatado = formatarTelefoneBr($dadosTrabalho['telefone_contato']);
+
+            if ($telefoneFormatado === null) {
+                throw new TrabalhoSubmissaoException('Informe o telefone com DDD, no formato (00) 0000-0000 ou (00) 00000-0000.', 'telefone_contato');
+            }
+
+            $dadosTrabalho['telefone_contato'] = $telefoneFormatado;
         }
 
         $totalAutores = 1 + count($coautores);
 
         if ($totalAutores > (int) $config['quantidade_maxima_autores']) {
-            throw new \RuntimeException('Quantidade de autores acima do limite permitido para este evento (' . (int) $config['quantidade_maxima_autores'] . ').');
+            throw new TrabalhoSubmissaoException('Quantidade de autores acima do limite permitido para este evento (' . (int) $config['quantidade_maxima_autores'] . ').', 'coautores');
         }
 
         if (!CpfValidador::valido($dadosAutorPrincipal['cpf'])) {
-            throw new \RuntimeException('CPF do autor principal inválido.');
+            throw new TrabalhoSubmissaoException('CPF do autor principal inválido.', 'autor_cpf');
         }
 
-        foreach ($coautores as $coautor) {
+        if (!filter_var($dadosAutorPrincipal['email'], FILTER_VALIDATE_EMAIL)) {
+            throw new TrabalhoSubmissaoException('Informe um e-mail válido para o autor principal.', 'autor_email');
+        }
+
+        $emailPrincipal = mb_strtolower(trim($dadosAutorPrincipal['email']));
+
+        foreach ($coautores as $posicao => $coautor) {
+            $indiceCoautor = isset($coautor['indice']) ? $coautor['indice'] : $posicao;
+
+            if (trim((string) $coautor['nome']) === '') {
+                throw new TrabalhoSubmissaoException('Informe o nome completo do coautor.', 'coautor_nome', $indiceCoautor);
+            }
+
             if (!CpfValidador::valido($coautor['cpf'])) {
-                throw new \RuntimeException('CPF de um dos coautores inválido.');
+                throw new TrabalhoSubmissaoException('CPF do coautor inválido.', 'coautor_cpf', $indiceCoautor);
+            }
+
+            if (!filter_var($coautor['email'], FILTER_VALIDATE_EMAIL)) {
+                throw new TrabalhoSubmissaoException('Informe um e-mail válido para o coautor.', 'coautor_email', $indiceCoautor);
+            }
+
+            if (mb_strtolower(trim($coautor['email'])) === $emailPrincipal) {
+                throw new TrabalhoSubmissaoException('O e-mail do coautor não pode ser igual ao do autor principal.', 'coautor_email', $indiceCoautor);
             }
         }
 
@@ -103,18 +169,31 @@ class TrabalhoSubmissaoService
         // já é avaliador avulso ATIVO deste evento não pode submeter um
         // trabalho nele. Checa autor principal e cada coautor, por e-mail.
         if ($this->avaliadores->emailJaEhAvaliadorAtivo($eventoId, $dadosAutorPrincipal['email'])) {
-            throw new \RuntimeException('Este e-mail já está cadastrado como avaliador de Trabalhos deste evento e não pode submeter um trabalho.');
+            throw new TrabalhoSubmissaoException('Este e-mail já está cadastrado como avaliador de Trabalhos deste evento e não pode submeter um trabalho.', 'autor_email');
         }
 
-        foreach ($coautores as $coautor) {
+        foreach ($coautores as $posicao => $coautor) {
+            $indiceCoautor = isset($coautor['indice']) ? $coautor['indice'] : $posicao;
+
             if ($this->avaliadores->emailJaEhAvaliadorAtivo($eventoId, $coautor['email'])) {
-                throw new \RuntimeException('O e-mail de um dos coautores já está cadastrado como avaliador de Trabalhos deste evento.');
+                throw new TrabalhoSubmissaoException('O e-mail do coautor já está cadastrado como avaliador de Trabalhos deste evento.', 'coautor_email', $indiceCoautor);
             }
         }
 
         $termosParaRegistrar = $this->validarTermos($eventoId, $termosAceitos);
 
         $conteudo = $this->validarConteudo($config, $dadosTrabalho, $arquivosEnviados);
+
+        // Reabertura da Fase 51 (achado da equipe de Teste Cego): quando o
+        // evento liga "inscrever autores ao submeter", o autor principal e
+        // cada coautor entram inscritos no evento junto com o trabalho.
+        $evento = $this->eventos->buscarPorId($eventoId);
+        $inscreverAutores = $evento !== null
+            && isset($config['inscrever_autores_ao_submeter'])
+            && (int) $config['inscrever_autores_ao_submeter'] === 1;
+        $modoCredenciamento = $evento !== null ? $evento['modo_credenciamento'] : 'assistido';
+        $respostasInscricao = $inscreverAutores ? $this->respostasPadraoDaInscricao($eventoId) : [];
+        $pessoas = [];
 
         $pdo = Database::conexao();
         $pdo->beginTransaction();
@@ -181,17 +260,53 @@ class TrabalhoSubmissaoService
 
             $this->usuarioPerfil->atualizarParcial($usuarioId, $camposPerfilAutor);
 
+            $pessoas[] = [
+                'papel' => 'principal',
+                'nome' => $dadosAutorPrincipal['nome'],
+                'email' => trim($dadosAutorPrincipal['email']),
+                'usuario_id' => $usuarioId,
+                'conta_nova' => false,
+                'token_senha' => null,
+                'inscricao' => 'nao_aplicavel',
+                'email_enviado' => null,
+            ];
+
             foreach ($coautores as $coautor) {
+                $conta = ['usuario_id' => null, 'conta_nova' => false, 'token_senha' => null];
+
+                if ($inscreverAutores) {
+                    $conta = $this->resolverContaDoCoautor($coautor);
+                }
+
+                $cpfCoautor = CpfValidador::apenasDigitos($coautor['cpf']);
+                $cargoCoautor = !empty($coautor['cargo']) ? $coautor['cargo'] : null;
+                $orgaoCoautor = !empty($coautor['orgao_origem']) ? $coautor['orgao_origem'] : null;
+
                 $this->autores->inserir(
                     $trabalhoId,
                     false,
-                    null,
+                    $conta['usuario_id'],
                     $coautor['nome'],
-                    CpfValidador::apenasDigitos($coautor['cpf']),
+                    $cpfCoautor,
                     $coautor['email'],
-                    !empty($coautor['cargo']) ? $coautor['cargo'] : null,
-                    !empty($coautor['orgao_origem']) ? $coautor['orgao_origem'] : null
+                    $cargoCoautor,
+                    $orgaoCoautor
                 );
+
+                if ($conta['usuario_id'] !== null) {
+                    $this->preencherPerfilVazio($conta['usuario_id'], $cpfCoautor, $cargoCoautor, $orgaoCoautor);
+                }
+
+                $pessoas[] = [
+                    'papel' => 'coautor',
+                    'nome' => $coautor['nome'],
+                    'email' => mb_strtolower(trim($coautor['email'])),
+                    'usuario_id' => $conta['usuario_id'],
+                    'conta_nova' => $conta['conta_nova'],
+                    'token_senha' => $conta['token_senha'],
+                    'inscricao' => 'nao_inscrito',
+                    'email_enviado' => null,
+                ];
             }
 
             if (!empty($termosParaRegistrar)) {
@@ -200,6 +315,19 @@ class TrabalhoSubmissaoService
 
             $this->garantirPerfilInscrito($usuarioId);
 
+            if ($inscreverAutores) {
+                foreach ($pessoas as $posicaoPessoa => $pessoa) {
+                    if ($pessoa['usuario_id'] === null) {
+                        continue;
+                    }
+
+                    $this->garantirPerfilInscrito($pessoa['usuario_id']);
+
+                    $recemInscrito = $this->inscricoes->inscrever($eventoId, $pessoa['usuario_id'], $respostasInscricao, $modoCredenciamento);
+                    $pessoas[$posicaoPessoa]['inscricao'] = $recemInscrito ? 'nova' : 'ja_inscrito';
+                }
+            }
+
             $pdo->commit();
         } catch (\Throwable $e) {
             $pdo->rollBack();
@@ -207,7 +335,127 @@ class TrabalhoSubmissaoService
             throw $e;
         }
 
+        $this->ultimoResumo = [
+            'trabalho_id' => (int) $trabalhoId,
+            'titulo' => $dadosTrabalho['titulo'],
+            'inscricao_automatica' => $inscreverAutores,
+            'modo_credenciamento' => $modoCredenciamento,
+            'pessoas' => $this->enviarRecebimentos($pessoas, $trabalhoId, $dadosTrabalho['titulo'], $evento, $config, $inscreverAutores, $modoCredenciamento),
+        ];
+
         return $trabalhoId;
+    }
+
+    /**
+     * Reabertura da Fase 51: conta do coautor para a inscricao automatica.
+     * Sem conta com esse e-mail: cria conta aprovada, sem senha, com endereco
+     * de definir senha valido por 7 dias (mesmo padrao da importacao de
+     * trabalhos). Com conta aprovada: usa a existente. Conta pendente ou
+     * rejeitada nunca e' alterada por uma submissao alheia: o coautor fica
+     * so' registrado no trabalho, sem inscricao automatica.
+     */
+    private function resolverContaDoCoautor(array $coautor)
+    {
+        $email = mb_strtolower(trim($coautor['email']));
+        $usuario = $this->usuarios->buscarPorEmail($email);
+
+        if ($usuario === null) {
+            $usuarioId = $this->usuarios->criarAprovadoSemSenha($coautor['nome'], $email);
+            $token = $this->tokens->criar($usuarioId, 'definir', 168);
+
+            return ['usuario_id' => $usuarioId, 'conta_nova' => true, 'token_senha' => $token];
+        }
+
+        if ($usuario['status'] !== 'aprovado') {
+            return ['usuario_id' => null, 'conta_nova' => false, 'token_senha' => null];
+        }
+
+        return ['usuario_id' => (int) $usuario['id'], 'conta_nova' => false, 'token_senha' => null];
+    }
+
+    /**
+     * Dados da pessoa moram em usuarios_perfil (fonte unica): para o coautor
+     * (que nao digitou nada disso na propria conta), preenche so' o que
+     * estiver vazio, nunca sobrescreve o que a pessoa ja cadastrou.
+     */
+    private function preencherPerfilVazio($usuarioId, $cpf, $cargo, $orgaoOrigem)
+    {
+        $atual = $this->usuarioPerfil->buscarPorUsuarioId($usuarioId);
+        $campos = [];
+
+        if ($atual === null || trim((string) $atual['documento']) === '') {
+            $campos['documento'] = $cpf;
+            $campos['tipo_documento'] = 'CPF';
+        }
+
+        if ($cargo !== null && ($atual === null || trim((string) $atual['cargo']) === '')) {
+            $campos['cargo'] = $cargo;
+        }
+
+        if ($orgaoOrigem !== null && ($atual === null || trim((string) $atual['orgao_origem']) === '')) {
+            $campos['orgao_origem'] = $orgaoOrigem;
+        }
+
+        if (!empty($campos)) {
+            $this->usuarioPerfil->atualizarParcial($usuarioId, $campos);
+        }
+    }
+
+    /**
+     * Resposta que a submissao ja sabe dar ao formulario de inscricao do
+     * evento: o tipo de documento e' CPF (o CPF foi informado no envio).
+     * Os demais campos do formulario de inscricao ficam em branco.
+     */
+    private function respostasPadraoDaInscricao($eventoId)
+    {
+        foreach ($this->camposInscricao->listarPorEvento($eventoId) as $campo) {
+            if ($campo['rotulo'] !== EventoCampoInscricaoRepository::ROTULO_TIPO_DOCUMENTO) {
+                continue;
+            }
+
+            $configuracao = $campo['config_json'] !== null ? json_decode($campo['config_json'], true) : null;
+            $opcoes = is_array($configuracao) && isset($configuracao['opcoes']) ? $configuracao['opcoes'] : [];
+
+            return in_array('CPF', $opcoes, true) ? [$campo['id'] => 'CPF'] : [];
+        }
+
+        return [];
+    }
+
+    /**
+     * Um e-mail por pessoa, depois do 'commit': recebimento do trabalho e,
+     * quando houver, a inscricao no evento. Falha de envio nunca desfaz a
+     * submissao; o resultado de cada envio volta no proprio item da pessoa,
+     * e o registro fica em notificacoes. Coautor sem conta (inscricao
+     * automatica desligada, ou conta que nao pode ser alterada) nao recebe.
+     */
+    private function enviarRecebimentos(array $pessoas, $trabalhoId, $titulo, $evento, array $config, $inscreverAutores, $modoCredenciamento)
+    {
+        $nomePrincipal = $pessoas[0]['nome'];
+        $dadosTrabalho = ['id' => (int) $trabalhoId, 'titulo' => $titulo, 'recebido_em' => date('Y-m-d H:i:s')];
+        $notificacoes = new NotificacaoService();
+
+        foreach ($pessoas as $posicao => $pessoa) {
+            if ($pessoa['papel'] === 'coautor' && $pessoa['usuario_id'] === null) {
+                continue;
+            }
+
+            try {
+                $pessoas[$posicao]['email_enviado'] = $notificacoes->recebimentoTrabalho(
+                    $pessoa,
+                    $dadosTrabalho,
+                    $evento !== null ? $evento : ['id' => 0, 'nome' => '', 'data_inicio' => null, 'data_fim' => null],
+                    $config,
+                    $nomePrincipal,
+                    $inscreverAutores,
+                    $modoCredenciamento
+                );
+            } catch (\Throwable $e) {
+                $pessoas[$posicao]['email_enviado'] = false;
+            }
+        }
+
+        return $pessoas;
     }
 
     /**
@@ -233,7 +481,7 @@ class TrabalhoSubmissaoService
 
             if (!$foiMarcado) {
                 if ((int) $termo['obrigatorio'] === 1) {
-                    throw new \RuntimeException('É necessário aceitar: ' . $termo['rotulo']);
+                    throw new TrabalhoSubmissaoException('É necessário aceitar: ' . $termo['rotulo'], 'termos');
                 }
 
                 continue;
@@ -288,11 +536,11 @@ class TrabalhoSubmissaoService
         $agora = date('Y-m-d H:i:s');
 
         if ($config['data_abertura_submissao'] !== null && $agora < $config['data_abertura_submissao']) {
-            throw new \RuntimeException('O prazo de submissão de trabalhos ainda não começou.');
+            throw new TrabalhoSubmissaoException('O prazo de submissão de trabalhos ainda não começou.');
         }
 
         if ($config['data_fim_submissao'] !== null && $agora > $config['data_fim_submissao']) {
-            throw new \RuntimeException('O prazo de submissão de trabalhos já terminou.');
+            throw new TrabalhoSubmissaoException('O prazo de submissão de trabalhos já terminou.');
         }
     }
 
@@ -301,7 +549,7 @@ class TrabalhoSubmissaoService
         $metodosHabilitados = $config['metodos_submissao_json'] !== null ? json_decode($config['metodos_submissao_json'], true) : [];
 
         if (empty($dadosTrabalho['metodo_submissao']) || !in_array($dadosTrabalho['metodo_submissao'], (array) $metodosHabilitados, true)) {
-            throw new \RuntimeException('Método de submissão inválido ou não habilitado para este evento.');
+            throw new TrabalhoSubmissaoException('Método de submissão inválido ou não habilitado para este evento.', 'metodo_submissao');
         }
     }
 
@@ -315,14 +563,15 @@ class TrabalhoSubmissaoService
         $cpfPrincipal = CpfValidador::apenasDigitos($dadosAutorPrincipal['cpf']);
 
         if ($this->autores->cpfJaExisteNoEvento($eventoId, $cpfPrincipal)) {
-            throw new \RuntimeException('Este CPF já consta em outro trabalho submetido neste evento.');
+            throw new TrabalhoSubmissaoException('Este CPF já consta em outro trabalho submetido neste evento.', 'autor_cpf');
         }
 
-        foreach ($coautores as $coautor) {
+        foreach ($coautores as $posicao => $coautor) {
+            $indiceCoautor = isset($coautor['indice']) ? $coautor['indice'] : $posicao;
             $cpfCoautor = CpfValidador::apenasDigitos($coautor['cpf']);
 
             if ($this->autores->cpfJaExisteNoEvento($eventoId, $cpfCoautor)) {
-                throw new \RuntimeException('O CPF de um dos coautores já consta em outro trabalho submetido neste evento.');
+                throw new TrabalhoSubmissaoException('O CPF do coautor já consta em outro trabalho submetido neste evento.', 'coautor_cpf', $indiceCoautor);
             }
         }
     }
@@ -340,7 +589,7 @@ class TrabalhoSubmissaoService
 
         if ($metodo === 'formulario') {
             if (empty($dadosTrabalho['conteudo_html'])) {
-                throw new \RuntimeException('Informe o conteúdo do trabalho.');
+                throw new TrabalhoSubmissaoException('Informe o conteúdo do trabalho.', 'conteudo_html');
             }
 
             return ['conteudo_html' => $this->textoParaHtmlSeguro($dadosTrabalho['conteudo_html'])];
@@ -348,14 +597,14 @@ class TrabalhoSubmissaoService
 
         if ($metodo === 'link_externo') {
             if (empty($dadosTrabalho['link_avaliacao']) || !linkHttpValido($dadosTrabalho['link_avaliacao'])) {
-                throw new \RuntimeException('Informe, no campo do arquivo sem identificação, um endereço eletrônico válido, começando com http:// ou https://.');
+                throw new TrabalhoSubmissaoException('Informe, no campo do arquivo sem identificação, um endereço eletrônico válido, começando com http:// ou https://.', 'link_avaliacao');
             }
 
             $resultado = ['link_avaliacao' => $dadosTrabalho['link_avaliacao']];
 
             if ($sigiloCego) {
                 if (empty($dadosTrabalho['link_publicacao']) || !linkHttpValido($dadosTrabalho['link_publicacao'])) {
-                    throw new \RuntimeException('Informe o endereço eletrônico da versão completa (identificada), começando com http:// ou https://.');
+                    throw new TrabalhoSubmissaoException('Informe o endereço eletrônico da versão completa (identificada), começando com http:// ou https://.', 'link_publicacao');
                 }
 
                 $resultado['link_publicacao'] = $dadosTrabalho['link_publicacao'];
@@ -372,13 +621,13 @@ class TrabalhoSubmissaoService
             $limiteBytes = (int) $config['tamanho_maximo_mb'] * 1024 * 1024;
 
             if (!isset($arquivosEnviados['arquivo_avaliacao'])) {
-                throw new \RuntimeException('O campo para envio do arquivo "sem identificação" está vazio.');
+                throw new TrabalhoSubmissaoException('Escolha o arquivo sem identificação.', 'arquivo_avaliacao');
             }
 
-            $validacaoAvaliacao = TrabalhoArquivoValidador::validar($arquivosEnviados['arquivo_avaliacao'], $extensoesPermitidas, $limiteBytes);
+            $validacaoAvaliacao = TrabalhoArquivoValidador::validar($arquivosEnviados['arquivo_avaliacao'], $extensoesPermitidas, $limiteBytes, 'arquivo_avaliacao');
 
             if (!$validacaoAvaliacao['valido']) {
-                throw new \RuntimeException('Arquivo sem identificação: ' . $validacaoAvaliacao['mensagem']);
+                throw new TrabalhoSubmissaoException('Arquivo sem identificação: ' . $validacaoAvaliacao['mensagem'], 'arquivo_avaliacao');
             }
 
             $resultado = [
@@ -388,13 +637,13 @@ class TrabalhoSubmissaoService
 
             if ($sigiloCego) {
                 if (!isset($arquivosEnviados['arquivo_publicacao'])) {
-                    throw new \RuntimeException('O campo para envio do arquivo da "versão completa (identificada)" está vazio.');
+                    throw new TrabalhoSubmissaoException('Escolha o arquivo da versão completa, com identificação.', 'arquivo_publicacao');
                 }
 
-                $validacaoPublicacao = TrabalhoArquivoValidador::validar($arquivosEnviados['arquivo_publicacao'], $extensoesPermitidas, $limiteBytes);
+                $validacaoPublicacao = TrabalhoArquivoValidador::validar($arquivosEnviados['arquivo_publicacao'], $extensoesPermitidas, $limiteBytes, 'arquivo_publicacao');
 
                 if (!$validacaoPublicacao['valido']) {
-                    throw new \RuntimeException('Versão completa (identificada): ' . $validacaoPublicacao['mensagem']);
+                    throw new TrabalhoSubmissaoException('Versão completa (identificada): ' . $validacaoPublicacao['mensagem'], 'arquivo_publicacao');
                 }
 
                 $resultado['arquivo_publicacao'] = $arquivosEnviados['arquivo_publicacao'];
@@ -404,7 +653,7 @@ class TrabalhoSubmissaoService
             return $resultado;
         }
 
-        throw new \RuntimeException('Método de submissão inválido.');
+        throw new TrabalhoSubmissaoException('Método de submissão inválido.', 'metodo_submissao');
     }
 
     /**
