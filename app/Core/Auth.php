@@ -88,6 +88,12 @@ class Auth
             return 'duvidaAdmin/minhasEscaladas';
         }
 
+        // Fase 54: representante de estande (perfil por convite do
+        // Administrador), antes do "inscrito", que continua por ultimo.
+        if (self::possuiPerfil('representante_estande')) {
+            return 'representanteEstande/index';
+        }
+
         // Fase 40/41: perfil mais "fraco" (auto-aprovado, sem curadoria
         // humana), checado por ultimo. Manda pro shell do aplicativo
         // (EventoAppController::index()), que resolve pra qual evento levar

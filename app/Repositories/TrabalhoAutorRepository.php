@@ -102,6 +102,87 @@ class TrabalhoAutorRepository
     }
 
     /**
+     * Fase 54 (achado do teste do dono): segunda camada da regra "um
+     * trabalho por pessoa no evento". O CPF e' digitado a cada envio e pode
+     * ser trocado; o e-mail, comparado sem diferenca de maiusculas e sem
+     * espacos, pega o mesmo autor com outro CPF. Mesmo escopo de
+     * cpfJaExisteNoEvento(): autor principal e coautores, qualquer situacao.
+     */
+    public function emailJaExisteNoEvento($eventoId, $email)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*)
+             FROM trabalho_autores a
+             INNER JOIN trabalhos t ON t.id = a.trabalho_id
+             WHERE t.evento_id = :evento_id AND LOWER(TRIM(a.email)) = :email'
+        );
+        $stmt->execute(['evento_id' => $eventoId, 'email' => mb_strtolower(trim((string) $email))]);
+
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
+    /**
+     * Fase 54: terceira camada da mesma regra. O autor principal e' sempre a
+     * conta que envia (trabalho_autores.usuario_id), entao a mesma conta
+     * nao envia um segundo trabalho no evento nem trocando CPF e e-mail; e
+     * coautor que ja' ganhou conta tambem e' reconhecido por ela.
+     */
+    public function usuarioJaEhAutorNoEvento($eventoId, $usuarioId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*)
+             FROM trabalho_autores a
+             INNER JOIN trabalhos t ON t.id = a.trabalho_id
+             WHERE t.evento_id = :evento_id AND a.usuario_id = :usuario_id'
+        );
+        $stmt->execute(['evento_id' => $eventoId, 'usuario_id' => $usuarioId]);
+
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
+    /**
+     * Fase 54 (decisao do dono): a correcao do CPF em Meu Perfil chega aos
+     * trabalhos da pessoa. Devolve os eventos em que o CPF novo ja' consta
+     * como de OUTRA pessoa (outra conta, ou autor sem conta), para recusar a
+     * correcao antes de gravar qualquer coisa.
+     */
+    public function eventosComCpfDeOutraPessoa($usuarioId, $cpf)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT DISTINCT e.nome
+             FROM trabalho_autores meu
+             INNER JOIN trabalhos tm ON tm.id = meu.trabalho_id
+             INNER JOIN trabalhos t ON t.evento_id = tm.evento_id
+             INNER JOIN trabalho_autores a ON a.trabalho_id = t.id
+             INNER JOIN eventos e ON e.id = tm.evento_id
+             WHERE meu.usuario_id = :usuario_id
+               AND a.cpf = :cpf
+               AND (a.usuario_id IS NULL OR a.usuario_id <> :usuario_id_outro)'
+        );
+        $stmt->execute(['usuario_id' => $usuarioId, 'cpf' => $cpf, 'usuario_id_outro' => $usuarioId]);
+
+        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+    }
+
+    /**
+     * Fase 54: grava o CPF corrigido em todo trabalho em que a pessoa e'
+     * autora ou coautora com conta. Chamar dentro da transacao de quem
+     * grava o perfil (MeuPerfilController), sem transacao propria.
+     * Devolve quantas linhas mudaram.
+     */
+    public function atualizarCpfDoUsuarioNaTransacaoAtual($usuarioId, $cpf)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('UPDATE trabalho_autores SET cpf = :cpf WHERE usuario_id = :usuario_id AND cpf <> :cpf_atual');
+        $stmt->execute(['cpf' => $cpf, 'usuario_id' => $usuarioId, 'cpf_atual' => $cpf]);
+
+        return $stmt->rowCount();
+    }
+
+    /**
      * Usado por EventoAppController::index() para desviar, antes do
      * fallback de "sem inscricao", quem ganhou o perfil `inscrito` so' por
      * ser autor (principal ou coautor) de algum trabalho - mesmo padrao ja resolvido

@@ -14,6 +14,7 @@ use App\Repositories\EventoSecaoCartoesRepository;
 use App\Repositories\EventoSecaoContagemRepository;
 use App\Repositories\EventoSecaoCronogramaRepository;
 use App\Repositories\EventoSecaoDestaquesRepository;
+use App\Repositories\EventoSecaoEstandesRepository;
 use App\Repositories\EventoSecaoFaqRepository;
 use App\Repositories\EventoSecaoLocalRepository;
 use App\Repositories\EventoSecaoOrdemRepository;
@@ -51,6 +52,9 @@ class EventoSecaoAdminController extends Controller
         'programacao' => ['rotulo' => 'Programação', 'classe' => EventoSecaoProgramacaoRepository::class, 'view' => 'evento_programacao', 'tem_itens' => true],
         'faq' => ['rotulo' => 'Perguntas frequentes', 'classe' => EventoSecaoFaqRepository::class, 'view' => 'evento_faq', 'tem_itens' => true],
         'local' => ['rotulo' => 'Local e acesso', 'classe' => EventoSecaoLocalRepository::class, 'view' => 'evento_local', 'tem_itens' => false],
+        // Fase 54: lista publica dos estandes ativos do evento (os itens sao
+        // os proprios estandes, cadastrados no no Estandes da arvore).
+        'estandes' => ['rotulo' => 'Estandes', 'classe' => EventoSecaoEstandesRepository::class, 'view' => 'evento_estandes', 'tem_itens' => false],
     ];
 
     private static $rotulosFixos = [

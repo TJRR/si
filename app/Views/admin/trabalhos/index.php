@@ -130,6 +130,35 @@
     </fieldset>
 
     <fieldset>
+        <legend>Resultado para o autor</legend>
+        <p style="color:#555;font-size:0.9em;">O que cada autor (principal e coautores) vê do próprio trabalho depois que o resultado é publicado, na tela Resultado. A situação final (aprovado ou reprovado) sempre aparece. A nota de cada avaliador nunca aparece.</p>
+        <?php
+        $exibeNota = $config === null || !isset($config['resultado_exibe_nota']) || !empty($config['resultado_exibe_nota']);
+        $exibePosicao = $config === null || !isset($config['resultado_exibe_posicao']) || !empty($config['resultado_exibe_posicao']);
+        $exibeCriterios = $config === null || !isset($config['resultado_exibe_criterios']) || !empty($config['resultado_exibe_criterios']);
+        ?>
+        <label>
+            <input type="checkbox" name="resultado_exibe_nota" <?php echo $exibeNota ? 'checked' : ''; ?>>
+            Mostrar a nota final
+        </label>
+        <label>
+            <input type="checkbox" name="resultado_exibe_posicao" <?php echo $exibePosicao ? 'checked' : ''; ?>>
+            Mostrar a posição na classificação
+        </label>
+        <label>
+            <input type="checkbox" name="resultado_exibe_criterios" <?php echo $exibeCriterios ? 'checked' : ''; ?>>
+            Mostrar a média de cada critério
+        </label>
+        <p>Texto do e-mail de aviso do resultado (vai depois do convite para abrir o aplicativo, que o sistema monta sozinho; em branco, vale um texto padrão):</p>
+        <?php
+        $nome = 'mensagem_resultado_html';
+        $valor = $config !== null && !empty($config['mensagem_resultado_html']) ? (string) $config['mensagem_resultado_html'] : '';
+        $rotulo = null;
+        include __DIR__ . '/../_editor_rico.php';
+        ?>
+    </fieldset>
+
+    <fieldset>
         <legend>Situação</legend>
         <label>
             <select name="situacao">

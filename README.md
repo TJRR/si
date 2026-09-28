@@ -139,6 +139,7 @@ trilha — tudo é dado, cadastrado pela interface.
 | **Participante** | Sua equipe, suas submissões, suas dúvidas e requerimentos |
 | **Colaborador** | Pessoa externa que só enxerga dúvidas escaladas para ela — nenhum outro acesso administrativo |
 | **Inscrito** | Quem se inscreveu num Evento (ex.: Semana de Inovação) — só o próprio painel do evento, auto-aprovado, sem depender de aprovação manual |
+| **Representante de estande** | Pessoa do expositor ou do patrocinador, convidada pela organização, que só acompanha o próprio estande num Evento: dados exibidos, cartaz com o código e total de visitas |
 
 Toda conta — criada manualmente ou via Google — nasce **pendente** e só consegue
 entrar depois de aprovada por um Administrador, com uma única exceção: quem se
@@ -259,7 +260,27 @@ a organização define os critérios
 de nota e convida avaliadores avulsos, que analisam cada trabalho às cegas
 (sem saber quem é o autor) e lançam a nota por critério; o sistema calcula
 o resultado final, aplica desempate quando necessário e seleciona os
-trabalhos aprovados.
+trabalhos aprovados. A organização confere a prévia e **publica o resultado**;
+só então cada autor (principal ou coautor) vê, no próprio aplicativo, a situação
+final do trabalho e, conforme a configuração do evento, a nota final, a posição
+na classificação e a média por critério, e é avisado por e-mail e pelo sino do
+aplicativo.
+Depois do evento, a organização publica os **Anais**: o volume único, em PDF, com os
+trabalhos apresentados. O volume pode ser montado pela equipe fora do sistema ou
+**pelo próprio sistema**: o autor principal de cada trabalho envia a versão final pelo
+aplicativo, dentro do prazo definido pela organização, e o sistema junta capa, páginas
+iniciais (folha de rosto, ficha catalográfica, expediente, comissões e apresentação),
+sumário por eixo temático e os trabalhos, numerando as páginas. O sistema guarda cada
+versão do arquivo, publica como documento do evento e no botão "Anais" do aplicativo,
+mantém a lista de quais trabalhos constam no volume e avisa os autores por e-mail e
+pelo sino.
+
+Os **estandes** de expositores e patrocinadores também têm um código fixo, impresso num
+cartaz com QR: o participante registra a visita pelo aplicativo, uma vez por estande, e
+acumula os pontos definidos pela organização. Cada estande pode ter um representante,
+convidado pela organização, que atualiza nome, descrição e logotipo, imprime o cartaz e
+acompanha quantas visitas o estande recebeu, sem identificar quem visitou. A lista de
+estandes aparece no aplicativo e, se a organização quiser, na página pública do evento.
 
 ---
 
@@ -432,6 +453,9 @@ de tudo esse bloco de uma vez, junto com a Fase 51.
 | 49 | **Trabalhos**: submissão e avaliação de artigos e resumos expandidos de um Evento, com motor próprio (sem relação com o Concurso), avaliação às cegas por avaliadores avulsos, cálculo de resultado com desempate configurável |
 | 50 | **Página pública própria para cada Evento**, separada da home do Concurso, com Cabeçalho, Quadros de apresentação, Faixas e Blocos de conteúdo exclusivos, e controle de quando cada uma fica publicada |
 | 51 | **Página do evento montada por seções**: ordem, liga e desliga e menu definidos pela organização, com componentes novos (contagem regressiva, cronograma, cartões, destaques, programação por dia, perguntas frequentes, local com mapa), fontes escolhidas por evento e **documentos do evento** (edital, anexos, retificações, com versões); **declarações de aceite configuráveis** na submissão de trabalhos, com formulário que aponta o campo com problema e **inscrição automática dos autores** (opcional, por evento); **importação de trabalhos recebidos por outro canal**, com convite de acesso aos autores pela fila de envio; **qual regra decidiu cada empate** no resultado; **divulgação pública do resultado final da trilha**; pastas na biblioteca de mídia |
+| 52 | **Resultado de Trabalhos publicado ao autor**: a organização confere a prévia e publica; só então o autor vê situação, seleção para apresentação, nota final, posição e média por critério (cada bloco liga e desliga por evento), com aviso por e-mail e pelo sino do aplicativo, e a possibilidade de reabrir para corrigir; **tela amigável "Este evento não existe"** para página de evento inexistente ou não publicada, com **prévia** da página não publicada para administradores |
+| 53 | **Anais do Evento**: o volume único em PDF, montado pela equipe, é enviado em versões numeradas, publicado como documento do evento e como botão no aplicativo do participante, com a lista de quais trabalhos aprovados constam nele e aviso aos autores por e-mail e pelo sino |
+| 54 | **Estandes** de expositores e patrocinadores, com código fixo em cartaz, visita registrada pelo participante no aplicativo com pontos e representante do estande convidado pela organização; **geração automática do volume dos Anais**, com envio da versão final de cada trabalho pelo autor, dados editoriais, comissões, sumário e numeração das páginas; na submissão de trabalhos, **um trabalho por pessoa** conferido também pelo e-mail e pela conta, e cadastro seguido direto do formulário para quem ainda não tem conta |
 
 ---
 

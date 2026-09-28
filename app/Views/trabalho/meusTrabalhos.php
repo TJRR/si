@@ -30,6 +30,12 @@
                     <p>Protocolo nº <?php echo (int) $trabalho['id']; ?></p>
                     <p><?php echo htmlspecialchars($trabalho['evento_nome'], ENT_QUOTES, 'UTF-8'); ?></p>
                     <p><span class="selo-situacao <?php echo $corSituacao; ?>"><?php echo htmlspecialchars($situacaoAtual, ENT_QUOTES, 'UTF-8'); ?></span></p>
+                    <?php if (!empty($trabalho['consta_nos_anais'])): ?>
+                        <p>
+                            <span class="selo-situacao verde">Publicado nos Anais</span>
+                            <a href="<?php echo htmlspecialchars($trabalho['anais_url'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">Abrir os Anais</a>
+                        </p>
+                    <?php endif; ?>
                     <p>Submetido em <?php echo htmlspecialchars($trabalho['submetido_em'], ENT_QUOTES, 'UTF-8'); ?></p>
                     <p><a href="<?php echo url('trabalho/ver/' . (int) $trabalho['id']); ?>" class="btn">Ver detalhes</a></p>
                 </div>

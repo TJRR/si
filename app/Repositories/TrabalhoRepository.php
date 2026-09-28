@@ -156,11 +156,48 @@ class TrabalhoRepository
         Auditoria::registrar('desclassificar', 'trabalhos', $id, $antes, ['motivo_desclassificacao' => $motivo]);
     }
 
-    public function atualizarStatus($id, $status)
+    /**
+     * Fase 52: grava, num unico UPDATE, tudo o que a publicacao do
+     * resultado congela num trabalho classificado: situacao, selecao para
+     * apresentacao, regra que decidiu o empate, nota final, posicao e o
+     * detalhe em JSON (nota maxima, total classificado e media por
+     * criterio). Chamado so' de dentro da transacao de
+     * TrabalhoResultadoService::publicarResultado().
+     */
+    public function gravarResultado($id, $status, $selecionado, $desempate, $notaFinal, $posicao, $detalheJson)
     {
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare('UPDATE trabalhos SET status = :status WHERE id = :id');
-        $stmt->execute(['status' => $status, 'id' => $id]);
+        $stmt = $pdo->prepare(
+            'UPDATE trabalhos
+             SET status = :status, selecionado = :selecionado, desempate_criterio = :desempate,
+                 nota_final = :nota_final, posicao = :posicao, resultado_detalhe_json = :detalhe
+             WHERE id = :id'
+        );
+        $stmt->execute([
+            'status' => $status,
+            'selecionado' => $selecionado ? 1 : 0,
+            'desempate' => $desempate,
+            'nota_final' => $notaFinal,
+            'posicao' => $posicao,
+            'detalhe' => $detalheJson,
+            'id' => $id,
+        ]);
+    }
+
+    /**
+     * Fase 52: trabalho desclassificado nao entra na classificacao. Ao
+     * publicar, o que um resultado anterior deixou gravado nele (selecao,
+     * nota, posicao) e' apagado, para nunca aparecer como selecionado.
+     */
+    public function limparResultadoDesclassificados($eventoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            "UPDATE trabalhos
+             SET selecionado = 0, desempate_criterio = NULL, nota_final = NULL, posicao = NULL, resultado_detalhe_json = NULL
+             WHERE evento_id = :evento_id AND status = 'desclassificado'"
+        );
+        $stmt->execute(['evento_id' => $eventoId]);
     }
 
     /**
@@ -183,13 +220,6 @@ class TrabalhoRepository
         ]);
     }
 
-    public function marcarSelecionado($id, $selecionado)
-    {
-        $pdo = Database::conexao();
-        $stmt = $pdo->prepare('UPDATE trabalhos SET selecionado = :selecionado WHERE id = :id');
-        $stmt->execute(['selecionado' => $selecionado ? 1 : 0, 'id' => $id]);
-    }
-
     /**
      * Atribuicao tardia (sob demanda), so' para quem ainda esta NULL -
      * mesmo padrao lazy de SubmissaoRepository::garantirNumerosSigilo() do
@@ -202,17 +232,6 @@ class TrabalhoRepository
      * antes tem a mesma referencia de origem, e o importador a classifica
      * como "ja importado" em vez de gravar de novo ou convidar de novo.
      */
-    /**
-     * Fase 51: guarda, no proprio trabalho, qual regra decidiu o empate com
-     * o trabalho imediatamente acima no resultado aplicado.
-     */
-    public function definirDesempateCriterio($id, $criterio)
-    {
-        $pdo = Database::conexao();
-        $stmt = $pdo->prepare('UPDATE trabalhos SET desempate_criterio = :criterio WHERE id = :id');
-        $stmt->execute(['criterio' => $criterio, 'id' => $id]);
-    }
-
     public function buscarPorOrigemReferencia($eventoId, $referencia)
     {
         $pdo = Database::conexao();

@@ -10,11 +10,14 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auditoria;
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Core\Database;
 use App\Repositories\TemaVisualRepository;
 use App\Repositories\TokenSenhaRepository;
+use App\Repositories\TrabalhoAutorRepository;
 use App\Repositories\UsuarioPerfilRepository;
 use App\Repositories\UsuarioRepository;
 use App\Services\ImagemService;
+use App\Validation\CpfValidador;
 
 /**
  * Tela "Meu perfil" (nome + foto), liberada para qualquer perfil autenticado
@@ -53,9 +56,34 @@ class MeuPerfilController extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
 
+            $tipoDocumento = in_array(isset($_POST['tipo_documento']) ? $_POST['tipo_documento'] : null, UsuarioPerfilRepository::TIPOS_DOCUMENTO, true)
+                ? $_POST['tipo_documento']
+                : 'CPF';
+            $documento = trim(isset($_POST['documento']) ? $_POST['documento'] : '');
+            $autores = new TrabalhoAutorRepository();
+            $cpfParaTrabalhos = null;
+
+            // Fase 54 (decisao do dono): quem e' autor ou coautor de algum
+            // trabalho corrige o CPF aqui, e a correcao chega aos trabalhos
+            // ja' enviados. Conferido antes de gravar qualquer coisa: CPF
+            // valido e que nao seja de outra pessoa num trabalho do mesmo
+            // evento (regra de um trabalho por pessoa).
+            if ($nome !== '' && $tipoDocumento === 'CPF' && $documento !== '' && $autores->possuiTrabalhoEmQualquerEvento($usuario['id'])) {
+                if (!CpfValidador::valido($documento)) {
+                    $erro = 'CPF inválido. Confira o número: ele também é usado nos trabalhos que você enviou.';
+                } else {
+                    $cpfParaTrabalhos = CpfValidador::apenasDigitos($documento);
+                    $eventosEmConflito = $autores->eventosComCpfDeOutraPessoa($usuario['id'], $cpfParaTrabalhos);
+
+                    if (!empty($eventosEmConflito)) {
+                        $erro = 'Este CPF já consta como de outra pessoa num trabalho de: ' . implode(', ', $eventosEmConflito) . '. Confira o número digitado.';
+                    }
+                }
+            }
+
             if ($nome === '') {
                 $erro = 'Informe o nome.';
-            } else {
+            } elseif ($erro === null) {
                 $this->usuarios->atualizarNome($usuario['id'], $nome);
                 $_SESSION['usuario_nome'] = $nome;
 
@@ -78,20 +106,42 @@ class MeuPerfilController extends Controller
                 }
 
                 if ($erro === null) {
-                    $perfis->salvar($usuario['id'], [
-                        'documento' => trim(isset($_POST['documento']) ? $_POST['documento'] : ''),
-                        'tipo_documento' => in_array(isset($_POST['tipo_documento']) ? $_POST['tipo_documento'] : null, UsuarioPerfilRepository::TIPOS_DOCUMENTO, true)
-                            ? $_POST['tipo_documento']
-                            : 'CPF',
-                        'cargo' => trim(isset($_POST['cargo']) ? $_POST['cargo'] : ''),
-                        'categoria_profissional' => in_array(isset($_POST['categoria_profissional']) ? $_POST['categoria_profissional'] : null, UsuarioPerfilRepository::CATEGORIAS_PROFISSIONAIS, true)
-                            ? $_POST['categoria_profissional']
-                            : '',
-                        'orgao_origem' => trim(isset($_POST['orgao_origem']) ? $_POST['orgao_origem'] : ''),
-                        'minicurriculo' => trim(isset($_POST['minicurriculo']) ? $_POST['minicurriculo'] : ''),
-                    ]);
+                    $trabalhosCorrigidos = 0;
+                    $pdo = Database::conexao();
+                    $pdo->beginTransaction();
 
-                    $_SESSION['flash'] = 'Perfil atualizado.';
+                    try {
+                        $perfis->salvar($usuario['id'], [
+                            'documento' => $documento,
+                            'tipo_documento' => $tipoDocumento,
+                            'cargo' => trim(isset($_POST['cargo']) ? $_POST['cargo'] : ''),
+                            'categoria_profissional' => in_array(isset($_POST['categoria_profissional']) ? $_POST['categoria_profissional'] : null, UsuarioPerfilRepository::CATEGORIAS_PROFISSIONAIS, true)
+                                ? $_POST['categoria_profissional']
+                                : '',
+                            'orgao_origem' => trim(isset($_POST['orgao_origem']) ? $_POST['orgao_origem'] : ''),
+                            'minicurriculo' => trim(isset($_POST['minicurriculo']) ? $_POST['minicurriculo'] : ''),
+                        ]);
+
+                        if ($cpfParaTrabalhos !== null) {
+                            $trabalhosCorrigidos = $autores->atualizarCpfDoUsuarioNaTransacaoAtual($usuario['id'], $cpfParaTrabalhos);
+                        }
+
+                        $pdo->commit();
+                    } catch (\Throwable $e) {
+                        if ($pdo->inTransaction()) {
+                            $pdo->rollBack();
+                        }
+
+                        throw $e;
+                    }
+
+                    if ($trabalhosCorrigidos > 0) {
+                        Auditoria::registrar('corrigir_cpf_nos_trabalhos', 'trabalho_autores', $usuario['id'], null, ['trabalhos_corrigidos' => $trabalhosCorrigidos]);
+                    }
+
+                    $_SESSION['flash'] = $trabalhosCorrigidos > 0
+                        ? 'Perfil atualizado. O CPF também foi corrigido nos trabalhos que você enviou.'
+                        : 'Perfil atualizado.';
                     $this->redirecionar('meuPerfil/index');
                     return;
                 }

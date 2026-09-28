@@ -20,8 +20,8 @@ return [
         ],
         [
             'nome' => 'Publicar esta página',
-            'como' => 'Enquanto não estiver marcada, o endereço público deste evento responde como não encontrado para qualquer pessoa, mesmo já sabendo o endereço.',
-            'observacao' => 'Marcada, a tela mostra o endereço completo, pronto para divulgar.',
+            'como' => 'Enquanto não estiver marcada, o endereço público deste evento mostra "Este evento não existe" para qualquer pessoa, mesmo já sabendo o endereço. A única exceção são os administradores com acesso ao sistema: eles veem a página como prévia, com uma faixa avisando que ela ainda não está publicada.',
+            'observacao' => 'Antes de publicar, a tela mostra o endereço da prévia (a página só existe depois que este cabeçalho é salvo uma vez). Marcada a caixa, a tela mostra o endereço completo, pronto para divulgar.',
         ],
         [
             'nome' => 'Imagem de fundo',

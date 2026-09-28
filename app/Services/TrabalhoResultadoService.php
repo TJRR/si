@@ -7,6 +7,9 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auditoria;
+use App\Core\Database;
+use App\Repositories\EventoAnaisRepository;
 use App\Repositories\TrabalhoConfigRepository;
 use App\Repositories\TrabalhoCriterioRepository;
 use App\Repositories\TrabalhoDesignacaoRepository;
@@ -19,8 +22,11 @@ use App\Repositories\TrabalhoRepository;
  * ResultadoEtapaService do Concurso (EPSILON de comparacao de ponto
  * flutuante, cascata de regras de desempate, corte de aprovacao/selecao
  * configuravel), mas sem nenhuma FK para etapas/concursos (decisao de
- * arquitetura numero 5). Nota final nunca e' persistida, sempre calculada
- * em tempo real a partir de trabalho_notas.
+ * arquitetura numero 5). Ate a Fase 51 a nota final nunca era persistida.
+ * Desde a Fase 52 a tela administrativa continua mostrando uma previa
+ * calculada em tempo real a partir de trabalho_notas, e a PUBLICACAO do
+ * resultado (publicarResultado) congela nota, posicao e media por criterio
+ * no proprio trabalho: e' isso que o autor ve, e so' depois de publicado.
  *
  * metodo_agregacao_nota (media_aritmetica ou mediana, configuravel por
  * evento) resolve como as notas totais de cada avaliador se combinam -
@@ -97,7 +103,7 @@ class TrabalhoResultadoService
      * Lista ordenada (maior nota primeiro, desempate em cascata) de todos
      * os trabalhos nao desclassificados de um evento, com nota e situacao
      * de aprovacao calculadas. Usado tanto pela tela administrativa de
-     * Resultado quanto por aplicarResultado().
+     * Resultado quanto por publicarResultado().
      */
     public function calcularRanking($eventoId)
     {
@@ -253,29 +259,15 @@ class TrabalhoResultadoService
     }
 
     /**
-     * Grava status aprovado/reprovado de cada trabalho e marca
-     * "selecionado" nos primeiros N aprovados conforme
+     * Fase 52: quais trabalhos ficam selecionados para apresentacao, isto
+     * e, os primeiros N aprovados da lista ja ordenada, conforme
      * regra_selecao_tipo/regra_selecao_valor do evento (mesmo estilo de
      * ResultadoEtapaService::marcarClassificados() do Concurso, tabela
-     * propria). Acao administrativa explicita (nao roda sozinha).
+     * propria). Devolve a lista de ids. Usado pela previa da tela
+     * administrativa e pela publicacao, para as duas mostrarem o mesmo.
      */
-    public function aplicarResultado($eventoId)
+    public function calcularSelecao(array $linhas, array $config)
     {
-        $config = $this->config->buscarPorEvento($eventoId);
-
-        if ($config === null) {
-            throw new \RuntimeException('Este evento ainda não tem configuração de Trabalhos.');
-        }
-
-        $linhas = $this->calcularRanking($eventoId);
-
-        foreach ($linhas as $linha) {
-            $status = $linha['aprovado'] ? 'aprovado' : 'reprovado';
-            $this->trabalhos->atualizarStatus($linha['trabalho_id'], $status);
-            $this->trabalhos->marcarSelecionado($linha['trabalho_id'], false);
-            $this->trabalhos->definirDesempateCriterio($linha['trabalho_id'], $linha['desempate_criterio']);
-        }
-
         $aprovados = array_values(array_filter($linhas, function (array $linha) {
             return $linha['aprovado'];
         }));
@@ -292,10 +284,233 @@ class TrabalhoResultadoService
             $corte = $totalAprovados;
         }
 
+        $selecionados = [];
+
         foreach ($aprovados as $posicao => $linha) {
             if ($posicao < $corte) {
-                $this->trabalhos->marcarSelecionado($linha['trabalho_id'], true);
+                $selecionados[] = $linha['trabalho_id'];
             }
         }
+
+        return $selecionados;
+    }
+
+    /**
+     * Fase 52: calcula o resultado, grava em cada trabalho o que o autor vai
+     * ver (situacao, selecao, nota final, posicao e media por criterio,
+     * congelados a partir deste momento) e marca o resultado do evento como
+     * publicado. Substitui o antigo "calcular e aplicar": nao existe mais um
+     * estado intermediario em que o resultado esta gravado mas ainda nao foi
+     * publicado.
+     *
+     * A linha de configuracao do evento e' travada (FOR UPDATE) ANTES de
+     * conferir se ja esta publicado: duas chamadas simultaneas (duplo clique)
+     * se serializam, a segunda enxerga "ja publicado" e falha sem gravar
+     * nada. Quem chama so' dispara os avisos aos autores quando este metodo
+     * volta sem excecao.
+     */
+    public function publicarResultado($eventoId, $usuarioId)
+    {
+        $pdo = Database::conexao();
+        $pdo->beginTransaction();
+
+        try {
+            $config = $this->config->buscarPorEventoParaAtualizar($eventoId);
+
+            if ($config === null) {
+                throw new \RuntimeException('Este evento ainda não tem configuração de Trabalhos.');
+            }
+
+            if (!empty($config['resultado_publicado_em'])) {
+                throw new \RuntimeException('O resultado já está publicado. Reabra o resultado para recalcular e publicar de novo.');
+            }
+
+            $linhas = $this->calcularRanking($eventoId);
+            $selecionados = $this->calcularSelecao($linhas, $config);
+            $criterios = $this->criterios->listarPorEvento($eventoId);
+            $notaMaxima = $this->criterios->notaMaximaTotal($eventoId);
+
+            $totalAvaliados = 0;
+
+            foreach ($linhas as $linha) {
+                if ($linha['nota'] !== null) {
+                    $totalAvaliados++;
+                }
+            }
+
+            foreach ($linhas as $indice => $linha) {
+                $detalhe = [
+                    'nota_maxima' => $notaMaxima,
+                    'total_avaliados' => $totalAvaliados,
+                    'criterios' => [],
+                ];
+
+                foreach ($criterios as $criterio) {
+                    $media = $this->notas->mediaPorTrabalhoECriterio($linha['trabalho_id'], $criterio['id']);
+
+                    $detalhe['criterios'][] = [
+                        'nome' => $criterio['nome'],
+                        'media' => $media !== null ? round($media, 2) : null,
+                        'maximo' => (float) $criterio['nota_maxima'],
+                    ];
+                }
+
+                $this->trabalhos->gravarResultado(
+                    $linha['trabalho_id'],
+                    $linha['aprovado'] ? 'aprovado' : 'reprovado',
+                    in_array($linha['trabalho_id'], $selecionados, true),
+                    $linha['desempate_criterio'],
+                    $linha['nota'] !== null ? round($linha['nota'], 2) : null,
+                    $linha['nota'] !== null ? $indice + 1 : null,
+                    json_encode($detalhe)
+                );
+            }
+
+            $this->trabalhos->limparResultadoDesclassificados($eventoId);
+            $this->config->marcarResultadoPublicado($eventoId, $usuarioId);
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+
+            throw $e;
+        }
+
+        Auditoria::registrar('publicar_resultado', 'evento_trabalhos_config', (int) $config['id'], null, [
+            'evento_id' => (int) $eventoId,
+            'trabalhos' => count($linhas),
+            'selecionados' => count($selecionados),
+            'publicado_por' => $usuarioId,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Fase 52: tira o resultado do ar (o autor volta a ver "Submetido") para
+     * o Admin poder recalcular e publicar de novo. Nao apaga o que ficou
+     * gravado nos trabalhos; a proxima publicacao regrava tudo. Mesma trava
+     * de linha de publicarResultado(), para os dois nao se cruzarem.
+     */
+    public function reabrirResultado($eventoId, $usuarioId)
+    {
+        $pdo = Database::conexao();
+        $pdo->beginTransaction();
+
+        try {
+            $config = $this->config->buscarPorEventoParaAtualizar($eventoId);
+
+            if ($config === null || empty($config['resultado_publicado_em'])) {
+                throw new \RuntimeException('O resultado deste evento não está publicado.');
+            }
+
+            // Fase 53: os Anais publicados dependem do resultado (so' entram
+            // trabalhos aprovados). Reabrir com eles no ar deixaria a lista
+            // que os autores ja viram sem base; despublicar vem antes.
+            if ((new EventoAnaisRepository())->estaPublicado($eventoId)) {
+                throw new \RuntimeException('Os Anais deste evento estão publicados. Despublique os Anais (aba Anais) antes de reabrir o resultado.');
+            }
+
+            $this->config->limparResultadoPublicado($eventoId);
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+
+            throw $e;
+        }
+
+        Auditoria::registrar('reabrir_resultado', 'evento_trabalhos_config', (int) $config['id'], [
+            'resultado_publicado_em' => $config['resultado_publicado_em'],
+            'resultado_publicado_por' => $config['resultado_publicado_por'],
+        ], [
+            'evento_id' => (int) $eventoId,
+            'reaberto_por' => $usuarioId,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Fase 52: enquanto o resultado do evento nao esta publicado, o autor
+     * nunca ve aprovado ou reprovado, mesmo que o trabalho ja esteja gravado
+     * assim (resultado reaberto). Desclassificado e' um ato individual e
+     * continua visivel na hora.
+     */
+    public function situacaoVisivelParaAutor($status, array $config = null)
+    {
+        $publicado = $config !== null && !empty($config['resultado_publicado_em']);
+
+        if (!$publicado && in_array($status, ['aprovado', 'reprovado'], true)) {
+            return 'submetido';
+        }
+
+        return $status;
+    }
+
+    /**
+     * Fase 52: o que o autor ve do resultado publicado do proprio trabalho,
+     * ja formatado para a tela, ou null enquanto nao houver resultado a
+     * mostrar (evento sem publicacao, trabalho ainda submetido ou
+     * desclassificado). Cada bloco (nota final, posicao, media por criterio)
+     * so' sai se a opcao correspondente estiver ligada na configuracao do
+     * evento e o dado existir. Le so' o que foi congelado no proprio
+     * trabalho: nunca a nota de um avaliador individual.
+     */
+    public function resultadoParaAutor(array $trabalho, array $config = null)
+    {
+        if ($config === null || empty($config['resultado_publicado_em'])) {
+            return null;
+        }
+
+        if (!in_array($trabalho['status'], ['aprovado', 'reprovado'], true)) {
+            return null;
+        }
+
+        $detalhe = !empty($trabalho['resultado_detalhe_json']) ? json_decode($trabalho['resultado_detalhe_json'], true) : null;
+
+        if (!is_array($detalhe)) {
+            $detalhe = [];
+        }
+
+        $formatar = function ($valor) {
+            return number_format((float) $valor, 2, ',', '.');
+        };
+
+        $aprovado = $trabalho['status'] === 'aprovado';
+
+        $resultado = [
+            'situacao' => $aprovado ? 'Aprovado' : 'Reprovado',
+            'selecionado' => $aprovado ? ((int) $trabalho['selecionado'] === 1) : null,
+            'nota' => null,
+            'posicao' => null,
+            'criterios' => [],
+        ];
+
+        if (!empty($config['resultado_exibe_nota']) && $trabalho['nota_final'] !== null) {
+            $resultado['nota'] = [
+                'valor' => $formatar($trabalho['nota_final']),
+                'maxima' => (isset($detalhe['nota_maxima']) && (float) $detalhe['nota_maxima'] > 0) ? $formatar($detalhe['nota_maxima']) : null,
+            ];
+        }
+
+        if (!empty($config['resultado_exibe_posicao']) && $trabalho['posicao'] !== null) {
+            $resultado['posicao'] = [
+                'numero' => (int) $trabalho['posicao'],
+                'total' => isset($detalhe['total_avaliados']) ? (int) $detalhe['total_avaliados'] : null,
+            ];
+        }
+
+        if (!empty($config['resultado_exibe_criterios']) && !empty($detalhe['criterios'])) {
+            foreach ($detalhe['criterios'] as $criterio) {
+                $resultado['criterios'][] = [
+                    'nome' => $criterio['nome'],
+                    'media' => $criterio['media'] !== null ? $formatar($criterio['media']) : null,
+                    'maximo' => $formatar($criterio['maximo']),
+                ];
+            }
+        }
+
+        return $resultado;
     }
 }

@@ -25,7 +25,15 @@ use App\Core\Texto;
  */
 class EventoDocumentoRepository extends EventoConteudoRepositorioBase
 {
-    public const TIPOS = ['edital', 'edital_simples', 'anexo', 'retificacao', 'resultado_final', 'ata'];
+    // Fase 53: 'anais' e' o volume publicado na sub-aba Anais de Trabalhos.
+    // Fica de fora de TIPOS_MANUAIS (o que a tela de Documentos aceita e
+    // oferece): la ele nunca e' criado, editado, despublicado nem removido,
+    // para nao ficar em desacordo com o ponteiro de publicacao dos Anais.
+    public const TIPO_ANAIS = 'anais';
+
+    public const TIPOS_MANUAIS = ['edital', 'edital_simples', 'anexo', 'retificacao', 'resultado_final', 'ata'];
+
+    public const TIPOS = ['edital', 'edital_simples', 'anexo', 'retificacao', 'resultado_final', 'ata', 'anais'];
 
     public const ROTULOS_TIPO = [
         'edital' => 'Edital',
@@ -34,7 +42,16 @@ class EventoDocumentoRepository extends EventoConteudoRepositorioBase
         'retificacao' => 'Retificação',
         'resultado_final' => 'Resultado final',
         'ata' => 'Ata',
+        'anais' => 'Anais',
     ];
+
+    /**
+     * Rotulos dos tipos que a tela de Documentos oferece (sem os Anais).
+     */
+    public static function rotulosTipoManuais()
+    {
+        return array_diff_key(self::ROTULOS_TIPO, [self::TIPO_ANAIS => true]);
+    }
 
     protected function tabela()
     {
@@ -44,6 +61,23 @@ class EventoDocumentoRepository extends EventoConteudoRepositorioBase
     protected function colunas()
     {
         return ['tipo', 'titulo', 'arquivo_path', 'grupo_documento', 'versao', 'ativo', 'publicado', 'criado_por'];
+    }
+
+    /**
+     * Fase 53: versoes vigentes que a tela de Documentos administra, isto e,
+     * todas menos os Anais (administrados na sub-aba propria de Trabalhos).
+     */
+    public function listarAtivosManuais($eventoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT * FROM evento_documentos
+             WHERE evento_id = :evento_id AND ativo = 1 AND tipo <> :tipo_anais
+             ORDER BY ordem ASC, id ASC'
+        );
+        $stmt->execute(['evento_id' => $eventoId, 'tipo_anais' => self::TIPO_ANAIS]);
+
+        return $stmt->fetchAll();
     }
 
     /**
@@ -113,54 +147,78 @@ class EventoDocumentoRepository extends EventoConteudoRepositorioBase
      */
     public function criar($eventoId, array $dados)
     {
+        $pdo = Database::conexao();
+        $pdo->beginTransaction();
+
+        try {
+            $resultado = $this->inserirVersaoNaTransacaoAtual($eventoId, $dados);
+
+            $pdo->commit();
+            Auditoria::registrar('criar', 'evento_documentos', $resultado['id'], null, $resultado['registro']);
+
+            return $resultado['id'];
+        } catch (\Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Fase 53: o miolo de criar() (calcular a versao, desativar a anterior e
+     * inserir a nova), separado para rodar DENTRO da transacao de quem
+     * chama. O PDO nao aceita transacao aninhada, e a publicacao dos Anais
+     * precisa criar o Documento, desativar a versao anterior e gravar o
+     * ponteiro de publicacao de uma vez so', sem deixar um Documento criado
+     * e a etapa seguinte pendente. Quem chama abre e fecha a transacao, e
+     * grava a auditoria depois do commit. $forcarPublicado (so' os Anais usa)
+     * publica a versao nova mesmo que a anterior estivesse despublicada.
+     *
+     * Devolve ['id' => id da versao criada, 'registro' => linha gravada].
+     */
+    public function inserirVersaoNaTransacaoAtual($eventoId, array $dados, $forcarPublicado = false)
+    {
         $grupo = Texto::slugify($dados['tipo'] . '-' . $dados['titulo']);
         $versaoAtiva = $this->buscarVersaoAtiva($eventoId, $grupo);
         $novaVersao = $versaoAtiva !== null ? ((int) $versaoAtiva['versao'] + 1) : 1;
 
         $pdo = Database::conexao();
-        $pdo->beginTransaction();
 
-        try {
-            if ($versaoAtiva !== null) {
-                $pdo->prepare('UPDATE evento_documentos SET ativo = 0 WHERE id = :id AND evento_id = :evento_id')
-                    ->execute(['id' => $versaoAtiva['id'], 'evento_id' => $eventoId]);
-                $ordem = (int) $versaoAtiva['ordem'];
-                $publicado = (int) $versaoAtiva['publicado'];
-            } else {
-                $ordemMaxima = $pdo->prepare('SELECT COALESCE(MAX(ordem), -1) + 1 FROM evento_documentos WHERE evento_id = :evento_id');
-                $ordemMaxima->execute(['evento_id' => $eventoId]);
-                $ordem = (int) $ordemMaxima->fetchColumn();
-                $publicado = 1;
-            }
-
-            $registro = [
-                'evento_id' => $eventoId,
-                'tipo' => $dados['tipo'],
-                'titulo' => $dados['titulo'],
-                'arquivo_path' => $dados['arquivo_path'],
-                'grupo_documento' => $grupo,
-                'versao' => $novaVersao,
-                'ativo' => 1,
-                'ordem' => $ordem,
-                'publicado' => $publicado,
-                'criado_por' => $dados['criado_por'],
-            ];
-
-            $stmt = $pdo->prepare(
-                'INSERT INTO evento_documentos (evento_id, tipo, titulo, arquivo_path, grupo_documento, versao, ativo, ordem, publicado, criado_por)
-                 VALUES (:evento_id, :tipo, :titulo, :arquivo_path, :grupo_documento, :versao, :ativo, :ordem, :publicado, :criado_por)'
-            );
-            $stmt->execute($registro);
-            $id = (int) $pdo->lastInsertId();
-
-            $pdo->commit();
-            Auditoria::registrar('criar', 'evento_documentos', $id, null, $registro);
-
-            return $id;
-        } catch (\Exception $e) {
-            $pdo->rollBack();
-            throw $e;
+        if ($versaoAtiva !== null) {
+            $pdo->prepare('UPDATE evento_documentos SET ativo = 0 WHERE id = :id AND evento_id = :evento_id')
+                ->execute(['id' => $versaoAtiva['id'], 'evento_id' => $eventoId]);
+            $ordem = (int) $versaoAtiva['ordem'];
+            $publicado = (int) $versaoAtiva['publicado'];
+        } else {
+            $ordemMaxima = $pdo->prepare('SELECT COALESCE(MAX(ordem), -1) + 1 FROM evento_documentos WHERE evento_id = :evento_id');
+            $ordemMaxima->execute(['evento_id' => $eventoId]);
+            $ordem = (int) $ordemMaxima->fetchColumn();
+            $publicado = 1;
         }
+
+        if ($forcarPublicado) {
+            $publicado = 1;
+        }
+
+        $registro = [
+            'evento_id' => $eventoId,
+            'tipo' => $dados['tipo'],
+            'titulo' => $dados['titulo'],
+            'arquivo_path' => $dados['arquivo_path'],
+            'grupo_documento' => $grupo,
+            'versao' => $novaVersao,
+            'ativo' => 1,
+            'ordem' => $ordem,
+            'publicado' => $publicado,
+            'criado_por' => $dados['criado_por'],
+        ];
+
+        $stmt = $pdo->prepare(
+            'INSERT INTO evento_documentos (evento_id, tipo, titulo, arquivo_path, grupo_documento, versao, ativo, ordem, publicado, criado_por)
+             VALUES (:evento_id, :tipo, :titulo, :arquivo_path, :grupo_documento, :versao, :ativo, :ordem, :publicado, :criado_por)'
+        );
+        $stmt->execute($registro);
+
+        return ['id' => (int) $pdo->lastInsertId(), 'registro' => $registro];
     }
 
     /**

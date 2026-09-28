@@ -16,13 +16,17 @@
 <form method="post" action="<?php echo url('eventoCabecalho/cabecalho/' . (int) $evento['id']); ?>" enctype="multipart/form-data" id="form-cabecalho-evento"><?= campoCsrf() ?>
     <fieldset>
         <legend>Publicação</legend>
-        <p>Enquanto esta caixa não estiver marcada, a página pública deste evento (endereço abaixo) responde como não encontrada para qualquer pessoa.</p>
+        <p>Enquanto esta caixa não estiver marcada, a página pública deste evento (endereço abaixo) mostra "Este evento não existe" para qualquer pessoa, exceto administradores com login, que a veem como prévia.</p>
         <label>
             <input type="checkbox" name="publicado" value="1" <?php echo (!empty($configuracaoVisual['publicado'])) ? 'checked' : ''; ?>>
             Publicar esta página
         </label>
         <?php if (!empty($configuracaoVisual['publicado'])): ?>
             <p>Endereço público: <a href="<?php echo urlAbsoluta('evento/index/' . (int) $evento['id']); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars(urlAbsoluta('evento/index/' . (int) $evento['id']), ENT_QUOTES, 'UTF-8'); ?></a></p>
+        <?php elseif (!empty($configuracaoVisual)): ?>
+            <p>Ver prévia (só administradores): <a href="<?php echo urlAbsoluta('evento/index/' . (int) $evento['id']); ?>" target="_blank" rel="noopener"><?php echo htmlspecialchars(urlAbsoluta('evento/index/' . (int) $evento['id']), ENT_QUOTES, 'UTF-8'); ?></a></p>
+        <?php else: ?>
+            <p>Salve este cabeçalho uma vez para habilitar a prévia da página.</p>
         <?php endif; ?>
     </fieldset>
 

@@ -9,6 +9,7 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Repositories\EventoAnaisRepository;
 use App\Repositories\SemanaInovacaoRepository;
 use App\Repositories\TrabalhoAutorRepository;
 use App\Repositories\EventoTrabalhoTermoRepository;
@@ -19,6 +20,8 @@ use App\Repositories\TrabalhoNaturezaRepository;
 use App\Repositories\TrabalhoRepository;
 use App\Repositories\UsuarioPerfilRepository;
 use App\Repositories\UsuarioRepository;
+use App\Services\EventoAnaisPdfFinalService;
+use App\Services\TrabalhoResultadoService;
 use App\Services\TrabalhoSubmissaoException;
 use App\Services\TrabalhoSubmissaoService;
 
@@ -67,12 +70,13 @@ class TrabalhoController extends Controller
         ];
 
         // Fase 51: a porta de entrada e' a do Evento (identidade visual
-        // propria, Fase 48B), nao a do Concurso - quem chega aqui veio da
-        // pagina publica do evento e nunca deveria ver a marca do Premio de
-        // Inovacao no meio do caminho. O retorno para o formulario continua
-        // funcionando: AuthController::entrarComResultado() consulta
-        // redirecionarPosLogin() antes do destino padrao do contexto.
-        $this->redirecionar('auth/loginEvento/' . (int) $eventoId);
+        // propria, Fase 48B), nao a do Concurso. Fase 54 (achado do teste do
+        // dono): quem chega aqui sem estar conectado cai primeiro no cadastro
+        // do evento, que leva direto ao formulario depois de criar a conta
+        // (EventoInscricaoPublicaController::cadastrar()) e tem o atalho
+        // "Entrar" para quem ja' tem conta; a entrada tambem volta ao
+        // formulario (AuthController::redirecionarPosLogin()).
+        $this->redirecionar('eventoInscricao/cadastrar/' . (int) $eventoId);
         exit;
     }
 
@@ -183,10 +187,15 @@ class TrabalhoController extends Controller
             }
         }
 
+        // Fase 54 (achado do dono): o e-mail da pessoa nunca muda. O autor
+        // principal e' sempre a conta conectada, entao o e-mail gravado e' o
+        // da conta, e nenhum valor enviado pelo navegador e' lido.
+        $contaAutor = $this->usuarios->buscarPorId(Auth::usuarioId());
+
         $dadosAutorPrincipal = [
             'nome' => trim($_POST['autor_nome']),
             'cpf' => trim($_POST['autor_cpf']),
-            'email' => trim($_POST['autor_email']),
+            'email' => $contaAutor !== null ? (string) $contaAutor['email'] : '',
             'cargo' => isset($_POST['autor_cargo']) ? trim($_POST['autor_cargo']) : '',
             'orgao_origem' => isset($_POST['autor_orgao_origem']) ? trim($_POST['autor_orgao_origem']) : '',
         ];
@@ -308,17 +317,21 @@ class TrabalhoController extends Controller
             return;
         }
 
-        $rotulosSituacao = [
-            'submetido' => 'Submetido',
-            'desclassificado' => 'Desclassificado',
-            'aprovado' => 'Aprovado',
-            'reprovado' => 'Reprovado',
-        ];
-
         $trabalhos = $this->autores->listarTrabalhosDoUsuario(Auth::usuarioId());
 
+        // Fase 52: a configuracao de cada evento e' lida uma vez por evento
+        // distinto, so' durante esta requisicao (variavel local, nada
+        // compartilhado entre requisicoes).
+        $configsPorEvento = [];
+
         foreach ($trabalhos as &$trabalho) {
-            $trabalho['situacao_rotulo'] = $rotulosSituacao[$trabalho['status']];
+            $eventoId = (int) $trabalho['evento_id'];
+
+            if (!array_key_exists($eventoId, $configsPorEvento)) {
+                $configsPorEvento[$eventoId] = $this->config->buscarPorEvento($eventoId);
+            }
+
+            $trabalho = $this->prepararSituacaoParaAutor($trabalho, $configsPorEvento[$eventoId]);
         }
         unset($trabalho);
 
@@ -345,18 +358,111 @@ class TrabalhoController extends Controller
             exit('Trabalho não encontrado.');
         }
 
+        $config = $this->config->buscarPorEvento($trabalho['evento_id']);
+        $trabalho = $this->prepararSituacaoParaAutor($trabalho, $config);
+
+        $this->renderizar('trabalho/ver', [
+            'trabalho' => $trabalho,
+            'autores' => $this->autores->listarPorTrabalho($id),
+            'resultadoPublicado' => $config !== null && !empty($config['resultado_publicado_em']),
+            'resultado' => (new TrabalhoResultadoService())->resultadoParaAutor($trabalho, $config),
+            'versaoAnais' => $this->blocoVersaoAnais($trabalho),
+        ], $trabalho['titulo']);
+    }
+
+    /**
+     * Fase 54: dados do bloco "Versao final para os Anais". Recurso
+     * opcional numa tela em uso pela submissao aberta: qualquer falha vira
+     * "sem bloco", registrada no log de erros, e a tela segue normal.
+     */
+    private function blocoVersaoAnais(array $trabalho)
+    {
+        try {
+            return (new EventoAnaisPdfFinalService())->blocoParaAutor($trabalho, Auth::usuarioId());
+        } catch (\Throwable $e) {
+            error_log('[Anais] Falha ao montar o bloco da versao final do trabalho ' . (int) $trabalho['id'] . ': ' . $e->getMessage());
+
+            return null;
+        }
+    }
+
+    /**
+     * Fase 54: envio do PDF final do trabalho para a montagem automatica dos
+     * Anais. Toda a conferencia (autor principal, trabalho nos Anais, prazo
+     * aberto, arquivo legivel) fica em EventoAnaisPdfFinalService; aqui so'
+     * a mesma conferencia de posse de ver().
+     */
+    public function enviarVersaoAnais($id)
+    {
+        if (!Auth::autenticado()) {
+            $this->redirecionar('auth/loginEvento');
+            return;
+        }
+
+        $trabalho = $this->trabalhos->buscarComDetalhes($id);
+
+        if ($trabalho === null || !$this->autores->usuarioEhAutor($id, Auth::usuarioId())) {
+            http_response_code(404);
+            exit('Trabalho não encontrado.');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirecionar('trabalho/ver/' . (int) $id);
+            return;
+        }
+
+        $arquivo = isset($_FILES['pdf_final']) && is_array($_FILES['pdf_final']) ? $_FILES['pdf_final'] : [];
+        $resultado = (new EventoAnaisPdfFinalService())->enviarPeloAutor($trabalho, $arquivo, Auth::usuarioId());
+
+        if (!empty($resultado['ok'])) {
+            flashSucesso($resultado['mensagem']);
+        } else {
+            flashErro($resultado['mensagem']);
+        }
+
+        $this->redirecionar('trabalho/ver/' . (int) $id);
+    }
+
+    /**
+     * Fase 52: acrescenta ao trabalho o rotulo de situacao mostrado ao autor.
+     * Aprovado e reprovado so' aparecem depois que o resultado do evento e'
+     * publicado; antes disso (ou com o resultado reaberto) o autor ve
+     * "Submetido". O campo status do proprio trabalho nao e' alterado, para
+     * o resultado publicado continuar lendo a situacao real.
+     */
+    private function prepararSituacaoParaAutor(array $trabalho, array $config = null)
+    {
         $rotulosSituacao = [
             'submetido' => 'Submetido',
             'desclassificado' => 'Desclassificado',
             'aprovado' => 'Aprovado',
             'reprovado' => 'Reprovado',
         ];
-        $trabalho['situacao_rotulo'] = $rotulosSituacao[$trabalho['status']];
-        $trabalho['foi_desclassificado'] = $trabalho['status'] === 'desclassificado';
 
-        $this->renderizar('trabalho/ver', [
-            'trabalho' => $trabalho,
-            'autores' => $this->autores->listarPorTrabalho($id),
-        ], $trabalho['titulo']);
+        $situacao = (new TrabalhoResultadoService())->situacaoVisivelParaAutor($trabalho['status'], $config);
+
+        $trabalho['situacao_rotulo'] = $rotulosSituacao[$situacao];
+        $trabalho['foi_desclassificado'] = $situacao === 'desclassificado';
+
+        // Fase 53: "Publicado nos Anais" so' para trabalho aprovado (visivel
+        // ao autor), com os Anais publicados e o trabalho fora da lista de
+        // exclusoes. A indicacao leva ao PDF publicado.
+        $trabalho['consta_nos_anais'] = false;
+        $trabalho['anais_url'] = null;
+
+        if ($situacao === 'aprovado') {
+            $anais = new EventoAnaisRepository();
+
+            if ($anais->trabalhoConstaNosAnais((int) $trabalho['evento_id'], (int) $trabalho['id'])) {
+                $publicado = $anais->buscarPublicadoParaParticipante((int) $trabalho['evento_id']);
+
+                if ($publicado !== null) {
+                    $trabalho['consta_nos_anais'] = true;
+                    $trabalho['anais_url'] = $publicado['url'];
+                }
+            }
+        }
+
+        return $trabalho;
     }
 }

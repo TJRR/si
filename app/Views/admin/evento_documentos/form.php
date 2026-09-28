@@ -11,7 +11,7 @@
 <form method="post" action="<?php echo url('eventoDocumentos/novo/' . (int) $evento['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
     <label>Tipo:
         <select name="tipo" required>
-            <?php foreach (\App\Repositories\EventoDocumentoRepository::ROTULOS_TIPO as $valorOpcao => $rotuloOpcao): ?>
+            <?php foreach (\App\Repositories\EventoDocumentoRepository::rotulosTipoManuais() as $valorOpcao => $rotuloOpcao): ?>
                 <option value="<?php echo $valorOpcao; ?>" <?php echo (isset($_POST['tipo']) && $_POST['tipo'] === $valorOpcao) ? 'selected' : ''; ?>><?php echo $rotuloOpcao; ?></option>
             <?php endforeach; ?>
         </select>

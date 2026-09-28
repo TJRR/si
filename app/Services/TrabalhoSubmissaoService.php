@@ -202,7 +202,7 @@ class TrabalhoSubmissaoService
             $configTravada = $this->config->buscarPorEventoParaAtualizar($eventoId);
 
             if ((int) $configTravada['permite_multiplos_trabalhos_por_pessoa'] === 0) {
-                $this->checarDuplicidade($eventoId, $dadosAutorPrincipal, $coautores);
+                $this->checarDuplicidade($eventoId, $usuarioId, $dadosAutorPrincipal, $coautores);
             }
 
             $trabalhoId = $this->trabalhos->criar([
@@ -558,12 +558,23 @@ class TrabalhoSubmissaoService
      * evento_trabalhos_config (buscarPorEventoParaAtualizar() ja' chamado
      * pelo metodo publico antes deste).
      */
-    private function checarDuplicidade($eventoId, array $dadosAutorPrincipal, array $coautores)
+    private function checarDuplicidade($eventoId, $usuarioId, array $dadosAutorPrincipal, array $coautores)
     {
+        // Fase 54 (achado do teste do dono): o CPF sozinho nao garantia um
+        // trabalho por pessoa, porque pode ser trocado no formulario. Tres
+        // camadas: a conta que envia, o CPF e o e-mail de cada autor.
+        if ($this->autores->usuarioJaEhAutorNoEvento($eventoId, $usuarioId)) {
+            throw new TrabalhoSubmissaoException('Você já consta como autor ou coautor de outro trabalho submetido neste evento. Cada pessoa participa de um único trabalho.');
+        }
+
         $cpfPrincipal = CpfValidador::apenasDigitos($dadosAutorPrincipal['cpf']);
 
         if ($this->autores->cpfJaExisteNoEvento($eventoId, $cpfPrincipal)) {
             throw new TrabalhoSubmissaoException('Este CPF já consta em outro trabalho submetido neste evento.', 'autor_cpf');
+        }
+
+        if ($this->autores->emailJaExisteNoEvento($eventoId, $dadosAutorPrincipal['email'])) {
+            throw new TrabalhoSubmissaoException('Este e-mail já consta em outro trabalho submetido neste evento.', 'autor_email');
         }
 
         foreach ($coautores as $posicao => $coautor) {
@@ -572,6 +583,10 @@ class TrabalhoSubmissaoService
 
             if ($this->autores->cpfJaExisteNoEvento($eventoId, $cpfCoautor)) {
                 throw new TrabalhoSubmissaoException('O CPF do coautor já consta em outro trabalho submetido neste evento.', 'coautor_cpf', $indiceCoautor);
+            }
+
+            if ($this->autores->emailJaExisteNoEvento($eventoId, $coautor['email'])) {
+                throw new TrabalhoSubmissaoException('O e-mail do coautor já consta em outro trabalho submetido neste evento.', 'coautor_email', $indiceCoautor);
             }
         }
     }

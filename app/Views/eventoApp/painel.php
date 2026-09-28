@@ -26,6 +26,21 @@
             <a href="<?php echo url('eventoApp/ler/' . (int) $evento['id']); ?>" class="btn">Ler código</a>
         </p>
 
+        <?php if (!empty($temEstandes)): ?>
+            <?php /* Fase 54: so' aparece com estande ativo no evento; o
+            resumo de pontos vem protegido contra falha de banco. */ ?>
+            <p>
+                <a href="<?php echo url('eventoApp/estandes/' . (int) $evento['id']); ?>" class="btn">Estandes</a>
+                <?php if (!empty($resumoEstandes['visitas'])): ?>
+                    <br>
+                    <small>
+                        <?php echo (int) $resumoEstandes['total_pontos']; ?> <?php echo (int) $resumoEstandes['total_pontos'] === 1 ? 'ponto' : 'pontos'; ?>
+                        em <?php echo count($resumoEstandes['visitas']); ?> <?php echo count($resumoEstandes['visitas']) === 1 ? 'estande visitado' : 'estandes visitados'; ?>
+                    </small>
+                <?php endif; ?>
+            </p>
+        <?php endif; ?>
+
         <?php if ($ehAvaliadorDoEvento): ?>
             <?php /* Fase 49B, achado do usuário: quem é avaliador avulso
             deste evento vê só o acesso à avaliação, nunca os botões de
@@ -47,6 +62,24 @@
 
             <p>
                 <a href="<?php echo url('trabalho/meusTrabalhos'); ?>" class="btn">Meus trabalhos</a>
+            </p>
+        <?php endif; ?>
+
+        <?php if (!empty($anais)): ?>
+            <?php /* Fase 53: os Anais publicados, para qualquer inscrito
+            (autor, avaliador ou visitante do evento). O PDF é um arquivo
+            público; abre em outra aba para não prender a pessoa dentro do
+            aplicativo instalado, que não tem botão de voltar para um PDF. */ ?>
+            <p>
+                <a href="<?php echo htmlspecialchars($anais['url'], ENT_QUOTES, 'UTF-8'); ?>" class="btn" target="_blank" rel="noopener">Anais</a>
+                <br>
+                <small>
+                    <?php echo htmlspecialchars($anais['titulo'], ENT_QUOTES, 'UTF-8'); ?>
+                    <?php echo $anais['rotulo_identificador'] !== '' ? ' - ' . htmlspecialchars($anais['rotulo_identificador'], ENT_QUOTES, 'UTF-8') : ''; ?>
+                </small>
+                <?php if (!empty($anais['descricao'])): ?>
+                    <br><small><?php echo htmlspecialchars($anais['descricao'], ENT_QUOTES, 'UTF-8'); ?></small>
+                <?php endif; ?>
             </p>
         <?php endif; ?>
     </div>

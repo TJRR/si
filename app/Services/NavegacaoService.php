@@ -83,8 +83,8 @@ class NavegacaoService
          * Concurso (ver filhosDe('raizEvento', ...) abaixo). Diferente de
          * 'concurso' (que NAO tem sub-abas proprias, so' filhos de arvore),
          * 'evento' se parece com 'trilha': tem sub-abas horizontais E
-         * filhos de arvore (Atividades/Trabalhos/Estandes/Competicoes,
-         * ainda nao implementados nesta fase). Fase 50 (correcao de
+         * filhos de arvore (Atividades, Trabalhos e Estandes; Competicoes
+         * entra numa fase seguinte). Fase 50 (correcao de
          * arquitetura): "Divulgacao na home" (Fase 40) foi removida -
          * Concurso e Evento passaram a ter paginas publicas totalmente
          * separadas, sem integracao cruzada. No lugar entraram Cabecalho/
@@ -116,8 +116,8 @@ class NavegacaoService
         /**
          * Fase 46: abas de uma Atividade especifica (filha de arvore do
          * Evento, mesmo desenho de 'etapa' dentro de 'trilha'). Certificado
-         * fica de fora ate' a Fase 54 chegar - mesmo criterio ja' usado para
-         * Certificado/Comunicacao do proprio Evento (Fases 39->54). "Presencas"
+         * fica de fora ate' a Fase 59 chegar - mesmo criterio ja' usado para
+         * Certificado do proprio Evento (numeracao vigente das fases). "Presencas"
          * (Fase 47) reaproveita o codigo fixo da atividade gerado na Fase 46.
          */
         'atividade' => [
@@ -152,6 +152,23 @@ class NavegacaoService
             ['tipo' => 'trabalhosAvaliadores', 'rotulo' => 'Avaliadores', 'rota' => 'trabalhos/avaliadores'],
             ['tipo' => 'trabalhosRecebidos', 'rotulo' => 'Trabalhos recebidos', 'rota' => 'trabalhos/recebidos'],
             ['tipo' => 'trabalhosResultado', 'rotulo' => 'Resultado', 'rota' => 'trabalhos/resultado'],
+            // Fase 53: Anais do Evento (volume unico em PDF), depois do
+            // resultado, de que depende. Controller proprio (trabalhoAnais),
+            // por isso o modulo entra tambem em $modulosArvoreEvento do
+            // layout.php.
+            ['tipo' => 'trabalhosAnais', 'rotulo' => 'Anais', 'rota' => 'trabalhoAnais/index'],
+            ['tipo' => 'trabalhosAnaisSelecao', 'rotulo' => 'Trabalhos nos Anais', 'rota' => 'trabalhoAnais/trabalhos'],
+            // Fase 54: montagem automatica do volume dos Anais (controller
+            // proprio, anaisMontagem, tambem em $modulosArvoreEvento).
+            ['tipo' => 'trabalhosAnaisMontagem', 'rotulo' => 'Montagem dos Anais', 'rota' => 'anaisMontagem/index'],
+        ],
+        /**
+         * Fase 54: no unico "Estandes" do Evento (sem no por estande), com a
+         * lista e as configuracoes do convite ao representante.
+         */
+        'estandes' => [
+            ['tipo' => 'estandes', 'rotulo' => 'Estandes', 'rota' => 'estandes/index'],
+            ['tipo' => 'estandesConfiguracoes', 'rotulo' => 'Configurações', 'rota' => 'estandes/configuracoes'],
         ],
         /**
          * Fase 33: "Meu perfil" passa a usar as mesmas sub-abas das demais
@@ -231,6 +248,11 @@ class NavegacaoService
         'trabalhosAvaliadores' => 'trabalhos',
         'trabalhosRecebidos' => 'trabalhos',
         'trabalhosResultado' => 'trabalhos',
+        'trabalhosAnais' => 'trabalhos',
+        'trabalhosAnaisSelecao' => 'trabalhos',
+        'trabalhosAnaisMontagem' => 'trabalhos',
+        'estandes' => 'estandes',
+        'estandesConfiguracoes' => 'estandes',
     ];
 
     /**
@@ -384,6 +406,18 @@ class NavegacaoService
             return [self::noEvento($evento), self::noTrabalhos($evento)];
         }
 
+        // Fase 54: 'estandes' tambem e' no unico por evento ($id = id do
+        // evento), no mesmo criterio de 'trabalhos' acima.
+        if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'estandes') {
+            $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+            if ($evento === null) {
+                return [];
+            }
+
+            return [self::noEvento($evento), self::noEstandes($evento)];
+        }
+
         if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'atividade') {
             $atividade = (new EventoAtividadeRepository())->buscarPorId($id);
 
@@ -512,10 +546,10 @@ class NavegacaoService
                     return [];
                 }
 
-                // Fase 49: Trabalhos entra como irmao de Atividades.
-                // Estandes/Competicoes entram aqui do mesmo jeito nas fases
-                // seguintes do plano.
-                return [self::noAtividades($evento), self::noTrabalhos($evento)];
+                // Fase 49: Trabalhos entra como irmao de Atividades. Fase
+                // 54: Estandes, do mesmo jeito. Competicoes entra aqui numa
+                // fase seguinte do plano.
+                return [self::noAtividades($evento), self::noTrabalhos($evento), self::noEstandes($evento)];
 
             case 'atividades':
                 $lista = [];
@@ -760,8 +794,8 @@ class NavegacaoService
 
     /**
      * Fase 46: deixa de ser folha - primeiro filho de arvore e' Atividades
-     * (noAtividades()); Trabalhos/Estandes/Competicoes entram como irmaos
-     * dela nas fases seguintes do plano.
+     * (noAtividades()); Trabalhos (Fase 49) e Estandes (Fase 54) sao irmaos
+     * dela, e Competicoes entra do mesmo jeito numa fase seguinte.
      */
     private static function noEvento(array $evento)
     {
@@ -814,6 +848,21 @@ class NavegacaoService
             'rotulo' => 'Trabalhos',
             'folha' => true,
             'url' => 'trabalhos/index/' . (int) $evento['id'],
+        ];
+    }
+
+    /**
+     * Fase 54: mesmo formato de noTrabalhos() - no unico, sem filhos (nao
+     * ha no por estande), id = id do EVENTO.
+     */
+    private static function noEstandes(array $evento)
+    {
+        return [
+            'tipo' => 'estandes',
+            'id' => (int) $evento['id'],
+            'rotulo' => 'Estandes',
+            'folha' => true,
+            'url' => 'estandes/index/' . (int) $evento['id'],
         ];
     }
 }

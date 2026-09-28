@@ -70,6 +70,10 @@ class TrabalhoConfigRepository
             // Reabertura da Fase 51: inscricao automatica dos autores ao
             // submeter e texto editavel do e-mail de recebimento.
             'inscrever_autores_ao_submeter', 'mensagem_recebimento_html',
+            // Fase 52: o que o autor ve do resultado publicado e o texto do
+            // aviso. O momento da publicacao (resultado_publicado_em/_por)
+            // fica de fora de proposito: tem metodos proprios abaixo.
+            'resultado_exibe_nota', 'resultado_exibe_posicao', 'resultado_exibe_criterios', 'mensagem_resultado_html',
         ];
 
         $colunas = implode(', ', $campos);
@@ -123,6 +127,35 @@ class TrabalhoConfigRepository
 
         $depois = $this->buscarPorEvento($eventoId);
         Auditoria::registrar('salvar', 'evento_trabalhos_config', (int) $depois['id'], $antes, ['criterios_resumo_html' => $html]);
+    }
+
+    /**
+     * Fase 52: momento e autor da publicacao do resultado. Ficam fora de
+     * salvar() porque o upsert completo de Configuracoes gravaria nulo
+     * nestes dois campos. So' chamar dentro da transacao de
+     * TrabalhoResultadoService, depois de buscarPorEventoParaAtualizar();
+     * a auditoria fica com o servico.
+     */
+    public function marcarResultadoPublicado($eventoId, $usuarioId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'UPDATE evento_trabalhos_config
+             SET resultado_publicado_em = NOW(), resultado_publicado_por = :usuario_id
+             WHERE evento_id = :evento_id'
+        );
+        $stmt->execute(['usuario_id' => $usuarioId, 'evento_id' => $eventoId]);
+    }
+
+    public function limparResultadoPublicado($eventoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'UPDATE evento_trabalhos_config
+             SET resultado_publicado_em = NULL, resultado_publicado_por = NULL
+             WHERE evento_id = :evento_id'
+        );
+        $stmt->execute(['evento_id' => $eventoId]);
     }
 
     public function metodosHabilitados($eventoId)

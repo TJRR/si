@@ -158,10 +158,15 @@ $inscricaoAutomatica = !empty($config['inscrever_autores_ao_submeter']);
                     <input type="text" name="autor_cpf" required maxlength="14" class="campo-cpf-validar" value="<?php echo $v($valores, 'autor_cpf', $cpfPreenchido); ?>"<?php echo $focoErro('autor_cpf'); ?>>
                     <?php echo $mensagemErro('autor_cpf'); ?>
                 </label>
+                <?php /* Fase 54 (achado do dono): o e-mail da pessoa nunca
+                muda; o autor principal e' sempre a conta conectada, entao o
+                campo so' mostra o e-mail da conta, e o servidor grava esse
+                e-mail, sem ler nada do navegador. */ ?>
                 <label class="<?php echo $classeErro('autor_email'); ?>"><?php echo $rotulo('E-mail', true); ?>
-                    <input type="email" name="autor_email" required maxlength="150" value="<?php echo $v($valores, 'autor_email', $usuario['email']); ?>"<?php echo $focoErro('autor_email'); ?>>
+                    <input type="email" value="<?php echo htmlspecialchars((string) $usuario['email'], ENT_QUOTES, 'UTF-8'); ?>" readonly aria-readonly="true"<?php echo $focoErro('autor_email'); ?>>
                     <?php echo $mensagemErro('autor_email'); ?>
                 </label>
+                <p class="trabalho-legenda">É o e-mail da sua conta, que não pode ser alterado. O CPF vem de "Meu perfil" (Dados complementares, campo Documento), onde você também pode corrigi-lo depois do envio.</p>
                 <label><?php echo $rotulo('Cargo', false); ?>
                     <input type="text" name="autor_cargo" maxlength="150" value="<?php echo $v($valores, 'autor_cargo', $perfilPessoa !== null ? (string) $perfilPessoa['cargo'] : ''); ?>">
                 </label>

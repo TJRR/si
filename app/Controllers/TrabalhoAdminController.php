@@ -22,8 +22,10 @@ use App\Repositories\TrabalhoNaturezaRepository;
 use App\Repositories\TrabalhoNotaRepository;
 use App\Repositories\TrabalhoRegraDesempateRepository;
 use App\Repositories\TrabalhoRepository;
+use App\Repositories\UsuarioRepository;
 use App\Services\TrabalhoArquivoValidador;
 use App\Services\TrabalhoAvaliadorConviteService;
+use App\Services\TrabalhoResultadoAvisoService;
 use App\Services\TrabalhoResultadoService;
 use App\Validation\CpfValidador;
 
@@ -233,16 +235,18 @@ class TrabalhoAdminController extends Controller
     public function termoReordenar($eventoId)
     {
         RoleMiddleware::exigir(['administrador']);
-        $ids = isset($_POST['ids']) && is_array($_POST['ids']) ? $_POST['ids'] : [];
+
+        // Fase 53 (correcao): o arrastar-e-soltar (reordenar-arrastar.js) envia
+        // a lista em JSON no corpo da requisicao, nao em $_POST; ler so'
+        // $_POST fazia a ordem nunca ser gravada, sem nenhum erro na tela.
+        // Mesmo padrao de criterioReordenar().
+        header('Content-Type: application/json; charset=utf-8');
+        $corpo = json_decode((string) file_get_contents('php://input'), true);
+        $ids = isset($corpo['ids']) && is_array($corpo['ids']) ? array_map('intval', $corpo['ids']) : [];
+
         $this->termos->reordenar($eventoId, $ids);
 
-        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-            header('Content-Type: application/json');
-            echo json_encode(['ok' => true]);
-            return;
-        }
-
-        $this->redirecionar('trabalhos/termos/' . $eventoId);
+        echo json_encode(['ok' => true]);
     }
 
     private function salvarConfig($eventoId)
@@ -271,6 +275,12 @@ class TrabalhoAdminController extends Controller
             'inscrever_autores_ao_submeter' => isset($_POST['inscrever_autores_ao_submeter']) ? 1 : 0,
             'mensagem_recebimento_html' => isset($_POST['mensagem_recebimento_html']) && trim(strip_tags($_POST['mensagem_recebimento_html'])) !== ''
                 ? sanitizarHtmlRico($_POST['mensagem_recebimento_html'])
+                : null,
+            'resultado_exibe_nota' => isset($_POST['resultado_exibe_nota']) ? 1 : 0,
+            'resultado_exibe_posicao' => isset($_POST['resultado_exibe_posicao']) ? 1 : 0,
+            'resultado_exibe_criterios' => isset($_POST['resultado_exibe_criterios']) ? 1 : 0,
+            'mensagem_resultado_html' => isset($_POST['mensagem_resultado_html']) && trim(strip_tags($_POST['mensagem_resultado_html'])) !== ''
+                ? sanitizarHtmlRico($_POST['mensagem_resultado_html'])
                 : null,
         ]);
     }
@@ -321,7 +331,10 @@ class TrabalhoAdminController extends Controller
             // acao distingue os dois formulários desta mesma tela, mesmo
             // padrão já usado em index()/salvar_config.
             if (isset($_POST['acao']) && $_POST['acao'] === 'salvar_resumo') {
-                $html = trim($_POST['criterios_resumo_html']) !== '' ? $_POST['criterios_resumo_html'] : null;
+                // Fase 53 (correcao): o texto e' exibido ao avaliador; passa
+                // pelo mesmo filtro dos demais editores ricos ao salvar (e
+                // de novo ao exibir, ver avaliacaoTrabalhos/notar).
+                $html = trim($_POST['criterios_resumo_html']) !== '' ? sanitizarHtmlRico($_POST['criterios_resumo_html']) : null;
                 $this->config->atualizarResumoCriterios($eventoId, $html);
                 flashSucesso('Resumo dos critérios salvo.');
                 $this->redirecionar('trabalhos/criterios/' . $eventoId);
@@ -646,12 +659,23 @@ class TrabalhoAdminController extends Controller
     {
         $evento = $this->buscarEventoOu404($eventoId);
 
+        $servico = new TrabalhoResultadoService();
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             RoleMiddleware::exigir(['administrador']);
 
+            $acao = isset($_POST['acao']) ? $_POST['acao'] : '';
+
             try {
-                (new TrabalhoResultadoService())->aplicarResultado($eventoId);
-                flashSucesso('Resultado calculado e aplicado.');
+                if ($acao === 'publicar') {
+                    $servico->publicarResultado($eventoId, Auth::usuarioId());
+                    $this->avisarAutoresDoResultado($eventoId);
+                } elseif ($acao === 'reabrir') {
+                    $servico->reabrirResultado($eventoId, Auth::usuarioId());
+                    flashSucesso('Resultado reaberto. Os autores deixaram de ver situação e pontuação até uma nova publicação.');
+                } else {
+                    flashErro('Ação desconhecida.');
+                }
             } catch (\RuntimeException $e) {
                 flashErro($e->getMessage());
             }
@@ -660,9 +684,49 @@ class TrabalhoAdminController extends Controller
             return;
         }
 
+        $config = $this->config->buscarPorEvento($eventoId);
+        $ranking = $servico->calcularRanking($eventoId);
+        $publicadoPor = null;
+
+        if ($config !== null && !empty($config['resultado_publicado_por'])) {
+            $usuario = (new UsuarioRepository())->buscarPorId($config['resultado_publicado_por']);
+            $publicadoPor = $usuario !== null ? $usuario['nome'] : null;
+        }
+
+        $semNota = 0;
+
+        foreach ($ranking as $linha) {
+            if ($linha['nota'] === null) {
+                $semNota++;
+            }
+        }
+
         $this->renderizar('admin/trabalhos/resultado', [
             'evento' => $evento,
-            'ranking' => (new TrabalhoResultadoService())->calcularRanking($eventoId),
+            'ranking' => $ranking,
+            'selecionados' => $config !== null ? $servico->calcularSelecao($ranking, $config) : [],
+            'publicadoEm' => $config !== null && !empty($config['resultado_publicado_em']) ? $config['resultado_publicado_em'] : null,
+            'publicadoPor' => $publicadoPor,
+            'semNota' => $semNota,
         ], 'Resultado de Trabalhos: ' . $evento['nome'], ['tipo' => 'trabalhosResultado', 'id' => (int) $eventoId]);
+    }
+
+    /**
+     * Fase 52: o resultado ja foi publicado e confirmado; uma falha ao criar
+     * os avisos (sino e e-mail) nunca desfaz a publicacao, so' avisa o Admin
+     * para comunicar os autores por outro meio.
+     */
+    private function avisarAutoresDoResultado($eventoId)
+    {
+        try {
+            $avisos = (new TrabalhoResultadoAvisoService())->avisarAutores($eventoId, Auth::usuarioId());
+            flashSucesso(
+                'Resultado publicado. Avisos aos autores: ' . $avisos['sinos'] . ' no aplicativo e '
+                . $avisos['emails'] . ' e-mail(s) na fila de envio (saem dez por minuto).'
+            );
+        } catch (\Throwable $e) {
+            error_log('[Trabalhos] falha ao avisar os autores do evento ' . (int) $eventoId . ': ' . $e->getMessage());
+            flashAlerta('Resultado publicado, mas não foi possível criar os avisos aos autores. Avise-os por outro meio.');
+        }
     }
 }

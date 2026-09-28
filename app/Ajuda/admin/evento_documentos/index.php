@@ -46,6 +46,10 @@ return [
             'como' => 'Na seção de submissão (componente Cronograma, em Seções da página), o primeiro e o terceiro botão podem apontar para um documento daqui, por exemplo "Acessar o Edital completo" (primeiro) e "Baixar o modelo do resumo expandido" (terceiro). Ele abre sempre a versão atual: ao enviar uma retificação com o mesmo tipo e título, o botão passa a abrir a versão nova sozinho.',
         ],
         [
+            'nome' => 'Os Anais não aparecem aqui',
+            'como' => 'O volume dos Anais é enviado, versionado e publicado na aba Anais, dentro de Trabalhos. Depois de publicado, ele fica disponível na lista de documentos do botão do Cronograma, mas não é listado nem editado nesta tela.',
+        ],
+        [
             'nome' => 'Reordenar',
             'como' => 'Ver conceito "Reordenar por arraste" abaixo.',
         ],

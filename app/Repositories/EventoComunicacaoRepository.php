@@ -231,17 +231,23 @@ class EventoComunicacaoRepository
      * Nome/e-mail de quem falhou numa campanha - exibido no historico da
      * sub-aba Comunicacao para o Admin saber quem desmarcar ao compor um
      * reenvio manual (nao ha reprocessamento automatico de falhas).
+     *
+     * Fase 52: inclui o destinatario avulso (sem inscricao no evento), que
+     * antes ficava fora da lista por causa do JOIN so' por inscricao. A
+     * resolucao de nome e e-mail e' a mesma de proximosPendentes().
      */
     public function listarFalhasPorComunicacao($comunicacaoId)
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT u.nome AS usuario_nome, u.email AS usuario_email
+            'SELECT COALESCE(ua.nome, ui.nome, ecd.nome) AS usuario_nome,
+                    COALESCE(ua.email, ui.email, ecd.email) AS usuario_email
              FROM evento_comunicacao_destinatarios ecd
-             JOIN evento_inscricoes ei ON ei.id = ecd.evento_inscricao_id
-             JOIN usuarios u ON u.id = ei.usuario_id
+             LEFT JOIN evento_inscricoes ei ON ei.id = ecd.evento_inscricao_id
+             LEFT JOIN usuarios ui ON ui.id = ei.usuario_id
+             LEFT JOIN usuarios ua ON ua.id = ecd.usuario_id
              WHERE ecd.comunicacao_id = :comunicacao_id AND ecd.status = "falhou"
-             ORDER BY u.nome ASC'
+             ORDER BY usuario_nome ASC'
         );
         $stmt->execute(['comunicacao_id' => $comunicacaoId]);
 

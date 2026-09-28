@@ -31,6 +31,11 @@ return [
             'observacao' => 'O texto do e-mail vem depois do protocolo e dos dados de acesso, que o sistema monta sozinho. Em branco, vale um texto padrão. O formulário de submissão avisa quando a inscrição automática está ligada.',
         ],
         [
+            'nome' => 'Resultado para o autor',
+            'como' => 'Define o que cada autor (principal e coautores) vê do próprio trabalho depois que o resultado é publicado na tela Resultado: a nota final, a posição na classificação e a média de cada critério. A situação final (aprovado ou reprovado) sempre aparece, e a nota de cada avaliador nunca aparece.',
+            'observacao' => 'O texto do e-mail de aviso vem depois do convite para abrir o aplicativo, que o sistema monta sozinho. Em branco, vale um texto padrão. O e-mail sai pela fila de envio, dez por minuto, e nunca leva situação nem nota.',
+        ],
+        [
             'nome' => 'Situação',
             'como' => 'Rascunho (formulário indisponível), Publicado (submissão aberta a quem estiver no prazo) ou Encerrado.',
         ],

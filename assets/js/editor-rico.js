@@ -13,11 +13,10 @@
  * inicializacao por elemento (contenteditable funciona assim que existe no
  * DOM), nenhum "montar()" e' necessario - só os listeners globais abaixo.
  *
- * Conteudo e' HTML confiavel: só o perfil 'administrador' grava nestes
- * campos (RoleMiddleware::exigir(['administrador']) em cada controller que
- * usa este componente), o mesmo nivel de confianca que esse perfil já tem
- * sobre todo o resto do sistema - por isso o HTML e' salvo e reexibido sem
- * sanitizacao adicional, igual a qualquer outro dado editado por admin.
+ * Este componente nao filtra nada: o filtro vale no servidor, ao gravar
+ * (sanitizarHtmlRico(), em app/helpers.php), para todo campo que usa o
+ * editor. Desde a Fase 54 ele tambem aparece para o representante de
+ * estande (pessoa de fora da instituicao), sem o botao de imagem.
  */
 (function () {
     'use strict';

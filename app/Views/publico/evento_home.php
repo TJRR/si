@@ -36,6 +36,10 @@ $logoClaroSrc = !empty($configVisual['cabecalho_logo_claro_path']) ? config('bas
     <?php include __DIR__ . '/../home/_cabecalho.php'; ?>
 
     <main id="conteudo-principal">
+        <?php if (!empty($emPrevia)): ?>
+            <p class="site-flash alerta">Prévia: esta página ainda não está publicada e só administradores conseguem vê-la. Para liberá-la ao público, marque "Publicar esta página" na aba Cabeçalho do evento.</p>
+        <?php endif; ?>
+
         <?php if (!empty($_SESSION['flash'])): ?>
             <p class="site-flash <?php echo classeFlash(); ?>"><?php echo htmlspecialchars($_SESSION['flash'], ENT_QUOTES, 'UTF-8'); unset($_SESSION['flash']); ?></p>
         <?php endif; ?>

@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Controllers\AnaisMontagemAdminController;
 use App\Controllers\ApresentacaoPitchAdminController;
 use App\Controllers\ApresentacaoPitchController;
 use App\Controllers\ApuracaoAdminController;
@@ -32,6 +33,7 @@ use App\Controllers\DuvidaAdminController;
 use App\Controllers\DuvidaController;
 use App\Controllers\EdicaoPublicaController;
 use App\Controllers\EditorMidiaAdminController;
+use App\Controllers\EstandeAdminController;
 use App\Controllers\EtapaAdminController;
 use App\Controllers\EventoAdminController;
 use App\Controllers\EventoAppController;
@@ -68,6 +70,7 @@ use App\Controllers\ParticipanteController;
 use App\Controllers\PremioAdminController;
 use App\Controllers\RegraDesempateAdminController;
 use App\Controllers\RequerimentoAdminController;
+use App\Controllers\RepresentanteEstandeController;
 use App\Controllers\RequerimentoController;
 use App\Controllers\ResultadoAdminController;
 use App\Controllers\ResultadoPublicoController;
@@ -79,6 +82,7 @@ use App\Controllers\SubmissaoController;
 use App\Controllers\TemaAdminController;
 use App\Controllers\TemaDesafioAdminController;
 use App\Controllers\TrabalhoAdminController;
+use App\Controllers\TrabalhoAnaisAdminController;
 use App\Controllers\TrabalhoAvaliacaoController;
 use App\Controllers\TrabalhoController;
 use App\Controllers\TrilhaAdminController;
@@ -166,8 +170,14 @@ class Router
         'eventoDocumentos' => EventoDocumentoAdminController::class,
         'atividadeTipos' => AtividadeTipoAdminController::class,
         'trabalhos' => TrabalhoAdminController::class,
+        'trabalhoAnais' => TrabalhoAnaisAdminController::class,
         'trabalho' => TrabalhoController::class,
         'avaliacaoTrabalhos' => TrabalhoAvaliacaoController::class,
+        // Fase 54: Estandes (painel do Administrador e do representante) e
+        // montagem automatica do volume dos Anais.
+        'estandes' => EstandeAdminController::class,
+        'representanteEstande' => RepresentanteEstandeController::class,
+        'anaisMontagem' => AnaisMontagemAdminController::class,
     ];
 
     /**

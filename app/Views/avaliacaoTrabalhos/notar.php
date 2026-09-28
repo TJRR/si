@@ -120,7 +120,9 @@
     </div>
     <div class="site-painel-corpo">
         <?php if ($criteriosResumoHtml !== null): ?>
-            <?php echo $criteriosResumoHtml; ?>
+            <?php /* Fase 53 (correção): o texto vem de um editor rico e já
+            gravado antes do filtro existir; passa pelo filtro também aqui. */ ?>
+            <?php echo sanitizarHtmlRico($criteriosResumoHtml); ?>
         <?php else: ?>
             <p>A organização ainda não cadastrou o resumo dos critérios de avaliação deste edital.</p>
         <?php endif; ?>

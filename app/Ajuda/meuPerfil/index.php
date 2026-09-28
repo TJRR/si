@@ -15,7 +15,8 @@ return [
         ],
         [
             'nome' => 'Dados complementares',
-            'como' => 'Documento, cargo, categoria profissional, órgão de origem e minicurrículo. Usados quando você é designado facilitador de uma atividade (instrutor, professor, palestrante): preenchendo aqui, não precisa redigitar a cada nova designação.',
+            'como' => 'Documento, cargo, categoria profissional, órgão de origem e minicurrículo. Usados quando você é designado facilitador de uma atividade (instrutor, professor, palestrante): preenchendo aqui, não precisa redigitar a cada nova designação. O CPF daqui também vem preenchido no formulário de submissão de trabalhos de um evento.',
+            'observacao' => 'Se você é autor ou coautor de algum trabalho, é aqui que se corrige o CPF: com o tipo CPF, o número corrigido também passa para os trabalhos que você já enviou. A correção é recusada se o número for inválido ou se já constar como de outra pessoa num trabalho do mesmo evento. O e-mail da conta não pode ser alterado.',
         ],
         [
             'nome' => 'Visualizar como outro usuário',

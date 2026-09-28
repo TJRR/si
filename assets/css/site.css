@@ -6540,6 +6540,28 @@ body.app-evento-page .site-form-page .admin-card .cartao-credenciamento-dados li
     opacity: .75;
 }
 
+/* Fase 54 (achado do teste do dono): a regra geral ".site-form-page label"
+   (display: block, mais especifica) vencia a de cima, e como o texto da
+   declaracao comeca com paragrafo a caixa ficava sozinha acima dele. A
+   caixa volta para o inicio da primeira linha do texto. */
+.site-form-page label.trabalho-termo {
+    display: flex;
+    margin-bottom: 0;
+}
+
+.trabalho-termo input[type="checkbox"] {
+    flex-shrink: 0;
+    margin: .2rem 0 0;
+}
+
+.trabalho-termo-texto > :first-child {
+    margin-top: 0;
+}
+
+.trabalho-termo-texto p {
+    margin: 0 0 .4rem;
+}
+
 /* Reabertura da Fase 51 (achados da equipe de Teste Cego): formulario de
    submissao com obrigatorios marcados, erro em caixa e por campo, limite de
    coautores. Cor do erro = a mesma do aviso de erro do aplicativo. */

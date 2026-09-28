@@ -28,7 +28,7 @@ $leitorInstrucao = isset($leitorInstrucao) ? $leitorInstrucao : 'Use a câmera (
     <button type="button" class="btn leitor-codigo-botao-camera" hidden data-leitor-botao-camera>Usar a câmera</button>
 
     <div class="leitor-codigo-manual">
-        <label for="leitor-codigo-input">Código de 5 ou 6 caracteres</label>
+        <label for="leitor-codigo-input"><?php echo htmlspecialchars(isset($leitorRotuloCampo) ? $leitorRotuloCampo : 'Código de 5 ou 6 caracteres', ENT_QUOTES, 'UTF-8'); ?></label>
         <input type="text" id="leitor-codigo-input" class="leitor-codigo-input" maxlength="6" autocomplete="off" autocapitalize="characters" data-leitor-input>
         <button type="button" class="app-btn-acao" data-leitor-botao-validar>Validar</button>
     </div>

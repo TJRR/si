@@ -20,7 +20,9 @@ use App\Repositories\EventoSecaoCartoesRepository;
 use App\Repositories\EventoSecaoContagemRepository;
 use App\Repositories\EventoSecaoCronogramaRepository;
 use App\Repositories\EventoSecaoDestaquesRepository;
+use App\Repositories\EventoSecaoEstandesRepository;
 use App\Repositories\EventoSecaoFaqRepository;
+use App\Repositories\EstandeRepository;
 use App\Repositories\EventoSecaoLocalRepository;
 use App\Repositories\EventoSecaoProgramacaoRepository;
 use App\Repositories\EventoSlideRepository;
@@ -49,22 +51,38 @@ class EventoPublicoController extends Controller
     public function index($id = null)
     {
         if ($id === null) {
-            http_response_code(404);
-            exit('Página não encontrada.');
+            $this->responderEventoInexistente();
+            return;
         }
 
         $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
 
         if ($evento === null) {
-            http_response_code(404);
-            exit('Evento não encontrado.');
+            $this->responderEventoInexistente();
+            return;
         }
 
         $configuracaoVisualEvento = (new EventoConfiguracaoVisualRepository())->buscarPorEvento($id);
 
-        if ($configuracaoVisualEvento === null || (int) $configuracaoVisualEvento['publicado'] !== 1) {
-            http_response_code(404);
-            exit('Página ainda não disponível.');
+        if ($configuracaoVisualEvento === null) {
+            $this->responderEventoInexistente();
+            return;
+        }
+
+        // Fase 52: pagina ainda nao publicada. Visitante e qualquer perfil
+        // que nao seja Administrador recebem a mesma tela de evento
+        // inexistente (nada revela que o evento existe); o Administrador
+        // logado ve a pagina como previa, para conferir antes de publicar.
+        $emPrevia = false;
+
+        if ((int) $configuracaoVisualEvento['publicado'] !== 1) {
+            if (!Auth::autenticado() || !Auth::possuiPerfil('administrador')) {
+                $this->responderEventoInexistente();
+                return;
+            }
+
+            $emPrevia = true;
+            header('Cache-Control: private, no-store');
         }
 
         $repositorioOrdem = new EventoSecaoOrdemRepository();
@@ -135,7 +153,29 @@ class EventoPublicoController extends Controller
             'fonteTextoEvento' => !empty($configuracaoVisualEvento['fonte_texto']) ? $configuracaoVisualEvento['fonte_texto'] : null,
             'configVisual' => $configVisual,
             'contato' => $contato,
+            'emPrevia' => $emPrevia,
         ], $evento['nome']);
+    }
+
+    /**
+     * Fase 52: tela unica para os tres casos em que a pagina de um evento nao
+     * pode ser mostrada (endereco sem numero, evento que nao existe e evento
+     * ainda nao publicado). Mesma tela e mesmo texto nos tres, sempre com o
+     * codigo 404, sem levar nenhum dado do evento: quem visita nao descobre
+     * que um evento em configuracao existe. Privado de proposito, para nunca
+     * virar rota.
+     */
+    private function responderEventoInexistente()
+    {
+        http_response_code(404);
+
+        $this->renderizar('publico/evento_inexistente', [
+            'logoSrc' => logoAtual(true),
+            'altLogoTexto' => nomeInstituicao(),
+            'contato' => (new ContatoConcursoRepository())->buscar(),
+            'menuRodape' => [],
+            'configVisual' => [],
+        ], 'Este evento não existe');
     }
 
     /**
@@ -154,6 +194,7 @@ class EventoPublicoController extends Controller
             'programacao' => new EventoSecaoProgramacaoRepository(),
             'faq' => new EventoSecaoFaqRepository(),
             'local' => new EventoSecaoLocalRepository(),
+            'estandes' => new EventoSecaoEstandesRepository(),
         ];
 
         $resolvidas = [];
@@ -192,6 +233,10 @@ class EventoPublicoController extends Controller
                 $secao['dados']['botao3_url'] = $this->destinoBotaoDocumento($eventoId, $dados, 'botao3');
             } elseif ($tipo === 'faq') {
                 $secao['itens'] = $repositorio->listarItensAtivos((int) $secao['referencia_id']);
+            } elseif ($tipo === 'estandes') {
+                // Fase 54: os itens sao os estandes ativos do evento, sem o
+                // codigo de visita (so' o cartaz impresso o mostra).
+                $secao['itens'] = (new EstandeRepository())->listarAtivosPublico($eventoId);
             } elseif ($tipo !== 'local') {
                 $secao['itens'] = $repositorio->listarItens((int) $secao['referencia_id']);
             }

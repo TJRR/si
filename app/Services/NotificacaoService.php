@@ -281,6 +281,105 @@ class NotificacaoService
     }
 
     /**
+     * Fase 54: convite ao representante de um estande, para conta nova ou
+     * conta criada antes e nunca usada (sem senha e sem Google): leva o
+     * endereco de definir senha. O texto editavel do evento (Estandes,
+     * Configuracoes) entra depois da apresentacao.
+     */
+    public function conviteRepresentanteEstande($destinatarioEmail, $nomeUsuario, array $evento, array $estande, $linkDefinirSenha, $mensagemHtml)
+    {
+        $assunto = 'Representante de estande: ' . $evento['nome'];
+        $corpo = $this->montarCorpoConviteRepresentante($nomeUsuario, $evento, $estande, $mensagemHtml, $linkDefinirSenha);
+
+        $id = $this->notificacoes->criar(
+            'convite_representante_estande',
+            'convite_representante_estande',
+            $destinatarioEmail,
+            $assunto,
+            $corpo
+        );
+
+        try {
+            $resultado = Mailer::enviar($destinatarioEmail, $assunto, $corpo);
+        } catch (\Exception $e) {
+            $resultado = ['sucesso' => false, 'erro' => $e->getMessage()];
+        }
+
+        if ($resultado['sucesso']) {
+            $this->notificacoes->marcarEnviada($id);
+        } else {
+            $this->notificacoes->marcarFalhou($id);
+        }
+    }
+
+    /**
+     * Fase 54: mesma indicacao para quem ja usa uma conta no sistema: sem
+     * endereco de definir senha, so' o aviso de que o acesso e' o de sempre.
+     */
+    public function conviteRepresentanteEstandeContaExistente($destinatarioEmail, $nomeUsuario, array $evento, array $estande, $mensagemHtml)
+    {
+        $assunto = 'Representante de estande: ' . $evento['nome'];
+        $corpo = $this->montarCorpoConviteRepresentante($nomeUsuario, $evento, $estande, $mensagemHtml, null);
+
+        $id = $this->notificacoes->criar(
+            'convite_representante_estande_conta_existente',
+            'convite_representante_estande_conta_existente',
+            $destinatarioEmail,
+            $assunto,
+            $corpo
+        );
+
+        try {
+            $resultado = Mailer::enviar($destinatarioEmail, $assunto, $corpo);
+        } catch (\Exception $e) {
+            $resultado = ['sucesso' => false, 'erro' => $e->getMessage()];
+        }
+
+        if ($resultado['sucesso']) {
+            $this->notificacoes->marcarEnviada($id);
+        } else {
+            $this->notificacoes->marcarFalhou($id);
+        }
+    }
+
+    /**
+     * Fase 54: corpo dos dois convites ao representante. O texto editavel
+     * fica num bloco proprio (pode ter paragrafos e listas, que nao cabem
+     * dentro de outro paragrafo) e passa de novo pelo filtro de HTML.
+     */
+    private function montarCorpoConviteRepresentante($nomeDestinatario, array $evento, array $estande, $mensagemHtml, $linkDefinirSenha)
+    {
+        $mensagemHtml = trim(sanitizarHtmlRico((string) $mensagemHtml));
+
+        $corpo = '<p>Olá, ' . htmlspecialchars((string) $nomeDestinatario, ENT_QUOTES, 'UTF-8') . ',</p>'
+            . '<p>Você foi indicado(a) como representante do estande "' . htmlspecialchars($estande['nome'], ENT_QUOTES, 'UTF-8')
+            . '" no evento "' . htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8') . '". Pelo sistema, você atualiza o nome, '
+            . 'a descrição e o logotipo do estande, baixa o cartaz com o código que os participantes leem para registrar a visita '
+            . 'e acompanha quantas visitas o estande recebeu.</p>'
+            . ($mensagemHtml !== '' ? '<div>' . $mensagemHtml . '</div>' : '');
+
+        if ($linkDefinirSenha !== null) {
+            $corpo .= '<p>Você já pode acessar o sistema de duas formas:</p>'
+                . '<ul>'
+                . '<li>🔵 Se este endereço de e-mail for de uma conta Google, clique em '
+                . '<a href="' . htmlspecialchars(urlAbsoluta('auth/google'), ENT_QUOTES, 'UTF-8') . '">Entrar com Google</a>; ou</li>'
+                . '<li>🔑 Clicando em <a href="' . htmlspecialchars($linkDefinirSenha, ENT_QUOTES, 'UTF-8') . '">Definir minha senha</a> '
+                . 'e entrando com este e-mail e uma senha que você deverá definir.</li>'
+                . '</ul>';
+        } else {
+            $corpo .= '<p>Como você já tem conta neste sistema, não é preciso se cadastrar de novo: acesse normalmente com o '
+                . 'e-mail e a senha que já usa (ou com sua conta Google, se for assim que costuma entrar).</p>'
+                . '<p><a href="' . htmlspecialchars(urlAbsoluta('auth/login'), ENT_QUOTES, 'UTF-8') . '">Entrar no sistema</a></p>';
+        }
+
+        return $corpo
+            . '<p style="color:#555;font-size:0.9em;">Este e-mail foi enviado automaticamente. Não compartilhe sua senha '
+            . 'com terceiros. Em caso de dúvida sobre a autenticidade deste e-mail, entre em contato pelos canais abaixo.</p>'
+            . '<p>Atenciosamente,</p>'
+            . $this->assinaturaContato();
+    }
+
+    /**
      * Fase 51: autor cujo trabalho foi recebido por canal alternativo (item
      * 5.2 do edital) e trazido para o sistema pela importacao. Conta criada
      * na hora, entao o texto leva o endereco de definir senha, como o

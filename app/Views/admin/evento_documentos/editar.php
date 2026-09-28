@@ -13,7 +13,7 @@
 <form method="post" action="<?php echo url('eventoDocumentos/editar/' . (int) $evento['id'] . '/' . (int) $documento['id']); ?>"><?= campoCsrf() ?>
     <label>Tipo:
         <select name="tipo" required>
-            <?php foreach (\App\Repositories\EventoDocumentoRepository::ROTULOS_TIPO as $valorOpcao => $rotuloOpcao): ?>
+            <?php foreach (\App\Repositories\EventoDocumentoRepository::rotulosTipoManuais() as $valorOpcao => $rotuloOpcao): ?>
                 <option value="<?php echo $valorOpcao; ?>" <?php echo $documento['tipo'] === $valorOpcao ? 'selected' : ''; ?>><?php echo $rotuloOpcao; ?></option>
             <?php endforeach; ?>
         </select>

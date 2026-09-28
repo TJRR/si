@@ -4,7 +4,7 @@
 } ?>
 <?php
 $ehPainelAdmin = isset($view) && (strpos($view, 'admin/') === 0 || $view === 'home/administrativo');
-$prefixosPainelInterno = ['admin/', 'avaliacao/', 'participante/', 'meuPerfil/'];
+$prefixosPainelInterno = ['admin/', 'avaliacao/', 'participante/', 'meuPerfil/', 'representanteEstande/'];
 $ehPainelInterno = $ehPainelAdmin;
 if (isset($view) && !$ehPainelInterno) {
     foreach ($prefixosPainelInterno as $prefixo) {
@@ -39,7 +39,7 @@ $ehPaginaConvidado = isset($view) && in_array($view, ['auth/login', 'auth/cadast
 // instalavel de proposito (decisao separada, confirmada tambem), so' com a
 // mesma aparencia visual (ver $ehContextoEvento abaixo).
 $ehAppEvento = isset($view) && (
-    in_array($view, ['eventoApp/painel', 'eventoApp/selecionar', 'eventoApp/inscricao', 'eventoApp/ler', 'eventoApp/aviso', 'eventoApp/atividades', 'eventoApp/presenca', 'eventoApp/facilitacoes'], true)
+    in_array($view, ['eventoApp/painel', 'eventoApp/selecionar', 'eventoApp/inscricao', 'eventoApp/ler', 'eventoApp/aviso', 'eventoApp/atividades', 'eventoApp/presenca', 'eventoApp/facilitacoes', 'eventoApp/estandes', 'eventoApp/ler_estande'], true)
     || ($view === 'publico/evento_inscricao' && ehContextoApp())
     || (isset($view) && strpos($view, 'trabalho/') === 0)
 );
@@ -105,7 +105,7 @@ if ($ehPainelAdmin) {
     // "Eventos" e' aba de 1o nivel propria (ver NavegacaoService::
     // filhosDe('raizEvento', ...) e admin/_arvore.php, generalizado para
     // aceitar mais de uma raiz).
-    $modulosArvoreEvento = ['eventos', 'eventoCabecalho', 'eventoSlides', 'eventoBanners', 'eventoBlocos', 'eventoSecoes', 'eventoDocumentos', 'atividadeTipos', 'eventoFormulario', 'atividades', 'trabalhos'];
+    $modulosArvoreEvento = ['eventos', 'eventoCabecalho', 'eventoSlides', 'eventoBanners', 'eventoBlocos', 'eventoSecoes', 'eventoDocumentos', 'atividadeTipos', 'eventoFormulario', 'atividades', 'trabalhos', 'trabalhoAnais', 'anaisMontagem', 'estandes'];
     $ehEscopoArvoreEvento = in_array($moduloAtual, $modulosArvoreEvento, true);
     $ehEscopoArvore = $ehEscopoArvoreConcurso || $ehEscopoArvoreEvento;
 
@@ -338,6 +338,12 @@ if ($ehPainelAdmin) {
     <script src="<?php echo config('base_path'); ?>/assets/js/busca-usuario.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/busca-usuario.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/atividade-tolerancia.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/atividade-tolerancia.js'); ?>" defer></script>
     <?php endif; ?>
+    <?php if (isset($view) && strpos($view, 'representanteEstande/') === 0): ?>
+    <!-- Fase 54: o representante do estande edita a descricao com o editor
+         rico (sem o botao de imagem, que continua so' do Administrador). -->
+    <script>window.SI_BASE_PATH = <?php echo json_encode(config('base_path')); ?>; window.SI_CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token']); ?>;</script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/editor-rico.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/editor-rico.js'); ?>" defer></script>
+    <?php endif; ?>
 <?php endif; ?>
 <?php $ehPaginaPublicaSemTopbar = $ehPaginaConvidado || $ehContextoEvento || (isset($view) && strpos($view, 'publico/') === 0); ?>
 <?php if ($ehPaginaPublicaSemTopbar && $ajudaHtml !== null): ?>
@@ -460,7 +466,7 @@ if ($ehPainelAdmin) {
          inscricao", nao precisa carregar nas demais telas do app. -->
     <script src="<?php echo config('base_path'); ?>/assets/js/brilho-cracha.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/brilho-cracha.js'); ?>" defer></script>
     <?php endif; ?>
-    <?php if (in_array($view, ['eventoApp/ler', 'eventoApp/presenca'], true)): ?>
+    <?php if (in_array($view, ['eventoApp/ler', 'eventoApp/presenca', 'eventoApp/ler_estande'], true)): ?>
     <!-- Fase 43: componente de leitura de codigo (camera + digitacao
          manual) - existe em "Ler codigo" e, desde a Fase 47, em "Confirmar
          presenca" - reaproveitavel pelas Fases 49/50 (estandes, networking).

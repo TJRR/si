@@ -27,6 +27,7 @@ class CodigoUnicoService
         'evento_inscricoes.codigo_credenciamento',
         'evento_atividades.codigo_atividade',
         'evento_atividades.codigo_presenca_online',
+        'evento_estandes.codigo_estande',
     ];
 
     public static function gerar($tabela, $coluna, $tamanho = 6)

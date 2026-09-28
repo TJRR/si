@@ -49,7 +49,9 @@ class EventoDocumentoAdminController extends Controller
     {
         $documento = $this->documentos->buscarPorId($id);
 
-        if ($documento === null || (int) $documento['evento_id'] !== (int) $eventoId) {
+        // Fase 53: os Anais sao administrados so' na sub-aba propria de
+        // Trabalhos; um id ou grupo forjado na URL nao chega a eles daqui.
+        if ($documento === null || (int) $documento['evento_id'] !== (int) $eventoId || $documento['tipo'] === EventoDocumentoRepository::TIPO_ANAIS) {
             http_response_code(404);
             exit('Documento não encontrado.');
         }
@@ -63,7 +65,7 @@ class EventoDocumentoAdminController extends Controller
 
         $this->renderizar('admin/evento_documentos/index', [
             'evento' => $evento,
-            'documentos' => $this->documentos->listarAtivos($eventoId),
+            'documentos' => $this->documentos->listarAtivosManuais($eventoId),
         ], 'Documentos: ' . $evento['nome'], ['tipo' => 'eventoDocumentos', 'id' => (int) $eventoId]);
     }
 
@@ -98,7 +100,7 @@ class EventoDocumentoAdminController extends Controller
             $tipo = isset($_POST['tipo']) ? $_POST['tipo'] : '';
             $titulo = trim(isset($_POST['titulo']) ? $_POST['titulo'] : '');
 
-            if (!in_array($tipo, EventoDocumentoRepository::TIPOS, true)) {
+            if (!in_array($tipo, EventoDocumentoRepository::TIPOS_MANUAIS, true)) {
                 $erro = 'Selecione um tipo de documento válido.';
             } elseif ($titulo === '') {
                 $erro = 'Informe o título do documento.';
@@ -120,10 +122,16 @@ class EventoDocumentoAdminController extends Controller
     public function historico($eventoId, $grupoDocumento = null)
     {
         $evento = $this->eventoOu404($eventoId);
+        $versoes = $this->documentos->listarVersoesPorGrupo($eventoId, (string) $grupoDocumento);
+
+        if (!empty($versoes) && $versoes[0]['tipo'] === EventoDocumentoRepository::TIPO_ANAIS) {
+            http_response_code(404);
+            exit('Documento não encontrado.');
+        }
 
         $this->renderizar('admin/evento_documentos/historico', [
             'evento' => $evento,
-            'versoes' => $this->documentos->listarVersoesPorGrupo($eventoId, (string) $grupoDocumento),
+            'versoes' => $versoes,
         ], 'Histórico de versões: ' . $evento['nome'], ['tipo' => 'eventoDocumentos', 'id' => (int) $eventoId]);
     }
 
@@ -167,6 +175,13 @@ class EventoDocumentoAdminController extends Controller
         $this->eventoOu404($eventoId);
         $grupo = isset($_POST['grupo_documento']) ? (string) $_POST['grupo_documento'] : '';
 
+        $existentes = $this->documentos->listarVersoesPorGrupo($eventoId, $grupo);
+
+        if (!empty($existentes) && $existentes[0]['tipo'] === EventoDocumentoRepository::TIPO_ANAIS) {
+            http_response_code(404);
+            exit('Documento não encontrado.');
+        }
+
         $versoes = $this->documentos->removerGrupo($eventoId, $grupo);
 
         foreach ($versoes as $versao) {
@@ -182,7 +197,7 @@ class EventoDocumentoAdminController extends Controller
         $tipo = isset($_POST['tipo']) ? $_POST['tipo'] : '';
         $titulo = trim(isset($_POST['titulo']) ? $_POST['titulo'] : '');
 
-        if (!in_array($tipo, EventoDocumentoRepository::TIPOS, true)) {
+        if (!in_array($tipo, EventoDocumentoRepository::TIPOS_MANUAIS, true)) {
             return 'Selecione um tipo de documento válido.';
         }
 

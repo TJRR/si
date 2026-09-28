@@ -7,7 +7,9 @@
  * Partial reaproveitavel do editor de texto rico (Fase 18). Inclusao:
  *   <?php $nome = 'titulo_html'; $valor = $slide['titulo_html']; $rotulo = 'Título'; ?>
  *   <?php include __DIR__ . '/../_editor_rico.php'; ?>
- * $nome e $valor sao obrigatorios; $rotulo e' opcional.
+ * $nome e $valor sao obrigatorios; $rotulo e' opcional. Fase 54: $semImagem
+ * (opcional) tira o botao de imagem, para quem nao pode enviar imagem pelo
+ * editor (o envio e' so' do Administrador); sem ele, nada muda.
  */
 $idEditor = 'editor-' . preg_replace('/[^a-z0-9]/', '', strtolower($nome)) . '-' . mt_rand(1000, 9999);
 $valorAtual = isset($valor) ? (string) $valor : '';
@@ -43,7 +45,9 @@ $valorAtual = isset($valor) ? (string) $valor : '';
             <input type="color" class="editor-rico-cor" data-comando="realce" title="Cor de realce (fundo do texto)" aria-label="Cor de realce do texto" value="#fff3cd">
             <button type="button" class="editor-rico-btn" data-comando="semRealce" title="Remover realce" aria-label="Remover realce">⌫</button>
             <button type="button" class="editor-rico-btn" data-comando="link" title="Inserir hiperlink" aria-label="Inserir hiperlink">🔗</button>
+            <?php if (empty($semImagem)): ?>
             <button type="button" class="editor-rico-btn" data-comando="imagem" title="Inserir imagem" aria-label="Inserir imagem">🖼</button>
+            <?php endif; ?>
             <button type="button" class="editor-rico-btn" data-comando="barra" title="Inserir barra separadora (usa a cor de texto selecionada)" aria-label="Inserir barra separadora">▬</button>
             <?php if (!empty($mostrarPalavrasChave)): ?>
                 <select class="editor-rico-select" data-comando="palavraChave" title="Inserir palavra-chave" aria-label="Inserir palavra-chave">
@@ -59,5 +63,7 @@ $valorAtual = isset($valor) ? (string) $valor : '';
         <textarea class="editor-rico-codigo" data-editor-codigo hidden spellcheck="false"><?php echo htmlspecialchars($valorAtual, ENT_QUOTES, 'UTF-8'); ?></textarea>
     </div>
     <input type="hidden" name="<?php echo htmlspecialchars($nome, ENT_QUOTES, 'UTF-8'); ?>" data-editor-hidden value="<?php echo htmlspecialchars($valorAtual, ENT_QUOTES, 'UTF-8'); ?>">
+    <?php if (empty($semImagem)): ?>
     <input type="file" class="editor-rico-arquivo-oculto" data-editor-arquivo accept="image/*" hidden>
+    <?php endif; ?>
 </div>

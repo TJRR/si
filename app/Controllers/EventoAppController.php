@@ -11,6 +11,7 @@ use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\View;
 use App\Repositories\ConfiguracaoSistemaRepository;
+use App\Repositories\EventoAnaisRepository;
 use App\Repositories\EventoAtividadeFacilitadorRepository;
 use App\Repositories\EventoAtividadeInscricaoRepository;
 use App\Repositories\EventoAtividadeLeituraFalhaRepository;
@@ -19,6 +20,10 @@ use App\Repositories\EventoCampoInscricaoRepository;
 use App\Repositories\EventoCheckinRepository;
 use App\Repositories\EventoComunicacaoRepository;
 use App\Repositories\EventoInscricaoRepository;
+use App\Repositories\EstandeLeituraFalhaRepository;
+use App\Repositories\EstandeRepository;
+use App\Repositories\EstandeRepresentanteRepository;
+use App\Repositories\EstandeVisitaRepository;
 use App\Repositories\LeituraCodigoFalhaRepository;
 use App\Repositories\NotificacaoPainelRepository;
 use App\Repositories\PerfilRepository;
@@ -138,6 +143,12 @@ class EventoAppController extends Controller
             'evento' => $evento,
             'inscricao' => $inscricao,
             'ehAvaliadorDoEvento' => $ehAvaliadorDoEvento,
+            // Fase 53: botao "Anais" (so' quando ha versao publicada).
+            'anais' => (new EventoAnaisRepository())->buscarPublicadoParaParticipante($evento['id']),
+            // Fase 54: botao "Estandes" (so' com estande ativo) e o resumo
+            // de pontos; as duas consultas ja se protegem de falha de banco.
+            'temEstandes' => (new EstandeRepository())->existeAtivoNoEvento($evento['id']),
+            'resumoEstandes' => (new EstandeVisitaRepository())->resumoParticipante($inscricao['id']),
         ], $evento['nome']);
     }
 
@@ -281,7 +292,8 @@ class EventoAppController extends Controller
      * (fallback usado sempre em Safari/Firefox, que nao suportam a API), e
      * confirma se pertence a uma inscricao do MESMO evento do leitor. Nao
      * grava nada no banco alem do rate limiting abaixo - so' valida e
-     * exibe (pontuacao e' Bloco E, fases futuras).
+     * exibe (a pontuacao por leitura de estande e' validarEstande(), Fase
+     * 54; a leitura entre participantes e' da Fase 55).
      *
      * Rate limiting: LeituraCodigoFalhaRepository, tabela dedicada (nunca a
      * mesma de login) por usuario_id do LEITOR - 10 falhas em 30 minutos
@@ -640,6 +652,146 @@ class EventoAppController extends Controller
         $checkins->registrar($atividadeId, $inscricaoLeitor['id'], $modalidadeAcesso);
         $tentativas->limparFalhas($usuarioId, $atividadeId);
         echo json_encode(['valido' => true, 'mensagem' => 'Presença confirmada em "' . $atividade['nome'] . '".']);
+    }
+
+    /**
+     * Fase 54: estandes ativos do evento e o progresso do participante
+     * (estandes ja visitados e total de pontos). Mesma conferencia de posse
+     * de atividades(). O codigo do estande nunca sai nesta tela.
+     */
+    public function estandes($id)
+    {
+        if (!Auth::autenticado()) {
+            $this->redirecionar('eventoInscricao/index/' . (int) $id);
+            return;
+        }
+
+        $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+        $inscricao = $evento !== null
+            ? (new EventoInscricaoRepository())->buscarPorEventoEUsuario($id, Auth::usuarioId())
+            : null;
+
+        if ($evento === null || $inscricao === null) {
+            $this->redirecionar('eventoInscricao/index/' . (int) $id);
+            return;
+        }
+
+        $resumo = (new EstandeVisitaRepository())->resumoParticipante($inscricao['id']);
+        $visitados = [];
+
+        foreach ($resumo['visitas'] as $visita) {
+            $visitados[(int) $visita['estande_id']] = $visita;
+        }
+
+        $this->renderizar('eventoApp/estandes', [
+            'evento' => $evento,
+            'estandes' => (new EstandeRepository())->listarAtivosPublico($id),
+            'resumo' => $resumo,
+            'visitados' => $visitados,
+        ], 'Estandes: ' . $evento['nome']);
+    }
+
+    /**
+     * Fase 54: tela do leitor do codigo do estande - mesma conferencia de
+     * posse e mesmo componente de leitura de presenca().
+     */
+    public function lerEstande($id)
+    {
+        if (!Auth::autenticado()) {
+            $this->redirecionar('eventoInscricao/index/' . (int) $id);
+            return;
+        }
+
+        $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+        $inscricao = $evento !== null
+            ? (new EventoInscricaoRepository())->buscarPorEventoEUsuario($id, Auth::usuarioId())
+            : null;
+
+        if ($evento === null || $inscricao === null) {
+            $this->redirecionar('eventoInscricao/index/' . (int) $id);
+            return;
+        }
+
+        $this->renderizar('eventoApp/ler_estande', [
+            'evento' => $evento,
+        ], $evento['nome']);
+    }
+
+    /**
+     * Fase 54: resposta JSON da leitura do codigo do estande, no contrato de
+     * validarPresenca(). Ordem: posse, limite de tentativas, codigo de 6
+     * caracteres do evento de quem le, estande ativo, autovisita (quem
+     * representa o estande nao pontua nele), visita ja registrada, gravacao
+     * com os pontos vigentes. Estande inativo e autovisita sao restricoes
+     * legitimas, nao erro de leitura: nao contam no limite de tentativas.
+     * Sem janela de horario (decisao do dono na Fase 54).
+     */
+    public function validarEstande($id)
+    {
+        header('Content-Type: application/json');
+
+        if (!Auth::autenticado()) {
+            http_response_code(403);
+            echo json_encode(['valido' => false, 'mensagem' => 'Acesso negado.']);
+            return;
+        }
+
+        $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+        $inscricaoLeitor = $evento !== null
+            ? (new EventoInscricaoRepository())->buscarPorEventoEUsuario($id, Auth::usuarioId())
+            : null;
+
+        if ($evento === null || $inscricaoLeitor === null) {
+            http_response_code(403);
+            echo json_encode(['valido' => false, 'mensagem' => 'Acesso negado.']);
+            return;
+        }
+
+        $tentativas = new EstandeLeituraFalhaRepository();
+        $usuarioId = Auth::usuarioId();
+
+        if ($tentativas->contarFalhasRecentes($usuarioId, 30) >= 10) {
+            http_response_code(429);
+            echo json_encode(['valido' => false, 'mensagem' => 'Muitas tentativas. Aguarde alguns minutos e tente novamente.']);
+            return;
+        }
+
+        $corpo = json_decode(file_get_contents('php://input'), true);
+        $codigo = isset($corpo['codigo']) ? strtoupper(trim((string) $corpo['codigo'])) : '';
+        $estande = strlen($codigo) === 6 ? (new EstandeRepository())->buscarPorCodigo($id, $codigo) : null;
+
+        if ($estande === null) {
+            $tentativas->registrarFalha($usuarioId);
+            echo json_encode(['valido' => false, 'mensagem' => 'Código não encontrado.']);
+            return;
+        }
+
+        if (empty($estande['ativo'])) {
+            echo json_encode(['valido' => false, 'mensagem' => 'Este estande não está recebendo visitas no momento.']);
+            return;
+        }
+
+        if ((new EstandeRepresentanteRepository())->buscarVinculo((int) $estande['id'], $usuarioId) !== null) {
+            echo json_encode(['valido' => false, 'mensagem' => 'Você representa este estande, então a visita a ele não conta pontos para você.']);
+            return;
+        }
+
+        $visitas = new EstandeVisitaRepository();
+
+        if ($visitas->buscarPorEstandeEInscricao((int) $estande['id'], $inscricaoLeitor['id']) !== null) {
+            echo json_encode(['valido' => true, 'mensagem' => 'Sua visita ao estande "' . $estande['nome'] . '" já estava registrada.']);
+            return;
+        }
+
+        $registro = $visitas->registrar((int) $estande['id'], $inscricaoLeitor['id'], (int) $estande['pontos_visita']);
+        $tentativas->limparFalhas($usuarioId);
+        $pontos = (int) $registro['pontos_creditados'];
+
+        echo json_encode([
+            'valido' => true,
+            'mensagem' => 'Visita ao estande "' . $estande['nome'] . '" registrada'
+                . ($pontos > 0 ? ': ' . $pontos . ($pontos === 1 ? ' ponto.' : ' pontos.') : '.'),
+        ]);
     }
 
     /**

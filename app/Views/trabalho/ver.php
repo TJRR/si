@@ -26,6 +26,12 @@
             }
             ?>
             <p><span class="selo-situacao <?php echo $corSituacao; ?>"><?php echo htmlspecialchars($situacaoAtual, ENT_QUOTES, 'UTF-8'); ?></span></p>
+            <?php if (!empty($trabalho['consta_nos_anais'])): ?>
+                <p>
+                    <span class="selo-situacao verde">Publicado nos Anais</span>
+                    <a href="<?php echo htmlspecialchars($trabalho['anais_url'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener">Abrir os Anais</a>
+                </p>
+            <?php endif; ?>
             <?php if ($trabalho['foi_desclassificado'] && !empty($trabalho['motivo_desclassificacao'])): ?>
                 <p><strong>Motivo:</strong> <?php echo htmlspecialchars($trabalho['motivo_desclassificacao'], ENT_QUOTES, 'UTF-8'); ?></p>
             <?php endif; ?>
@@ -49,6 +55,43 @@
             </ul>
         </div>
 
-        <p>O resultado da avaliação, quando disponível, aparece aqui.</p>
+        <?php if ($resultado !== null): ?>
+            <div class="admin-card">
+                <h3>Resultado da avaliação</h3>
+                <p><strong>Situação:</strong> <span class="selo-situacao <?php echo $resultado['situacao'] === 'Aprovado' ? 'verde' : 'vermelho'; ?>"><?php echo htmlspecialchars($resultado['situacao'], ENT_QUOTES, 'UTF-8'); ?></span></p>
+                <?php if ($resultado['selecionado'] !== null): ?>
+                    <p><strong>Seleção para apresentação:</strong> <?php echo $resultado['selecionado'] ? 'Selecionado' : 'Não selecionado'; ?></p>
+                <?php endif; ?>
+                <?php if ($resultado['nota'] !== null): ?>
+                    <p><strong>Nota final:</strong> <?php echo htmlspecialchars($resultado['nota']['valor'], ENT_QUOTES, 'UTF-8'); ?><?php echo $resultado['nota']['maxima'] !== null ? ' de ' . htmlspecialchars($resultado['nota']['maxima'], ENT_QUOTES, 'UTF-8') : ''; ?></p>
+                <?php endif; ?>
+                <?php if ($resultado['posicao'] !== null): ?>
+                    <p><strong>Posição:</strong> <?php echo (int) $resultado['posicao']['numero']; ?>º<?php echo $resultado['posicao']['total'] !== null ? ' entre ' . (int) $resultado['posicao']['total'] . ' trabalhos avaliados' : ''; ?></p>
+                <?php endif; ?>
+                <?php if (!empty($resultado['criterios'])): ?>
+                    <p><strong>Média por critério:</strong></p>
+                    <ul>
+                        <?php foreach ($resultado['criterios'] as $criterio): ?>
+                            <li><?php echo htmlspecialchars($criterio['nome'], ENT_QUOTES, 'UTF-8'); ?>: <?php echo $criterio['media'] !== null ? htmlspecialchars($criterio['media'], ENT_QUOTES, 'UTF-8') : 'sem nota'; ?> de <?php echo htmlspecialchars($criterio['maximo'], ENT_QUOTES, 'UTF-8'); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+            </div>
+        <?php elseif (!$trabalho['foi_desclassificado']): ?>
+            <div class="admin-card">
+                <h3>Resultado da avaliação</h3>
+                <?php if ($resultadoPublicado): ?>
+                    <p>Este trabalho não consta no resultado publicado. Em caso de dúvida, procure a organização do evento.</p>
+                <?php else: ?>
+                    <p>O resultado ainda não foi publicado. Você será avisado por e-mail e no aplicativo quando estiver disponível.</p>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (!empty($versaoAnais)): ?>
+            <?php /* Fase 54: envio da versao final para a montagem dos Anais;
+            so' existe com o resultado publicado e o trabalho nos Anais. */ ?>
+            <?php require __DIR__ . '/_versao_anais.php'; ?>
+        <?php endif; ?>
     </div>
 </div>

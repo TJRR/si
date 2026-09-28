@@ -15,7 +15,7 @@
 
     <fieldset>
         <legend>Botão principal (opcional)</legend>
-        <p style="color:#555;font-size:0.9em;">Escolha um documento do evento (sub-aba Documentos) ou digite um destino. Com documento escolhido, o botão abre sempre a versão atual dele e some da página se o documento for despublicado.</p>
+        <p style="color:#555;font-size:0.9em;">Escolha um documento do evento (sub-aba Documentos, ou os Anais já publicados em Trabalhos) ou digite um destino. Com documento escolhido, o botão abre sempre a versão atual dele e some da página se o documento for despublicado.</p>
         <label>Texto do botão:
             <input type="text" name="botao1_titulo" maxlength="150" placeholder="Acessar o Edital completo" value="<?php echo htmlspecialchars((string) (isset($secao['botao1_titulo']) ? $secao['botao1_titulo'] : ''), ENT_QUOTES, 'UTF-8'); ?>">
         </label>

@@ -12,7 +12,13 @@ $logoSrc = logoAtual(true);
     <img src="<?php echo htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8'); ?>" class="guest-logo">
 
     <h1 class="guest-titulo">Criar cadastro</h1>
-    <p class="guest-subtitulo">Cadastre-se para se inscrever em <?php echo htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8'); ?>.</p>
+    <?php if (!empty($paraSubmissao)): ?>
+        <?php /* Fase 54: veio do botao de enviar trabalho; depois do
+        cadastro, segue direto para o formulario de submissao. */ ?>
+        <p class="guest-subtitulo">Crie sua conta para enviar o seu trabalho em <?php echo htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8'); ?>. Logo depois do cadastro, abre o formulário de submissão, onde você informa os dados do trabalho e os seus dados pessoais.</p>
+    <?php else: ?>
+        <p class="guest-subtitulo">Cadastre-se para se inscrever em <?php echo htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8'); ?>.</p>
+    <?php endif; ?>
 
     <?php if (!empty($erro)): ?>
         <p style="color:red;"><?php echo htmlspecialchars($erro, ENT_QUOTES, 'UTF-8'); ?></p>
@@ -33,6 +39,10 @@ $logoSrc = logoAtual(true);
         </label>
         <button type="submit" class="btn btn-bordered">Cadastrar</button>
     </form>
+
+    <?php if (!empty($paraSubmissao)): ?>
+        <p class="guest-cadastro">Já tem conta? <a href="<?php echo url('auth/loginEvento/' . (int) $evento['id']); ?>">Entrar</a> (e-mail e senha ou conta Google). Depois de entrar, você também vai direto para o formulário de submissão.</p>
+    <?php endif; ?>
 
     <p class="guest-cadastro"><a href="<?php echo url('eventoInscricao/index/' . (int) $evento['id']); ?>">Voltar</a></p>
 </div>

@@ -125,7 +125,7 @@ class EventoCheckinRepository
      * inclusive antes de data_inicio), mas sem o limite inferior aqui,
      * alguem confirmando presenca antes da atividade comecar contaria
      * indevidamente como presenca efetiva - e essa conta alimenta direto a
-     * elegibilidade de certificado na Fase 54.
+     * elegibilidade de certificado na Fase 59.
      */
     public function presencaEfetiva(array $atividade, $checkinEm)
     {

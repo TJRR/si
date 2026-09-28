@@ -132,6 +132,7 @@ class EventoInscricaoPublicaController extends Controller
         }
 
         $erro = null;
+        $destinoSubmissao = $this->destinoSubmissaoPendente((int) $evento['id']);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nome = trim(isset($_POST['nome']) ? $_POST['nome'] : '');
@@ -147,6 +148,16 @@ class EventoInscricaoPublicaController extends Controller
                     $usuario = (new UsuarioRepository())->buscarPorId($resultado['usuario_id']);
                     $perfis = (new UsuarioRepository())->perfisDoUsuario($resultado['usuario_id']);
                     Auth::login($usuario, $perfis);
+
+                    // Fase 54 (achado do teste do dono): veio do botao de
+                    // enviar trabalho, segue direto para o formulario de
+                    // submissao, sem passar pela inscricao.
+                    if ($destinoSubmissao !== null) {
+                        unset($_SESSION['retorno_apos_login']);
+                        $this->redirecionar($destinoSubmissao);
+                        return;
+                    }
+
                     $this->redirecionar('eventoInscricao/index/' . $evento['id']);
                     return;
                 }
@@ -158,7 +169,27 @@ class EventoInscricaoPublicaController extends Controller
         $this->renderizar('publico/evento_inscricao_cadastro', [
             'evento' => $evento,
             'erro' => $erro,
+            'paraSubmissao' => $destinoSubmissao !== null,
         ], 'Criar cadastro: ' . $evento['nome']);
+    }
+
+    /**
+     * Fase 54: o formulario de submissao deste evento, quando e' ele o
+     * retorno ainda valido guardado na sessao por TrabalhoController::
+     * exigirLogin(). So' esse padrao exato, nunca um endereco qualquer da
+     * sessao (mesmo cuidado de AuthController::redirecionarPosLogin()).
+     */
+    private function destinoSubmissaoPendente($eventoId)
+    {
+        $retorno = isset($_SESSION['retorno_apos_login']) ? $_SESSION['retorno_apos_login'] : null;
+
+        if (!is_array($retorno) || !isset($retorno['destino'], $retorno['expira_em']) || time() >= $retorno['expira_em']) {
+            return null;
+        }
+
+        $destino = 'trabalho/formulario/' . (int) $eventoId;
+
+        return $retorno['destino'] === $destino ? $destino : null;
     }
 
     public function inscrever()

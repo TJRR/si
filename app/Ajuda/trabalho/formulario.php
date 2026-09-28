@@ -67,12 +67,20 @@ return function (array $tela) {
     if ($maxCoautores > 0) {
         $operacoes[] = [
             'nome' => 'Autor principal e coautores',
-            'como' => 'Nome, CPF e e-mail são obrigatórios para cada autor; cargo e órgão de origem são opcionais. O CPF, o cargo e o órgão do autor principal, se já cadastrados em "Meu Perfil", vêm preenchidos. Este evento aceita até ' . $maxAutores . ' autores, incluindo o principal: o botão "Adicionar coautor" para em ' . $maxCoautores . ' coautor' . ($maxCoautores === 1 ? '' : 'es') . '. Coautor é opcional; um bloco de coautor pode ser removido a qualquer momento.',
+            'como' => 'Nome, CPF e e-mail são obrigatórios para cada autor; cargo e órgão de origem são opcionais. O CPF, o cargo e o órgão do autor principal, se já cadastrados em "Meu Perfil", vêm preenchidos. O e-mail do autor principal é sempre o da sua conta e não pode ser alterado. Este evento aceita até ' . $maxAutores . ' autores, incluindo o principal: o botão "Adicionar coautor" para em ' . $maxCoautores . ' coautor' . ($maxCoautores === 1 ? '' : 'es') . '. Coautor é opcional; um bloco de coautor pode ser removido a qualquer momento.',
         ];
     } else {
         $operacoes[] = [
             'nome' => 'Autor principal',
-            'como' => 'Este evento aceita um único autor por trabalho. Nome, CPF e e-mail são obrigatórios; cargo e órgão de origem são opcionais. Se já estiverem cadastrados em "Meu Perfil", vêm preenchidos.',
+            'como' => 'Este evento aceita um único autor por trabalho. Nome, CPF e e-mail são obrigatórios; cargo e órgão de origem são opcionais. Se já estiverem cadastrados em "Meu Perfil", vêm preenchidos. O e-mail é sempre o da sua conta e não pode ser alterado.',
+        ];
+    }
+
+    if (isset($config['permite_multiplos_trabalhos_por_pessoa']) && (int) $config['permite_multiplos_trabalhos_por_pessoa'] === 0) {
+        $operacoes[] = [
+            'nome' => 'Um trabalho por pessoa',
+            'como' => 'Neste evento, cada pessoa participa de um único trabalho, como autor principal ou como coautor. O envio é recusado se a sua conta, o CPF ou o e-mail de qualquer autor já constar em outro trabalho do evento.',
+            'observacao' => 'Se o seu CPF foi informado errado num envio anterior, não envie de novo: corrija o CPF em "Meu perfil" (Dados complementares, campo Documento, com o tipo CPF). A correção passa também para os trabalhos que você já enviou.',
         ];
     }
 

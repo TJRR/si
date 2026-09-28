@@ -15,7 +15,7 @@ use App\Services\CodigoUnicoService;
  * Fase 46: cursos/palestras/seminarios do Evento - primeira entidade filha
  * de arvore do Evento (NavegacaoService::noAtividades()/noAtividade()).
  * Inscricao (evento_atividade_inscricoes, ver EventoAtividadeInscricaoRepository)
- * e emissao de certificado (Fase 54, so' a flag e' gravada aqui) sao
+ * e emissao de certificado (Fase 59, so' a flag e' gravada aqui) sao
  * configuraveis como opcionais por atividade.
  */
 class EventoAtividadeRepository
