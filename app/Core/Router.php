@@ -24,6 +24,7 @@ use App\Controllers\CampoAdminController;
 use App\Controllers\CategoriaAvaliadorAdminController;
 use App\Controllers\ConcursoAdminController;
 use App\Controllers\ConexaoAdminController;
+use App\Controllers\DivulgacaoAdminController;
 use App\Controllers\ConfiguracaoAdminController;
 use App\Controllers\ContatoConcursoAdminController;
 use App\Controllers\ConteudoAdminController;
@@ -184,6 +185,9 @@ class Router
         // configuracao do Administrador) e "Meu Perfil" dentro do
         // aplicativo do Evento.
         'conexoes' => ConexaoAdminController::class,
+        // Fase 56: Divulgacao (comprovacao de publicacao em rede social, com
+        // pontuacao creditada no envio e anulacao pelo Administrador).
+        'divulgacao' => DivulgacaoAdminController::class,
         'eventoAppPerfil' => EventoAppPerfilController::class,
     ];
 
@@ -281,6 +285,22 @@ class Router
             if (Auth::estaVisualizandoComoOutro() && $_SERVER['REQUEST_METHOD'] !== 'GET' && !$ehRotaPararVisualizacao) {
                 http_response_code(403);
                 exit('Ação bloqueada: modo de visualização somente leitura. Volte para sua conta de administrador para realizar ações.');
+            }
+
+            // Fase 56: envio maior que o post_max_size chega aqui com
+            // $_POST e $_FILES vazios, porque o PHP descarta o corpo
+            // inteiro antes de o codigo rodar. Sem essa conferencia, o
+            // token de verificacao tambem sumia e a resposta era "Sessao
+            // expirada" - mensagem que nao tem relacao com a causa e que
+            // ja afetava os envios de PDF do Concurso (requerimentos e
+            // Anais). A varredura ampla de casos parecidos e' a pendencia
+            // 31 de SGSI/pendencias.md.
+            if ($_SERVER['REQUEST_METHOD'] !== 'GET'
+                && empty($_POST) && empty($_FILES)
+                && isset($_SERVER['CONTENT_LENGTH'])
+                && (int) $_SERVER['CONTENT_LENGTH'] > \App\Services\ArquivoService::limitePostBytes()) {
+                http_response_code(413);
+                exit('O arquivo enviado é maior que o limite de ' . \App\Services\ArquivoService::limiteMaximoMB() . 'MB do servidor. Reduza o tamanho do arquivo e envie outra vez.');
             }
 
             // Fase 31 (Auditoria de Seguranca, achado #1/#3): protecao CSRF

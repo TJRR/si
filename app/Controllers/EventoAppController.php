@@ -13,6 +13,8 @@ use App\Core\View;
 use App\Repositories\ConexaoConfigRepository;
 use App\Repositories\ConexaoRepository;
 use App\Repositories\ConfiguracaoSistemaRepository;
+use App\Repositories\DivulgacaoComprovacaoRepository;
+use App\Repositories\DivulgacaoConfigRepository;
 use App\Repositories\EventoAnaisRepository;
 use App\Repositories\EventoAtividadeFacilitadorRepository;
 use App\Repositories\EventoAtividadeInscricaoRepository;
@@ -33,7 +35,11 @@ use App\Repositories\SemanaInovacaoRepository;
 use App\Repositories\TemaVisualRepository;
 use App\Repositories\TrabalhoAutorRepository;
 use App\Repositories\TrabalhoAvaliadorRepository;
+use App\Repositories\UsuarioPerfilRepository;
+use App\Services\ArquivoPrivadoService;
 use App\Services\ConexaoService;
+use App\Services\DivulgacaoService;
+use App\Services\ImagemComprovacaoService;
 use App\Services\NotificacaoService;
 use App\Services\PerfilVisibilidadeService;
 
@@ -160,6 +166,13 @@ class EventoAppController extends Controller
             // painel de quem esta inscrito.
             'conexoesAtivas' => (new ConexaoConfigRepository())->estaAtivo($evento['id']),
             'resumoConexoes' => (new ConexaoRepository())->resumoParticipante($inscricao['id']),
+            // Fase 56: botao "Divulgacao" so' com o modulo ligado no evento,
+            // com o resumo de pontos abaixo. Mesma protecao das duas fases
+            // anteriores: as consultas capturam falha de banco dentro do
+            // repositorio, entao tabela ainda nao criada faz o botao sumir
+            // em vez de derrubar o painel de todo inscrito.
+            'divulgacaoAtiva' => (new DivulgacaoConfigRepository())->estaAtivo($evento['id']),
+            'resumoDivulgacao' => (new DivulgacaoComprovacaoRepository())->resumoParticipante($inscricao['id']),
         ], $evento['nome']);
     }
 
@@ -349,6 +362,340 @@ class EventoAppController extends Controller
             'resumo' => (new ConexaoRepository())->resumoParticipante($inscricao['id']),
             'conexoes' => $conexoes,
         ], 'Minhas conexões: ' . $evento['nome']);
+    }
+
+    /**
+     * Fase 56: tela "Divulgacao" - onde a pessoa envia a comprovacao de que
+     * publicou sobre o evento numa rede social, ou de que passou a
+     * acompanhar os canais do Tribunal, e acompanha a situacao de cada uma.
+     *
+     * Mesma conferencia de posse e mesmo redirect neutro das telas de
+     * Estandes e Conexoes.
+     */
+    public function divulgacao($id)
+    {
+        $contexto = $this->contextoDivulgacaoOuVolta($id);
+
+        if ($contexto === null) {
+            return;
+        }
+
+        $this->renderizarDivulgacao($contexto['evento'], $contexto['inscricao']);
+    }
+
+    /**
+     * Fase 56: envio da comprovacao, com credito automatico dos pontos.
+     *
+     * A ordem das recusas segue o molde de validarEstande()/validarCodigo():
+     * primeiro o que nao depende do que foi enviado (modulo ligado, janela,
+     * rede ativa), depois o que depende (rede cadastrada em "Meu Perfil",
+     * prova compativel, endereco do dominio certo, imagem legivel) e, por
+     * ultimo, a gravacao com os tetos recontados dentro da transacao.
+     *
+     * O arquivo so' vai para a area privada DEPOIS da conferencia de
+     * duplicidade, e qualquer falha posterior o remove: gravacao em disco
+     * nao participa da transacao do banco.
+     */
+    public function divulgacaoEnviar($id)
+    {
+        $contexto = $this->contextoDivulgacaoOuVolta($id);
+
+        if ($contexto === null) {
+            return;
+        }
+
+        $evento = $contexto['evento'];
+        $inscricao = $contexto['inscricao'];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirecionar('eventoApp/divulgacao/' . (int) $evento['id']);
+            return;
+        }
+
+        $valores = [
+            'rede' => isset($_POST['rede']) ? (string) $_POST['rede'] : '',
+            'tipo_acao' => isset($_POST['tipo_acao']) ? (string) $_POST['tipo_acao'] : '',
+            'endereco' => isset($_POST['endereco']) ? trim((string) $_POST['endereco']) : '',
+        ];
+
+        $configRepo = new DivulgacaoConfigRepository();
+        $config = $configRepo->vigente($evento['id']);
+        $servico = new DivulgacaoService();
+
+        if ($config['ativo'] !== 1) {
+            $this->renderizarDivulgacao($evento, $inscricao, 'A divulgação não está ativada neste evento.', $valores);
+            return;
+        }
+
+        if (!$servico->dentroDaJanela($evento, $config)) {
+            $janela = $servico->janelaTexto($evento, $config);
+            $this->renderizarDivulgacao(
+                $evento,
+                $inscricao,
+                'As comprovações de divulgação valem apenas de ' . $janela . '.',
+                $valores
+            );
+            return;
+        }
+
+        if (!in_array($valores['tipo_acao'], DivulgacaoService::TIPOS_ACAO, true)) {
+            $this->renderizarDivulgacao($evento, $inscricao, 'Escolha o que você quer comprovar.', $valores);
+            return;
+        }
+
+        $configRede = $configRepo->rede($evento['id'], $valores['rede']);
+        $ativaNoTipo = $configRede !== null
+            && (($valores['tipo_acao'] === 'publicacao' && $configRede['publicacao_ativa'] === 1)
+                || ($valores['tipo_acao'] === 'acompanhar' && $configRede['acompanhar_ativa'] === 1));
+
+        if (!$ativaNoTipo) {
+            $this->renderizarDivulgacao($evento, $inscricao, 'Essa rede social não vale para essa comprovação neste evento.', $valores);
+            return;
+        }
+
+        $rotulo = $configRede['rotulo'];
+
+        // A rede precisa estar cadastrada em "Meu Perfil": o documento da
+        // dinamica de pontos fala em "mesmo Instagram informado na
+        // plataforma", e e' o nome de usuario cadastrado que permite
+        // comparar a prova com a conta da pessoa.
+        $perfilRepo = new UsuarioPerfilRepository();
+        $redesDaPessoa = $perfilRepo->redesSociais($perfilRepo->buscarPorUsuarioId(Auth::usuarioId()));
+
+        if (!isset($redesDaPessoa[$valores['rede']])) {
+            $this->renderizarDivulgacao(
+                $evento,
+                $inscricao,
+                'Informe primeiro o seu perfil no ' . $rotulo . ' em "Meu Perfil". A comprovação é conferida contra a conta que você cadastrou.',
+                $valores
+            );
+            return;
+        }
+
+        $prova = $valores['tipo_acao'] === 'publicacao' ? $configRede['publicacao_prova'] : $configRede['acompanhar_prova'];
+        $aceitaEndereco = $prova === 'endereco' || $prova === 'ambos';
+        $aceitaImagem = $prova === 'imagem' || $prova === 'ambos';
+        $enviouEndereco = $valores['endereco'] !== '';
+        $enviouImagem = isset($_FILES['imagem']) && isset($_FILES['imagem']['error']) && $_FILES['imagem']['error'] !== UPLOAD_ERR_NO_FILE;
+
+        if (!$enviouEndereco && !$enviouImagem) {
+            $this->renderizarDivulgacao($evento, $inscricao, $this->mensagemProvaEsperada($prova, $rotulo), $valores);
+            return;
+        }
+
+        if ($enviouEndereco && !$aceitaEndereco) {
+            $this->renderizarDivulgacao($evento, $inscricao, 'No ' . $rotulo . ', a comprovação é a imagem da tela.', $valores);
+            return;
+        }
+
+        if ($enviouImagem && !$aceitaImagem) {
+            $this->renderizarDivulgacao($evento, $inscricao, 'No ' . $rotulo . ', a comprovação é o endereço da publicação.', $valores);
+            return;
+        }
+
+        $dados = ['rede' => $valores['rede'], 'tipo_acao' => $valores['tipo_acao']];
+
+        if ($enviouEndereco) {
+            $endereco = $servico->normalizarEndereco($valores['rede'], $valores['endereco']);
+
+            if ($endereco === null) {
+                $this->renderizarDivulgacao(
+                    $evento,
+                    $inscricao,
+                    'Esse endereço não parece ser uma publicação do ' . $rotulo . '. Copie o endereço da publicação e cole aqui.',
+                    $valores
+                );
+                return;
+            }
+
+            $dados['endereco'] = $endereco;
+            $dados['endereco_hash'] = $servico->resumoDoEndereco($endereco);
+        }
+
+        $imagem = new ImagemComprovacaoService();
+        $preparado = null;
+
+        if ($enviouImagem) {
+            try {
+                $preparado = $imagem->prepararEnvio($_FILES['imagem']);
+            } catch (\RuntimeException $e) {
+                $this->renderizarDivulgacao($evento, $inscricao, $e->getMessage(), $valores);
+                return;
+            }
+
+            $dados['arquivo_sha256'] = $preparado['sha256'];
+            $dados['arquivo_nome'] = $preparado['nome_original'];
+            $dados['arquivo_bytes'] = $preparado['bytes'];
+        }
+
+        $comprovacoes = new DivulgacaoComprovacaoRepository();
+
+        // Conferencia de duplicidade ANTES de o arquivo ir para a area
+        // privada: o caso mais comum de recusa nem chega a criar arquivo em
+        // disco. A chave unica do banco continua sendo a garantia final.
+        $repetida = $comprovacoes->provaJaUsada(
+            (int) $evento['id'],
+            (int) $inscricao['id'],
+            isset($dados['endereco_hash']) ? $dados['endereco_hash'] : null,
+            isset($dados['arquivo_sha256']) ? $dados['arquivo_sha256'] : null
+        );
+
+        if ($repetida !== null) {
+            if ($preparado !== null) {
+                $imagem->descartar($preparado);
+            }
+
+            // Duas situacoes diferentes para quem esta na tela: o endereco e'
+            // unico no evento (pode ter sido registrado por outra pessoa), e a
+            // imagem e' unica por pessoa.
+            $mensagem = $repetida === 'endereco'
+                ? 'Esta publicação já foi registrada neste evento.'
+                : 'Você já enviou esta imagem como comprovação.';
+            $this->renderizarDivulgacao($evento, $inscricao, $mensagem, $valores);
+            return;
+        }
+
+        if ($preparado !== null) {
+            try {
+                $dados['arquivo_path'] = $imagem->gravar($preparado, $evento['id']);
+            } catch (\RuntimeException $e) {
+                $imagem->descartar($preparado);
+                $this->renderizarDivulgacao($evento, $inscricao, $e->getMessage(), $valores);
+                return;
+            }
+        }
+
+        try {
+            $resultado = $servico->registrar($evento, $inscricao, $configRede, $dados);
+        } catch (\Throwable $e) {
+            // Arquivo gravado e linha nao gravada: remove o arquivo, para a
+            // area privada nao acumular resto (mesma compensacao de
+            // EventoAnaisPdfFinalService::enviarPeloAutor()).
+            if (isset($dados['arquivo_path'])) {
+                ArquivoPrivadoService::remover($dados['arquivo_path']);
+            }
+
+            error_log('[Divulgacao] Falha ao gravar comprovacao do evento ' . (int) $evento['id'] . ': ' . $e->getMessage());
+            $this->renderizarDivulgacao($evento, $inscricao, 'Não foi possível registrar a comprovação agora. Tente de novo em alguns instantes.', $valores);
+            return;
+        }
+
+        if ($resultado['id'] === null) {
+            if (isset($dados['arquivo_path'])) {
+                ArquivoPrivadoService::remover($dados['arquivo_path']);
+            }
+
+            $mensagem = $resultado['motivo_sem_pontos'] === 'acompanhar_repetido'
+                ? 'Você já registrou que acompanha o ' . $rotulo . '.'
+                : 'Esta comprovação já foi registrada neste evento.';
+            $this->renderizarDivulgacao($evento, $inscricao, $mensagem, $valores);
+            return;
+        }
+
+        if ($resultado['pontos'] > 0) {
+            flashSucesso('Comprovação registrada. Você recebeu ' . $resultado['pontos'] . ' ponto(s).');
+        } elseif ($resultado['motivo_sem_pontos'] === 'teto_dia') {
+            flashAlerta('Comprovação registrada, sem pontos: você já atingiu o limite diário de publicações que pontuam no ' . $rotulo . '.');
+        } elseif ($resultado['motivo_sem_pontos'] === 'teto_evento') {
+            flashAlerta('Comprovação registrada, sem pontos: você já atingiu o limite de publicações que pontuam no ' . $rotulo . ' neste evento.');
+        } else {
+            flashAlerta('Comprovação registrada. Esta ação não credita pontos neste evento.');
+        }
+
+        $this->redirecionar('eventoApp/divulgacao/' . (int) $evento['id']);
+    }
+
+    /**
+     * Fase 56: entrega a imagem de comprovacao para a PROPRIA pessoa. A
+     * imagem fica na area privada (storage/uploads), fora do alcance do
+     * servidor web, porque uma captura de tela traz nome, foto e publicacao
+     * de terceiros - so' este ponto e a tela do Administrador a servem.
+     */
+    public function divulgacaoImagem($id, $comprovacaoId = null)
+    {
+        $contexto = $this->contextoDivulgacaoOuVolta($id);
+
+        if ($contexto === null) {
+            return;
+        }
+
+        $comprovacao = (new DivulgacaoComprovacaoRepository())->buscarPorId($comprovacaoId);
+
+        if ($comprovacao === null
+            || (int) $comprovacao['evento_inscricao_id'] !== (int) $contexto['inscricao']['id']) {
+            http_response_code(404);
+            exit('Comprovação não encontrada.');
+        }
+
+        if (empty($comprovacao['arquivo_path'])) {
+            http_response_code(404);
+            exit('Esta imagem foi apagada conforme a política de retenção de dados do evento.');
+        }
+
+        ArquivoPrivadoService::servirImagem($comprovacao['arquivo_path'], $comprovacao['arquivo_nome']);
+    }
+
+    /**
+     * Posse do aplicativo, repetida nas tres acoes de Divulgacao como nas
+     * demais telas: evento existe e quem pede tem inscricao nele. Devolve
+     * null depois de redirecionar, e quem chama so' precisa voltar.
+     */
+    private function contextoDivulgacaoOuVolta($id)
+    {
+        if (!Auth::autenticado()) {
+            $this->redirecionar('eventoInscricao/index/' . (int) $id);
+            return null;
+        }
+
+        $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+        $inscricao = $evento !== null
+            ? (new EventoInscricaoRepository())->buscarPorEventoEUsuario($id, Auth::usuarioId())
+            : null;
+
+        if ($evento === null || $inscricao === null) {
+            $this->redirecionar('eventoInscricao/index/' . (int) $id);
+            return null;
+        }
+
+        return ['evento' => $evento, 'inscricao' => $inscricao];
+    }
+
+    private function mensagemProvaEsperada($prova, $rotulo)
+    {
+        if ($prova === 'endereco') {
+            return 'Informe o endereço da sua publicação no ' . $rotulo . '.';
+        }
+
+        if ($prova === 'imagem') {
+            return 'Envie a imagem da tela mostrando a sua publicação no ' . $rotulo . '.';
+        }
+
+        return 'Informe o endereço da publicação ou envie a imagem da tela do ' . $rotulo . '.';
+    }
+
+    private function renderizarDivulgacao(array $evento, array $inscricao, $erro = null, array $valores = [])
+    {
+        if ($erro !== null) {
+            flashErro($erro);
+        }
+
+        $configRepo = new DivulgacaoConfigRepository();
+        $config = $configRepo->vigente($evento['id']);
+        $servico = new DivulgacaoService();
+        $perfilRepo = new UsuarioPerfilRepository();
+
+        $this->renderizar('eventoApp/divulgacao', [
+            'evento' => $evento,
+            'inscricao' => $inscricao,
+            'config' => $config,
+            'redes' => $configRepo->redesAtivas($evento['id']),
+            'redesDaPessoa' => $perfilRepo->redesSociais($perfilRepo->buscarPorUsuarioId(Auth::usuarioId())),
+            'dentroDaJanela' => $servico->dentroDaJanela($evento, $config),
+            'janelaTexto' => $servico->janelaTexto($evento, $config),
+            'resumo' => (new DivulgacaoComprovacaoRepository())->resumoParticipante($inscricao['id']),
+            'comprovacoes' => (new DivulgacaoComprovacaoRepository())->listarDaInscricao($inscricao['id']),
+            'valores' => $valores,
+        ], 'Divulgação: ' . $evento['nome']);
     }
 
     /**

@@ -41,6 +41,22 @@
             </p>
         <?php endif; ?>
 
+        <?php if (!empty($divulgacaoAtiva)): ?>
+            <?php /* Fase 56: "Divulgação" só aparece com o módulo ligado no
+            evento. O resumo vem protegido contra falha de banco, como os de
+            Estandes e Conexões. */ ?>
+            <p>
+                <a href="<?php echo url('eventoApp/divulgacao/' . (int) $evento['id']); ?>" class="btn">Divulgação</a>
+                <?php if ((int) $resumoDivulgacao['total_comprovacoes'] > 0): ?>
+                    <br>
+                    <small>
+                        <?php echo (int) $resumoDivulgacao['total_pontos']; ?> <?php echo (int) $resumoDivulgacao['total_pontos'] === 1 ? 'ponto' : 'pontos'; ?>
+                        em <?php echo (int) $resumoDivulgacao['total_comprovacoes']; ?> <?php echo (int) $resumoDivulgacao['total_comprovacoes'] === 1 ? 'comprovação enviada' : 'comprovações enviadas'; ?>
+                    </small>
+                <?php endif; ?>
+            </p>
+        <?php endif; ?>
+
         <?php if (!empty($temEstandes)): ?>
             <?php /* Fase 54: so' aparece com estande ativo no evento; o
             resumo de pontos vem protegido contra falha de banco. */ ?>

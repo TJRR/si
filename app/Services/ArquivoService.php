@@ -74,6 +74,22 @@ class ArquivoService
         return round(self::limiteMaximoBytes() / 1024 / 1024, 1);
     }
 
+    /**
+     * Fase 56: ACRESCIMO. So' o post_max_size, e nao o menor dos dois.
+     *
+     * E' ele que faz o PHP descartar $_POST e $_FILES INTEIROS quando o
+     * corpo da requisicao e' maior: sem os dados, o token de verificacao
+     * some junto e a checagem central do Router respondia "Sessao expirada"
+     * para o que era, na verdade, arquivo grande demais. Quando quem estoura
+     * e' o upload_max_filesize, $_POST continua populado e o erro chega
+     * normalmente em $_FILES['error'], entao comparar com o menor dos dois
+     * daria falso positivo.
+     */
+    public static function limitePostBytes()
+    {
+        return self::converterParaBytes(ini_get('post_max_size'));
+    }
+
     private static function converterParaBytes($valorIni)
     {
         $valorIni = trim((string) $valorIni);

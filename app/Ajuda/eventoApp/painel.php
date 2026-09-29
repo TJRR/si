@@ -18,6 +18,10 @@ return [
             'como' => 'Aparece quando o evento está com as conexões ativadas. Abre a leitura do crachá de outra pessoa (câmera, quando o navegador suportar, ou digitação do código de 6 caracteres). Uma leitura só conecta as duas e credita os pontos às duas; cada dupla conta uma vez. Logo abaixo do botão aparece o seu total, depois da primeira conexão.',
         ],
         [
+            'nome' => '"Divulgação"',
+            'como' => 'Aparece quando o evento está com a divulgação ativada. Abre a tela em que você comprova que publicou sobre o evento numa rede social, ou que passou a acompanhar um canal do Tribunal, e recebe os pontos na hora. Logo abaixo do botão aparece o seu total, depois da primeira comprovação.',
+        ],
+        [
             'nome' => '"Estandes"',
             'como' => 'Aparece quando o evento tem estande de expositor ou de patrocinador recebendo visitas. Abre a lista dos estandes, os que você já visitou e o seu total de pontos em estandes; lá, "Registrar visita" lê o código do cartaz do estande. Logo abaixo do botão aparece o seu total de pontos, depois da primeira visita.',
         ],

@@ -179,6 +179,15 @@ class NavegacaoService
             ['tipo' => 'conexoesConfiguracoes', 'rotulo' => 'Configurações', 'rota' => 'conexoes/configuracoes'],
         ],
         /**
+         * Fase 56: no unico "Divulgacao" do Evento, com o acompanhamento das
+         * comprovacoes (lista nominal, porque a conferencia depende de
+         * comparar a prova com a conta da pessoa) e a configuracao por rede.
+         */
+        'divulgacao' => [
+            ['tipo' => 'divulgacao', 'rotulo' => 'Divulgação', 'rota' => 'divulgacao/index'],
+            ['tipo' => 'divulgacaoConfiguracoes', 'rotulo' => 'Configurações', 'rota' => 'divulgacao/configuracoes'],
+        ],
+        /**
          * Fase 33: "Meu perfil" passa a usar as mesmas sub-abas das demais
          * telas, em vez de empilhar tres blocos numa pagina so'. Sem id, como
          * o grupo "configuracao". Duas das tres abas sao condicionais - ver a
@@ -263,6 +272,8 @@ class NavegacaoService
         'estandesConfiguracoes' => 'estandes',
         'conexoes' => 'conexoes',
         'conexoesConfiguracoes' => 'conexoes',
+        'divulgacao' => 'divulgacao',
+        'divulgacaoConfiguracoes' => 'divulgacao',
     ];
 
     /**
@@ -439,6 +450,17 @@ class NavegacaoService
             return [self::noEvento($evento), self::noConexoes($evento)];
         }
 
+        // Fase 56: 'divulgacao' segue o mesmo criterio ($id = id do evento).
+        if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'divulgacao') {
+            $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+            if ($evento === null) {
+                return [];
+            }
+
+            return [self::noEvento($evento), self::noDivulgacao($evento)];
+        }
+
         if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'atividade') {
             $atividade = (new EventoAtividadeRepository())->buscarPorId($id);
 
@@ -568,13 +590,15 @@ class NavegacaoService
                 }
 
                 // Fase 49: Trabalhos entra como irmao de Atividades. Fase
-                // 54: Estandes, do mesmo jeito. Fase 55: Conexoes. Competicoes
-                // entra aqui numa fase seguinte do plano.
+                // 54: Estandes, do mesmo jeito. Fase 55: Conexoes. Fase 56:
+                // Divulgacao. Competicoes entra aqui numa fase seguinte do
+                // plano.
                 return [
                     self::noAtividades($evento),
                     self::noTrabalhos($evento),
                     self::noEstandes($evento),
                     self::noConexoes($evento),
+                    self::noDivulgacao($evento),
                 ];
 
             case 'atividades':
@@ -904,6 +928,21 @@ class NavegacaoService
             'rotulo' => 'Conexões',
             'folha' => true,
             'url' => 'conexoes/index/' . (int) $evento['id'],
+        ];
+    }
+
+    /**
+     * Fase 56: mesmo formato de noConexoes() - no unico, sem filhos, id =
+     * id do EVENTO.
+     */
+    private static function noDivulgacao(array $evento)
+    {
+        return [
+            'tipo' => 'divulgacao',
+            'id' => (int) $evento['id'],
+            'rotulo' => 'Divulgação',
+            'folha' => true,
+            'url' => 'divulgacao/index/' . (int) $evento['id'],
         ];
     }
 }
