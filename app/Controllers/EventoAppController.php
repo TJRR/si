@@ -10,6 +10,8 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\View;
+use App\Repositories\ConexaoConfigRepository;
+use App\Repositories\ConexaoRepository;
 use App\Repositories\ConfiguracaoSistemaRepository;
 use App\Repositories\EventoAnaisRepository;
 use App\Repositories\EventoAtividadeFacilitadorRepository;
@@ -31,7 +33,9 @@ use App\Repositories\SemanaInovacaoRepository;
 use App\Repositories\TemaVisualRepository;
 use App\Repositories\TrabalhoAutorRepository;
 use App\Repositories\TrabalhoAvaliadorRepository;
+use App\Services\ConexaoService;
 use App\Services\NotificacaoService;
+use App\Services\PerfilVisibilidadeService;
 
 /**
  * Fase 41: ponto de entrada ("shell") do aplicativo web instalavel (PWA) do
@@ -149,6 +153,13 @@ class EventoAppController extends Controller
             // de pontos; as duas consultas ja se protegem de falha de banco.
             'temEstandes' => (new EstandeRepository())->existeAtivoNoEvento($evento['id']),
             'resumoEstandes' => (new EstandeVisitaRepository())->resumoParticipante($inscricao['id']),
+            // Fase 55: "Conectar com participante" (a antiga "Ler codigo")
+            // so' aparece com o modulo Conexoes ligado no evento; o resumo
+            // vem junto. As duas consultas tambem se protegem de falha de
+            // banco, entao uma tabela ainda nao criada nunca derruba o
+            // painel de quem esta inscrito.
+            'conexoesAtivas' => (new ConexaoConfigRepository())->estaAtivo($evento['id']),
+            'resumoConexoes' => (new ConexaoRepository())->resumoParticipante($inscricao['id']),
         ], $evento['nome']);
     }
 
@@ -263,6 +274,12 @@ class EventoAppController extends Controller
      * posse de inscricao()/cracha() (evento existe + o LEITOR tem inscricao
      * nesse evento), com o MESMO redirect neutro nos dois casos de falha.
      * $id aqui e' sempre o evento do proprio leitor, nunca do codigo lido.
+     *
+     * Fase 55: a tela deixou de ser so' conferencia e virou "Conectar com
+     * participante" - a leitura grava a conexao e credita pontos aos dois
+     * lados (decisao do dono). Com o modulo desligado no evento, o leitor
+     * da' lugar a um aviso, para ninguem ler um cracha achando que vai
+     * pontuar.
      */
     public function ler($id)
     {
@@ -281,19 +298,75 @@ class EventoAppController extends Controller
             return;
         }
 
+        $config = (new ConexaoConfigRepository())->vigente($id);
+
         $this->renderizar('eventoApp/ler', [
             'evento' => $evento,
-        ], $evento['nome']);
+            'config' => $config,
+            'resumo' => (new ConexaoRepository())->resumoParticipante($inscricao['id']),
+            'dentroDaJanela' => (new ConexaoService())->dentroDaJanela($evento),
+        ], 'Conectar com participante: ' . $evento['nome']);
+    }
+
+    /**
+     * Fase 55: lista das conexoes da pessoa, no molde de estandes() -
+     * mesma conferencia de posse e mesmo redirect neutro. O que aparece de
+     * cada pessoa conectada e' decidido por PerfilVisibilidadeService, a
+     * partir do que ela mesma liberou em "Meu Perfil", lido agora e nunca
+     * congelado na conexao.
+     */
+    public function conexoes($id)
+    {
+        if (!Auth::autenticado()) {
+            $this->redirecionar('eventoInscricao/index/' . (int) $id);
+            return;
+        }
+
+        $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+        $inscricao = $evento !== null
+            ? (new EventoInscricaoRepository())->buscarPorEventoEUsuario($id, Auth::usuarioId())
+            : null;
+
+        if ($evento === null || $inscricao === null) {
+            $this->redirecionar('eventoInscricao/index/' . (int) $id);
+            return;
+        }
+
+        $visibilidade = new PerfilVisibilidadeService();
+        $conexoes = [];
+
+        foreach ((new ConexaoRepository())->listarDaInscricao($inscricao['id']) as $linha) {
+            $conexoes[] = [
+                'conectado_em' => $linha['conectado_em'],
+                'pontos_creditados' => (int) $linha['pontos_creditados'],
+                'pessoa' => $visibilidade->paraExibicao($linha),
+            ];
+        }
+
+        $this->renderizar('eventoApp/conexoes', [
+            'evento' => $evento,
+            'config' => (new ConexaoConfigRepository())->vigente($id),
+            'resumo' => (new ConexaoRepository())->resumoParticipante($inscricao['id']),
+            'conexoes' => $conexoes,
+        ], 'Minhas conexões: ' . $evento['nome']);
     }
 
     /**
      * Fase 43: endpoint AJAX do componente de leitura - recebe o codigo
      * decodificado do QR (BarcodeDetector nativo) OU digitado manualmente
      * (fallback usado sempre em Safari/Firefox, que nao suportam a API), e
-     * confirma se pertence a uma inscricao do MESMO evento do leitor. Nao
-     * grava nada no banco alem do rate limiting abaixo - so' valida e
-     * exibe (a pontuacao por leitura de estande e' validarEstande(), Fase
-     * 54; a leitura entre participantes e' da Fase 55).
+     * confirma se pertence a uma inscricao do MESMO evento do leitor.
+     *
+     * Fase 55: a leitura passou a GRAVAR a conexao entre as duas pessoas e a
+     * creditar pontos aos dois lados, numa transacao so' (ConexaoService).
+     * A ordem das conferencias segue validarEstande() (Fase 54), e a mesma
+     * distincao vale aqui: so' codigo inexistente conta no limite de
+     * tentativas. Modulo desligado, fora da janela do evento, autoleitura,
+     * inscricao ainda nao homologada e dupla ja conectada sao restricoes
+     * legitimas, nao engano de quem esta lendo.
+     *
+     * A autoleitura fecha o achado registrado na Fase 43 (Implantar.md,
+     * entrada da Fase 44): ate aqui, ler o proprio codigo era aceito.
      *
      * Rate limiting: LeituraCodigoFalhaRepository, tabela dedicada (nunca a
      * mesma de login) por usuario_id do LEITOR - 10 falhas em 30 minutos
@@ -329,6 +402,25 @@ class EventoAppController extends Controller
             return;
         }
 
+        $config = (new ConexaoConfigRepository())->vigente($id);
+        $servico = new ConexaoService();
+
+        // Modulo desligado e fora da janela vem antes de olhar o codigo:
+        // nao dependem dele, e a resposta seria a mesma de qualquer jeito.
+        if ($config['ativo'] !== 1) {
+            echo json_encode(['valido' => false, 'mensagem' => 'As conexões não estão ativadas neste evento.']);
+            return;
+        }
+
+        if (!$servico->dentroDaJanela($evento)) {
+            echo json_encode([
+                'valido' => false,
+                'mensagem' => 'As conexões só valem durante o evento, de ' . formatarData($evento['data_inicio'])
+                    . ' a ' . formatarData($evento['data_fim']) . '.',
+            ]);
+            return;
+        }
+
         $corpo = json_decode(file_get_contents('php://input'), true);
         $codigo = isset($corpo['codigo']) ? strtoupper(trim((string) $corpo['codigo'])) : '';
 
@@ -340,11 +432,58 @@ class EventoAppController extends Controller
             return;
         }
 
+        if ((int) $inscricaoLida['id'] === (int) $inscricaoLeitor['id']) {
+            echo json_encode([
+                'valido' => false,
+                'mensagem' => 'Este é o seu próprio código. Peça o código de outra pessoa para se conectar.',
+            ]);
+            return;
+        }
+
+        // Em evento com credenciamento automatico toda inscricao ja nasce
+        // homologada, entao nao ha nada a conferir aqui.
+        if ($evento['modo_credenciamento'] === 'assistido') {
+            if (empty($inscricaoLeitor['homologado_em'])) {
+                echo json_encode([
+                    'valido' => false,
+                    'mensagem' => 'Sua inscrição ainda não foi homologada. Procure o credenciamento do evento antes de se conectar.',
+                ]);
+                return;
+            }
+
+            if (empty($inscricaoLida['homologado_em'])) {
+                echo json_encode([
+                    'valido' => false,
+                    'mensagem' => 'A inscrição de ' . $inscricaoLida['usuario_nome'] . ' ainda não foi homologada. '
+                        . 'Peça a ela para passar no credenciamento do evento.',
+                ]);
+                return;
+            }
+        }
+
+        $resultado = $servico->conectar($evento, $config, $inscricaoLeitor, $inscricaoLida);
         $tentativas->limparFalhas($usuarioId);
-        echo json_encode([
-            'valido' => true,
-            'mensagem' => 'Código válido: ' . $inscricaoLida['usuario_nome'] . ', inscrito(a) em ' . $evento['nome'] . '.',
-        ]);
+
+        if ($resultado['ja_existia']) {
+            echo json_encode([
+                'valido' => true,
+                'mensagem' => 'Você e ' . $inscricaoLida['usuario_nome'] . ' já estavam conectados.',
+            ]);
+            return;
+        }
+
+        $pontos = (int) $resultado['pontos_leitor'];
+        $mensagem = 'Conexão com ' . $inscricaoLida['usuario_nome'] . ' registrada';
+
+        if ($pontos > 0) {
+            $mensagem .= ': ' . $pontos . ($pontos === 1 ? ' ponto.' : ' pontos.');
+        } elseif ((int) $config['pontos_por_conexao'] > 0) {
+            $mensagem .= '. Você já atingiu o limite de conexões que pontuam neste evento.';
+        } else {
+            $mensagem .= '.';
+        }
+
+        echo json_encode(['valido' => true, 'mensagem' => $mensagem]);
     }
 
     /**

@@ -27,6 +27,11 @@
             <a href="<?php echo url('eventoApp/index' . (isset($eventoId) ? '/' . (int) $eventoId : '')); ?>">Painel</a>
             <?php if (isset($eventoId)): ?>
                 <a href="<?php echo url('eventoApp/inscricao/' . (int) $eventoId); ?>">Minha inscrição</a>
+                <?php /* Fase 55: "Meu Perfil" passa a existir dentro do
+                aplicativo (dados, aparência e senha) - antes só havia a tela
+                do painel administrativo, sem nenhum caminho até ela para
+                quem é apenas inscrito em evento. */ ?>
+                <a href="<?php echo url('eventoAppPerfil/index/' . (int) $eventoId); ?>">Meu Perfil</a>
             <?php endif; ?>
             <a href="<?php echo url('auth/logout'); ?>" class="app-menu-sair">Sair</a>
         <?php else: ?>

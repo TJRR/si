@@ -80,6 +80,7 @@ reais, avaliadores reais e prazos reais.
 | Tira-Dúvidas | Canal formal de dúvidas com anexo, acompanhamento de status, reabertura e prazo de resposta |
 | Requerimentos | Geração do documento a partir de um modelo oficial, assinatura digital externa e protocolo |
 | Mentoria e Oficina | Reserva de horário de mentoria (exclusivo por equipe) e inscrição em oficinas (coletivas), com link da sala virtual |
+| Conexões no evento | Leitura do crachá de outro participante pelo aplicativo: as duas pessoas ficam conectadas e pontuam, e cada uma decide quais contatos compartilha |
 
 ### Para quem avalia
 
@@ -456,6 +457,7 @@ de tudo esse bloco de uma vez, junto com a Fase 51.
 | 52 | **Resultado de Trabalhos publicado ao autor**: a organização confere a prévia e publica; só então o autor vê situação, seleção para apresentação, nota final, posição e média por critério (cada bloco liga e desliga por evento), com aviso por e-mail e pelo sino do aplicativo, e a possibilidade de reabrir para corrigir; **tela amigável "Este evento não existe"** para página de evento inexistente ou não publicada, com **prévia** da página não publicada para administradores |
 | 53 | **Anais do Evento**: o volume único em PDF, montado pela equipe, é enviado em versões numeradas, publicado como documento do evento e como botão no aplicativo do participante, com a lista de quais trabalhos aprovados constam nele e aviso aos autores por e-mail e pelo sino |
 | 54 | **Estandes** de expositores e patrocinadores, com código fixo em cartaz, visita registrada pelo participante no aplicativo com pontos e representante do estande convidado pela organização; **geração automática do volume dos Anais**, com envio da versão final de cada trabalho pelo autor, dados editoriais, comissões, sumário e numeração das páginas; na submissão de trabalhos, **um trabalho por pessoa** conferido também pelo e-mail e pela conta, e cadastro seguido direto do formulário para quem ainda não tem conta |
+| 55 | **Conexões entre participantes**: uma pessoa lê o crachá da outra no aplicativo e as duas ficam conectadas e pontuam, com pontos e limite definidos por evento; cada uma escolhe o que mostra à outra (foto, cargo, órgão, minicurrículo, telefone com WhatsApp e redes sociais), e **"Meu Perfil" passa a existir dentro do aplicativo**, com dados, contatos, escolha de tema e troca de senha |
 
 ---
 

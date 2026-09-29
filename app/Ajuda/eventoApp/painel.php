@@ -7,15 +7,15 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Meu evento',
-    'resumo' => 'Painel do aplicativo do Evento: mostra o evento em que você está inscrito e a situação da sua inscrição. Seu crachá de credenciamento fica em "Minha inscrição" (menu ☰). "Ler código" abre a leitura de código de outra pessoa.',
+    'resumo' => 'Painel do aplicativo do Evento: mostra o evento em que você está inscrito e a situação da sua inscrição. Seu crachá de credenciamento fica em "Minha inscrição" (menu ☰). "Conectar com participante" abre a leitura do crachá de outra pessoa.',
     'operacoes' => [
         [
             'nome' => 'Selo de situação',
             'como' => 'Mostra se sua inscrição já está confirmada ou ainda aguardando homologação do Administrador.',
         ],
         [
-            'nome' => '"Ler código"',
-            'como' => 'Abre a tela de leitura do código de credenciamento de outra pessoa (câmera, quando o navegador suportar, ou digitação manual do código de 6 caracteres).',
+            'nome' => '"Conectar com participante"',
+            'como' => 'Aparece quando o evento está com as conexões ativadas. Abre a leitura do crachá de outra pessoa (câmera, quando o navegador suportar, ou digitação do código de 6 caracteres). Uma leitura só conecta as duas e credita os pontos às duas; cada dupla conta uma vez. Logo abaixo do botão aparece o seu total, depois da primeira conexão.',
         ],
         [
             'nome' => '"Estandes"',
@@ -35,7 +35,7 @@ return [
         ],
         [
             'nome' => 'Menu (ícone ☰)',
-            'como' => 'Abre "Painel", "Minha inscrição" (dados que você preencheu) e "Sair".',
+            'como' => 'Abre "Painel", "Minha inscrição" (dados que você preencheu), "Meu Perfil" (seus dados, a aparência e a troca de senha, além do que você compartilha nas conexões) e "Sair".',
         ],
     ],
     'conceitos' => [],

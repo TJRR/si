@@ -27,6 +27,27 @@ foreach ($concursos as $concurso) {
 
     <p>E-mail: <?php echo htmlspecialchars($usuario['email'], ENT_QUOTES, 'UTF-8'); ?> (não editável)</p>
 
+    <?php
+    /**
+     * Fase 55 (pendência 24): quem tem um perfil que nasce por fluxo próprio
+     * (Representante de estande, Inscrito em evento) não o encontra na lista,
+     * porque ele não é atribuível por aqui. Sem este aviso, a seleção
+     * apareceria em "Nenhum" e um "Salvar" descuidado pareceria ter apagado o
+     * perfil da pessoa, quando na verdade nada muda.
+     */
+    $perfilAtualEhAtribuivel = $vinculoAtual === null
+        || \App\Repositories\PerfilRepository::ehAtribuivelPelaTelaUsuarios($vinculoAtual['perfil']);
+    ?>
+
+    <?php if (!$perfilAtualEhAtribuivel): ?>
+        <p class="status-pill laranja">
+            Esta conta tem o perfil
+            "<?php echo htmlspecialchars($vinculoAtual['perfil_nome'], ENT_QUOTES, 'UTF-8'); ?>", que só é
+            atribuído pelo fluxo próprio dele e não aparece na lista abaixo. Salvar sem escolher um perfil
+            mantém o atual; escolher outro substitui o que existe hoje.
+        </p>
+    <?php endif; ?>
+
     <label>Perfil:
         <select name="perfil" id="campo-perfil-editar">
             <option value="">Nenhum</option>

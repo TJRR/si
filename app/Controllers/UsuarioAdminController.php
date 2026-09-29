@@ -176,6 +176,11 @@ class UsuarioAdminController extends Controller
         $this->renderizar('admin/usuarios', [
             'usuarios' => $lista,
             'perfis' => $this->perfis->listar(),
+            // Fase 55 (pendencia 24): o filtro continua com todos os perfis,
+            // para o Administrador poder filtrar por um perfil que ele nao
+            // pode atribuir; o formulario de aprovacao, na mesma tela, usa a
+            // lista sem os perfis que nascem por fluxo proprio.
+            'perfisAtribuiveis' => $this->perfis->listarParaAtribuicao(),
             'concursos' => $this->concursos->listar(),
             'categoriasPorConcurso' => $categoriasPorConcurso,
             'filtroConcursoId' => $filtroConcursoId,
@@ -266,6 +271,16 @@ class UsuarioAdminController extends Controller
             return;
         }
 
+        // Fase 55 (pendencia 24): a lista da tela ja nao oferece estes
+        // perfis, mas a recusa precisa existir aqui - um envio forjado nao
+        // passa pela tela. Vem antes de atualizarStatus(), para o usuario
+        // nao ficar aprovado sem perfil.
+        if (!PerfilRepository::ehAtribuivelPelaTelaUsuarios($perfil['chave'])) {
+            flashErro('Este perfil não pode ser atribuído por esta tela.');
+            $this->redirecionar('usuarios/index');
+            return;
+        }
+
         $this->usuarios->atualizarStatus($id, 'aprovado');
         $this->usuarios->definirPrecisaRevisarConcurso($id, false);
         $this->perfis->atribuir($id, $perfil['id'], $concursoId);
@@ -302,7 +317,7 @@ class UsuarioAdminController extends Controller
         $this->renderizar('admin/usuarios_editar', [
             'usuario' => $usuario,
             'vinculoAtual' => $vinculoAtual,
-            'perfis' => $this->perfis->listar(),
+            'perfis' => $this->perfis->listarParaAtribuicao(),
             'concursos' => $this->concursos->listar(),
             'categoriasPorConcurso' => $categoriasPorConcurso,
             'flash' => !empty($_SESSION['flash']) ? $_SESSION['flash'] : null,
@@ -331,6 +346,15 @@ class UsuarioAdminController extends Controller
         }
 
         $perfil = $this->perfis->buscarPorChave($perfilChave);
+
+        // Fase 55 (pendencia 24): perfil que nasce por fluxo proprio nao e'
+        // trocado por aqui. O nome continua sendo salvo acima - a recusa e'
+        // so' da troca de perfil.
+        if ($perfil !== null && !PerfilRepository::ehAtribuivelPelaTelaUsuarios($perfil['chave'])) {
+            flashErro('Este perfil não pode ser atribuído por esta tela.');
+            $this->redirecionar('usuarios/editar/' . $id);
+            return;
+        }
 
         if ($perfil !== null) {
             $this->perfis->substituirPerfil($id, $perfil['id'], $concursoId);
@@ -447,6 +471,10 @@ class UsuarioAdminController extends Controller
                 $erro = 'Informe nome e e-mail.';
             } elseif ($perfil === null) {
                 $erro = 'Selecione um perfil válido.';
+            } elseif (!PerfilRepository::ehAtribuivelPelaTelaUsuarios($perfil['chave'])) {
+                // Fase 55 (pendencia 24): mesma recusa de aprovar() e
+                // salvarEdicao(), aqui antes de criar conta nenhuma.
+                $erro = 'Este perfil não pode ser atribuído por esta tela.';
             } elseif ($categoriaAvaliadorId !== null && !$this->categoriaPertenceAoConcurso($categoriaAvaliadorId, $concursoId)) {
                 $erro = 'A categoria escolhida não pertence ao concurso selecionado.';
             } else {
@@ -469,7 +497,7 @@ class UsuarioAdminController extends Controller
 
         $this->renderizar('admin/usuarios_convidar', [
             'erro' => $erro,
-            'perfis' => $this->perfis->listar(),
+            'perfis' => $this->perfis->listarParaAtribuicao(),
             'concursos' => $this->concursos->listar(),
             'categoriasPorConcurso' => $categoriasPorConcurso,
         ], 'Convidar usuário');

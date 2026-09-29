@@ -171,6 +171,14 @@ class NavegacaoService
             ['tipo' => 'estandesConfiguracoes', 'rotulo' => 'Configurações', 'rota' => 'estandes/configuracoes'],
         ],
         /**
+         * Fase 55: no unico "Conexoes" do Evento (sem no por conexao), com o
+         * acompanhamento e a configuracao de pontos.
+         */
+        'conexoes' => [
+            ['tipo' => 'conexoes', 'rotulo' => 'Conexões', 'rota' => 'conexoes/index'],
+            ['tipo' => 'conexoesConfiguracoes', 'rotulo' => 'Configurações', 'rota' => 'conexoes/configuracoes'],
+        ],
+        /**
          * Fase 33: "Meu perfil" passa a usar as mesmas sub-abas das demais
          * telas, em vez de empilhar tres blocos numa pagina so'. Sem id, como
          * o grupo "configuracao". Duas das tres abas sao condicionais - ver a
@@ -253,6 +261,8 @@ class NavegacaoService
         'trabalhosAnaisMontagem' => 'trabalhos',
         'estandes' => 'estandes',
         'estandesConfiguracoes' => 'estandes',
+        'conexoes' => 'conexoes',
+        'conexoesConfiguracoes' => 'conexoes',
     ];
 
     /**
@@ -418,6 +428,17 @@ class NavegacaoService
             return [self::noEvento($evento), self::noEstandes($evento)];
         }
 
+        // Fase 55: 'conexoes' segue o mesmo criterio ($id = id do evento).
+        if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'conexoes') {
+            $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+            if ($evento === null) {
+                return [];
+            }
+
+            return [self::noEvento($evento), self::noConexoes($evento)];
+        }
+
         if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'atividade') {
             $atividade = (new EventoAtividadeRepository())->buscarPorId($id);
 
@@ -547,9 +568,14 @@ class NavegacaoService
                 }
 
                 // Fase 49: Trabalhos entra como irmao de Atividades. Fase
-                // 54: Estandes, do mesmo jeito. Competicoes entra aqui numa
-                // fase seguinte do plano.
-                return [self::noAtividades($evento), self::noTrabalhos($evento), self::noEstandes($evento)];
+                // 54: Estandes, do mesmo jeito. Fase 55: Conexoes. Competicoes
+                // entra aqui numa fase seguinte do plano.
+                return [
+                    self::noAtividades($evento),
+                    self::noTrabalhos($evento),
+                    self::noEstandes($evento),
+                    self::noConexoes($evento),
+                ];
 
             case 'atividades':
                 $lista = [];
@@ -863,6 +889,21 @@ class NavegacaoService
             'rotulo' => 'Estandes',
             'folha' => true,
             'url' => 'estandes/index/' . (int) $evento['id'],
+        ];
+    }
+
+    /**
+     * Fase 55: mesmo formato de noEstandes() - no unico, sem filhos, id =
+     * id do EVENTO.
+     */
+    private static function noConexoes(array $evento)
+    {
+        return [
+            'tipo' => 'conexoes',
+            'id' => (int) $evento['id'],
+            'rotulo' => 'Conexões',
+            'folha' => true,
+            'url' => 'conexoes/index/' . (int) $evento['id'],
         ];
     }
 }

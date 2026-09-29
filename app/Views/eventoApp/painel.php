@@ -22,9 +22,24 @@
             <a href="<?php echo url('eventoApp/atividades/' . (int) $evento['id']); ?>" class="btn">Atividades</a>
         </p>
 
-        <p>
-            <a href="<?php echo url('eventoApp/ler/' . (int) $evento['id']); ?>" class="btn">Ler código</a>
-        </p>
+        <?php if (!empty($conexoesAtivas)): ?>
+            <?php /* Fase 55: a antiga "Ler código" virou "Conectar com
+            participante" e passou a gravar a conexão e pontuar os dois
+            lados, então só aparece com o módulo ligado no evento. O resumo
+            vem protegido contra falha de banco, como o de Estandes. */ ?>
+            <p>
+                <a href="<?php echo url('eventoApp/ler/' . (int) $evento['id']); ?>" class="btn">Conectar com participante</a>
+                <?php if ((int) $resumoConexoes['total_conexoes'] > 0): ?>
+                    <br>
+                    <small>
+                        <?php echo (int) $resumoConexoes['total_pontos']; ?> <?php echo (int) $resumoConexoes['total_pontos'] === 1 ? 'ponto' : 'pontos'; ?>
+                        em <?php echo (int) $resumoConexoes['total_conexoes']; ?> <?php echo (int) $resumoConexoes['total_conexoes'] === 1 ? 'pessoa conectada' : 'pessoas conectadas'; ?>
+                    </small>
+                    <br>
+                    <a href="<?php echo url('eventoApp/conexoes/' . (int) $evento['id']); ?>">Ver minhas conexões</a>
+                <?php endif; ?>
+            </p>
+        <?php endif; ?>
 
         <?php if (!empty($temEstandes)): ?>
             <?php /* Fase 54: so' aparece com estande ativo no evento; o

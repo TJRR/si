@@ -39,7 +39,7 @@ $ehPaginaConvidado = isset($view) && in_array($view, ['auth/login', 'auth/cadast
 // instalavel de proposito (decisao separada, confirmada tambem), so' com a
 // mesma aparencia visual (ver $ehContextoEvento abaixo).
 $ehAppEvento = isset($view) && (
-    in_array($view, ['eventoApp/painel', 'eventoApp/selecionar', 'eventoApp/inscricao', 'eventoApp/ler', 'eventoApp/aviso', 'eventoApp/atividades', 'eventoApp/presenca', 'eventoApp/facilitacoes', 'eventoApp/estandes', 'eventoApp/ler_estande'], true)
+    in_array($view, ['eventoApp/painel', 'eventoApp/selecionar', 'eventoApp/inscricao', 'eventoApp/ler', 'eventoApp/aviso', 'eventoApp/atividades', 'eventoApp/presenca', 'eventoApp/facilitacoes', 'eventoApp/estandes', 'eventoApp/ler_estande', 'eventoApp/conexoes', 'eventoApp/perfil', 'eventoApp/perfil_aparencia', 'eventoApp/perfil_senha'], true)
     || ($view === 'publico/evento_inscricao' && ehContextoApp())
     || (isset($view) && strpos($view, 'trabalho/') === 0)
 );
@@ -105,7 +105,7 @@ if ($ehPainelAdmin) {
     // "Eventos" e' aba de 1o nivel propria (ver NavegacaoService::
     // filhosDe('raizEvento', ...) e admin/_arvore.php, generalizado para
     // aceitar mais de uma raiz).
-    $modulosArvoreEvento = ['eventos', 'eventoCabecalho', 'eventoSlides', 'eventoBanners', 'eventoBlocos', 'eventoSecoes', 'eventoDocumentos', 'atividadeTipos', 'eventoFormulario', 'atividades', 'trabalhos', 'trabalhoAnais', 'anaisMontagem', 'estandes'];
+    $modulosArvoreEvento = ['eventos', 'eventoCabecalho', 'eventoSlides', 'eventoBanners', 'eventoBlocos', 'eventoSecoes', 'eventoDocumentos', 'atividadeTipos', 'eventoFormulario', 'atividades', 'trabalhos', 'trabalhoAnais', 'anaisMontagem', 'estandes', 'conexoes'];
     $ehEscopoArvoreEvento = in_array($moduloAtual, $modulosArvoreEvento, true);
     $ehEscopoArvore = $ehEscopoArvoreConcurso || $ehEscopoArvoreEvento;
 
@@ -465,6 +465,12 @@ if ($ehPainelAdmin) {
          leitura" do cartao de credenciamento - so' existe em "Minha
          inscricao", nao precisa carregar nas demais telas do app. -->
     <script src="<?php echo config('base_path'); ?>/assets/js/brilho-cracha.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/brilho-cracha.js'); ?>" defer></script>
+    <?php endif; ?>
+    <?php if ($view === 'eventoApp/perfil'): ?>
+    <!-- Fase 55: mascara de telefone em "Meu Perfil" dentro do aplicativo -
+         mesmo arquivo ja usado pelos formularios publicos desde a Fase 51.
+         Carregado so' nesta tela, como o brilho do cracha acima. -->
+    <script src="<?php echo config('base_path'); ?>/assets/js/telefone-mascara.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/telefone-mascara.js'); ?>" defer></script>
     <?php endif; ?>
     <?php if (in_array($view, ['eventoApp/ler', 'eventoApp/presenca', 'eventoApp/ler_estande'], true)): ?>
     <!-- Fase 43: componente de leitura de codigo (camera + digitacao

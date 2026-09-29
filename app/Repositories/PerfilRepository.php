@@ -12,11 +12,59 @@ use App\Core\Database;
 
 class PerfilRepository
 {
+    /**
+     * Fase 55 (pendencia 24): perfis que NASCEM por fluxo proprio e nunca
+     * devem ser atribuidos a mao pela tela Usuarios.
+     *
+     * 'representante_estande' vem do convite feito na tela de Estandes e
+     * depende de uma linha em evento_estande_representantes; atribuido a
+     * mao, a pessoa fica com o perfil sem estande nenhum. 'inscrito' nasce
+     * do cadastro em evento (AuthService) e da submissao de trabalho;
+     * atribuido a mao, a conta fica "inscrita" sem inscricao em evento
+     * nenhum.
+     *
+     * A lista vale para o servidor, nao so' para a tela: convidar, aprovar
+     * e editar recusam estas chaves mesmo que o envio venha forjado.
+     *
+     * O perfil 'participante' tem o mesmo defeito (nasce com vinculo em
+     * usuario_participante pela homologacao de equipe), mas tem uso legitimo
+     * conhecido pela tela Usuarios e ficou de fora por decisao do dono - e' a
+     * pendencia 26.
+     */
+    const PERFIS_NAO_ATRIBUIVEIS = ['representante_estande', 'inscrito'];
+
     public function listar()
     {
         $pdo = Database::conexao();
 
         return $pdo->query('SELECT * FROM perfis ORDER BY nome_exibicao ASC')->fetchAll();
+    }
+
+    /**
+     * Fase 55: lista para os campos de ESCOLHA de perfil da tela Usuarios
+     * (convidar, aprovar e editar). O listar() continua completo e e' o que
+     * alimenta o filtro da listagem, para o Administrador continuar podendo
+     * filtrar por um perfil que ele nao pode atribuir.
+     */
+    public function listarParaAtribuicao()
+    {
+        $perfis = [];
+
+        foreach ($this->listar() as $perfil) {
+            if (!in_array($perfil['chave'], self::PERFIS_NAO_ATRIBUIVEIS, true)) {
+                $perfis[] = $perfil;
+            }
+        }
+
+        return $perfis;
+    }
+
+    /**
+     * Fase 55: conferencia de servidor das telas de escrita.
+     */
+    public static function ehAtribuivelPelaTelaUsuarios($chave)
+    {
+        return !in_array($chave, self::PERFIS_NAO_ATRIBUIVEIS, true);
     }
 
     public function buscarPorChave($chave)

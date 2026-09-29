@@ -23,6 +23,7 @@ use App\Controllers\CadastroController;
 use App\Controllers\CampoAdminController;
 use App\Controllers\CategoriaAvaliadorAdminController;
 use App\Controllers\ConcursoAdminController;
+use App\Controllers\ConexaoAdminController;
 use App\Controllers\ConfiguracaoAdminController;
 use App\Controllers\ContatoConcursoAdminController;
 use App\Controllers\ConteudoAdminController;
@@ -37,6 +38,7 @@ use App\Controllers\EstandeAdminController;
 use App\Controllers\EtapaAdminController;
 use App\Controllers\EventoAdminController;
 use App\Controllers\EventoAppController;
+use App\Controllers\EventoAppPerfilController;
 use App\Controllers\EventoBannerAdminController;
 use App\Controllers\EventoBlocoConteudoAdminController;
 use App\Controllers\EventoConfiguracaoVisualAdminController;
@@ -178,6 +180,11 @@ class Router
         'estandes' => EstandeAdminController::class,
         'representanteEstande' => RepresentanteEstandeController::class,
         'anaisMontagem' => AnaisMontagemAdminController::class,
+        // Fase 55: Conexoes entre participantes (acompanhamento e
+        // configuracao do Administrador) e "Meu Perfil" dentro do
+        // aplicativo do Evento.
+        'conexoes' => ConexaoAdminController::class,
+        'eventoAppPerfil' => EventoAppPerfilController::class,
     ];
 
     /**
@@ -185,7 +192,7 @@ class Router
      * vencida vira visitante sem sessao, em vez de ir para o login do
      * Concurso (ver despachar()).
      */
-    private static $modulosFluxoEvento = ['evento', 'eventoInscricao', 'eventoApp', 'trabalho'];
+    private static $modulosFluxoEvento = ['evento', 'eventoInscricao', 'eventoApp', 'eventoAppPerfil', 'trabalho'];
 
     public function despachar($r)
     {

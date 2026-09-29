@@ -188,7 +188,10 @@ function usuarios_link_ordenar($rotulo, $coluna, $ordenar, $direcao, $filtroConc
                         <input type="hidden" name="id" value="<?php echo (int) $usuario['id']; ?>">
                         <select name="perfil" id="campo-perfil-aprovar-<?php echo (int) $usuario['id']; ?>" required>
                             <option value="">Perfil...</option>
-                            <?php foreach ($perfis as $perfil): ?>
+                            <?php /* Fase 55 (pendência 24): a aprovação usa a
+                            lista sem os perfis que nascem por fluxo próprio;
+                            o filtro acima continua com todos. */ ?>
+                            <?php foreach ($perfisAtribuiveis as $perfil): ?>
                                 <option value="<?php echo htmlspecialchars($perfil['chave'], ENT_QUOTES, 'UTF-8'); ?>">
                                     <?php echo htmlspecialchars($perfil['nome_exibicao'], ENT_QUOTES, 'UTF-8'); ?>
                                 </option>
