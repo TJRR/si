@@ -141,6 +141,14 @@ class EventoInscricaoPublicaController extends Controller
 
             if ($nome === '' || $email === '' || $senha === '') {
                 $erro = 'Preencha nome, e-mail e senha.';
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                // Fase 57 (reabertura): formato do e-mail e tamanho da senha
+                // conferidos no servidor, antes de qualquer consulta (a
+                // recusa nao diz nada sobre o e-mail ja' ter conta). A regra
+                // da senha e' a mesma de AuthController::definirSenha().
+                $erro = 'Informe um e-mail válido.';
+            } elseif (strlen($senha) < 8) {
+                $erro = 'A senha deve ter ao menos 8 caracteres.';
             } else {
                 $resultado = (new AuthService())->cadastrarInscrito($nome, $email, $senha);
 

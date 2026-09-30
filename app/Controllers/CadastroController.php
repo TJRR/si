@@ -24,6 +24,15 @@ class CadastroController extends Controller
 
             if ($nome === '' || $email === '' || $senha === '') {
                 $erro = 'Preencha nome, e-mail e senha.';
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                // Fase 57 (reabertura): formato do e-mail e tamanho da senha
+                // conferidos no servidor, antes de chegar ao servico: a
+                // recusa nao depende de o e-mail ja' ter conta, entao nao
+                // abre o canal de enumeracao fechado logo abaixo. A regra da
+                // senha e' a mesma de AuthController::definirSenha().
+                $erro = 'Informe um e-mail válido.';
+            } elseif (strlen($senha) < 8) {
+                $erro = 'A senha deve ter ao menos 8 caracteres.';
             } else {
                 // Fase 31 (Auditoria de Seguranca, achado #10): mensagem de
                 // sucesso e' sempre a mesma, exista ou nao o e-mail antes -

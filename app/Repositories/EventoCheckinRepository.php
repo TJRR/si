@@ -22,12 +22,24 @@ use App\Core\Database;
  */
 class EventoCheckinRepository
 {
-    public function buscarPorAtividadeEInscricao($atividadeId, $inscricaoId)
+    /**
+     * Fase 57 (bloco E): $incluirRemovidas com valor padrao false mantem o
+     * comportamento de todos os chamadores anteriores, que perguntam "existe
+     * presenca valida?". So' registrar() pede true, porque precisa enxergar a
+     * linha marcada como removida para reativa-la em vez de tentar um segundo
+     * INSERT que a chave unica recusaria.
+     */
+    public function buscarPorAtividadeEInscricao($atividadeId, $inscricaoId, $incluirRemovidas = false)
     {
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare(
-            'SELECT * FROM evento_checkins WHERE atividade_id = :atividade_id AND evento_inscricao_id = :evento_inscricao_id LIMIT 1'
-        );
+        $sql = 'SELECT * FROM evento_checkins
+                 WHERE atividade_id = :atividade_id AND evento_inscricao_id = :evento_inscricao_id';
+
+        if (!$incluirRemovidas) {
+            $sql .= ' AND removido_em IS NULL';
+        }
+
+        $stmt = $pdo->prepare($sql . ' LIMIT 1');
         $stmt->execute(['atividade_id' => $atividadeId, 'evento_inscricao_id' => $inscricaoId]);
 
         $registro = $stmt->fetch();
@@ -41,18 +53,25 @@ class EventoCheckinRepository
      * na atividade ainda existe - evento_checkins nao referencia essa
      * tabela, entao alguem pode ter confirmado presenca e depois cancelado a
      * inscricao na atividade; a tela precisa mostrar isso, nao esconder.
+     *
+     * Fase 57 (bloco E): a lista traz TAMBEM as presencas marcadas como
+     * removidas, com quem removeu. Esta tela e' o unico lugar onde o
+     * historico da correcao precisa aparecer; toda contagem e toda
+     * exportacao filtram removido_em IS NULL.
      */
     public function listarPorAtividade($atividadeId)
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'SELECT c.*, u.nome AS usuario_nome, u.email AS usuario_email,
-                    (ai.id IS NOT NULL) AS inscricao_ativa
+                    (ai.id IS NOT NULL) AS inscricao_ativa,
+                    r.nome AS removido_por_nome
              FROM evento_checkins c
              JOIN evento_inscricoes ei ON ei.id = c.evento_inscricao_id
              JOIN usuarios u ON u.id = ei.usuario_id
              LEFT JOIN evento_atividade_inscricoes ai
                     ON ai.atividade_id = c.atividade_id AND ai.evento_inscricao_id = c.evento_inscricao_id
+             LEFT JOIN usuarios r ON r.id = c.removido_por
              WHERE c.atividade_id = :atividade_id
              ORDER BY c.checkin_em ASC'
         );
@@ -73,18 +92,62 @@ class EventoCheckinRepository
      */
     public function registrar($atividadeId, $inscricaoId, $modalidadeAcesso = 'presencial')
     {
-        $existente = $this->buscarPorAtividadeEInscricao($atividadeId, $inscricaoId);
+        $existente = $this->buscarPorAtividadeEInscricao($atividadeId, $inscricaoId, true);
 
-        if ($existente !== null) {
+        if ($existente !== null && $existente['removido_em'] === null) {
             return $existente;
         }
 
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare(
-            'INSERT INTO evento_checkins (atividade_id, evento_inscricao_id, checkin_em, modalidade_acesso) VALUES (:atividade_id, :evento_inscricao_id, NOW(), :modalidade_acesso)'
-        );
-        $stmt->execute(['atividade_id' => $atividadeId, 'evento_inscricao_id' => $inscricaoId, 'modalidade_acesso' => $modalidadeAcesso]);
-        $id = (int) $pdo->lastInsertId();
+
+        // Fase 57 (bloco E, pendencia 33): presenca marcada como removida
+        // e' REATIVADA, nunca duplicada - a chave unica (atividade_id,
+        // evento_inscricao_id) recusaria um segundo INSERT, e sem este
+        // caminho quem teve a presenca removida por engano nunca mais
+        // conseguiria confirmar presenca naquela atividade. Mesmo desenho de
+        // EventoAtividadeFacilitadorRepository::criar(). O horario passa a
+        // ser o da leitura nova, porque e' ela que vale agora, inclusive
+        // para a conta de presenca efetiva.
+        if ($existente !== null) {
+            $stmt = $pdo->prepare(
+                'UPDATE evento_checkins
+                    SET removido_em = NULL, removido_por = NULL, motivo_remocao = NULL,
+                        checkin_em = NOW(), modalidade_acesso = :modalidade_acesso
+                  WHERE id = :id'
+            );
+            $stmt->execute(['modalidade_acesso' => $modalidadeAcesso, 'id' => (int) $existente['id']]);
+
+            $registro = $this->buscarPorAtividadeEInscricao($atividadeId, $inscricaoId);
+
+            Auditoria::registrar('reativar_presenca', 'evento_checkins', (int) $existente['id'], $existente, [
+                'checkin_em' => $registro['checkin_em'],
+                'modalidade_acesso' => $modalidadeAcesso,
+            ]);
+
+            return $registro;
+        }
+
+        // Fase 57 (bloco E, pendencia 32): a conferencia acima e o INSERT
+        // nao sao atomicos, e o chamador ainda repete a mesma conferencia
+        // antes de chamar - duas leituras simultaneas do mesmo codigo
+        // estouravam chave repetida sem tratamento, e como o endpoint ja'
+        // escreveu o cabecalho da resposta, o leitor recebia uma resposta
+        // quebrada. Mesmo tratamento do gemeo EstandeVisitaRepository::
+        // registrar(): no erro 23000, quem perdeu a corrida devolve a linha
+        // que a outra requisicao gravou, sem erro e sem auditar duas vezes.
+        try {
+            $stmt = $pdo->prepare(
+                'INSERT INTO evento_checkins (atividade_id, evento_inscricao_id, checkin_em, modalidade_acesso) VALUES (:atividade_id, :evento_inscricao_id, NOW(), :modalidade_acesso)'
+            );
+            $stmt->execute(['atividade_id' => $atividadeId, 'evento_inscricao_id' => $inscricaoId, 'modalidade_acesso' => $modalidadeAcesso]);
+            $id = (int) $pdo->lastInsertId();
+        } catch (\PDOException $e) {
+            if ($e->getCode() === '23000') {
+                return $this->buscarPorAtividadeEInscricao($atividadeId, $inscricaoId);
+            }
+
+            throw $e;
+        }
 
         $registro = $this->buscarPorAtividadeEInscricao($atividadeId, $inscricaoId);
 
@@ -99,6 +162,62 @@ class EventoCheckinRepository
     }
 
     /**
+     * Fase 57 (bloco E, pendencia 33): marca a presenca como removida, sem
+     * apagar a linha.
+     *
+     * Marcacao, e nunca DELETE, pelo motivo escrito na migration 184: a
+     * presenca alimenta a coluna "Categoria" das duas exportacoes EJURR, que
+     * podem ser geradas depois da atividade, e apagar tornaria um arquivo ja'
+     * entregue irreproduzivel.
+     *
+     * Idempotente, como EventoAtividadeFacilitadorRepository::remover():
+     * devolve false quando a presenca ja' estava removida, e quem chama
+     * decide a mensagem.
+     */
+    public function remover($id, $usuarioId, $motivo)
+    {
+        $antes = $this->buscarPorId($id);
+
+        if ($antes === null || $antes['removido_em'] !== null) {
+            return false;
+        }
+
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'UPDATE evento_checkins
+                SET removido_em = NOW(), removido_por = :usuario, motivo_remocao = :motivo
+              WHERE id = :id AND removido_em IS NULL'
+        );
+        $stmt->execute([
+            'usuario' => (int) $usuarioId,
+            'motivo' => $motivo,
+            'id' => (int) $id,
+        ]);
+
+        if ($stmt->rowCount() === 0) {
+            return false;
+        }
+
+        Auditoria::registrar('remover_presenca', 'evento_checkins', (int) $id, $antes, [
+            'removido_por' => (int) $usuarioId,
+            'motivo_remocao' => $motivo,
+        ]);
+
+        return true;
+    }
+
+    public function buscarPorId($id)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare('SELECT * FROM evento_checkins WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => (int) $id]);
+
+        $registro = $stmt->fetch();
+
+        return $registro !== false ? $registro : null;
+    }
+
+    /**
      * Fase 48: modalidade do check-in mais recente da pessoa em QUALQUER
      * atividade do evento - usado pela exportacao EJURR na visao geral do
      * Evento (coluna "Categoria"). null se a pessoa nunca confirmou
@@ -108,7 +227,9 @@ class EventoCheckinRepository
     {
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
-            'SELECT modalidade_acesso FROM evento_checkins WHERE evento_inscricao_id = :evento_inscricao_id ORDER BY checkin_em DESC LIMIT 1'
+            'SELECT modalidade_acesso FROM evento_checkins
+              WHERE evento_inscricao_id = :evento_inscricao_id AND removido_em IS NULL
+              ORDER BY checkin_em DESC LIMIT 1'
         );
         $stmt->execute(['evento_inscricao_id' => $eventoInscricaoId]);
 

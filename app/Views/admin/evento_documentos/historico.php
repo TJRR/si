@@ -18,7 +18,7 @@
                 <td><?php echo htmlspecialchars(formatarData($versao['criado_em']), ENT_QUOTES, 'UTF-8'); ?></td>
                 <td><span class="status-pill <?php echo $versao['ativo'] ? 'verde' : ''; ?>"><?php echo $versao['ativo'] ? 'Atual' : 'Substituída'; ?></span></td>
                 <td>
-                    <a href="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $versao['arquivo_path'], ENT_QUOTES, 'UTF-8'); ?>" class="btn-icone" title="Baixar esta versão" target="_blank" rel="noopener">
+                    <a href="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $versao['arquivo_path'], ENT_QUOTES, 'UTF-8'); ?>" class="btn-icone" title="Baixar esta versão" download="<?php echo htmlspecialchars(nomeArquivoParaDownload($versao['titulo'] . ' v' . (int) $versao['versao'], $versao['arquivo_path']), ENT_QUOTES, 'UTF-8'); ?>">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>

@@ -455,6 +455,41 @@ function normalizarNomeParaComparacao($nome)
 }
 
 /**
+ * Fase 57 (achado do teste de fumaca): nome amigavel para o arquivo que a
+ * pessoa baixa.
+ *
+ * Documento e modelo sao guardados com nome gerado (numero longo), que e' o
+ * que impede alguem de adivinhar o endereco de um arquivo ainda nao
+ * publicado. Esse nome continua igual no servidor; o que muda e' so' o nome
+ * sugerido no download, montado a partir do TITULO cadastrado pelo
+ * Administrador, para a pessoa nao receber um punhado de digitos na pasta de
+ * downloads.
+ *
+ * Ex.: titulo "Edital de Submissao de Trabalhos" com arquivo
+ * "a1b2c3d4e5f6.pdf" vira "edital-de-submissao-de-trabalhos.pdf".
+ */
+function nomeArquivoParaDownload($titulo, $arquivoPath)
+{
+    $extensao = strtolower(pathinfo((string) $arquivoPath, PATHINFO_EXTENSION));
+    $base = is_string($titulo) ? trim($titulo) : '';
+
+    if ($base !== '') {
+        $transliterado = iconv('UTF-8', 'ASCII//TRANSLIT', $base);
+        $base = $transliterado !== false ? $transliterado : $base;
+        $base = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $base));
+        $base = trim($base, '-');
+        $base = substr($base, 0, 60);
+        $base = trim($base, '-');
+    }
+
+    if ($base === '') {
+        $base = 'documento';
+    }
+
+    return $extensao !== '' ? $base . '.' . $extensao : $base;
+}
+
+/**
  * Logo de Concurso GLOBAL/default do sistema (usado no topbar do painel,
  * paginas convidadas, e como fallback da home publica quando a edicao ativa
  * nao tem logo proprio). Fase 48B: fonte de verdade passou a ser a logo de

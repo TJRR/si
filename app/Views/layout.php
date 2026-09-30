@@ -39,7 +39,7 @@ $ehPaginaConvidado = isset($view) && in_array($view, ['auth/login', 'auth/cadast
 // instalavel de proposito (decisao separada, confirmada tambem), so' com a
 // mesma aparencia visual (ver $ehContextoEvento abaixo).
 $ehAppEvento = isset($view) && (
-    in_array($view, ['eventoApp/painel', 'eventoApp/selecionar', 'eventoApp/inscricao', 'eventoApp/ler', 'eventoApp/aviso', 'eventoApp/atividades', 'eventoApp/presenca', 'eventoApp/facilitacoes', 'eventoApp/estandes', 'eventoApp/ler_estande', 'eventoApp/conexoes', 'eventoApp/divulgacao', 'eventoApp/perfil', 'eventoApp/perfil_aparencia', 'eventoApp/perfil_senha'], true)
+    in_array($view, ['eventoApp/painel', 'eventoApp/selecionar', 'eventoApp/inscricao', 'eventoApp/ler', 'eventoApp/aviso', 'eventoApp/atividades', 'eventoApp/presenca', 'eventoApp/facilitacoes', 'eventoApp/estandes', 'eventoApp/ler_estande', 'eventoApp/conexoes', 'eventoApp/divulgacao', 'eventoApp/pesquisa', 'eventoApp/perfil', 'eventoApp/perfil_aparencia', 'eventoApp/perfil_senha'], true)
     || ($view === 'publico/evento_inscricao' && ehContextoApp())
     || (isset($view) && strpos($view, 'trabalho/') === 0)
 );
@@ -105,7 +105,7 @@ if ($ehPainelAdmin) {
     // "Eventos" e' aba de 1o nivel propria (ver NavegacaoService::
     // filhosDe('raizEvento', ...) e admin/_arvore.php, generalizado para
     // aceitar mais de uma raiz).
-    $modulosArvoreEvento = ['eventos', 'eventoCabecalho', 'eventoSlides', 'eventoBanners', 'eventoBlocos', 'eventoSecoes', 'eventoDocumentos', 'atividadeTipos', 'eventoFormulario', 'atividades', 'trabalhos', 'trabalhoAnais', 'anaisMontagem', 'estandes', 'conexoes', 'divulgacao'];
+    $modulosArvoreEvento = ['eventos', 'eventoCabecalho', 'eventoSlides', 'eventoBanners', 'eventoBlocos', 'eventoSecoes', 'eventoDocumentos', 'atividadeTipos', 'eventoFormulario', 'atividades', 'trabalhos', 'trabalhoAnais', 'anaisMontagem', 'estandes', 'conexoes', 'divulgacao', 'bonus', 'pesquisa'];
     $ehEscopoArvoreEvento = in_array($moduloAtual, $modulosArvoreEvento, true);
     $ehEscopoArvore = $ehEscopoArvoreConcurso || $ehEscopoArvoreEvento;
 
@@ -486,5 +486,12 @@ if ($ehPainelAdmin) {
     <script src="<?php echo config('base_path'); ?>/assets/js/leitor-codigo.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/leitor-codigo.js'); ?>" defer></script>
     <?php endif; ?>
 <?php endif; ?>
+<?php /* Fase 57 (reabertura): rascunho do formulario de submissao de
+Trabalhos, guardado so' no navegador. A rotina carrega em TODA pagina porque
+a limpeza (rascunho vencido, saida do sistema) precisa acontecer fora do
+formulario tambem; em navegador sem rascunho ela termina sem abrir o banco,
+e nas telas do Concurso nao faz nada. So' age quando encontra os elementos
+de trabalho/formulario.php e trabalho/ver.php. */ ?>
+<script src="<?php echo config('base_path'); ?>/assets/js/rascunho-trabalho.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/rascunho-trabalho.js'); ?>" defer></script>
 </body>
 </html>

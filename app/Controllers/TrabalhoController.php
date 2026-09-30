@@ -24,6 +24,7 @@ use App\Services\EventoAnaisPdfFinalService;
 use App\Services\TrabalhoResultadoService;
 use App\Services\TrabalhoSubmissaoException;
 use App\Services\TrabalhoSubmissaoService;
+use App\Validation\CpfValidador;
 
 /**
  * Fase 49: submissao de Trabalhos pelo proprio participante - navegador
@@ -32,6 +33,13 @@ use App\Services\TrabalhoSubmissaoService;
  * (login/cadastro autoatendido), reaproveitando o mesmo mecanismo de
  * retorno pos-login ja usado por eventoApp/eventoInscricao
  * (AuthController::redirecionarPosLogin()).
+ *
+ * Fase 57 (reabertura): o formulario passa a ABRIR tambem para visitante,
+ * que ve todos os campos e preenche antes de entrar. O que ele preenche
+ * fica guardado so' no navegador (assets/js/rascunho-trabalho.js) e volta
+ * ao formulario depois da entrada; nada chega ao servidor antes disso. O
+ * ENVIO continua exigindo conta, e processarSubmissao() e
+ * TrabalhoSubmissaoService nao mudaram.
  */
 class TrabalhoController extends Controller
 {
@@ -80,9 +88,36 @@ class TrabalhoController extends Controller
         exit;
     }
 
+    /**
+     * Fase 57 (reabertura): destino do botao "Entrar para enviar", que o
+     * visitante ve no lugar de "Enviar trabalho". So' aqui o retorno apos a
+     * entrada e' gravado (exigirLogin()), e nao na abertura do formulario:
+     * gravar na abertura levaria ao formulario quem so' olhou e depois foi
+     * se inscrever no evento (EventoInscricaoPublicaController::index()
+     * preserva um retorno ainda valido). Quem ja' esta conectado segue
+     * direto para o formulario.
+     */
+    public function entrar($eventoId = null)
+    {
+        $eventoId = (int) $eventoId;
+
+        if ($eventoId <= 0 || $this->eventos->buscarPorId($eventoId) === null) {
+            http_response_code(404);
+            exit('Evento não encontrado.');
+        }
+
+        $this->exigirLogin($eventoId);
+        $this->redirecionar('trabalho/formulario/' . $eventoId);
+    }
+
     public function formulario($eventoId)
     {
-        $this->exigirLogin($eventoId);
+        // Fase 57 (reabertura): so' o envio exige conta; a abertura vale
+        // tambem para visitante. Para quem envia, a ordem e' a de sempre:
+        // conta, evento, configuracao, prazo e processarSubmissao().
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->exigirLogin($eventoId);
+        }
 
         $evento = $this->eventos->buscarPorId($eventoId);
 
@@ -137,9 +172,15 @@ class TrabalhoController extends Controller
     private function renderizarFormulario(array $evento, array $config, array $valores = [], array $termosMarcados = [], \RuntimeException $erro = null)
     {
         $eventoId = $evento['id'];
-        $usuario = $this->usuarios->buscarPorId(Auth::usuarioId());
-        $perfilPessoa = $this->usuarioPerfil->buscarPorUsuarioId(Auth::usuarioId());
+        // Fase 57 (reabertura): visitante nao tem conta nem perfil a
+        // consultar; a tela monta o ramo dele a partir de $visitante.
+        $visitante = !Auth::autenticado();
+        $usuario = $visitante ? null : $this->usuarios->buscarPorId(Auth::usuarioId());
+        $perfilPessoa = $visitante ? null : $this->usuarioPerfil->buscarPorUsuarioId(Auth::usuarioId());
         $comCampo = $erro instanceof TrabalhoSubmissaoException;
+        $avisoJaSubmetido = ($visitante || $erro !== null)
+            ? null
+            : $this->avisoTrabalhoExistente($eventoId, $config, $usuario, $perfilPessoa);
 
         $this->renderizar('trabalho/formulario', [
             'evento' => $evento,
@@ -150,6 +191,8 @@ class TrabalhoController extends Controller
             'extensoesHabilitadas' => $this->config->extensoesEditavelHabilitadas($eventoId),
             'usuario' => $usuario,
             'perfilPessoa' => $perfilPessoa,
+            'visitante' => $visitante,
+            'avisoJaSubmetido' => $avisoJaSubmetido,
             'termos' => (new EventoTrabalhoTermoRepository())->listarAtivos($eventoId),
             'termosMarcados' => $termosMarcados,
             'valores' => $valores,
@@ -157,6 +200,40 @@ class TrabalhoController extends Controller
             'campoErro' => $comCampo ? $erro->campo() : null,
             'indiceErro' => $comCampo ? $erro->indice() : null,
         ], 'Submeter trabalho: ' . $evento['nome']);
+    }
+
+    /**
+     * Fase 57 (reabertura): quem ja' consta num trabalho do evento ve o
+     * aviso ao abrir o formulario, em vez de preencher tudo e enviar os
+     * arquivos para so' entao ser recusado. SO' EXIBICAO: a decisao continua
+     * em TrabalhoSubmissaoService::checarDuplicidade(), dentro da transacao;
+     * aqui valem as mesmas tres consultas e as mesmas frases, com o e-mail da
+     * conta e o CPF do perfil (os que o formulario traria preenchidos).
+     * Devolve a frase, ou nulo quando nao ha' nada a avisar.
+     */
+    private function avisoTrabalhoExistente($eventoId, array $config, $usuario, $perfilPessoa)
+    {
+        if ((int) $config['permite_multiplos_trabalhos_por_pessoa'] === 1) {
+            return null;
+        }
+
+        if ($this->autores->usuarioJaEhAutorNoEvento($eventoId, Auth::usuarioId())) {
+            return 'Você já consta como autor ou coautor de outro trabalho submetido neste evento. Cada pessoa participa de um único trabalho.';
+        }
+
+        if ($usuario !== null && $this->autores->emailJaExisteNoEvento($eventoId, $usuario['email'])) {
+            return 'Este e-mail já consta em outro trabalho submetido neste evento.';
+        }
+
+        if ($perfilPessoa !== null && $perfilPessoa['tipo_documento'] === 'CPF') {
+            $cpf = CpfValidador::apenasDigitos((string) $perfilPessoa['documento']);
+
+            if ($cpf !== '' && $this->autores->cpfJaExisteNoEvento($eventoId, $cpf)) {
+                return 'Este CPF já consta em outro trabalho submetido neste evento. Se o CPF do seu perfil estiver errado, corrija em "Meu Perfil" (Dados complementares, campo Documento).';
+            }
+        }
+
+        return null;
     }
 
     private function processarSubmissao($eventoId, array $config)

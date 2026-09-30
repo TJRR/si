@@ -9,12 +9,16 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Repositories\PesquisaConfigRepository;
+use App\Repositories\PesquisaPerguntaRepository;
+use App\Repositories\PesquisaRespondenteRepository;
 use App\Repositories\SemanaInovacaoRepository;
 use App\Repositories\TrabalhoConfigRepository;
 use App\Repositories\TrabalhoCriterioRepository;
 use App\Repositories\TrabalhoDesignacaoRepository;
 use App\Repositories\TrabalhoNotaRepository;
 use App\Repositories\TrabalhoRepository;
+use App\Services\PesquisaService;
 use App\Services\TrabalhoArquivoValidador;
 
 /**
@@ -94,7 +98,43 @@ class TrabalhoAvaliacaoController extends Controller
             ];
         }
 
-        $this->renderizar('avaliacaoTrabalhos/index', ['designacoes' => $lista], 'Trabalhos para avaliar');
+        // Fase 57 (bloco E, pendencia 34): o avaliador avulso tambem
+        // responde a pesquisa de satisfacao do evento em que avalia, e ate'
+        // aqui nao tinha por onde. Um convite por evento, porque esta tela
+        // percorre as designacoes de mais de um. Sem inscricao, ele responde
+        // e nao pontua, e a propria tela da pesquisa avisa isso.
+        $pesquisas = [];
+        $respondentes = new PesquisaRespondenteRepository();
+        $servicoPesquisa = new PesquisaService();
+        $configPesquisa = new PesquisaConfigRepository();
+        $perguntas = new PesquisaPerguntaRepository();
+
+        foreach (array_keys($eventosComSigilo) as $eventoId) {
+            $evento = $this->eventos->buscarPorId($eventoId);
+
+            if ($evento === null) {
+                continue;
+            }
+
+            $config = $configPesquisa->vigente($eventoId);
+
+            if ((int) $config['ativo'] !== 1
+                || $perguntas->listarAtivas($eventoId) === []
+                || !$servicoPesquisa->dentroDaJanela($evento, $config)) {
+                continue;
+            }
+
+            $pesquisas[] = [
+                'evento_id' => $eventoId,
+                'evento_nome' => $evento['nome'],
+                'respondida' => $respondentes->jaRespondeu($eventoId, Auth::usuarioId()),
+            ];
+        }
+
+        $this->renderizar('avaliacaoTrabalhos/index', [
+            'designacoes' => $lista,
+            'pesquisas' => $pesquisas,
+        ], 'Trabalhos para avaliar');
     }
 
     private function autorizarDesignacao($trabalhoId)

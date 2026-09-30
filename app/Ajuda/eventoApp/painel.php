@@ -26,6 +26,14 @@ return [
             'como' => 'Aparece quando o evento tem estande de expositor ou de patrocinador recebendo visitas. Abre a lista dos estandes, os que você já visitou e o seu total de pontos em estandes; lá, "Registrar visita" lê o código do cartaz do estande. Logo abaixo do botão aparece o seu total de pontos, depois da primeira visita.',
         ],
         [
+            'nome' => 'Bônus',
+            'como' => 'Aparece quando o evento tem bônus automáticos ativos. Cada bônus mostra o nome dado pela organização, quanto falta para você fechá-lo (por exemplo, 3 de 5 atividades diferentes) e os pontos que ele vale; fechado, aparece com os pontos já creditados. Nada precisa ser enviado: a conta é feita a partir das suas confirmações de presença.',
+        ],
+        [
+            'nome' => '"Responder à pesquisa"',
+            'como' => 'Aparece enquanto a pesquisa de satisfação estiver aberta e você ainda não tiver respondido. As respostas são guardadas separadas do seu nome, e responder vale pontos quando a organização cadastrou um bônus para isso.',
+        ],
+        [
             'nome' => '"Anais"',
             'como' => 'Aparece só depois que a organização publica os Anais do evento, o volume em PDF com os trabalhos apresentados. Abre o arquivo em outra aba, com o título e, quando houver, o ISSN ou o ISBN logo abaixo do botão.',
         ],

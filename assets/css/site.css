@@ -4841,6 +4841,15 @@ body.app-evento-page {
     background: linear-gradient(160deg, var(--cor-primaria-inicio), var(--cor-terciaria));
     min-height: 100vh;
     --app-raio: 14px;
+    /* Fase 57 (achado do teste de fumaca): a fonte estava declarada so' em
+       .site-page e em body.admin-page, entao tudo que fica FORA do cartao de
+       conteudo do app caia na fonte padrao do navegador, com serifa. O caso
+       visivel era a ajuda contextual: o mesmo conteudo aparecia com serifa no
+       app e sem serifa no painel administrativo, porque o modal e' irmao de
+       .site-page, nunca filho. Mesma declaracao de body.admin-page, para as
+       duas ajudas ficarem identicas. */
+    font-family: var(--fonte-corpo);
+    color: var(--cor-texto);
 }
 
 /* Fase 48B (correcao pos-teste de fumaca): sem padding lateral e gap menor
@@ -6663,6 +6672,37 @@ div.campo-com-erro {
     border-radius: 6px;
 }
 
+/* Fase 57 (reabertura): avisos do rascunho do formulario de submissao
+   (assets/js/rascunho-trabalho.js) e o de quem ja' consta num trabalho. Sao
+   .app-flash dentro do cartao do formulario: ocupam a largura do cartao e
+   aceitam um botao ao lado do texto. O display so' vale em :not([hidden]),
+   porque a maioria nasce oculta e a regra base de .app-flash (display: flex)
+   venceria o atributo hidden. */
+.app-flash.trabalho-rascunho-aviso {
+    display: none;
+    width: auto;
+    max-width: none;
+    margin: 0 0 1.25rem;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    font-weight: 400;
+}
+
+.app-flash.trabalho-rascunho-aviso:not([hidden]) {
+    display: flex;
+}
+
+.trabalho-rascunho-aviso > span,
+.trabalho-rascunho-aviso > div {
+    flex: 1 1 16rem;
+}
+
+.trabalho-rascunho-aviso ul {
+    margin: .35rem 0 0;
+    padding-left: 1.1rem;
+    font-size: .9rem;
+}
+
 /* Linha de formulário dentro das listas reordenáveis do painel */
 .secao-linha-form {
     display: flex;
@@ -6707,4 +6747,29 @@ div.campo-com-erro {
     align-items: center;
     gap: .4rem;
     font-weight: 600;
+}
+
+/* ===================== Barra de progresso do aplicativo do Evento (Fase 57) ===================== */
+/*
+ * Copia proposital de .admin-progresso-barra-* (Fase 20), com a trilha em
+ * tom proprio: dentro do aplicativo, o cartao ja usa var(--cor-destaque-app)
+ * de fundo, e a trilha administrativa (var(--cor-fundo-alt)) se confunde com
+ * ele. Nenhuma classe existente e' alterada, e nada aqui alcanca o Concurso.
+ * Duplicacao registrada na pendencia 25.
+ */
+.app-progresso-barra-fundo {
+    display: block;
+    background: rgba(0, 0, 0, .12);
+    border-radius: 999px;
+    height: 10px;
+    overflow: hidden;
+    margin-top: .35rem;
+}
+
+.app-progresso-barra-preenchimento {
+    display: block;
+    background: var(--cor-primaria-fim);
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
 }

@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\View;
 use App\Middleware\RoleMiddleware;
@@ -17,8 +18,10 @@ use App\Repositories\EventoAtividadeTipoRepository;
 use App\Repositories\EventoCheckinRepository;
 use App\Repositories\EventoInscricaoRepository;
 use App\Repositories\EventoPerfilOrganizacaoRepository;
+use App\Repositories\NotificacaoPainelRepository;
 use App\Repositories\SemanaInovacaoRepository;
 use App\Repositories\UsuarioRepository;
+use App\Services\BonusApuracaoService;
 use App\Services\EjurrExportService;
 use App\Services\NotificacaoService;
 
@@ -200,7 +203,111 @@ class AtividadeAdminController extends Controller
             'evento' => $evento,
             'atividade' => $atividade,
             'checkins' => $checkins,
+            'podeEditar' => Auth::possuiPerfil('administrador'),
         ], 'Presenças: ' . $atividade['nome'], ['tipo' => 'atividadeCheckin', 'id' => (int) $id]);
+    }
+
+    /**
+     * Fase 57 (bloco E, pendencia 33): marca como removida uma presenca
+     * registrada por engano. Antes disso, nao havia caminho nenhum de
+     * correcao pela interface, e com os bonus desta fase a presenca indevida
+     * passou a poder gerar credito de pontos.
+     *
+     * A linha nao e' apagada (ver migration 184): ela sai de toda contagem e
+     * das duas exportacoes EJURR, e continua aparecendo nesta tela, com o
+     * motivo e quem removeu.
+     *
+     * Logo depois, BonusApuracaoService::reapurarAposRemocao() anula os
+     * creditos daquela pessoa que perderam a base, e essa anulacao volta
+     * sozinha se a presenca for registrada de novo.
+     */
+    public function removerCheckin($id, $checkinId = null)
+    {
+        RoleMiddleware::exigir(['administrador']);
+        $atividade = $this->atividades->buscarPorId($id);
+
+        if ($atividade === null) {
+            http_response_code(404);
+            exit('Atividade não encontrada.');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirecionar('atividades/checkins/' . (int) $id);
+            return;
+        }
+
+        $checkinRepo = new EventoCheckinRepository();
+        $checkin = $checkinRepo->buscarPorId($checkinId);
+
+        if ($checkin === null || (int) $checkin['atividade_id'] !== (int) $atividade['id']) {
+            flashErro('Presença não encontrada nesta atividade.');
+            $this->redirecionar('atividades/checkins/' . (int) $id);
+            return;
+        }
+
+        $motivo = trim(isset($_POST['motivo']) ? (string) $_POST['motivo'] : '');
+
+        if ($motivo === '') {
+            flashErro('Informe o motivo da remoção: ele fica registrado e explica a correção.');
+            $this->redirecionar('atividades/checkins/' . (int) $id);
+            return;
+        }
+
+        $motivo = mb_substr($motivo, 0, 500);
+
+        if (!$checkinRepo->remover((int) $checkin['id'], Auth::usuarioId(), $motivo)) {
+            flashAlerta('Esta presença já estava removida.');
+            $this->redirecionar('atividades/checkins/' . (int) $id);
+            return;
+        }
+
+        $evento = $this->eventos->buscarPorId($atividade['evento_id']);
+        $anulados = [];
+
+        if ($evento !== null) {
+            $anulados = (new BonusApuracaoService())->reapurarAposRemocao($evento, (int) $checkin['evento_inscricao_id']);
+            $this->avisarBonusAnulados($evento, (int) $checkin['evento_inscricao_id'], $anulados);
+        }
+
+        $mensagem = 'Presença removida.';
+
+        if ($anulados !== []) {
+            $mensagem .= ' ' . count($anulados)
+                . (count($anulados) === 1 ? ' bônus desta pessoa perdeu a base e foi anulado' : ' bônus desta pessoa perderam a base e foram anulados')
+                . ', com aviso a ela. Registrar a presença de novo devolve o que foi anulado assim.';
+        }
+
+        flashSucesso($mensagem);
+        $this->redirecionar('atividades/checkins/' . (int) $id);
+    }
+
+    /**
+     * Aviso no sino de quem perdeu credito por causa da remocao da presenca.
+     * Um aviso por bonus, com o motivo que o servico gerou.
+     */
+    private function avisarBonusAnulados(array $evento, $inscricaoId, array $anulados)
+    {
+        if ($anulados === []) {
+            return;
+        }
+
+        $inscricao = (new EventoInscricaoRepository())->buscarPorId($inscricaoId);
+
+        if ($inscricao === null || empty($inscricao['usuario_id'])) {
+            return;
+        }
+
+        $sino = new NotificacaoPainelRepository();
+
+        foreach ($anulados as $anulado) {
+            $sino->criar(
+                (int) $inscricao['usuario_id'],
+                'bonus_anulacao',
+                'Pontos de bônus removidos',
+                'O bônus "' . $anulado['nome'] . '" em ' . $evento['nome'] . ' foi anulado. ' . $anulado['motivo'],
+                ['url' => url('eventoApp/index/' . (int) $evento['id'])]
+            );
+        }
     }
 
     public function inscritos($id)
@@ -320,6 +427,11 @@ class AtividadeAdminController extends Controller
      */
     public function vincularFacilitador($id)
     {
+        // Fase 57 (bloco E): reforco que faltava, no padrao dos demais
+        // metodos de escrita deste controller (novo(), editar(),
+        // remover()). Sem ele, o Suporte vinculava facilitador e ainda
+        // atualizava a foto e os dados de perfil da pessoa.
+        RoleMiddleware::exigir(['administrador']);
         $atividade = $this->atividades->buscarPorId($id);
 
         if ($atividade === null) {
@@ -403,6 +515,8 @@ class AtividadeAdminController extends Controller
 
     public function removerFacilitador()
     {
+        // Fase 57 (bloco E): mesmo reforco de vincularFacilitador().
+        RoleMiddleware::exigir(['administrador']);
         $facilitadorId = (int) (isset($_POST['id']) ? $_POST['id'] : 0);
         $facilitador = (new EventoAtividadeFacilitadorRepository())->buscarPorId($facilitadorId);
 

@@ -19,6 +19,7 @@ use App\Controllers\AvaliacaoController;
 use App\Controllers\BannerAdminController;
 use App\Controllers\BlocoConcursoAdminController;
 use App\Controllers\BlocoConteudoAdminController;
+use App\Controllers\BonusAdminController;
 use App\Controllers\CadastroController;
 use App\Controllers\CampoAdminController;
 use App\Controllers\CategoriaAvaliadorAdminController;
@@ -70,6 +71,7 @@ use App\Controllers\OficinaAdminController;
 use App\Controllers\OficinaController;
 use App\Controllers\OficinaPublicaController;
 use App\Controllers\ParticipanteController;
+use App\Controllers\PesquisaAdminController;
 use App\Controllers\PremioAdminController;
 use App\Controllers\RegraDesempateAdminController;
 use App\Controllers\RequerimentoAdminController;
@@ -188,6 +190,11 @@ class Router
         // Fase 56: Divulgacao (comprovacao de publicacao em rede social, com
         // pontuacao creditada no envio e anulacao pelo Administrador).
         'divulgacao' => DivulgacaoAdminController::class,
+        // Fase 57: Bonus automaticos (entidade cadastravel por evento, com
+        // apuracao a partir dos check-ins) e Pesquisa de satisfacao
+        // (anonima, com o registro de quem respondeu em tabela separada).
+        'bonus' => BonusAdminController::class,
+        'pesquisa' => PesquisaAdminController::class,
         'eventoAppPerfil' => EventoAppPerfilController::class,
     ];
 

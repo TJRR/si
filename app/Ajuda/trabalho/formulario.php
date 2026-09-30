@@ -59,9 +59,15 @@ return function (array $tela) {
     }
 
     $operacoes[] = [
+        'nome' => 'Preencher antes de entrar',
+        'como' => 'O formulário pode ser visto e preenchido antes de entrar no sistema. Ao terminar, clique em "Entrar para enviar" e faça a entrada ou crie a sua conta. Na volta, o que foi preenchido e os arquivos escolhidos reaparecem, com o aviso "Recuperamos o que você preencheu": confira e envie.',
+        'observacao' => 'O preenchimento fica guardado só neste navegador e só nesta aba, por até 2 horas; nada é enviado antes de você entrar. O botão "Descartar rascunho" apaga o que foi guardado. Em janela de navegação privada, ou em navegador que não permite guardar, a tela avisa no topo: nesse caso, entre no sistema antes de preencher.',
+    ];
+
+    $operacoes[] = [
         'nome' => 'Campos obrigatórios',
         'como' => 'Os campos marcados com asterisco (*) são obrigatórios; os marcados com "(opcional)" podem ficar em branco. Nos dados do trabalho, são obrigatórios: ' . implode(', ', $obrigatoriosDoTrabalho) . '.',
-        'observacao' => 'Se o envio for recusado, aparece a caixa "Seu trabalho NÃO foi enviado" com o motivo, o campo com problema fica em vermelho e a tela vai até ele. O que você preencheu é mantido; só os arquivos precisam ser escolhidos de novo.',
+        'observacao' => 'Se o envio for recusado, aparece a caixa "Seu trabalho NÃO foi enviado" com o motivo, o campo com problema fica em vermelho e a tela vai até ele. O que você preencheu é mantido, e os arquivos que você tinha escolhido são recolocados quando o navegador permite; se algum não voltar, escolha de novo.',
     ];
 
     if ($maxCoautores > 0) {
@@ -79,7 +85,7 @@ return function (array $tela) {
     if (isset($config['permite_multiplos_trabalhos_por_pessoa']) && (int) $config['permite_multiplos_trabalhos_por_pessoa'] === 0) {
         $operacoes[] = [
             'nome' => 'Um trabalho por pessoa',
-            'como' => 'Neste evento, cada pessoa participa de um único trabalho, como autor principal ou como coautor. O envio é recusado se a sua conta, o CPF ou o e-mail de qualquer autor já constar em outro trabalho do evento.',
+            'como' => 'Neste evento, cada pessoa participa de um único trabalho, como autor principal ou como coautor. O envio é recusado se a sua conta, o CPF ou o e-mail de qualquer autor já constar em outro trabalho do evento. Quem já consta num trabalho vê, no lugar do formulário, um aviso com o botão "Meus trabalhos".',
             'observacao' => 'Se o seu CPF foi informado errado num envio anterior, não envie de novo: corrija o CPF em "Meu perfil" (Dados complementares, campo Documento, com o tipo CPF). A correção passa também para os trabalhos que você já enviou.',
         ];
     }
@@ -100,7 +106,7 @@ return function (array $tela) {
         $operacoes[] = [
             'nome' => 'Arquivos',
             'como' => 'O tamanho máximo de cada arquivo é ' . $tamanhoMb . 'MB' . (in_array('documento_editavel', $metodos, true) && !empty($extensoes) ? ' e as extensões aceitas para o documento editável são ' . implode(', ', $extensoes) : '') . '. O sistema confere o conteúdo do arquivo, não só o nome: um arquivo de outro tipo, mesmo renomeado, é recusado.',
-            'observacao' => 'Se o envio for recusado, escolha os arquivos novamente: por segurança, o navegador não guarda arquivos entre uma tentativa e outra.',
+            'observacao' => 'Se o envio for recusado, confira os campos de arquivo: o sistema recoloca os arquivos que você tinha escolhido, quando o navegador permite. O arquivo que motivou a recusa não volta e precisa ser escolhido de novo.',
         ];
     }
 

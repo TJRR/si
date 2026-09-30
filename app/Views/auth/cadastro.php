@@ -50,8 +50,8 @@ $logoSrc = logoAtual();
             <input type="email" name="email" required autocomplete="username">
         </label>
         <label>
-            Senha
-            <input type="password" name="senha" required autocomplete="new-password">
+            Senha (ao menos 8 caracteres)
+            <input type="password" name="senha" required minlength="8" autocomplete="new-password">
         </label>
         <button type="submit" class="btn btn-bordered">Cadastrar</button>
     </form>

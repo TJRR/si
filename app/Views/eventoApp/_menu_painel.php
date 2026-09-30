@@ -20,12 +20,33 @@
  * (publico/evento_inscricao.php, quando ehDispositivoMovel()) - por isso o
  * ramo para visitante anonimo abaixo.
  */
+
+/**
+ * Fase 57 (bloco E): "Minha inscricao" e "Meu Perfil" so' aparecem para
+ * quem tem inscricao no evento. Sem isso, o facilitador (que entra no
+ * aplicativo sem nunca ter se inscrito) via dois itens de menu que apenas o
+ * devolviam para a tela de inscricao: dois becos sem saida.
+ *
+ * A view diz o que sabe: $temInscricao quando conferiu, $inscricao quando
+ * ja' tem a linha em maos. Sem nenhum dos dois, o menu confere sozinho, uma
+ * vez, e so' nas telas que passam o evento.
+ */
+$menuTemInscricao = true;
+
+if (isset($temInscricao)) {
+    $menuTemInscricao = (bool) $temInscricao;
+} elseif (array_key_exists('inscricao', get_defined_vars())) {
+    $menuTemInscricao = !empty($inscricao);
+} elseif (isset($eventoId) && \App\Core\Auth::autenticado()) {
+    $menuTemInscricao = (new \App\Repositories\EventoInscricaoRepository())
+        ->buscarPorEventoEUsuario($eventoId, \App\Core\Auth::usuarioId()) !== null;
+}
 ?>
 <aside id="painel-menu-app" class="app-menu-lateral" aria-hidden="true" aria-label="Menu">
     <nav class="app-menu-corpo">
         <?php if (\App\Core\Auth::autenticado()): ?>
             <a href="<?php echo url('eventoApp/index' . (isset($eventoId) ? '/' . (int) $eventoId : '')); ?>">Painel</a>
-            <?php if (isset($eventoId)): ?>
+            <?php if (isset($eventoId) && $menuTemInscricao): ?>
                 <a href="<?php echo url('eventoApp/inscricao/' . (int) $eventoId); ?>">Minha inscrição</a>
                 <?php /* Fase 55: "Meu Perfil" passa a existir dentro do
                 aplicativo (dados, aparência e senha) - antes só havia a tela
@@ -35,7 +56,10 @@
             <?php endif; ?>
             <a href="<?php echo url('auth/logout'); ?>" class="app-menu-sair">Sair</a>
         <?php else: ?>
-            <a href="<?php echo url('home/index'); ?>">Voltar ao início</a>
+            <?php /* Com o evento conhecido (formulario de submissao de
+            trabalhos aberto por visitante), o inicio e' a pagina do proprio
+            evento, nunca a pagina inicial do Concurso. */ ?>
+            <a href="<?php echo isset($eventoId) ? htmlspecialchars(urlPaginaEvento($eventoId), ENT_QUOTES, 'UTF-8') : url('home/index'); ?>">Voltar ao início</a>
         <?php endif; ?>
     </nav>
 </aside>

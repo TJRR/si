@@ -15,7 +15,7 @@ return [
         ],
         [
             'nome' => 'Nome, e-mail e senha',
-            'como' => 'Preencha os três campos e clique em "Cadastrar".',
+            'como' => 'Preencha os três campos e clique em "Cadastrar". A senha precisa ter ao menos 8 caracteres.',
         ],
     ],
     'conceitos' => ['cadastro_pendente_aprovacao'],

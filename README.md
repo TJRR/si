@@ -82,6 +82,8 @@ reais, avaliadores reais e prazos reais.
 | Mentoria e Oficina | Reserva de horário de mentoria (exclusivo por equipe) e inscrição em oficinas (coletivas), com link da sala virtual |
 | Conexões no evento | Leitura do crachá de outro participante pelo aplicativo: as duas pessoas ficam conectadas e pontuam, e cada uma decide quais contatos compartilha |
 | Divulgação do evento | O participante comprova que publicou sobre o evento nas próprias redes sociais, ou que passou a acompanhar os canais do órgão, e recebe pontos na hora; a organização confere depois, por amostragem |
+| Bônus do evento | Conquistas que o sistema apura sozinho a partir das presenças confirmadas, como participar de cinco atividades diferentes ou estar presente em todos os dias; a organização cadastra quais valem, quanto valem e o que cada uma exige |
+| Pesquisa de satisfação | Questionário próprio do evento, com perguntas cadastradas pela organização; as respostas ficam guardadas separadas de quem respondeu, e responder pode valer pontos |
 
 ### Para quem avalia
 
@@ -460,6 +462,7 @@ de tudo esse bloco de uma vez, junto com a Fase 51.
 | 54 | **Estandes** de expositores e patrocinadores, com código fixo em cartaz, visita registrada pelo participante no aplicativo com pontos e representante do estande convidado pela organização; **geração automática do volume dos Anais**, com envio da versão final de cada trabalho pelo autor, dados editoriais, comissões, sumário e numeração das páginas; na submissão de trabalhos, **um trabalho por pessoa** conferido também pelo e-mail e pela conta, e cadastro seguido direto do formulário para quem ainda não tem conta |
 | 55 | **Conexões entre participantes**: uma pessoa lê o crachá da outra no aplicativo e as duas ficam conectadas e pontuam, com pontos e limite definidos por evento; cada uma escolhe o que mostra à outra (foto, cargo, órgão, minicurrículo, telefone com WhatsApp e redes sociais), e **"Meu Perfil" passa a existir dentro do aplicativo**, com dados, contatos, escolha de tema e troca de senha |
 | 56 | **Divulgação em redes sociais**: o participante comprova pelo aplicativo que publicou sobre o evento, ou que passou a acompanhar um canal do órgão, e recebe os pontos no ato; valor, prova aceita e limites são definidos por rede social e por evento, e a organização confere depois, podendo anular a pontuação com justificativa que chega ao participante |
+| 57 | **Bônus automáticos e pesquisa de satisfação**: a organização cadastra os bônus do evento, com nome livre, forma de apurar, exigência e pontos, e o sistema os concede sozinho a partir das presenças já confirmadas, mostrando ao participante quanto falta para cada um; a pesquisa de satisfação tem perguntas configuráveis em quatro formatos e guarda as respostas separadas de quem respondeu, de modo que nem a organização consegue ligar uma coisa à outra; o **formulário de submissão de trabalhos** passa a poder ser visto e preenchido antes de entrar no sistema, com a entrada pedida só na hora de enviar, e o que foi preenchido, arquivos inclusive, volta ao formulário depois da entrada |
 
 ---
 

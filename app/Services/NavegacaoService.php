@@ -188,6 +188,26 @@ class NavegacaoService
             ['tipo' => 'divulgacaoConfiguracoes', 'rotulo' => 'Configurações', 'rota' => 'divulgacao/configuracoes'],
         ],
         /**
+         * Fase 57: no "Bonus" do Evento. A primeira aba e' o CATALOGO,
+         * porque bonus e' entidade cadastravel: sem bonus cadastrado nao ha'
+         * o que apurar nem o que acompanhar.
+         */
+        'bonus' => [
+            ['tipo' => 'bonus', 'rotulo' => 'Bônus', 'rota' => 'bonus/index'],
+            ['tipo' => 'bonusAcompanhamento', 'rotulo' => 'Acompanhamento', 'rota' => 'bonus/acompanhamento'],
+            ['tipo' => 'bonusConfiguracoes', 'rotulo' => 'Configurações', 'rota' => 'bonus/configuracoes'],
+        ],
+        /**
+         * Fase 57: no "Pesquisa" do Evento, separado de Bonus porque sao
+         * entidades diferentes, com ciclos de vida diferentes (o bonus roda
+         * durante o evento, a pesquisa depois).
+         */
+        'pesquisa' => [
+            ['tipo' => 'pesquisa', 'rotulo' => 'Resultado', 'rota' => 'pesquisa/index'],
+            ['tipo' => 'pesquisaPerguntas', 'rotulo' => 'Perguntas', 'rota' => 'pesquisa/perguntas'],
+            ['tipo' => 'pesquisaConfiguracoes', 'rotulo' => 'Configurações', 'rota' => 'pesquisa/configuracoes'],
+        ],
+        /**
          * Fase 33: "Meu perfil" passa a usar as mesmas sub-abas das demais
          * telas, em vez de empilhar tres blocos numa pagina so'. Sem id, como
          * o grupo "configuracao". Duas das tres abas sao condicionais - ver a
@@ -274,6 +294,12 @@ class NavegacaoService
         'conexoesConfiguracoes' => 'conexoes',
         'divulgacao' => 'divulgacao',
         'divulgacaoConfiguracoes' => 'divulgacao',
+        'bonus' => 'bonus',
+        'bonusAcompanhamento' => 'bonus',
+        'bonusConfiguracoes' => 'bonus',
+        'pesquisa' => 'pesquisa',
+        'pesquisaPerguntas' => 'pesquisa',
+        'pesquisaConfiguracoes' => 'pesquisa',
     ];
 
     /**
@@ -461,6 +487,28 @@ class NavegacaoService
             return [self::noEvento($evento), self::noDivulgacao($evento)];
         }
 
+        // Fase 57: 'bonus' e 'pesquisa' seguem o mesmo criterio ($id = id do
+        // evento).
+        if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'bonus') {
+            $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+            if ($evento === null) {
+                return [];
+            }
+
+            return [self::noEvento($evento), self::noBonus($evento)];
+        }
+
+        if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'pesquisa') {
+            $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+            if ($evento === null) {
+                return [];
+            }
+
+            return [self::noEvento($evento), self::noPesquisa($evento)];
+        }
+
         if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'atividade') {
             $atividade = (new EventoAtividadeRepository())->buscarPorId($id);
 
@@ -591,14 +639,16 @@ class NavegacaoService
 
                 // Fase 49: Trabalhos entra como irmao de Atividades. Fase
                 // 54: Estandes, do mesmo jeito. Fase 55: Conexoes. Fase 56:
-                // Divulgacao. Competicoes entra aqui numa fase seguinte do
-                // plano.
+                // Divulgacao. Fase 57: Bonus e Pesquisa. Competicoes entra
+                // aqui numa fase seguinte do plano.
                 return [
                     self::noAtividades($evento),
                     self::noTrabalhos($evento),
                     self::noEstandes($evento),
                     self::noConexoes($evento),
                     self::noDivulgacao($evento),
+                    self::noBonus($evento),
+                    self::noPesquisa($evento),
                 ];
 
             case 'atividades':
@@ -943,6 +993,32 @@ class NavegacaoService
             'rotulo' => 'Divulgação',
             'folha' => true,
             'url' => 'divulgacao/index/' . (int) $evento['id'],
+        ];
+    }
+
+    /**
+     * Fase 57: mesmo formato de noDivulgacao() - no unico, sem filhos, id =
+     * id do EVENTO.
+     */
+    private static function noBonus(array $evento)
+    {
+        return [
+            'tipo' => 'bonus',
+            'id' => (int) $evento['id'],
+            'rotulo' => 'Bônus',
+            'folha' => true,
+            'url' => 'bonus/index/' . (int) $evento['id'],
+        ];
+    }
+
+    private static function noPesquisa(array $evento)
+    {
+        return [
+            'tipo' => 'pesquisa',
+            'id' => (int) $evento['id'],
+            'rotulo' => 'Pesquisa',
+            'folha' => true,
+            'url' => 'pesquisa/index/' . (int) $evento['id'],
         ];
     }
 }

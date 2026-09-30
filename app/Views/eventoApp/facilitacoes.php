@@ -16,6 +16,22 @@
         <h2>Minhas facilitações</h2>
         <p>Atividades em que você está designado como facilitador. Informe o código de presença online abaixo para quem está participando de forma online confirmar presença.</p>
 
+        <?php if (!empty($pesquisaAberta)): ?>
+            <?php /* Fase 57: quem conduziu atividade responde a pesquisa de
+            satisfação, mesmo sem inscrição no evento. Sem inscrição não há
+            pontos, e a própria tela da pesquisa avisa isso. */ ?>
+            <div class="admin-card">
+                <?php if (empty($pesquisaRespondida)): ?>
+                    <p><strong>A pesquisa de satisfação está aberta.</strong></p>
+                    <p>
+                        <a href="<?php echo url('eventoApp/pesquisa/' . (int) $evento['id']); ?>" class="btn">Responder à pesquisa</a>
+                    </p>
+                <?php else: ?>
+                    <p>Obrigado por responder à pesquisa de satisfação.</p>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
         <?php foreach ($facilitacoes as $facilitacao): ?>
         <div class="admin-card">
             <p><strong><?php echo htmlspecialchars($facilitacao['atividade_nome'], ENT_QUOTES, 'UTF-8'); ?></strong></p>

@@ -72,6 +72,66 @@
             </p>
         <?php endif; ?>
 
+        <?php if (!empty($bonusAtivo) && !empty($progressoBonus)): ?>
+            <?php /* Fase 57: o bloco percorre os bonus ATIVOS do evento, que
+            sao cadastro e nao codigo - bonus novo cadastrado pela
+            organizacao aparece aqui sem alteracao nenhuma nesta view. O
+            bonus do tipo "responder a pesquisa" vira o botao da pesquisa,
+            porque o que a pessoa precisa fazer ali nao e' esperar, e' abrir
+            a tela. */ ?>
+            <div class="admin-card">
+                <p><strong>Bônus</strong></p>
+
+                <?php foreach ($progressoBonus as $bonus): ?>
+                    <?php
+                    $credito = $bonus['credito'];
+                    $ganho = $credito !== null && $credito['anulado_em'] === null;
+                    $anulado = $credito !== null && $credito['anulado_em'] !== null;
+                    $exigencia = (int) $bonus['exigencia'];
+                    $atual = (int) $bonus['atual'];
+                    $percentual = $exigencia > 0 ? min(100, (int) round(($atual / $exigencia) * 100)) : 0;
+                    ?>
+                    <p>
+                        <strong><?php echo htmlspecialchars($bonus['nome'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                        <?php if ($ganho): ?>
+                            <span class="status-pill verde"><?php echo (int) $credito['pontos']; ?> <?php echo (int) $credito['pontos'] === 1 ? 'ponto' : 'pontos'; ?></span>
+                        <?php elseif ($anulado): ?>
+                            <span class="status-pill vermelho">Anulado pela organização</span>
+                        <?php endif; ?>
+
+                        <?php if (!empty($bonus['descricao'])): ?>
+                            <br><small><?php echo htmlspecialchars($bonus['descricao'], ENT_QUOTES, 'UTF-8'); ?></small>
+                        <?php endif; ?>
+
+                        <?php if ($anulado && !empty($credito['motivo_anulacao'])): ?>
+                            <br><small>Motivo: <?php echo htmlspecialchars($credito['motivo_anulacao'], ENT_QUOTES, 'UTF-8'); ?></small>
+                        <?php endif; ?>
+
+                        <?php if ($bonus['tipo'] === 'responder_pesquisa'): ?>
+                            <?php if (!$ganho && !empty($pesquisaAberta) && empty($pesquisaRespondida)): ?>
+                                <br>
+                                <a href="<?php echo url('eventoApp/pesquisa/' . (int) $evento['id']); ?>" class="btn">Responder à pesquisa</a>
+                                <br><small>Vale <?php echo (int) $bonus['pontos']; ?> <?php echo (int) $bonus['pontos'] === 1 ? 'ponto' : 'pontos'; ?>.</small>
+                            <?php endif; ?>
+                        <?php elseif (!$ganho && !$anulado): ?>
+                            <br>
+                            <small><?php echo $atual; ?> de <?php echo $exigencia; ?> <?php echo htmlspecialchars($bonus['unidade'], ENT_QUOTES, 'UTF-8'); ?><?php echo !empty($bonus['tipo_atividade_nome']) ? ' (' . htmlspecialchars($bonus['tipo_atividade_nome'], ENT_QUOTES, 'UTF-8') . ')' : ''; ?>, valendo <?php echo (int) $bonus['pontos']; ?> <?php echo (int) $bonus['pontos'] === 1 ? 'ponto' : 'pontos'; ?></small>
+                            <span class="app-progresso-barra-fundo">
+                                <span class="app-progresso-barra-preenchimento" style="width: <?php echo $percentual; ?>%"></span>
+                            </span>
+                        <?php endif; ?>
+                    </p>
+                <?php endforeach; ?>
+            </div>
+        <?php elseif (!empty($pesquisaAberta) && empty($pesquisaRespondida)): ?>
+            <?php /* Fase 57: com a pesquisa aberta e sem bonus cadastrado
+            para ela, o botao aparece assim mesmo - responder continua
+            valendo a pena para quem organiza, so' nao credita pontos. */ ?>
+            <p>
+                <a href="<?php echo url('eventoApp/pesquisa/' . (int) $evento['id']); ?>" class="btn">Responder à pesquisa</a>
+            </p>
+        <?php endif; ?>
+
         <?php if ($ehAvaliadorDoEvento): ?>
             <?php /* Fase 49B, achado do usuário: quem é avaliador avulso
             deste evento vê só o acesso à avaliação, nunca os botões de

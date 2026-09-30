@@ -19,6 +19,10 @@ $mostrarBotao3 = !empty($dadosSecao['botao3_titulo']) && $urlBotao3 !== '';
 $mostrarContato = !empty($dadosSecao['mostrar_contato']) && $contato !== null && (!empty($contato['email']) || !empty($contato['whatsapp']));
 $botao1AbreDocumento = !empty($dadosSecao['botao1_documento_id']);
 $botao3AbreDocumento = !empty($dadosSecao['botao3_documento_id']);
+// Fase 57 (achado do teste de fumaca): nome sugerido no download, vindo do
+// titulo do documento. O arquivo continua guardado com o nome gerado.
+$botao1Download = isset($dadosSecao['botao1_download']) ? (string) $dadosSecao['botao1_download'] : '';
+$botao3Download = isset($dadosSecao['botao3_download']) ? (string) $dadosSecao['botao3_download'] : '';
 ?>
 <?php include __DIR__ . '/_secao_abre.php'; ?>
         <div class="evento-duas-colunas evento-submissao">
@@ -28,13 +32,13 @@ $botao3AbreDocumento = !empty($dadosSecao['botao3_documento_id']);
                 <?php if ($mostrarBotao1 || $mostrarBotao2 || $mostrarBotao3): ?>
                     <div class="evento-botoes">
                         <?php if ($mostrarBotao1): ?>
-                            <a href="<?php echo htmlspecialchars($urlBotao1, ENT_QUOTES, 'UTF-8'); ?>" class="evento-botao evento-botao-escuro"<?php echo $botao1AbreDocumento ? ' target="_blank" rel="noopener"' : ''; ?>><?php echo htmlspecialchars($dadosSecao['botao1_titulo'], ENT_QUOTES, 'UTF-8'); ?></a>
+                            <a href="<?php echo htmlspecialchars($urlBotao1, ENT_QUOTES, 'UTF-8'); ?>" class="evento-botao evento-botao-escuro"<?php echo $botao1AbreDocumento ? ' target="_blank" rel="noopener"' : ''; ?><?php echo $botao1Download !== '' ? ' download="' . htmlspecialchars($botao1Download, ENT_QUOTES, 'UTF-8') . '"' : ''; ?>><?php echo htmlspecialchars($dadosSecao['botao1_titulo'], ENT_QUOTES, 'UTF-8'); ?></a>
                         <?php endif; ?>
                         <?php if ($mostrarBotao2): ?>
                             <a href="<?php echo htmlspecialchars($urlBotao2, ENT_QUOTES, 'UTF-8'); ?>" class="evento-botao evento-botao-contorno"><?php echo htmlspecialchars($dadosSecao['botao2_titulo'], ENT_QUOTES, 'UTF-8'); ?></a>
                         <?php endif; ?>
                         <?php if ($mostrarBotao3): ?>
-                            <a href="<?php echo htmlspecialchars($urlBotao3, ENT_QUOTES, 'UTF-8'); ?>" class="evento-botao evento-botao-contorno"<?php echo $botao3AbreDocumento ? ' target="_blank" rel="noopener"' : ''; ?>><?php echo htmlspecialchars($dadosSecao['botao3_titulo'], ENT_QUOTES, 'UTF-8'); ?></a>
+                            <a href="<?php echo htmlspecialchars($urlBotao3, ENT_QUOTES, 'UTF-8'); ?>" class="evento-botao evento-botao-contorno"<?php echo $botao3AbreDocumento ? ' target="_blank" rel="noopener"' : ''; ?><?php echo $botao3Download !== '' ? ' download="' . htmlspecialchars($botao3Download, ENT_QUOTES, 'UTF-8') . '"' : ''; ?>><?php echo htmlspecialchars($dadosSecao['botao3_titulo'], ENT_QUOTES, 'UTF-8'); ?></a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>

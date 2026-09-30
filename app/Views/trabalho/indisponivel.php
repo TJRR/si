@@ -7,7 +7,10 @@
     <?php
     $eventoId = $evento['id'];
     $tituloTopo = $evento['nome'];
-    $urlVoltar = url('eventoApp/index/' . (int) $eventoId);
+    // Visitante (o formulario abre tambem para quem ainda nao entrou) volta
+    // para a pagina do evento: eventoApp/index gravaria um retorno para o
+    // aplicativo e o levaria a inscricao.
+    $urlVoltar = \App\Core\Auth::autenticado() ? url('eventoApp/index/' . (int) $eventoId) : urlPaginaEvento($eventoId);
     require __DIR__ . '/../eventoApp/_app_bar.php';
     ?>
 

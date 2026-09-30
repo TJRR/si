@@ -12,6 +12,24 @@
         <?php require __DIR__ . '/../eventoApp/_ajuda_card.php'; ?>
         <h2>Trabalhos para avaliar</h2>
 
+        <?php if (!empty($pesquisas)): ?>
+            <?php /* Fase 57: quem avalia trabalhos de um evento responde a
+            pesquisa de satisfação dele, mesmo sem inscrição. Um convite por
+            evento, porque esta tela reúne designações de mais de um. */ ?>
+            <?php foreach ($pesquisas as $pesquisa): ?>
+            <div class="admin-card">
+                <?php if (empty($pesquisa['respondida'])): ?>
+                    <p><strong>A pesquisa de satisfação de <?php echo htmlspecialchars($pesquisa['evento_nome'], ENT_QUOTES, 'UTF-8'); ?> está aberta.</strong></p>
+                    <p>
+                        <a href="<?php echo url('eventoApp/pesquisa/' . (int) $pesquisa['evento_id']); ?>" class="btn">Responder à pesquisa</a>
+                    </p>
+                <?php else: ?>
+                    <p>Obrigado por responder à pesquisa de <?php echo htmlspecialchars($pesquisa['evento_nome'], ENT_QUOTES, 'UTF-8'); ?>.</p>
+                <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+
         <?php if (empty($designacoes)): ?>
             <p>Nenhum trabalho designado a você no momento.</p>
         <?php else: ?>

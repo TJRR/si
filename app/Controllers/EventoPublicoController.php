@@ -231,6 +231,11 @@ class EventoPublicoController extends Controller
                 $secao['itens'] = $repositorio->listarItens((int) $secao['referencia_id']);
                 $secao['dados']['botao1_url'] = $this->destinoBotaoDocumento($eventoId, $dados, 'botao1');
                 $secao['dados']['botao3_url'] = $this->destinoBotaoDocumento($eventoId, $dados, 'botao3');
+                // Fase 57 (achado do teste de fumaca): o nome sugerido no
+                // download sai do titulo do documento, e nao do nome gerado
+                // com que ele e' guardado no servidor.
+                $secao['dados']['botao1_download'] = $this->nomeDownloadBotaoDocumento($eventoId, $dados, 'botao1');
+                $secao['dados']['botao3_download'] = $this->nomeDownloadBotaoDocumento($eventoId, $dados, 'botao3');
             } elseif ($tipo === 'faq') {
                 $secao['itens'] = $repositorio->listarItensAtivos((int) $secao['referencia_id']);
             } elseif ($tipo === 'estandes') {
@@ -263,5 +268,22 @@ class EventoPublicoController extends Controller
         }
 
         return linkPublico(isset($dados[$prefixo . '_link']) ? $dados[$prefixo . '_link'] : '');
+    }
+
+    /**
+     * Fase 57: nome amigavel para o arquivo baixado, montado a partir do
+     * titulo do documento. Devolve vazio quando o botao aponta para um
+     * endereco digitado, e nao para um documento do evento: ali o destino e'
+     * de outro servidor e o navegador ignoraria o nome de qualquer forma.
+     */
+    private function nomeDownloadBotaoDocumento($eventoId, array $dados, $prefixo = 'botao1')
+    {
+        if (empty($dados[$prefixo . '_documento_id'])) {
+            return '';
+        }
+
+        $documento = (new EventoDocumentoRepository())->buscarVigentePublicado($eventoId, (int) $dados[$prefixo . '_documento_id']);
+
+        return $documento !== null ? nomeArquivoParaDownload($documento['titulo'], $documento['arquivo_path']) : '';
     }
 }

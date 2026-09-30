@@ -12,6 +12,14 @@
  * forma de envio quando ha' mais de uma habilitada e respeita o limite de
  * autores da configuracao. O comportamento em tela fica em
  * assets/js/trabalho-formulario.js.
+ *
+ * Fase 57 (reabertura): a tela abre tambem para visitante ($visitante), que
+ * preenche antes de entrar e, no lugar de "Enviar trabalho", tem o botao
+ * "Entrar para enviar". O que foi preenchido, arquivos inclusive, fica
+ * guardado so' no navegador e volta depois da entrada, e tambem quando uma
+ * validacao devolve o formulario com erro: assets/js/rascunho-trabalho.js,
+ * carregado em toda pagina, le os atributos data-rascunho-* daqui. Quem ja'
+ * consta num trabalho do evento ($avisoJaSubmetido) ve so' o aviso.
  */
 $valores = isset($valores) && is_array($valores) ? $valores : [];
 $campoErro = isset($campoErro) ? $campoErro : null;
@@ -77,19 +85,70 @@ if (isset($valores['coautor_nome']) && is_array($valores['coautor_nome'])) {
 $coautoresPreenchidos = array_slice($coautoresPreenchidos, 0, $maxCoautores, true);
 $termosMarcadosInt = array_map('intval', $termosMarcados);
 $inscricaoAutomatica = !empty($config['inscrever_autores_ao_submeter']);
+
+$visitante = !empty($visitante);
+$avisoJaSubmetido = isset($avisoJaSubmetido) ? $avisoJaSubmetido : null;
+$usuario = isset($usuario) ? $usuario : null;
+$perfilPessoa = isset($perfilPessoa) ? $perfilPessoa : null;
+$nomeConta = $usuario !== null ? (string) $usuario['nome'] : '';
+$emailConta = $usuario !== null ? (string) $usuario['email'] : '';
+$modoRascunho = $visitante ? 'visitante' : (!empty($erro) ? 'erro' : 'novo');
+$urlEntrar = url('trabalho/entrar/' . (int) $evento['id']);
 ?>
 
-<div class="site-page">
+<div class="site-page" data-rascunho-tela="formulario">
     <?php
     $eventoId = $evento['id'];
     $tituloTopo = $evento['nome'];
-    $urlVoltar = url('eventoApp/index/' . (int) $eventoId);
+    // Visitante volta para a pagina do evento: eventoApp/index gravaria um
+    // retorno para o aplicativo e o levaria a inscricao.
+    $urlVoltar = $visitante ? urlPaginaEvento($eventoId) : url('eventoApp/index/' . (int) $eventoId);
     require __DIR__ . '/../eventoApp/_app_bar.php';
     ?>
 
     <div class="site-form-page">
         <?php require __DIR__ . '/../eventoApp/_ajuda_card.php'; ?>
         <h2>Submeter trabalho</h2>
+
+        <?php if ($avisoJaSubmetido !== null): ?>
+            <?php /* Quem ja' consta num trabalho do evento ve so' o aviso,
+            sem os campos. O atributo manda a rotina de rascunho apagar o que
+            esta aba tiver guardado para este evento. */ ?>
+            <div class="app-flash alerta trabalho-rascunho-aviso" role="alert" data-rascunho-descartar-evento="<?php echo (int) $evento['id']; ?>">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span><?php echo $e($avisoJaSubmetido); ?></span>
+            </div>
+            <p><a href="<?php echo url('trabalho/meusTrabalhos'); ?>" class="btn">Meus trabalhos</a></p>
+        <?php else: ?>
+
+        <?php /* Avisos da rotina de rascunho. Nascem ocultos; quem os mostra
+        e' assets/js/rascunho-trabalho.js. Os textos ficam aqui, e nao na
+        rotina, para continuarem sob a mesma revisao de linguagem da tela. */ ?>
+        <?php if ($visitante): ?>
+            <div class="app-flash alerta trabalho-rascunho-aviso" id="trabalho-rascunho-sem-capacidade" role="alert" hidden>
+                <span>Este navegador não permite guardar o preenchimento. Você pode ver o formulário à vontade, mas entre no sistema antes de preencher: o que for digitado aqui se perde ao entrar.</span>
+                <a href="<?php echo $urlEntrar; ?>" class="btn" rel="nofollow">Entrar agora</a>
+            </div>
+            <div class="app-flash alerta trabalho-rascunho-aviso" id="trabalho-rascunho-de-conta" role="alert" hidden>
+                <span>Há um preenchimento guardado nesta aba por uma conta que estava conectada. Entre no sistema para recuperá-lo.</span>
+                <a href="<?php echo $urlEntrar; ?>" class="btn" rel="nofollow">Entrar agora</a>
+            </div>
+        <?php endif; ?>
+        <div class="app-flash sucesso trabalho-rascunho-aviso" id="trabalho-rascunho-recuperado" role="alert" hidden>
+            <div>
+                <strong>Recuperamos o que você preencheu. Confira e envie.</strong>
+                <ul id="trabalho-rascunho-arquivos"
+                    data-rotulo-arquivo_avaliacao="Arquivo sem identificação"
+                    data-rotulo-arquivo_publicacao="Arquivo da versão completa"
+                    data-texto-voltou="recolocado"
+                    data-texto-faltou="não foi possível recolocar; escolha o arquivo de novo"></ul>
+            </div>
+            <button type="button" class="btn" id="trabalho-rascunho-descartar">Descartar rascunho</button>
+        </div>
 
         <?php if (!empty($erro)): ?>
             <div class="app-flash erro trabalho-erro-caixa" id="trabalho-erro-caixa" role="alert" tabindex="-1">
@@ -102,7 +161,7 @@ $inscricaoAutomatica = !empty($config['inscrever_autores_ao_submeter']);
                     <strong>Seu trabalho NÃO foi enviado.</strong>
                     <span class="trabalho-erro-texto"><?php echo $e($erro); ?></span>
                     <span class="trabalho-erro-orientacao">
-                        Corrija o que está indicado e envie de novo. O que você preencheu foi mantido<?php echo ($metodoTemArquivo && in_array($metodoAtual, ['documento_editavel', 'documento_nao_editavel'], true)) ? ', mas o navegador não guarda arquivos: escolha o(s) arquivo(s) outra vez' : ''; ?>.
+                        Corrija o que está indicado e envie de novo. O que você preencheu foi mantido<?php echo ($metodoTemArquivo && in_array($metodoAtual, ['documento_editavel', 'documento_nao_editavel'], true)) ? '<span id="trabalho-erro-arquivos" data-texto-recuperado=", e os arquivos que você tinha escolhido foram recolocados">, mas o navegador não guarda arquivos: escolha o(s) arquivo(s) outra vez</span>' : ''; ?>.
                     </span>
                 </div>
             </div>
@@ -110,7 +169,11 @@ $inscricaoAutomatica = !empty($config['inscrever_autores_ao_submeter']);
 
         <p class="trabalho-legenda"><span class="obrigatorio">*</span> campo obrigatório</p>
 
-        <form method="post" id="trabalho-formulario" action="<?php echo url('trabalho/formulario/' . (int) $evento['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>
+        <form method="post" id="trabalho-formulario" action="<?php echo url('trabalho/formulario/' . (int) $evento['id']); ?>" enctype="multipart/form-data"
+            data-rascunho-evento="<?php echo (int) $evento['id']; ?>"
+            data-rascunho-modo="<?php echo $modoRascunho; ?>"
+            data-rascunho-conta="<?php echo $usuario !== null ? (int) $usuario['id'] : ''; ?>"
+            data-campo-erro="<?php echo $e((string) $campoErro); ?>"><?= campoCsrf() ?>
 
             <div class="admin-card">
                 <h3>Dados do trabalho</h3>
@@ -150,7 +213,7 @@ $inscricaoAutomatica = !empty($config['inscrever_autores_ao_submeter']);
             <div class="admin-card">
                 <h3>Autor principal</h3>
                 <label class="<?php echo $classeErro('autor_nome'); ?>"><?php echo $rotulo('Nome completo', true); ?>
-                    <input type="text" name="autor_nome" required maxlength="150" value="<?php echo $v($valores, 'autor_nome', $usuario['nome']); ?>"<?php echo $focoErro('autor_nome'); ?>>
+                    <input type="text" name="autor_nome" required maxlength="150" value="<?php echo $v($valores, 'autor_nome', $nomeConta); ?>"<?php echo $focoErro('autor_nome'); ?>>
                     <?php echo $mensagemErro('autor_nome'); ?>
                 </label>
                 <?php $cpfPreenchido = ($perfilPessoa !== null && $perfilPessoa['tipo_documento'] === 'CPF') ? (string) $perfilPessoa['documento'] : ''; ?>
@@ -163,10 +226,14 @@ $inscricaoAutomatica = !empty($config['inscrever_autores_ao_submeter']);
                 campo so' mostra o e-mail da conta, e o servidor grava esse
                 e-mail, sem ler nada do navegador. */ ?>
                 <label class="<?php echo $classeErro('autor_email'); ?>"><?php echo $rotulo('E-mail', true); ?>
-                    <input type="email" value="<?php echo htmlspecialchars((string) $usuario['email'], ENT_QUOTES, 'UTF-8'); ?>" readonly aria-readonly="true"<?php echo $focoErro('autor_email'); ?>>
+                    <input type="email" value="<?php echo htmlspecialchars($emailConta, ENT_QUOTES, 'UTF-8'); ?>" readonly aria-readonly="true"<?php echo $focoErro('autor_email'); ?>>
                     <?php echo $mensagemErro('autor_email'); ?>
                 </label>
-                <p class="trabalho-legenda">É o e-mail da sua conta, que não pode ser alterado. O CPF vem de "Meu perfil" (Dados complementares, campo Documento), onde você também pode corrigi-lo depois do envio.</p>
+                <?php if ($visitante): ?>
+                    <p class="trabalho-legenda">Será o e-mail da conta com que você entrar.</p>
+                <?php else: ?>
+                    <p class="trabalho-legenda">É o e-mail da sua conta, que não pode ser alterado. O CPF vem de "Meu perfil" (Dados complementares, campo Documento), onde você também pode corrigi-lo depois do envio.</p>
+                <?php endif; ?>
                 <label><?php echo $rotulo('Cargo', false); ?>
                     <input type="text" name="autor_cargo" maxlength="150" value="<?php echo $v($valores, 'autor_cargo', $perfilPessoa !== null ? (string) $perfilPessoa['cargo'] : ''); ?>">
                 </label>
@@ -306,8 +373,18 @@ $inscricaoAutomatica = !empty($config['inscrever_autores_ao_submeter']);
                 </p>
             <?php endif; ?>
 
-            <button type="submit" class="btn">Enviar trabalho</button>
+            <?php if ($visitante): ?>
+                <?php /* Visitante nao tem botao de envio: o atalho leva a
+                entrada (TrabalhoController::entrar()) e a rotina de rascunho
+                guarda antes o que estiver pendente. Sem a rotina, o atalho
+                funciona sozinho. */ ?>
+                <a href="<?php echo $urlEntrar; ?>" class="btn" id="trabalho-entrar-enviar" rel="nofollow" data-texto-guardando="Guardando arquivos...">Entrar para enviar</a>
+                <p class="trabalho-legenda" id="trabalho-entrar-apoio">Você ainda não entrou no sistema. Na próxima tela, entre ou crie sua conta. Ao voltar, o que você preencheu e os arquivos escolhidos estarão aqui, guardados neste navegador por até 2 horas.</p>
+            <?php else: ?>
+                <button type="submit" class="btn">Enviar trabalho</button>
+            <?php endif; ?>
         </form>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -324,3 +401,9 @@ $inscricaoAutomatica = !empty($config['inscrever_autores_ao_submeter']);
 <script src="<?php echo config('base_path'); ?>/assets/js/cpf-validador.js"></script>
 <script src="<?php echo config('base_path'); ?>/assets/js/telefone-mascara.js"></script>
 <script src="<?php echo config('base_path'); ?>/assets/js/trabalho-formulario.js"></script>
+<?php if (!$visitante): ?>
+<?php /* Mesma rotina do formulario de submissao do Concurso: sem ela, quem
+fica alem do tempo limite de inatividade preenchendo perde a sessao e, ao
+enviar, o texto e os arquivos. Visitante nao tem sessao a manter. */ ?>
+<script src="<?php echo config('base_path'); ?>/assets/js/manter-sessao-viva.js" data-url="<?php echo url('sessao/manterViva'); ?>"></script>
+<?php endif; ?>

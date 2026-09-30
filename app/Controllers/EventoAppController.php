@@ -10,6 +10,7 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\View;
+use App\Repositories\BonusConfigRepository;
 use App\Repositories\ConexaoConfigRepository;
 use App\Repositories\ConexaoRepository;
 use App\Repositories\ConfiguracaoSistemaRepository;
@@ -31,17 +32,22 @@ use App\Repositories\EstandeVisitaRepository;
 use App\Repositories\LeituraCodigoFalhaRepository;
 use App\Repositories\NotificacaoPainelRepository;
 use App\Repositories\PerfilRepository;
+use App\Repositories\PesquisaConfigRepository;
+use App\Repositories\PesquisaPerguntaRepository;
+use App\Repositories\PesquisaRespondenteRepository;
 use App\Repositories\SemanaInovacaoRepository;
 use App\Repositories\TemaVisualRepository;
 use App\Repositories\TrabalhoAutorRepository;
 use App\Repositories\TrabalhoAvaliadorRepository;
 use App\Repositories\UsuarioPerfilRepository;
 use App\Services\ArquivoPrivadoService;
+use App\Services\BonusApuracaoService;
 use App\Services\ConexaoService;
 use App\Services\DivulgacaoService;
 use App\Services\ImagemComprovacaoService;
 use App\Services\NotificacaoService;
 use App\Services\PerfilVisibilidadeService;
+use App\Services\PesquisaService;
 
 /**
  * Fase 41: ponto de entrada ("shell") do aplicativo web instalavel (PWA) do
@@ -149,6 +155,11 @@ class EventoAppController extends Controller
         // sempre daria erro.
         $ehAvaliadorDoEvento = (new TrabalhoAvaliadorRepository())->estaAtivo($evento['id'], Auth::usuarioId());
 
+        // Fase 57: com o modulo desligado nao ha' o que consultar, entao o
+        // painel nem paga o custo das consultas de progresso.
+        $bonusAtivo = (new BonusConfigRepository())->estaAtivo($evento['id']);
+        $pesquisaAberta = $this->pesquisaAberta($evento);
+
         $this->renderizar('eventoApp/painel', [
             'evento' => $evento,
             'inscricao' => $inscricao,
@@ -173,6 +184,18 @@ class EventoAppController extends Controller
             // em vez de derrubar o painel de todo inscrito.
             'divulgacaoAtiva' => (new DivulgacaoConfigRepository())->estaAtivo($evento['id']),
             'resumoDivulgacao' => (new DivulgacaoComprovacaoRepository())->resumoParticipante($inscricao['id']),
+            // Fase 57: o bloco de bonus percorre os bonus ATIVOS do evento,
+            // que sao cadastro e nao codigo, entao bonus novo aparece aqui
+            // sem alteracao nenhuma nesta view. progressoDe() resolve tudo
+            // em uma consulta (duas quando ha bonus por tipo de atividade),
+            // e o estado da pesquisa sai de mais duas leituras. Mesma
+            // protecao das tres fases anteriores: os repositorios capturam
+            // falha de banco e devolvem vazio, entao tabela ainda nao criada
+            // faz o bloco sumir em vez de derrubar o painel.
+            'bonusAtivo' => $bonusAtivo,
+            'progressoBonus' => $bonusAtivo ? (new BonusApuracaoService())->progressoDe($evento, $inscricao['id']) : [],
+            'pesquisaAberta' => $pesquisaAberta,
+            'pesquisaRespondida' => $pesquisaAberta ? (new PesquisaRespondenteRepository())->jaRespondeu($evento['id'], Auth::usuarioId()) : false,
         ], $evento['nome']);
     }
 
@@ -699,6 +722,184 @@ class EventoAppController extends Controller
     }
 
     /**
+     * Fase 57: pesquisa de satisfacao do evento, dentro do aplicativo.
+     *
+     * A pesquisa e' ANONIMA: o sistema guarda, em tabelas separadas e sem
+     * elo nenhum, que a pessoa respondeu (nominal, e' o que habilita o
+     * credito e o que impede responder duas vezes) e o que foi respondido.
+     *
+     * Conferencia de posse PROPRIA, e nao a de inscricao usada pelas demais
+     * acoes deste controller (bloco E, pendencia 34): facilitador e
+     * avaliador avulso tambem respondem, e nenhum dos dois tem inscricao.
+     * Nenhuma das outras conferencias do controller e' tocada.
+     */
+    public function pesquisa($id)
+    {
+        $contexto = $this->contextoPesquisaOuVolta($id);
+
+        if ($contexto === null) {
+            return;
+        }
+
+        $this->renderizarPesquisa($contexto['evento'], $contexto['inscricao']);
+    }
+
+    /**
+     * Posse da pesquisa: inscrito no evento, facilitador ativo de alguma
+     * atividade dele, ou avaliador ativo de Trabalhos dele. Devolve a
+     * inscricao quando existe (e' ela que habilita o credito de pontos) e
+     * null quando a pessoa tem vinculo sem ser inscrita.
+     */
+    private function contextoPesquisaOuVolta($id)
+    {
+        if (!Auth::autenticado()) {
+            $this->redirecionar('eventoInscricao/index/' . (int) $id);
+            return null;
+        }
+
+        $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+        if ($evento === null) {
+            $this->redirecionar('eventoInscricao/index/' . (int) $id);
+            return null;
+        }
+
+        $usuarioId = Auth::usuarioId();
+        $inscricao = (new EventoInscricaoRepository())->buscarPorEventoEUsuario($id, $usuarioId);
+
+        if ($inscricao === null) {
+            $ehFacilitador = (new EventoAtividadeFacilitadorRepository())->listarPorUsuarioNoEvento($usuarioId, $id) !== [];
+            $ehAvaliador = (new TrabalhoAvaliadorRepository())->estaAtivo($id, $usuarioId);
+
+            if (!$ehFacilitador && !$ehAvaliador) {
+                $this->redirecionar('eventoInscricao/index/' . (int) $id);
+                return null;
+            }
+        }
+
+        return ['evento' => $evento, 'inscricao' => $inscricao, 'usuarioId' => $usuarioId];
+    }
+
+    /**
+     * Envio das respostas. A ordem das recusas segue o molde das telas
+     * anteriores: primeiro o que nao depende do que foi enviado (modulo
+     * ligado, pergunta cadastrada, janela, ja' respondeu), depois a
+     * validacao das respostas e, por ultimo, a gravacao.
+     */
+    public function pesquisaEnviar($id)
+    {
+        $contexto = $this->contextoPesquisaOuVolta($id);
+
+        if ($contexto === null) {
+            return;
+        }
+
+        $evento = $contexto['evento'];
+        $inscricao = $contexto['inscricao'];
+        $usuarioId = $contexto['usuarioId'];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirecionar('eventoApp/pesquisa/' . (int) $evento['id']);
+            return;
+        }
+
+        $configRepo = new PesquisaConfigRepository();
+        $config = $configRepo->vigente($evento['id']);
+        $servico = new PesquisaService();
+        $perguntas = (new PesquisaPerguntaRepository())->listarAtivas($evento['id']);
+
+        if ((int) $config['ativo'] !== 1 || $perguntas === []) {
+            $this->renderizarPesquisa($evento, $inscricao, 'A pesquisa não está disponível neste evento.');
+            return;
+        }
+
+        if (!$servico->dentroDaJanela($evento, $config)) {
+            $janela = $servico->janelaTexto($evento, $config);
+            $this->renderizarPesquisa($evento, $inscricao, 'A pesquisa fica aberta' . ($janela !== '' ? ' de ' . $janela : '') . '.');
+            return;
+        }
+
+        if ((new PesquisaRespondenteRepository())->jaRespondeu($evento['id'], $usuarioId)) {
+            $this->renderizarPesquisa($evento, $inscricao, 'Você já respondeu a esta pesquisa.');
+            return;
+        }
+
+        $enviado = isset($_POST['resposta']) && is_array($_POST['resposta']) ? $_POST['resposta'] : [];
+        $conferencia = $servico->validarRespostas($perguntas, $enviado);
+
+        if ($conferencia['erros'] !== []) {
+            $this->renderizarPesquisa($evento, $inscricao, 'Confira as perguntas marcadas abaixo.', $conferencia['erros'], $enviado);
+            return;
+        }
+
+        if (!$servico->registrar($evento, $usuarioId, $conferencia['linhas'])) {
+            $this->renderizarPesquisa($evento, $inscricao, 'Você já respondeu a esta pesquisa.');
+            return;
+        }
+
+        // Quem responde sem ser inscrito (facilitador, avaliador avulso)
+        // responde e nao pontua: o credito exige inscricao no evento.
+        $creditados = $inscricao !== null
+            ? (new BonusApuracaoService())->creditarPorPesquisa($evento, $inscricao['id'])
+            : [];
+        $mensagem = 'Obrigado por responder.' . $this->mensagemDeBonus($creditados);
+
+        flashSucesso($mensagem);
+        $this->redirecionar('eventoApp/pesquisa/' . (int) $evento['id']);
+    }
+
+    /**
+     * A pesquisa so' aparece no painel quando esta' ligada, tem pergunta
+     * ativa e esta' dentro da janela. Usada pelo painel e pela propria tela.
+     */
+    private function pesquisaAberta(array $evento)
+    {
+        $config = (new PesquisaConfigRepository())->vigente($evento['id']);
+
+        if ((int) $config['ativo'] !== 1) {
+            return false;
+        }
+
+        if ((new PesquisaPerguntaRepository())->listarAtivas($evento['id']) === []) {
+            return false;
+        }
+
+        return (new PesquisaService())->dentroDaJanela($evento, $config);
+    }
+
+    private function renderizarPesquisa(array $evento, $inscricao, $erro = null, array $erros = [], array $valores = [])
+    {
+        if ($erro !== null) {
+            flashErro($erro);
+        }
+
+        $configRepo = new PesquisaConfigRepository();
+        $config = $configRepo->vigente($evento['id']);
+        $servico = new PesquisaService();
+        $respondente = (new PesquisaRespondenteRepository())->buscarPorUsuario($evento['id'], Auth::usuarioId());
+
+        $this->renderizar('eventoApp/pesquisa', [
+            'evento' => $evento,
+            'inscricao' => $inscricao,
+            // Sem inscricao no evento (facilitador, avaliador avulso), a
+            // pessoa responde e nao pontua, e a tela precisa dizer isso
+            // antes, nunca depois do envio.
+            'pontua' => $inscricao !== null,
+            'config' => $config,
+            'titulo' => $configRepo->tituloDe($config),
+            'perguntas' => (new PesquisaPerguntaRepository())->listarAtivas($evento['id']),
+            'dentroDaJanela' => $servico->dentroDaJanela($evento, $config),
+            'janelaTexto' => $servico->janelaTexto($evento, $config),
+            'respondente' => $respondente,
+            'servico' => $servico,
+            'erros' => $erros,
+            'valores' => $valores,
+            'escalaMinima' => PesquisaService::ESCALA_MINIMA,
+            'escalaMaxima' => PesquisaService::ESCALA_MAXIMA,
+        ], $configRepo->tituloDe($config) . ': ' . $evento['nome']);
+    }
+
+    /**
      * Fase 43: endpoint AJAX do componente de leitura - recebe o codigo
      * decodificado do QR (BarcodeDetector nativo) OU digitado manualmente
      * (fallback usado sempre em Safari/Firefox, que nao suportam a API), e
@@ -1028,9 +1229,15 @@ class EventoAppController extends Controller
             return;
         }
 
+        // Fase 57 (bloco E, pendencia 34): quem conduziu uma atividade
+        // tambem responde a pesquisa de satisfacao, e ate' aqui nao tinha
+        // por onde. Nao pontua, porque nao tem inscricao.
         $this->renderizar('eventoApp/facilitacoes', [
             'evento' => $evento,
             'facilitacoes' => $facilitacoes,
+            'pesquisaAberta' => $this->pesquisaAberta($evento),
+            'pesquisaRespondida' => (new PesquisaRespondenteRepository())->jaRespondeu($evento['id'], Auth::usuarioId()),
+            'temInscricao' => (new EventoInscricaoRepository())->buscarPorEventoEUsuario($id, Auth::usuarioId()) !== null,
         ], 'Minhas facilitações: ' . $evento['nome']);
     }
 
@@ -1137,7 +1344,57 @@ class EventoAppController extends Controller
 
         $checkins->registrar($atividadeId, $inscricaoLeitor['id'], $modalidadeAcesso);
         $tentativas->limparFalhas($usuarioId, $atividadeId);
-        echo json_encode(['valido' => true, 'mensagem' => 'Presença confirmada em "' . $atividade['nome'] . '".']);
+
+        // Fase 57: a presenca nova pode fechar um bonus. A apuracao roda
+        // DEPOIS da gravacao da presenca e dentro de um bloco de protecao
+        // proprio: a presenca e' o fato principal, o cabecalho da resposta
+        // ja foi escrito, e falha na apuracao nunca pode transformar uma
+        // confirmacao bem sucedida em erro na tela de quem esta na porta da
+        // sala. Nao ha' chamada dentro de EventoCheckinRepository de
+        // proposito: repositorio nao depende de servico neste projeto, e
+        // aqui o metodo so' chega quando a presenca e' nova de verdade (a
+        // repetida ja' retornou acima).
+        $mensagem = 'Presença confirmada em "' . $atividade['nome'] . '".';
+
+        try {
+            $creditados = (new BonusApuracaoService())->apurarInscricao($evento, $inscricaoLeitor['id'], Auth::usuarioId());
+            $mensagem .= $this->mensagemDeBonus($creditados);
+        } catch (\Throwable $e) {
+            error_log('[Bonus] Falha ao apurar apos a presenca da inscricao ' . (int) $inscricaoLeitor['id'] . ': ' . $e->getMessage());
+        }
+
+        echo json_encode(['valido' => true, 'mensagem' => $mensagem]);
+    }
+
+    /**
+     * Fase 57: complemento da mensagem da leitura quando a presenca fecha um
+     * ou mais bonus. Sai com o nome cadastrado pelo Administrador, nunca com
+     * um nome fixo em codigo.
+     */
+    private function mensagemDeBonus(array $creditados)
+    {
+        if ($creditados === []) {
+            return '';
+        }
+
+        $nomes = [];
+        $pontos = 0;
+
+        foreach ($creditados as $credito) {
+            $nomes[] = $credito['nome'];
+            $pontos += (int) $credito['pontos'];
+        }
+
+        $lista = count($nomes) === 1
+            ? $nomes[0]
+            : implode(', ', array_slice($nomes, 0, -1)) . ' e ' . $nomes[count($nomes) - 1];
+
+        if ($pontos === 0) {
+            return ' Você fechou ' . (count($nomes) === 1 ? 'o bônus' : 'os bônus') . ' ' . $lista . '.';
+        }
+
+        return ' Você fechou ' . (count($nomes) === 1 ? 'o bônus' : 'os bônus') . ' ' . $lista
+            . ': ' . $pontos . ($pontos === 1 ? ' ponto.' : ' pontos.');
     }
 
     /**

@@ -3,7 +3,10 @@
     exit('Acesso negado');
 } ?>
 
-<div class="site-page">
+<?php /* O atributo avisa a rotina de rascunho (assets/js/rascunho-trabalho.js)
+de que esta e' a tela em que o envio bem-sucedido cai: ela apaga o rascunho
+desta aba, e so' quando o envio acabou de acontecer. */ ?>
+<div class="site-page" data-rascunho-enviado-evento="<?php echo (int) $trabalho['evento_id']; ?>">
     <?php
     $eventoId = $trabalho['evento_id'];
     $tituloTopo = $trabalho['evento_nome'];
