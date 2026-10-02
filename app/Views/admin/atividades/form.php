@@ -73,7 +73,22 @@
         <input type="checkbox" name="emite_certificado" value="1" <?php echo ($atividade !== null && !empty($atividade['emite_certificado'])) ? 'checked' : ''; ?>>
         Emite certificado por esta atividade
     </label>
-    <p style="color:#555;font-size:0.9em;">A emissão de certificado em si é uma etapa futura: aqui só se guarda a decisão.</p>
+    <p style="color:#555;font-size:0.9em;">Marcada, quem confirmou presença nesta atividade e quem a conduziu passam a ter um certificado próprio dela, com a duração dela como carga horária. O texto do documento é um só para todas as atividades, em Certificados, Configurações.</p>
+
+    <?php /* Fase 59: plano de fundo próprio desta atividade, pelo mesmo
+    seletor da tela de configurações dos certificados. Sem escolha aqui, vale
+    a arte das atividades em Certificados, Configurações. */ ?>
+    <?php
+    $campoUrl = 'certificado_fundo_url';
+    $campoCor = 'certificado_fundo_cor';
+    $valorUrl = $atividade !== null && isset($atividade['certificado_fundo_url']) ? $atividade['certificado_fundo_url'] : '';
+    $valorCor = $atividade !== null && isset($atividade['certificado_fundo_cor']) ? $atividade['certificado_fundo_cor'] : '';
+    $rotuloFundo = 'Plano de fundo do certificado desta atividade';
+    $eventoIdFundo = (int) $evento['id'];
+    $semPadraoFundo = true;
+    include __DIR__ . '/../certificados/_seletor_fundo.php';
+    ?>
+    <p style="color:#555;font-size:0.9em;">Sem escolha aqui, vale a arte das atividades em Certificados, Configurações. Escolher uma arte ou uma cor nesta tela faz a atividade decidir por conta própria.</p>
 
     <label>Vagas (em branco = ilimitada):
         <input type="number" name="vagas" min="1" value="<?php echo htmlspecialchars($atividade !== null && $atividade['vagas'] !== null ? (string) $atividade['vagas'] : '', ENT_QUOTES, 'UTF-8'); ?>" style="width:6em;">
@@ -103,7 +118,19 @@
             <?php endforeach; ?>
         </select>
     </label>
-    <p style="color:#555;font-size:0.9em;">Usado pela sub-aba "Presenças" e futuramente pelo certificado; não afeta se a confirmação de presença é aceita, só se ela conta como presença efetiva.</p>
+    <p style="color:#555;font-size:0.9em;">Usado pela sub-aba "Presenças"; não afeta se a confirmação de presença é aceita, só se ela conta como presença efetiva. Conta como efetiva a confirmação feita desde a abertura da leitura (os minutos antes do início escolhidos acima) até a porcentagem da duração escolhida aqui. A leitura é recusada depois do fim da atividade.</p>
+
+    <?php
+    $pontosPresencaAtual = $atividade !== null && isset($atividade['pontos_presenca']) && $atividade['pontos_presenca'] !== null ? (string) $atividade['pontos_presenca'] : '';
+    $pontosPontualidadeAtual = $atividade !== null && isset($atividade['pontos_pontualidade']) && $atividade['pontos_pontualidade'] !== null ? (string) $atividade['pontos_pontualidade'] : '';
+    ?>
+    <label>Pontos de presença desta atividade:
+        <input type="number" name="pontos_presenca" min="0" max="1000" step="1" style="width:6em;" value="<?php echo htmlspecialchars($pontosPresencaAtual, ENT_QUOTES, 'UTF-8'); ?>">
+    </label>
+    <label>Extra de pontualidade desta atividade:
+        <input type="number" name="pontos_pontualidade" min="0" max="1000" step="1" style="width:6em;" value="<?php echo htmlspecialchars($pontosPontualidadeAtual, ENT_QUOTES, 'UTF-8'); ?>">
+    </label>
+    <p style="color:#555;font-size:0.9em;">Em branco, a atividade usa os valores do tipo (Tipos de atividade). Preencha só quando esta atividade tiver valor diferente do tipo; zero significa que ela não pontua. Mudar os valores não altera presença já pontuada.</p>
 
     <?php if ($ehEdicao && !empty($atividade['codigo_atividade'])): ?>
         <p>
@@ -117,7 +144,7 @@
         <p>
             <strong>Código de presença online desta atividade:</strong> <?php echo htmlspecialchars($atividade['codigo_presenca_online'], ENT_QUOTES, 'UTF-8'); ?>
         </p>
-        <p style="color:#555;font-size:0.9em;">Informe este código verbalmente durante a atividade: quem está participando online digita esse código no aplicativo (em vez de ler o QR) para confirmar presença.</p>
+        <p style="color:#555;font-size:0.9em;">Informe este código assim que a sala virtual abrir, antes do início: quem participa pela internet digita esse código no aplicativo (em vez de ler o QR) para confirmar presença, e pontua como quem está na sala, inclusive com o extra de pontualidade.</p>
     <?php endif; ?>
 
     <div class="form-acoes">

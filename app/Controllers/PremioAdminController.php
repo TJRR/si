@@ -80,7 +80,7 @@ class PremioAdminController extends Controller
 
         if (in_array($modo, ['geral', 'por_trilha'], true)) {
             $this->concursos->atualizarModoPremiacao($concursoId, $modo);
-            $_SESSION['flash'] = 'Modo de premiação atualizado.';
+            flashSucesso('Modo de premiação atualizado.');
         }
 
         $this->redirecionar('premios/index/' . $concursoId);
@@ -162,7 +162,7 @@ class PremioAdminController extends Controller
             $this->imagens->remover($premio['imagem_path']);
         }
 
-        $_SESSION['flash'] = 'Prêmio removido.';
+        flashSucesso('Prêmio removido.');
         $this->redirecionar('premios/index/' . $concursoId);
     }
 

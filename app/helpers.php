@@ -93,10 +93,9 @@ function estiloDeCores($corFundo = null, $corTexto = null, array $extra = [])
 }
 
 /**
- * Reabertura da Fase 51 (achado do teste de fumaca, item 1): destino dos
- * botoes "Voltar" nas telas do fluxo do Evento (inscricao, cadastro,
- * entrada). Leva a pagina publica do proprio evento quando ela esta
- * publicada; antes disso, a inscricao do evento. Nunca a home do Concurso.
+ * Destino dos botoes "Voltar" nas telas do fluxo do Evento: a pagina
+ * publica do proprio evento quando ela esta publicada; antes disso, a
+ * inscricao do evento. Nunca a home do Concurso.
  */
 function urlPaginaEvento($eventoId)
 {
@@ -274,11 +273,8 @@ function sufixoFusoHorario()
 }
 
 /**
- * Fase 24: link_meet (mentoria/oficina) e' texto livre digitado por
- * administrador/suporte e renderizado como href em telas de outros perfis
- * (participante) - sem essa checagem, um "link" tipo "javascript:..."
- * viraria XSS armazenado ao ser clicado. Valida tanto na gravacao
- * (Controllers) quanto de novo aqui na exibicao, como defesa em profundidade.
+ * Confere o endereco digitado antes de ele virar link, na gravacao e de
+ * novo na exibicao.
  */
 function linkHttpValido($link)
 {
@@ -315,12 +311,11 @@ function telefoneComCodigoPais($numero)
 }
 
 /**
- * Reabertura da Fase 51 (achado da equipe de Teste Cego): telefone
- * brasileiro com DDD, fixo (10 digitos, "(12) 3456-7890") ou celular (11
- * digitos, "(98) 76543-2100"), devolvido no formato de exibicao. Devolve
- * null quando nao tem 10 ou 11 digitos ou quando o DDD comeca com zero.
- * A mascara do navegador (assets/js/telefone-mascara.js) faz a mesma coisa
- * enquanto a pessoa digita; esta e' a validacao que decide, no servidor.
+ * Telefone brasileiro com DDD, fixo (10 digitos, "(12) 3456-7890") ou
+ * celular (11 digitos, "(98) 76543-2100"), devolvido no formato de
+ * exibicao. Devolve null quando nao tem 10 ou 11 digitos ou quando o DDD
+ * comeca com zero. A mascara do navegador faz a mesma coisa enquanto a
+ * pessoa digita; esta e' a validacao que decide, no servidor.
  */
 function formatarTelefoneBr($valor)
 {
@@ -405,10 +400,8 @@ function classeFlash()
 }
 
 /**
- * Fase 31 (Auditoria de Seguranca): campo oculto com o token CSRF da sessao
- * atual, pra incluir logo apos a abertura de todo <form method="post">.
- * Validado centralmente em Router::despachar() pra qualquer requisicao
- * nao-GET de usuario autenticado.
+ * Campo oculto com o codigo de protecao do formulario, para incluir logo
+ * apos a abertura de todo formulario de envio.
  */
 function campoCsrf()
 {
@@ -416,12 +409,10 @@ function campoCsrf()
 }
 
 /**
- * Fase 31: so administrador/suporte com e-mail institucional do Workspace
- * (@tjrr.jus.br) pode ser organizador (mentor/criador de oficina) de um
- * compromisso integrado ao Google Agenda - a Service Account usa Domain-Wide
- * Delegation, que so consegue impersonar contas do dominio institucional.
- * Chamado tanto na view (desabilitar o checkbox) quanto no controller/
- * GoogleCalendarSyncService (validacao real, nunca confiar so no client).
+ * So' administrador/suporte com e-mail institucional pode ser organizador
+ * (mentor/criador de oficina) de compromisso integrado ao Google Agenda.
+ * Chamado na tela (desabilitar a caixa) e no servidor (validacao real).
+ * Ver Implantar.md, secao 13.4.
  */
 function organizadorElegivelGoogle($email)
 {
@@ -455,15 +446,8 @@ function normalizarNomeParaComparacao($nome)
 }
 
 /**
- * Fase 57 (achado do teste de fumaca): nome amigavel para o arquivo que a
- * pessoa baixa.
- *
- * Documento e modelo sao guardados com nome gerado (numero longo), que e' o
- * que impede alguem de adivinhar o endereco de um arquivo ainda nao
- * publicado. Esse nome continua igual no servidor; o que muda e' so' o nome
- * sugerido no download, montado a partir do TITULO cadastrado pelo
- * Administrador, para a pessoa nao receber um punhado de digitos na pasta de
- * downloads.
+ * Nome amigavel para o arquivo que a pessoa baixa, montado a partir do
+ * titulo cadastrado. O nome guardado no servidor nao muda.
  *
  * Ex.: titulo "Edital de Submissao de Trabalhos" com arquivo
  * "a1b2c3d4e5f6.pdf" vira "edital-de-submissao-de-trabalhos.pdf".
@@ -501,11 +485,8 @@ function nomeArquivoParaDownload($titulo, $arquivoPath)
  * antes desta fase, para quando nenhum tema tiver logo de Concurso definida.
  */
 /**
- * Fase 49 (achado do usuario): $contextoEvento faz a mesma escolha usar
- * logo_evento_path em vez de logo_concurso_path - usado nas telas de
- * participante/avaliador de Trabalhos (fora do aplicativo instalavel, mas
- * ainda assim experiencia do Evento, nunca do Concurso). Sem o parametro
- * (uso normal, telas do Concurso), comportamento identico ao de sempre.
+ * $contextoEvento usa a logo do Evento em vez da do Concurso, nas telas de
+ * Trabalhos fora do aplicativo. Sem o parametro, comportamento de sempre.
  */
 function logoAtual($contextoEvento = false)
 {
@@ -604,28 +585,11 @@ function categoriaAcaoAuditoria($acao)
 }
 
 /**
- * Sanitiza o HTML gravado pelo editor rico (Fase 18) por blocklist: remove
- * so' vetores de execucao de JavaScript (tags de script/embed/svg, atributos
- * on*, URLs fora da allowlist de esquemas seguros), preservando tudo o
- * resto (estilo inline de cor/fonte/tamanho/alinhamento, imagens, links,
- * barra decorativa) - decisao de 28/08/2026, ver discussao de seguranca
- * sobre XSS armazenado no campo resumo_destaque (resultados_trilha).
- * Chamada no momento de SALVAR (nunca na exibicao, que continua echo
- * direto).
+ * Saneia o HTML gravado pelo editor rico, no momento de gravar (a exibicao
+ * continua imprimindo direto). Ver Implantar.md, secao 13.6.
  *
- * Revisao de seguranca (mesmo dia) apontou duas lacunas do blocklist
- * original, corrigidas aqui: (1) 'href'/'src' sozinhos nao pegam atributos
- * namespaced tipo 'xlink:href' dentro de <svg> - agora compara pelo nome
- * LOCAL (depois do ':'), alem de remover <svg>/<math>/<style>/<template>
- * inteiras (nenhuma e' usada pelo editor, entao remover nao quebra nada
- * real). (2) blacklist de esquema (javascript:/vbscript:) trocada por
- * ALLOWLIST (http/https/mailto/tel/relativo) - fecha qualquer esquema
- * perigoso que uma blacklist pudesse deixar passar (data:, etc.), sem
- * depender de prever cada variante.
- *
- * Usa DOMDocument (extensao 'dom', ja garantida no ambiente porque
- * dompdf/dompdf a exige) - sem lib nova, sem build step, mesma filosofia
- * do editor-rico.js.
+ * Usa DOMDocument (extensao 'dom', ja exigida pelo dompdf), sem biblioteca
+ * nova.
  */
 function sanitizarHtmlRico($html)
 {

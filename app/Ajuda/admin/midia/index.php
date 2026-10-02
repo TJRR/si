@@ -32,6 +32,11 @@ return [
             'observacao' => 'Bloqueado com erro se o item ainda estiver em uso, por exemplo na galeria de fotos de uma edição.',
         ],
         [
+            'nome' => 'Marcar e agir em lote',
+            'como' => 'Marque a caixa "Marcar" das mídias e use a barra acima dos cartões: escolha a pasta e clique em "Mover marcadas", ou clique em "Remover marcadas". Até 100 mídias por vez.',
+            'observacao' => 'Na remoção em lote, se qualquer uma das mídias marcadas estiver em uso, nenhuma é removida e a tela avisa; remova uma a uma para descobrir qual está em uso. Sem nenhuma mídia marcada, nada acontece e a tela avisa em laranja.',
+        ],
+        [
             'nome' => '+ Nova mídia',
             'como' => 'Tipo, arquivo, alt obrigatório para imagem, título/descrição, e edição de origem opcional (marca de qual concurso o item veio, sem restringir o uso).',
         ],

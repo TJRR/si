@@ -49,16 +49,9 @@
 <?php if (empty($inscricoes)): ?>
     <p>Nenhuma inscrição encontrada<?php echo $statusFiltro !== '' ? ' com este filtro' : ' nesta trilha'; ?>.</p>
 <?php else: ?>
-    <!--
-        form-acoes-em-massa fica vazio, so' com trilha_id, e os controles que
-        pertencem a ele (checkboxes da tabela + botoes em massa no fim da
-        pagina) se associam via atributo form="form-acoes-em-massa" em vez de
-        aninhamento de <form> - HTML nao permite <form> dentro de <form>
-        (era o caso antes, com a tabela inteira dentro deste form: o
-        navegador descarta o form aninhado, entao os botoes "Homologar"/
-        "Rejeitar" de cada linha acabavam submetendo ESTE form em vez do
-        deles, sem action nenhuma - por isso o botao "nao funcionava").
-    -->
+    <?php /* Formulario de lote vazio: as caixas da tabela e os botoes do fim
+    da pagina se ligam a ele por form="form-acoes-em-massa", porque HTML nao
+    aceita formulario dentro de formulario e cada linha ja tem os seus. */ ?>
     <form method="post" id="form-acoes-em-massa"><?= campoCsrf() ?>
         <input type="hidden" name="trilha_id" value="<?php echo (int) $trilha['id']; ?>">
     </form>

@@ -182,7 +182,7 @@ class DuvidaAdminController extends Controller
         $this->duvidas->responder((int) $id);
         $this->notificarEquipe($duvida, 'Dúvida respondida', 'Sua dúvida foi respondida.');
 
-        $_SESSION['flash'] = 'Resposta enviada.';
+        flashSucesso('Resposta enviada.');
         $this->redirecionar('duvidaAdmin/ver/' . (int) $id);
     }
 
@@ -213,7 +213,7 @@ class DuvidaAdminController extends Controller
         $this->duvidas->escalar((int) $id, $novoResponsavelId);
         $this->notificarResponsavel($novoResponsavelId, $duvida);
 
-        $_SESSION['flash'] = 'Dúvida escalada.';
+        flashSucesso('Dúvida escalada.');
         $this->redirecionar('duvidaAdmin/ver/' . (int) $id);
     }
 
@@ -239,7 +239,7 @@ class DuvidaAdminController extends Controller
         $this->duvidas->retomar((int) $id);
         $this->notificarAdministradoresFilaGeral($duvida);
 
-        $_SESSION['flash'] = 'Dúvida retomada: de volta à fila geral.';
+        flashSucesso('Dúvida retomada: de volta à fila geral.');
         $this->redirecionar('home/administrativo');
     }
 

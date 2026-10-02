@@ -91,10 +91,8 @@ class UsuarioAdminController extends Controller
             }
             unset($vinculo);
 
-            // Fase 31 (melhoria pos-auditoria): badge de "bloqueado por
-            // tentativas de login" (rate limiting do achado #11) - so'
-            // relevante pra quem tem senha propria, ja que Google nao passa
-            // por AuthService::autenticar().
+            // Selo de bloqueio por tentativas de entrada, so' para quem tem senha
+            // propria.
             $usuario['bloqueado_login'] = $this->tentativasLogin->contarFalhasRecentes(
                 $usuario['email'],
                 AuthService::JANELA_TENTATIVAS_MINUTOS
@@ -371,7 +369,7 @@ class UsuarioAdminController extends Controller
             }
         }
 
-        $_SESSION['flash'] = 'Usuário atualizado.';
+        flashSucesso('Usuário atualizado.');
         $this->redirecionar('usuarios/editar/' . $id);
     }
 
@@ -416,10 +414,8 @@ class UsuarioAdminController extends Controller
     }
 
     /**
-     * Fase 31 (melhoria pos-auditoria): remove o bloqueio por tentativas de
-     * login (achado #11) antes do prazo normal (15min). A tela ja avisa o
-     * Admin do risco antes de confirmar (ver admin/usuarios.php) - aqui so'
-     * fica o registro de auditoria de quem decidiu assumir esse risco.
+     * Remove o bloqueio por tentativas de entrada antes do prazo; a auditoria
+     * registra quem decidiu.
      */
     public function removerBloqueioLogin()
     {
@@ -484,7 +480,7 @@ class UsuarioAdminController extends Controller
                     $this->avaliadorCategorias->atribuir($resultado['usuario_id'], $concursoId, $categoriaAvaliadorId);
                 }
 
-                $_SESSION['flash'] = 'Usuário convidado com sucesso.';
+                flashSucesso('Usuário convidado com sucesso.');
                 $this->redirecionar('usuarios/index');
                 return;
             }

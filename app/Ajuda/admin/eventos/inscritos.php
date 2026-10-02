@@ -12,7 +12,7 @@ return [
         ['nome' => 'Editar resposta', 'como' => 'Administrador e Suporte podem corrigir ou preencher a resposta de qualquer campo direto nesta tela, sem depender do participante reenviar o formulário.'],
         ['nome' => 'Coluna "Documento"', 'como' => 'Exibida formatada (###.###.###-##) quando o "Tipo de Documento de Identificação" da linha for CPF; para RG/RNE/Passaporte, aparece como foi digitado, sem máscara.'],
         ['nome' => 'Homologar', 'como' => 'Marca a inscrição como credenciada. Só aparece no modo "Assistido".'],
-        ['nome' => 'Exportar (.csv)', 'como' => 'Gera a lista completa de inscritos, com as colunas exigidas pela EJURR (Educa Enfam), para importação no sistema deles. Abre no Excel ou LibreOffice.'],
+        ['nome' => 'Exportar (.csv)', 'como' => 'Gera a lista completa de inscritos, com as colunas no formato exigido pela instituição que certifica as horas, para importação no sistema dela. Abre em qualquer programa de planilha.'],
     ],
     'conceitos' => [],
 ];

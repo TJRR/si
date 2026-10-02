@@ -44,7 +44,7 @@ class FormularioAdminController extends Controller
 
         try {
             $this->formularios->remover($id);
-            $_SESSION['flash'] = 'Formulário removido.';
+            flashSucesso('Formulário removido.');
         } catch (\PDOException $e) {
             flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: este formulário já tem campos, etapas vinculadas ou submissões.'

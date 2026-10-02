@@ -1,21 +1,21 @@
 <?php
 
 /**
- * Fase 32: diagnostico da leitura de presenca no Google Meet - so' LEITURA,
- * nao grava nada no banco nem altera nada no Google. Uso:
- *   php database/testar_google_meet_presenca.php seu-email@tjrr.jus.br CONFERENCE_ID
+ * Diagnostico da leitura de presenca no Google Meet: so' LEITURA, nao
+ * grava nada no banco nem altera nada no Google. Uso:
+ *   php database/testar_google_meet_presenca.php <e-mail> CONFERENCE_ID
  *
  * O CONFERENCE_ID sai da coluna google_conference_id de um horario ja
- * integrado e JA ENCERRADO (mentoria_horarios ou oficina_horarios). Horarios
- * criados antes da Fase 32 tem essa coluna vazia - use um horario novo, ou
- * rode antes o database/backfill_conference_id.php.
+ * integrado e JA ENCERRADO (mentoria_horarios ou oficina_horarios). Horario
+ * sem essa coluna preenchida: use um horario novo, ou rode antes o
+ * database/backfill_conference_id.php.
  *
  * Rode isto ANTES de confiar na captura automatica. Ele responde, em ordem:
  *   1. A edicao do Workspace libera dados de presenca? (causa mais provavel
- *      de lista vazia - ver DeployFase32.md, secao 0)
- *   2. O conference_id resolve pra um space?
+ *      de lista vazia; ver Implantar.md, secao 13.4)
+ *   2. O conference_id resolve para um space?
  *   3. Existe conferenceRecord, e ele ja esta encerrado (endTime)?
- *   4. Que nome exatamente a API devolve pra cada participante? (e' por esse
+ *   4. Que nome exatamente a API devolve para cada participante? (e' por esse
  *      nome que o casamento com participantes cadastrados acontece)
  */
 
@@ -53,9 +53,7 @@ echo "E-mail a impersonar: {$email}\n";
 echo "conference_id informado: {$conferenceId}\n";
 linha('=');
 
-// Passo 1: token com o escopo NOVO (meetings.space.readonly). Um token de
-// Calendar que funciona nao garante nada aqui - o escopo do Meet precisa ter
-// sido autorizado separadamente na Delegacao em Todo o Dominio.
+// Passo 1: token com a permissao de leitura do Meet. Ver Implantar.md, secao 13.4.
 echo "Obtendo access token com o escopo do Meet...\n";
 echo "  " . GoogleMeetService::ESCOPO_LEITURA . "\n";
 

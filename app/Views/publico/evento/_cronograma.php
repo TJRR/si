@@ -19,8 +19,7 @@ $mostrarBotao3 = !empty($dadosSecao['botao3_titulo']) && $urlBotao3 !== '';
 $mostrarContato = !empty($dadosSecao['mostrar_contato']) && $contato !== null && (!empty($contato['email']) || !empty($contato['whatsapp']));
 $botao1AbreDocumento = !empty($dadosSecao['botao1_documento_id']);
 $botao3AbreDocumento = !empty($dadosSecao['botao3_documento_id']);
-// Fase 57 (achado do teste de fumaca): nome sugerido no download, vindo do
-// titulo do documento. O arquivo continua guardado com o nome gerado.
+// Nome sugerido no download, vindo do titulo do documento.
 $botao1Download = isset($dadosSecao['botao1_download']) ? (string) $dadosSecao['botao1_download'] : '';
 $botao3Download = isset($dadosSecao['botao3_download']) ? (string) $dadosSecao['botao3_download'] : '';
 ?>

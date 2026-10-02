@@ -70,7 +70,7 @@ class DuvidaController extends Controller
             $erro = $this->salvarNova();
 
             if ($erro === null) {
-                $_SESSION['flash'] = 'Dúvida registrada. Você será notificado quando houver resposta.';
+                flashSucesso('Dúvida registrada. Você será notificado quando houver resposta.');
                 $this->redirecionar('duvida/index');
                 return;
             }
@@ -126,7 +126,7 @@ class DuvidaController extends Controller
         $this->respostas->criar((int) $id, Auth::usuarioId(), $texto, $anexoPath, $anexoNomeOriginal);
         $this->notificarAdministradoresNovaDuvida((int) $duvida['concurso_id'], $duvida['nome_equipe'], $duvida['participante_nome'], (int) $id);
 
-        $_SESSION['flash'] = 'Dúvida reaberta.';
+        flashSucesso('Dúvida reaberta.');
         $this->redirecionar('duvida/ver/' . (int) $id);
     }
 

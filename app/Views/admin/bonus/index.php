@@ -51,6 +51,15 @@
                     <?php if (!empty($item['tipo_atividade_nome'])): ?>
                         (<?php echo htmlspecialchars($item['tipo_atividade_nome'], ENT_QUOTES, 'UTF-8'); ?>)
                     <?php endif; ?>
+                    <?php if ($tipo === 'perfil_campos'): ?>
+                        <?php
+                        $rotulosCampos = [];
+                        foreach (\App\Services\BonusApuracaoService::camposDoBonus($item) as $campoExigido) {
+                            $rotulosCampos[] = \App\Services\BonusApuracaoService::CAMPOS_PERFIL_ROTULOS[$campoExigido];
+                        }
+                        ?>
+                        (<?php echo htmlspecialchars(implode(', ', $rotulosCampos), ENT_QUOTES, 'UTF-8'); ?>)
+                    <?php endif; ?>
                     · <?php echo (int) $item['pontos']; ?> <?php echo (int) $item['pontos'] === 1 ? 'ponto' : 'pontos'; ?>
                     · <?php echo (int) $item['total_creditos']; ?> <?php echo (int) $item['total_creditos'] === 1 ? 'pessoa já ganhou' : 'pessoas já ganharam'; ?>
                 </span>

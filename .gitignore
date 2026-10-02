@@ -9,15 +9,9 @@
 /assets/uploads/*
 !/assets/uploads/.gitkeep
 
-# Fase 18: exportar_dump_completo.php agora grava na raiz do projeto (nao
-# mais em storage/exports/, pasta removida) - nunca versionar, contem CPF/
-# e-mail/telefone de todo mundo.
+# Exportacao completa do banco, com dados pessoais: nunca versionar.
 /dump_completo_*.sql
 
-# Dados reais de submissao/homologacao (CPF, nome, e-mail, telefone de
-# participantes) - nunca versionar, este repo e' publico. A pasta inteira fica
-# invisivel ao git (17/07/2026, correcao de vazamento real desde a Fase 3 -
-# ver memoria do projeto). Os scripts que leem arquivos dela (ex.:
-# importar_submissoes_google_forms.php) continuam versionados normalmente,
-# so' os dados de entrada e' que nunca devem ser commitados.
+# Arquivos de entrada das rotinas de importacao, com dados pessoais: nunca
+# versionar. As rotinas que os leem continuam versionadas.
 /database/dados_importacao/

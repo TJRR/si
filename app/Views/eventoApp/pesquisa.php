@@ -42,7 +42,7 @@
             <p>A pesquisa de satisfação ainda não está disponível neste evento.</p>
         <?php elseif (!$dentroDaJanela): ?>
             <p>
-                A pesquisa fica aberta<?php echo $janelaTexto !== '' ? ' de ' . htmlspecialchars($janelaTexto, ENT_QUOTES, 'UTF-8') : ''; ?>.
+                A pesquisa fica aberta<?php echo $janelaTexto !== '' ? ' ' . htmlspecialchars($janelaTexto, ENT_QUOTES, 'UTF-8') : ''; ?>.
             </p>
         <?php else: ?>
             <div class="admin-card">
@@ -58,6 +58,11 @@
                 <p style="color:#555;">
                     A sua resposta conta para o resultado da pesquisa, mas não credita pontos: os pontos
                     são dos participantes inscritos no evento.
+                </p>
+            <?php elseif (!empty($gincanaEncerrada)): ?>
+                <p style="color:#555;">
+                    A gincana deste evento foi encerrada: a sua resposta conta para o resultado da pesquisa,
+                    mas não credita mais pontos.
                 </p>
             <?php endif; ?>
 

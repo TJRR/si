@@ -25,6 +25,8 @@ use App\Core\Database;
  */
 class ConexaoRepository
 {
+    use OperacaoEmLote;
+
     /**
      * Ordem canonica do par: menor id primeiro. Unico lugar do sistema que
      * decide essa ordem - qualquer consulta ou gravacao passa por aqui.
@@ -254,5 +256,92 @@ class ConexaoRepository
         $stmt->execute(['evento_id' => (int) $eventoId]);
 
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Fase 58: lista nominal das conexoes do evento, com as duas pessoas de
+     * cada par.
+     *
+     * Ate' a Fase 57 a tela administrativa mostrava so' numeros, porque o par
+     * e' dado pessoal de terceiro. O dono decidiu em 01/10/2026 que o
+     * Administrador passa a ver os pares, para poder desfazer uma leitura
+     * feita por engano pela propria tela, no lugar do script de linha de
+     * comando. A ajuda da tela diz isso.
+     *
+     * A busca alcanca as DUAS pessoas do par: procurar por um nome traz toda
+     * conexao em que a pessoa aparece, de qualquer lado.
+     */
+    public function listarPorEvento($eventoId, array $filtros = [])
+    {
+        $sql =
+            'SELECT c.*, um.nome AS nome_menor, um.email AS email_menor,
+                    ux.nome AS nome_maior, ux.email AS email_maior
+               FROM evento_conexoes c
+               INNER JOIN evento_inscricoes im ON im.id = c.inscricao_menor_id
+               INNER JOIN usuarios um ON um.id = im.usuario_id
+               INNER JOIN evento_inscricoes ix ON ix.id = c.inscricao_maior_id
+               INNER JOIN usuarios ux ON ux.id = ix.usuario_id
+              WHERE c.evento_id = :evento';
+        $parametros = ['evento' => (int) $eventoId];
+
+        if (!empty($filtros['busca'])) {
+            $sql .= ' AND (um.nome LIKE :busca OR um.email LIKE :busca OR ux.nome LIKE :busca OR ux.email LIKE :busca)';
+            $parametros['busca'] = '%' . $filtros['busca'] . '%';
+        }
+
+        if (!empty($filtros['data_inicio'])) {
+            $sql .= ' AND DATE(c.conectado_em) >= :data_inicio';
+            $parametros['data_inicio'] = $filtros['data_inicio'];
+        }
+
+        if (!empty($filtros['data_fim'])) {
+            $sql .= ' AND DATE(c.conectado_em) <= :data_fim';
+            $parametros['data_fim'] = $filtros['data_fim'];
+        }
+
+        $sql .= ' ORDER BY c.conectado_em DESC, c.id DESC';
+
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($parametros);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Fase 58: remove em lote as conexoes marcadas. Apagar a linha devolve
+     * os pontos dos dois lados sozinho, porque a classificacao soma as
+     * linhas existentes: e' o mesmo efeito de
+     * database/remover_conexao_evento.php, agora pela tela.
+     *
+     * Devolve as linhas removidas, para a mensagem.
+     */
+    public function removerEmLote($eventoId, array $ids)
+    {
+        $identificadores = $this->identificadoresDoLote($ids);
+
+        if ($identificadores === []) {
+            return [];
+        }
+
+        $marcadores = implode(', ', array_fill(0, count($identificadores), '?'));
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT id FROM evento_conexoes WHERE id IN (' . $marcadores . ') AND evento_id = ?'
+        );
+        $stmt->execute(array_merge($identificadores, [(int) $eventoId]));
+        $alcancadas = $stmt->fetchAll();
+
+        if ($alcancadas === []) {
+            return [];
+        }
+
+        $alcancados = array_map(function ($linha) {
+            return (int) $linha['id'];
+        }, $alcancadas);
+
+        $this->executarLote('DELETE FROM evento_conexoes', '', $eventoId, $alcancados, [], 'remover', 'evento_conexoes');
+
+        return $alcancadas;
     }
 }

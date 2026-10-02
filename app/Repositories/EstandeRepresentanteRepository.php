@@ -47,8 +47,7 @@ class EstandeRepresentanteRepository
     }
 
     /**
-     * O estande, se (e so' se) a pessoa o representa. E' a conferencia de
-     * posse de toda acao do painel do representante.
+     * O estande, se (e so' se) a pessoa o representa.
      */
     public function buscarVinculo($estandeId, $usuarioId)
     {

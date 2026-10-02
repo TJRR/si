@@ -108,10 +108,8 @@ class PesquisaRespondenteRepository
     }
 
     /**
-     * Auditoria do fato nominal, chamada depois do commit. So' esta tabela e'
-     * auditada: a gravacao das respostas nunca passa por Auditoria, porque a
-     * trilha carimba usuario e instante e abriria sozinha o elo que o
-     * desenho das tabelas fecha.
+     * Auditoria do fato nominal, chamada depois do commit. A gravacao das
+     * respostas nunca passa por Auditoria: ver Implantar.md, secao 13.16.
      */
     public function auditarResposta($eventoId, $usuarioId)
     {

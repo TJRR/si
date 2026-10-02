@@ -548,10 +548,9 @@ class TrabalhoImportacaoService
 
     /**
      * O anexo chega pelo endereco do Drive na planilha; o arquivo em si vem
-     * na pasta exportada, renomeado pelo identificador daquele endereco
-     * (ver o roteiro de exportacao no DeployFase51.md). Casar por
-     * identificador, e nao por nome, e' o que evita trocar um arquivo pelo
-     * de outra pessoa.
+     * na pasta exportada, renomeado pelo identificador daquele endereco (ver
+     * Implantar.md, secao 13.10). Casar por identificador, e nao por nome, e'
+     * o que evita trocar um arquivo pelo de outra pessoa.
      */
     private function localizarArquivo($endereco, $pastaArquivos, array $extensoes, $limiteBytes)
     {

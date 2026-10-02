@@ -79,11 +79,8 @@
                     </li>
                 <?php endif; ?>
                 <?php
-                // linkHttpValido() de novo na exibicao (ja validado na gravacao)
-                // - defesa em profundidade, igual link_meet: link gravado antes
-                // desta checagem existir pode estar sem esquema ou ser
-                // "javascript:...". Filtra antes do <li> pra nao sobrar item
-                // vazio no rodape quando nenhum link passar.
+                // Endereco conferido de novo na exibicao (ver Implantar.md, secao 13.6).
+                // Filtra antes do <li> para nao sobrar item vazio no rodape.
                 $redesValidas = [];
 
                 if (!empty($contato['redes_sociais'])) {

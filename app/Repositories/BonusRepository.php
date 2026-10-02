@@ -89,7 +89,7 @@ class BonusRepository
      * linha com coluna nula nao colide em UNIQUE no MySQL: a chave
      * funcionaria num tipo e falharia nos outros tres.
      */
-    public function existeDuplicata($eventoId, $tipo, $exigencia, $tipoAtividadeId, $ignorarId = null)
+    public function existeDuplicata($eventoId, $tipo, $exigencia, $tipoAtividadeId, $ignorarId = null, $camposPerfil = null)
     {
         $pdo = Database::conexao();
         $sql = 'SELECT id FROM evento_bonus
@@ -103,6 +103,16 @@ class BonusRepository
 
         if ($tipoAtividadeId !== null) {
             $parametros['tipo_atividade_id'] = $tipoAtividadeId;
+        }
+
+        // Fase 58: dois bonus do tipo perfil_campos com listas diferentes
+        // sao legitimos ("Completar perfil" e "Contato e minicurriculo").
+        // A lista e' gravada sempre na mesma ordem, entao comparar o texto
+        // basta.
+        $sql .= ' AND ' . ($camposPerfil === null ? 'campos_perfil IS NULL' : 'campos_perfil = :campos_perfil');
+
+        if ($camposPerfil !== null) {
+            $parametros['campos_perfil'] = $camposPerfil;
         }
 
         if ($ignorarId !== null) {
@@ -147,11 +157,12 @@ class BonusRepository
             'tipo_atividade_id' => $dados['tipo_atividade_id'],
             'pontos' => $dados['pontos'],
             'ativo' => $dados['ativo'],
+            'campos_perfil' => isset($dados['campos_perfil']) ? $dados['campos_perfil'] : null,
         ];
 
         $stmt = $pdo->prepare(
-            'INSERT INTO evento_bonus (evento_id, ordem, nome, descricao, tipo, exigencia, tipo_atividade_id, pontos, ativo)
-             VALUES (:evento_id, :ordem, :nome, :descricao, :tipo, :exigencia, :tipo_atividade_id, :pontos, :ativo)'
+            'INSERT INTO evento_bonus (evento_id, ordem, nome, descricao, tipo, exigencia, tipo_atividade_id, pontos, ativo, campos_perfil)
+             VALUES (:evento_id, :ordem, :nome, :descricao, :tipo, :exigencia, :tipo_atividade_id, :pontos, :ativo, :campos_perfil)'
         );
         $stmt->execute($campos);
         $id = (int) $pdo->lastInsertId();
@@ -177,13 +188,21 @@ class BonusRepository
             'tipo_atividade_id' => $dados['tipo_atividade_id'],
             'pontos' => $dados['pontos'],
             'ativo' => $dados['ativo'],
+            // Fase 58: sem a chave, a lista de campos do perfil fica como
+            // estava. A desativacao de BonusAdminController::remover() chama
+            // este metodo com uma lista explicita que nao a traz, e nao pode
+            // apaga-la.
+            'campos_perfil' => array_key_exists('campos_perfil', $dados)
+                ? $dados['campos_perfil']
+                : ($antes !== null ? $antes['campos_perfil'] : null),
         ];
 
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'UPDATE evento_bonus
                 SET nome = :nome, descricao = :descricao, exigencia = :exigencia,
-                    tipo_atividade_id = :tipo_atividade_id, pontos = :pontos, ativo = :ativo
+                    tipo_atividade_id = :tipo_atividade_id, pontos = :pontos, ativo = :ativo,
+                    campos_perfil = :campos_perfil
               WHERE id = :id'
         );
         $stmt->execute($campos + ['id' => $id]);

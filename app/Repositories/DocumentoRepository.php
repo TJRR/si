@@ -216,13 +216,8 @@ class DocumentoRepository
     }
 
     /**
-     * Fase 29 (Bug 3): ordem manual via drag-and-drop na tela de Documentos,
-     * refletida na home - mesmo padrao ja usado em SlideRepository/
-     * PremioRepository etc. (assets/js/reordenar-arrastar.js).
-     * Fase 50 (achado de seguranca): WHERE passou a incluir concurso_id,
-     * nao so' id - sem isso, um id de documento de OUTRO concurso seria
-     * aceito e teria sua ordem alterada, sem checagem de posse. Mesmo
-     * padrao ja usado por PremioRepository/FaqConcursoRepository.
+     * Ordem manual na tela de Documentos, refletida na home. Escopo do
+     * concurso no proprio comando: ver Implantar.md, secao 13.6.
      */
     public function reordenar($concursoId, array $ids)
     {

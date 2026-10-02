@@ -7,19 +7,28 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Meu evento',
-    'resumo' => 'Painel do aplicativo do Evento: mostra o evento em que você está inscrito e a situação da sua inscrição. Seu crachá de credenciamento fica em "Minha inscrição" (menu ☰). "Conectar com participante" abre a leitura do crachá de outra pessoa.',
+    'resumo' => 'Painel do aplicativo do Evento: mostra o evento em que você está inscrito e a situação da sua inscrição. O seu código de participante fica em "Minha inscrição" (menu ☰) e na tela "Conectar com participante".',
     'operacoes' => [
         [
             'nome' => 'Selo de situação',
             'como' => 'Mostra se sua inscrição já está confirmada ou ainda aguardando homologação do Administrador.',
         ],
         [
+            'nome' => 'Seus pontos na gincana',
+            'como' => 'Aparece quando o evento mostra a pontuação no aplicativo. É o seu total, somando todas as formas de pontuar. "Ver minha pontuação e a classificação" abre a sua posição, o extrato e os primeiros da classificação; "Regras do jogo" explica quanto vale cada coisa.',
+            'observacao' => 'Depois do encerramento da gincana, o cartão avisa que a classificação está congelada: nada mais pontua.',
+        ],
+        [
+            'nome' => '"Ler código"',
+            'como' => 'Abre o leitor dos códigos fixos: o afixado no local de uma atividade (confirma a presença), o do credenciamento no local do evento (confirma a sua chegada) e o que o responsável por uma competição mostra na hora (registra a sua participação).',
+        ],
+        [
             'nome' => '"Conectar com participante"',
-            'como' => 'Aparece quando o evento está com as conexões ativadas. Abre a leitura do crachá de outra pessoa (câmera, quando o navegador suportar, ou digitação do código de 6 caracteres). Uma leitura só conecta as duas e credita os pontos às duas; cada dupla conta uma vez. Logo abaixo do botão aparece o seu total, depois da primeira conexão.',
+            'como' => 'Aparece quando o evento está com as conexões ativadas. Abre a leitura do código de outra pessoa (câmera, quando o navegador suportar, ou digitação do código de 6 caracteres) e mostra o seu próprio código. Uma leitura só conecta as duas e credita os pontos às duas; cada dupla conta uma vez. Logo abaixo do botão aparece o seu total, depois da primeira conexão.',
         ],
         [
             'nome' => '"Divulgação"',
-            'como' => 'Aparece quando o evento está com a divulgação ativada. Abre a tela em que você comprova que publicou sobre o evento numa rede social, ou que passou a acompanhar um canal do Tribunal, e recebe os pontos na hora. Logo abaixo do botão aparece o seu total, depois da primeira comprovação.',
+            'como' => 'Aparece quando o evento está com a divulgação ativada. Abre a tela em que você comprova que publicou sobre o evento numa rede social, ou que passou a seguir um canal indicado pela organização, e recebe os pontos na hora. Logo abaixo do botão aparece o seu total, depois da primeira comprovação.',
         ],
         [
             'nome' => '"Estandes"',
@@ -28,6 +37,10 @@ return [
         [
             'nome' => 'Bônus',
             'como' => 'Aparece quando o evento tem bônus automáticos ativos. Cada bônus mostra o nome dado pela organização, quanto falta para você fechá-lo (por exemplo, 3 de 5 atividades diferentes) e os pontos que ele vale; fechado, aparece com os pontos já creditados. Nada precisa ser enviado: a conta é feita a partir das suas confirmações de presença.',
+        ],
+        [
+            'nome' => 'Bônus de ações',
+            'como' => 'Alguns bônus pedem uma ação sua, e não presenças: ter inscrição no evento, preencher campos do perfil (a tela diz quais faltam e leva a Meu Perfil), confirmar o credenciamento no local (leva ao leitor) ou ser autor de um trabalho submetido. Cada um vale uma vez. O de perfil é conferido também quando você abre este painel, então vale mesmo que o perfil tenha sido preenchido fora do aplicativo.',
         ],
         [
             'nome' => '"Responder à pesquisa"',
@@ -47,7 +60,7 @@ return [
         ],
         [
             'nome' => 'Menu (ícone ☰)',
-            'como' => 'Abre "Painel", "Minha inscrição" (dados que você preencheu), "Meu Perfil" (seus dados, a aparência e a troca de senha, além do que você compartilha nas conexões) e "Sair".',
+            'como' => 'Abre "Painel", "Minha inscrição" (dados que você preencheu e o seu código), "Meu Perfil" (seus dados, a aparência e a troca de senha, além do que você compartilha nas conexões), "Minha pontuação" e "Regras do jogo" (quando o evento mostra a pontuação) e "Sair".',
         ],
     ],
     'conceitos' => [],

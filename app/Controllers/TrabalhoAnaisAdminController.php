@@ -187,7 +187,8 @@ class TrabalhoAnaisAdminController extends Controller
         if (empty($_POST['avisar_autores'])) {
             flashSucesso('Anais publicados (versão ' . (int) $resultado['numero'] . '). Nenhum aviso foi enviado aos autores.');
         } else {
-            $this->avisarAutores($eventoId, (int) $resultado['numero']);
+            $modo = isset($_POST['modo_aviso']) && $_POST['modo_aviso'] === 'todos' ? 'todos' : 'novos';
+            $this->avisarAutores($eventoId, (int) $resultado['numero'], $modo);
         }
 
         $this->redirecionar('trabalhoAnais/index/' . $eventoId);
@@ -230,12 +231,43 @@ class TrabalhoAnaisAdminController extends Controller
 
         $config = (new TrabalhoConfigRepository())->buscarPorEvento($eventoId);
         $resultadoPublicado = $config !== null && !empty($config['resultado_publicado_em']);
+        $estaPublicado = $this->anais->estaPublicado($eventoId);
+        $linhas = $resultadoPublicado ? $this->servico->montarSelecao($eventoId) : [];
+        $totalApresentados = 0;
+
+        foreach ($linhas as $linha) {
+            if ($linha['apresentado']) {
+                $totalApresentados++;
+            }
+        }
+
+        $sugestao = null;
+
+        if (!empty($_GET['sugerir']) && !$estaPublicado && !empty($linhas)) {
+            $sugestao = $totalApresentados > 0 ? 'aplicada' : 'sem_marcas';
+
+            if ($sugestao === 'aplicada') {
+                foreach ($linhas as $indice => $linha) {
+                    if ($linha['selecionado'] && !$linha['apresentado']) {
+                        $linhas[$indice]['incluido'] = false;
+                        $linhas[$indice]['sugerido'] = true;
+
+                        if ($linha['motivo'] === '') {
+                            $linhas[$indice]['motivo'] = 'Trabalho não apresentado';
+                        }
+                    }
+                }
+            }
+        }
 
         $this->renderizar('admin/trabalhos_anais/trabalhos', [
             'evento' => $evento,
             'resultadoPublicado' => $resultadoPublicado,
-            'estaPublicado' => $this->anais->estaPublicado($eventoId),
-            'linhas' => $resultadoPublicado ? $this->servico->montarSelecao($eventoId) : [],
+            'estaPublicado' => $estaPublicado,
+            'linhas' => $linhas,
+            'totalApresentados' => $totalApresentados,
+            'sugestao' => $sugestao,
+            'casasDecimais' => TrabalhoConfigRepository::casasDecimais($config),
         ], 'Trabalhos nos Anais: ' . $evento['nome'], ['tipo' => 'trabalhosAnaisSelecao', 'id' => (int) $eventoId]);
     }
 
@@ -244,10 +276,16 @@ class TrabalhoAnaisAdminController extends Controller
      * avisos (sino e e-mail) nunca desfaz a publicacao, so' avisa o
      * Administrador para comunicar os autores por outro meio.
      */
-    private function avisarAutores($eventoId, $numeroVersao)
+    private function avisarAutores($eventoId, $numeroVersao, $modo)
     {
         try {
-            $avisos = (new EventoAnaisAvisoService())->avisarAutores($eventoId, Auth::usuarioId());
+            $avisos = (new EventoAnaisAvisoService())->avisarAutores($eventoId, Auth::usuarioId(), $modo, $numeroVersao);
+
+            if ($avisos['trabalhos'] === 0) {
+                flashSucesso('Anais publicados (versão ' . $numeroVersao . '). Nenhum trabalho novo desde o último aviso, então ninguém foi avisado de novo.');
+                return;
+            }
+
             flashSucesso(
                 'Anais publicados (versão ' . $numeroVersao . '). Avisos aos autores: ' . $avisos['sinos'] . ' no aplicativo e '
                 . $avisos['emails'] . ' e-mail(s) na fila de envio (saem dez por minuto).'

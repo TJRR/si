@@ -19,10 +19,13 @@ use App\Repositories\EventoCheckinRepository;
 use App\Repositories\EventoInscricaoRepository;
 use App\Repositories\EventoPerfilOrganizacaoRepository;
 use App\Repositories\NotificacaoPainelRepository;
+use App\Repositories\PresencaCreditoRepository;
 use App\Repositories\SemanaInovacaoRepository;
 use App\Repositories\UsuarioRepository;
 use App\Services\BonusApuracaoService;
 use App\Services\EjurrExportService;
+use App\Services\GamificacaoService;
+use App\Services\PresencaPontuacaoService;
 use App\Services\NotificacaoService;
 
 /**
@@ -199,10 +202,21 @@ class AtividadeAdminController extends Controller
         }
         unset($checkin);
 
+        // Fase 58: os pontos de cada presenca, com a pontualidade congelada
+        // no instante da leitura. Recurso opcional da tela: falha de banco
+        // (tabela ainda nao criada) so' esconde as colunas.
+        try {
+            $creditosPresenca = (new PresencaCreditoRepository())->mapaPorAtividade($id);
+        } catch (\PDOException $e) {
+            error_log('[Presenca] Falha ao ler os creditos da atividade ' . (int) $id . ': ' . $e->getMessage());
+            $creditosPresenca = [];
+        }
+
         $this->renderizar('admin/atividades/checkins', [
             'evento' => $evento,
             'atividade' => $atividade,
             'checkins' => $checkins,
+            'creditosPresenca' => $creditosPresenca,
             'podeEditar' => Auth::possuiPerfil('administrador'),
         ], 'Presenças: ' . $atividade['nome'], ['tipo' => 'atividadeCheckin', 'id' => (int) $id]);
     }
@@ -263,22 +277,144 @@ class AtividadeAdminController extends Controller
 
         $evento = $this->eventos->buscarPorId($atividade['evento_id']);
         $anulados = [];
+        $presencaAnulada = null;
 
         if ($evento !== null) {
+            // Fase 58: primeiro o credito da propria presenca, depois os
+            // bonus que perderam a base. As duas anulacoes sao PELO SISTEMA
+            // e voltam sozinhas quando a presenca volta (nova leitura antes
+            // do fim da atividade, ou "Restaurar presenca"). Com a gincana
+            // encerrada, nenhuma das duas acontece: a presenca sai, os
+            // pontos nao se movem.
+            $presencaAnulada = (new PresencaPontuacaoService())->anularPorRemocao(
+                $evento,
+                $checkin,
+                'A organização removeu esta presença.'
+            );
+            $this->avisarPresencaAnulada($evento, $atividade, (int) $checkin['evento_inscricao_id'], $presencaAnulada, $motivo);
+
             $anulados = (new BonusApuracaoService())->reapurarAposRemocao($evento, (int) $checkin['evento_inscricao_id']);
             $this->avisarBonusAnulados($evento, (int) $checkin['evento_inscricao_id'], $anulados);
         }
 
         $mensagem = 'Presença removida.';
 
+        if ($presencaAnulada !== null) {
+            $mensagem .= ' Os pontos desta presença foram anulados, com aviso à pessoa.';
+        }
+
         if ($anulados !== []) {
             $mensagem .= ' ' . count($anulados)
                 . (count($anulados) === 1 ? ' bônus desta pessoa perdeu a base e foi anulado' : ' bônus desta pessoa perderam a base e foram anulados')
-                . ', com aviso a ela. Registrar a presença de novo devolve o que foi anulado assim.';
+                . ', com aviso a ela.';
+        }
+
+        if ($presencaAnulada !== null || $anulados !== []) {
+            $mensagem .= ' "Restaurar presença" devolve o que foi anulado assim.';
+        }
+
+        if ($evento !== null && GamificacaoService::encerrada((int) $evento['id'])) {
+            $mensagem .= ' A gincana está encerrada, então os pontos não foram alterados.';
         }
 
         flashSucesso($mensagem);
         $this->redirecionar('atividades/checkins/' . (int) $id);
+    }
+
+    /**
+     * Fase 58 (N2 do plano): desfaz a remocao de uma presenca preservando o
+     * horario original da leitura. Antes desta fase, a volta de uma remocao
+     * por engano era a propria pessoa ler o codigo de novo; como a leitura
+     * passou a fechar no fim da atividade, depois do fim esse caminho nao
+     * existe mais.
+     *
+     * O credito da presenca volta como era (horario original), e os bonus
+     * anulados pelo sistema voltam pela apuracao da pessoa.
+     */
+    public function restaurarCheckin($id, $checkinId = null)
+    {
+        RoleMiddleware::exigir(['administrador']);
+        $atividade = $this->atividades->buscarPorId($id);
+
+        if ($atividade === null) {
+            http_response_code(404);
+            exit('Atividade não encontrada.');
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirecionar('atividades/checkins/' . (int) $id);
+            return;
+        }
+
+        $checkinRepo = new EventoCheckinRepository();
+        $checkin = $checkinRepo->buscarPorId($checkinId);
+
+        if ($checkin === null || (int) $checkin['atividade_id'] !== (int) $atividade['id']) {
+            flashErro('Presença não encontrada nesta atividade.');
+            $this->redirecionar('atividades/checkins/' . (int) $id);
+            return;
+        }
+
+        if (!$checkinRepo->restaurar((int) $checkin['id'], Auth::usuarioId())) {
+            flashAlerta('Esta presença não está removida.');
+            $this->redirecionar('atividades/checkins/' . (int) $id);
+            return;
+        }
+
+        $evento = $this->eventos->buscarPorId($atividade['evento_id']);
+        $mensagem = 'Presença restaurada, com o horário original da leitura.';
+
+        if ($evento !== null && !GamificacaoService::encerrada((int) $evento['id'])) {
+            $inscricao = (new EventoInscricaoRepository())->buscarPorId((int) $checkin['evento_inscricao_id']);
+            $checkinAtual = $checkinRepo->buscarPorId((int) $checkin['id']);
+
+            if ($inscricao !== null && $checkinAtual !== null) {
+                try {
+                    $devolvido = (new PresencaPontuacaoService())->restaurar($evento, $atividade, $checkinAtual, (int) $inscricao['usuario_id']);
+                    (new BonusApuracaoService())->apurarInscricao($evento, (int) $inscricao['id'], (int) $inscricao['usuario_id']);
+
+                    if (is_array($devolvido) && empty($devolvido['facilitador']) && empty($devolvido['encerrada'])) {
+                        $mensagem .= ' Os pontos da presença voltaram a valer.';
+                    }
+                } catch (\Throwable $e) {
+                    error_log('[Presenca] Falha ao devolver os pontos da presenca ' . (int) $checkin['id'] . ': ' . $e->getMessage());
+                    $mensagem .= ' Os pontos não puderam ser devolvidos agora; use "Reconferir agora" em Gamificação, Classificação.';
+                }
+            }
+        } elseif ($evento !== null) {
+            $mensagem .= ' A gincana está encerrada, então os pontos não foram alterados.';
+        }
+
+        flashSucesso($mensagem);
+        $this->redirecionar('atividades/checkins/' . (int) $id);
+    }
+
+    /**
+     * Fase 58: aviso no sino de quem perdeu os pontos de uma presenca
+     * removida. Separado do aviso de bonus, que fala so' de bonus.
+     */
+    private function avisarPresencaAnulada(array $evento, array $atividade, $inscricaoId, $credito, $motivoRemocao)
+    {
+        if ($credito === null) {
+            return;
+        }
+
+        $inscricao = (new EventoInscricaoRepository())->buscarPorId($inscricaoId);
+
+        if ($inscricao === null || empty($inscricao['usuario_id'])) {
+            return;
+        }
+
+        $pontos = (int) $credito['pontos_presenca'] + (int) $credito['pontos_pontualidade'];
+
+        (new NotificacaoPainelRepository())->criar(
+            (int) $inscricao['usuario_id'],
+            'presenca_pontos_anulados',
+            'Pontos de presença removidos',
+            'A organização removeu sua presença em "' . $atividade['nome'] . '", em ' . $evento['nome'] . ', e os '
+                . $pontos . ($pontos === 1 ? ' ponto dela foi anulado' : ' pontos dela foram anulados') . '. Motivo: ' . $motivoRemocao,
+            ['url' => url('eventoApp/index/' . (int) $evento['id'])]
+        );
     }
 
     /**
@@ -668,6 +804,16 @@ class AtividadeAdminController extends Controller
             'permite_lista_espera' => isset($_POST['permite_lista_espera']),
             'tolerancia_presenca_efetiva' => isset($_POST['tolerancia_presenca_efetiva']) ? trim($_POST['tolerancia_presenca_efetiva']) : '100',
             'antecedencia_abertura_presenca' => isset($_POST['antecedencia_abertura_presenca']) ? trim($_POST['antecedencia_abertura_presenca']) : '60',
+            'pontos_presenca' => isset($_POST['pontos_presenca']) ? trim($_POST['pontos_presenca']) : '',
+            'pontos_pontualidade' => isset($_POST['pontos_pontualidade']) ? trim($_POST['pontos_pontualidade']) : '',
+            // Fase 59: plano de fundo proprio do certificado desta atividade.
+            // Em branco vale o das atividades, na configuracao dos
+            // certificados do evento.
+            'certificado_fundo_url' => isset($_POST['certificado_fundo_url']) ? trim($_POST['certificado_fundo_url']) : '',
+            'certificado_fundo_cor' => isset($_POST['certificado_fundo_cor'])
+                && preg_match('/^#[0-9a-fA-F]{6}$/', trim($_POST['certificado_fundo_cor'])) === 1
+                ? strtolower(trim($_POST['certificado_fundo_cor']))
+                : '',
         ];
     }
 
@@ -695,6 +841,12 @@ class AtividadeAdminController extends Controller
 
         if (!in_array($dados['antecedencia_abertura_presenca'], ['15', '30', '60'], true)) {
             return 'Antecedência para abertura da confirmação de presença inválida.';
+        }
+
+        foreach (['pontos_presenca' => 'Pontos de presença', 'pontos_pontualidade' => 'Extra de pontualidade'] as $campo => $rotulo) {
+            if ($dados[$campo] !== '' && (!ctype_digit($dados[$campo]) || (int) $dados[$campo] > 1000)) {
+                return $rotulo . ' deve ser um número inteiro de 0 a 1000, ou em branco para usar o valor do tipo.';
+            }
         }
 
         return null;

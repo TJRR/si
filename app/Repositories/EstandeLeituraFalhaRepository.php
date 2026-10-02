@@ -10,10 +10,8 @@ if (!defined('SI_BOOT')) {
 use App\Core\Database;
 
 /**
- * Fase 54: limite de tentativas da leitura do codigo do estande, por
- * usuario, em tabela propria (mesmo contrato de LeituraCodigoFalhaRepository,
- * Fase 43). Nao ha coluna de estande porque nao existe falha depois de achar
- * um estande real: so' conta codigo inexistente.
+ * Limite de tentativas da leitura do codigo do estande, em tabela propria.
+ * Ver Implantar.md, secao 13.13.
  */
 class EstandeLeituraFalhaRepository
 {

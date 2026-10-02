@@ -57,6 +57,14 @@
                 <option value="mediana" <?php echo ($config !== null && $config['metodo_agregacao_nota'] === 'mediana') ? 'selected' : ''; ?>>Mediana</option>
             </select>
         </label>
+        <?php $casasDecimaisAtual = \App\Repositories\TrabalhoConfigRepository::casasDecimais($config); ?>
+        <label>Casas decimais da média por critério e da nota final:
+            <select name="casas_decimais">
+                <?php for ($c = 0; $c <= 4; $c++): ?>
+                    <option value="<?php echo $c; ?>"<?php echo $c === $casasDecimaisAtual ? ' selected' : ''; ?>><?php echo $c; ?></option>
+                <?php endfor; ?>
+            </select>
+        </label>
         <label>Nota de corte para aprovação (deixe em branco para não exigir corte):
             <input type="number" step="0.01" name="nota_corte_aprovacao" value="<?php echo $config !== null && $config['nota_corte_aprovacao'] !== null ? htmlspecialchars($config['nota_corte_aprovacao'], ENT_QUOTES, 'UTF-8') : ''; ?>">
         </label>

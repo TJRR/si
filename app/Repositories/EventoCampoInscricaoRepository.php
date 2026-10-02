@@ -113,9 +113,7 @@ class EventoCampoInscricaoRepository
     }
 
     /**
-     * Fase 50 (achado de seguranca): WHERE inclui evento_id, nao so' id -
-     * sem isso, um id de campo de OUTRO evento seria aceito e teria sua
-     * ordem alterada, sem checagem de posse.
+     * Reordena os campos do evento. Escopo do evento no proprio comando: ver Implantar.md, secao 13.6.
      */
     public function reordenar($eventoId, array $ids)
     {
@@ -130,9 +128,6 @@ class EventoCampoInscricaoRepository
             }
 
             $pdo->commit();
-            // Fase 50: mover() nunca tinha auditoria (unico dos 5 repositories
-            // "swap com vizinho" sem isso) - reordenar() ja passa a ter, igual
-            // ao padrao dos demais, nao e' regressao, e' correcao da lacuna.
             Auditoria::registrar('reordenar', 'evento_campos_inscricao', null, null, ['evento_id' => $eventoId, 'ids' => $ids]);
         } catch (\Exception $e) {
             $pdo->rollBack();

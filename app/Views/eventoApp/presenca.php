@@ -15,8 +15,8 @@
         <?php require __DIR__ . '/_ajuda_card.php'; ?>
         <?php
         $leitorEndpoint = url('eventoApp/validarPresenca/' . (int) $evento['id']);
-        $leitorTitulo = 'Confirmar presença';
-        $leitorInstrucao = 'Aponte a câmera para o código da atividade ou digite-o abaixo.';
+        $leitorTitulo = 'Ler código';
+        $leitorInstrucao = 'Aponte a câmera para o código afixado no espaço da atividade ou no credenciamento, ou para o código que o responsável pela competição mostra, ou digite-o abaixo.';
         require __DIR__ . '/_leitor_codigo.php';
         ?>
     </div>

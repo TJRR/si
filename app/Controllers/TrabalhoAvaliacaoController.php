@@ -9,6 +9,7 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Repositories\CertificadoConfigRepository;
 use App\Repositories\PesquisaConfigRepository;
 use App\Repositories\PesquisaPerguntaRepository;
 use App\Repositories\PesquisaRespondenteRepository;
@@ -18,6 +19,7 @@ use App\Repositories\TrabalhoCriterioRepository;
 use App\Repositories\TrabalhoDesignacaoRepository;
 use App\Repositories\TrabalhoNotaRepository;
 use App\Repositories\TrabalhoRepository;
+use App\Services\CertificadoElegibilidadeService;
 use App\Services\PesquisaService;
 use App\Services\TrabalhoArquivoValidador;
 
@@ -131,9 +133,31 @@ class TrabalhoAvaliacaoController extends Controller
             ];
         }
 
+        // Fase 59: o certificado do avaliador avulso. Mesmo desenho do
+        // convite da pesquisa acima, um por evento, porque esta tela percorre
+        // as designacoes de mais de um. So' aparece quando as duas travas da
+        // emissao estao satisfeitas (o evento terminou e a organizacao abriu
+        // a chave); quem foi designado e nao lancou nota nenhuma chega a
+        // tela e le' por escrito que nao tem documento a retirar.
+        $certificados = [];
+        $configCertificado = new CertificadoConfigRepository();
+        $elegibilidade = new CertificadoElegibilidadeService();
+
+        foreach (array_keys($eventosComSigilo) as $eventoId) {
+            $evento = $this->eventos->buscarPorId($eventoId);
+
+            if ($evento === null
+                || !$elegibilidade->emissaoAbertaAoParticipante($evento, $configCertificado->vigente($eventoId))) {
+                continue;
+            }
+
+            $certificados[] = ['evento_id' => $eventoId, 'evento_nome' => $evento['nome']];
+        }
+
         $this->renderizar('avaliacaoTrabalhos/index', [
             'designacoes' => $lista,
             'pesquisas' => $pesquisas,
+            'certificados' => $certificados,
         ], 'Trabalhos para avaliar');
     }
 

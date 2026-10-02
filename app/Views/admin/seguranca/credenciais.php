@@ -3,10 +3,7 @@
     exit('Acesso negado');
 } ?>
 <?php
-    // Fase 35: NENHUM valor de campo sigiloso chega aqui. O repositorio
-    // devolve 'valor' => null para esses campos e entrega apenas a impressao
-    // digital - assim nao existe caminho pelo qual o segredo va parar no
-    // HTML por engano, nem mesmo num atributo escondido.
+    // Nenhum valor de campo sigiloso chega aqui: so' a impressao digital.
     $rotulos = [
         'client_email' => 'E-mail da Conta de Serviço',
         'private_key' => 'Chave privada (PEM)',

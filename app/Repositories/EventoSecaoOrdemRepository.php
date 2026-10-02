@@ -41,6 +41,7 @@ class EventoSecaoOrdemRepository
         'faq' => 'evento_secao_faq',
         'local' => 'evento_secao_local',
         'estandes' => 'evento_secao_estandes',
+        'anais' => 'evento_secao_anais',
     ];
 
     private static $tiposSemReferencia = ['quadros', 'faixas'];
@@ -66,7 +67,7 @@ class EventoSecaoOrdemRepository
         $stmt = $pdo->prepare(
             'SELECT o.id AS secao_id, o.tipo, o.referencia_id, o.ordem, o.ativo,
                     o.mostrar_no_menu, o.rotulo_menu, o.ancora,
-                    COALESCE(b.titulo, ct.titulo, cr.titulo, ca.titulo, de.titulo, pr.titulo, fa.titulo, lo.titulo, es.titulo) AS titulo_item,
+                    COALESCE(b.titulo, ct.titulo, cr.titulo, ca.titulo, de.titulo, pr.titulo, fa.titulo, lo.titulo, es.titulo, an.titulo) AS titulo_item,
                     b.secao_ancora AS bloco_ancora
              FROM evento_secoes_ordem o
              LEFT JOIN evento_blocos_conteudo b ON o.tipo = \'bloco\' AND b.id = o.referencia_id
@@ -78,6 +79,7 @@ class EventoSecaoOrdemRepository
              LEFT JOIN evento_secao_faq fa ON o.tipo = \'faq\' AND fa.id = o.referencia_id
              LEFT JOIN evento_secao_local lo ON o.tipo = \'local\' AND lo.id = o.referencia_id
              LEFT JOIN evento_secao_estandes es ON o.tipo = \'estandes\' AND es.id = o.referencia_id
+             LEFT JOIN evento_secao_anais an ON o.tipo = \'anais\' AND an.id = o.referencia_id
              WHERE o.evento_id = :evento_id
              ORDER BY o.ordem ASC, o.id ASC'
         );

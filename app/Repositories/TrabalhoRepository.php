@@ -11,13 +11,10 @@ use App\Core\Auditoria;
 use App\Core\Database;
 
 /**
- * Fase 49: submissoes de Trabalhos. Os metodos "ParaAvaliador"/
+ * Submissoes de Trabalhos. Os metodos "ParaAvaliador" e
  * "DesignadosParaUsuario" recebem $sigiloCego explicitamente e SO' trazem
- * os campos de autoria (trabalho_autores) quando $sigiloCego for false -
- * defesa em profundidade: a ocultacao acontece na propria consulta, nao so'
- * filtrada depois na view (achado corrigido na revisao desta fase: a
- * versao anterior descrevia a ocultacao como incondicional, o que fazia
- * "sigilo_cego desligado" nao mudar nada de verdade).
+ * os campos de autoria quando ele for false: a ocultacao acontece na
+ * propria consulta, nao so' na tela.
  */
 class TrabalhoRepository
 {
@@ -96,6 +93,26 @@ class TrabalhoRepository
         $trabalho = $stmt->fetch();
 
         return $trabalho !== false ? $trabalho : null;
+    }
+
+    /**
+     * Relacao publica dos trabalhos selecionados de um evento: so' titulo e
+     * eixo, em ordem alfabetica dentro de cada eixo, para a posicao nao ser
+     * deduzida da ordem. Quem chama confere se o resultado foi publicado.
+     */
+    public function listarSelecionadosPublicos($eventoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT t.id, t.titulo, e.nome AS eixo_nome
+             FROM trabalhos t
+             LEFT JOIN trabalho_eixos_tematicos e ON e.id = t.eixo_tematico_id
+             WHERE t.evento_id = :evento_id AND t.selecionado = 1
+             ORDER BY e.nome IS NULL, e.nome ASC, t.titulo ASC'
+        );
+        $stmt->execute(['evento_id' => (int) $eventoId]);
+
+        return $stmt->fetchAll();
     }
 
     public function listarPorEvento($eventoId)

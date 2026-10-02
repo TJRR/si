@@ -1,22 +1,20 @@
 <?php
 
 /**
- * Fase 32: captura automatica da presenca real no Google Meet dos horarios de
+ * Captura automatica da presenca real no Google Meet dos horarios de
  * Mentoria/Oficina ja encerrados. Uso:
  *   php database/capturar_presenca_google_meet.php [--limite=N]
  *
- * ESTE E' O PRIMEIRO PROCESSO AGENDADO DO PROJETO. Todo o resto do sistema e'
- * requisicao-resposta; aqui e' o cron do servidor que dispara (ver
- * DeployFase32.md, secao de infraestrutura, pra como instalar/monitorar).
+ * Disparado pelo agendador do servidor (ver Implantar.md, secao 13.4).
  *
  * NAO tem flag --confirmar, ao contrario dos outros scripts de database/.
- * Aqueles sao operados por um humano que confere o dry-run antes; este roda
- * sozinho a cada 15-30 min, sem ninguem pra confirmar nada. Escrever e'
- * exatamente o trabalho dele.
+ * Aqueles sao operados por um humano que confere o ensaio antes; este roda
+ * sozinho, sem ninguem para confirmar nada. Escrever e' exatamente o
+ * trabalho dele.
  *
  * Seguro rodar a qualquer momento e quantas vezes quiser: so' processa o que
  * esta pendente, e a gravacao das sessoes e' idempotente (apaga e regrava as
- * do horario) - reprocessar nunca duplica carga horaria.
+ * do horario); reprocessar nunca duplica carga horaria.
  */
 
 if (php_sapi_name() !== 'cli') {
@@ -58,10 +56,10 @@ foreach ($argv as $argumento) {
 }
 
 /**
- * Trava contra execucoes sobrepostas. E' defesa SECUNDARIA - a primaria e' a
- * gravacao idempotente das sessoes -, mas evita gastar cota do Google a toa
- * quando uma execucao demora mais que o intervalo do cron. Local ao host: nao
- * cobriria dois servidores rodando o mesmo cron (ver DeployFase32.md).
+ * Trava contra execucoes sobrepostas. E' defesa SECUNDARIA (a primaria e' a
+ * gravacao idempotente das sessoes), mas evita gastar cota do Google a toa
+ * quando uma execucao demora mais que o intervalo do agendador. Ver
+ * Implantar.md, secao 13.4.
  */
 $arquivoTrava = sys_get_temp_dir() . '/si_presenca_meet.lock';
 $trava = fopen($arquivoTrava, 'c');

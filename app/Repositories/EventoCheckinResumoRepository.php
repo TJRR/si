@@ -35,6 +35,12 @@ use App\Core\Database;
  * (migration 138): uma pessoa tem no maximo um check-in por atividade. Se
  * um dia alguem derrubar essa chave, a contagem dobra em silencio e os
  * bonus de atividades fecham com metade do que deveriam.
+ *
+ * Fase 58 (decisao do dono): presenca na atividade que a propria pessoa
+ * facilita (designacao ativa em evento_atividade_facilitadores) continua
+ * registrada, para certificado e exportacao EJURR, mas nao conta para
+ * bonus - no molde do representante, que nao pontua no proprio estande. A
+ * exclusao usa a chave UNIQUE (atividade_id, usuario_id) daquela tabela.
  */
 class EventoCheckinResumoRepository
 {
@@ -56,8 +62,12 @@ class EventoCheckinResumoRepository
                 'SELECT COUNT(*) AS atividades, COUNT(DISTINCT DATE(a.data_inicio)) AS dias
                    FROM evento_checkins c
                    INNER JOIN evento_atividades a ON a.id = c.atividade_id
+                   INNER JOIN evento_inscricoes ei ON ei.id = c.evento_inscricao_id
                   WHERE c.evento_inscricao_id = :inscricao AND a.evento_id = :evento
-                    AND c.removido_em IS NULL'
+                    AND c.removido_em IS NULL AND NOT EXISTS (
+                        SELECT 1 FROM evento_atividade_facilitadores f
+                         WHERE f.atividade_id = c.atividade_id AND f.usuario_id = ei.usuario_id AND f.removido_em IS NULL
+                    )'
             );
             $stmt->execute(['inscricao' => (int) $inscricaoId, 'evento' => (int) $eventoId]);
             $linha = $stmt->fetch();
@@ -94,8 +104,12 @@ class EventoCheckinResumoRepository
                 'SELECT a.tipo_id, COUNT(*) AS total
                    FROM evento_checkins c
                    INNER JOIN evento_atividades a ON a.id = c.atividade_id
+                   INNER JOIN evento_inscricoes ei ON ei.id = c.evento_inscricao_id
                   WHERE c.evento_inscricao_id = :inscricao AND a.evento_id = :evento
-                    AND a.tipo_id IS NOT NULL AND c.removido_em IS NULL
+                    AND a.tipo_id IS NOT NULL AND c.removido_em IS NULL AND NOT EXISTS (
+                        SELECT 1 FROM evento_atividade_facilitadores f
+                         WHERE f.atividade_id = c.atividade_id AND f.usuario_id = ei.usuario_id AND f.removido_em IS NULL
+                    )
                   GROUP BY a.tipo_id'
             );
             $stmt->execute(['inscricao' => (int) $inscricaoId, 'evento' => (int) $eventoId]);
@@ -128,7 +142,11 @@ class EventoCheckinResumoRepository
             'SELECT c.evento_inscricao_id, COUNT(*) AS atividades, COUNT(DISTINCT DATE(a.data_inicio)) AS dias
                FROM evento_checkins c
                INNER JOIN evento_atividades a ON a.id = c.atividade_id
-              WHERE a.evento_id = :evento AND c.removido_em IS NULL
+               INNER JOIN evento_inscricoes ei ON ei.id = c.evento_inscricao_id
+              WHERE a.evento_id = :evento AND c.removido_em IS NULL AND NOT EXISTS (
+                    SELECT 1 FROM evento_atividade_facilitadores f
+                     WHERE f.atividade_id = c.atividade_id AND f.usuario_id = ei.usuario_id AND f.removido_em IS NULL
+                )
               GROUP BY c.evento_inscricao_id'
         );
         $stmt->execute(['evento' => (int) $eventoId]);
@@ -156,7 +174,11 @@ class EventoCheckinResumoRepository
             'SELECT c.evento_inscricao_id, a.tipo_id, COUNT(*) AS total
                FROM evento_checkins c
                INNER JOIN evento_atividades a ON a.id = c.atividade_id
-              WHERE a.evento_id = :evento AND a.tipo_id IS NOT NULL AND c.removido_em IS NULL
+               INNER JOIN evento_inscricoes ei ON ei.id = c.evento_inscricao_id
+              WHERE a.evento_id = :evento AND a.tipo_id IS NOT NULL AND c.removido_em IS NULL AND NOT EXISTS (
+                    SELECT 1 FROM evento_atividade_facilitadores f
+                     WHERE f.atividade_id = c.atividade_id AND f.usuario_id = ei.usuario_id AND f.removido_em IS NULL
+                )
               GROUP BY c.evento_inscricao_id, a.tipo_id'
         );
         $stmt->execute(['evento' => (int) $eventoId]);
@@ -171,6 +193,87 @@ class EventoCheckinResumoRepository
             }
 
             $porInscricao[$inscricao][(int) $linha['tipo_id']] = (int) $linha['total'];
+        }
+
+        return $porInscricao;
+    }
+
+    /**
+     * Fase 59: as atividades com presenca de UMA pessoa, com o periodo de
+     * cada uma. Base do certificado: a contagem de atividades distintas, a de
+     * dias distintos e a carga horaria (uniao dos intervalos, em
+     * CertificadoElegibilidadeService) saem todas desta mesma lista, numa
+     * consulta so'.
+     *
+     * DUAS DIFERENCAS DELIBERADAS em relacao as quatro consultas acima, que
+     * servem aos bonus:
+     *
+     *   1. NAO exclui a atividade que a propria pessoa facilita. O comentario
+     *      do topo desta classe registra a decisao da Fase 58: a presenca na
+     *      atividade conduzida continua registrada "para certificado e
+     *      exportacao EJURR", e so' nao conta para bonus. Quem conduziu e'
+     *      quem mais esteve naquela sala.
+     *   2. Devolve o periodo, e nao uma contagem, porque somar as duracoes
+     *      exige saber onde cada atividade comeca e termina: as atividades da
+     *      5a Semana se sobrepoem (duas das 16h as 18h de 04/11, outras duas
+     *      das 14h as 18h de 06/11) e somar duracao a duracao declararia mais
+     *      horas do que o evento tem.
+     *
+     * removido_em IS NULL continua valendo: presenca removida pelo
+     * Administrador sai da conta do certificado como sai da dos bonus.
+     */
+    public function intervalosDaInscricao($eventoId, $inscricaoId)
+    {
+        try {
+            $pdo = Database::conexao();
+            $stmt = $pdo->prepare(
+                'SELECT a.id AS atividade_id, a.nome, a.local, a.data_inicio, a.data_fim,
+                        a.emite_certificado, a.certificado_fundo_url
+                   FROM evento_checkins c
+                   INNER JOIN evento_atividades a ON a.id = c.atividade_id
+                  WHERE c.evento_inscricao_id = :inscricao AND a.evento_id = :evento
+                    AND c.removido_em IS NULL
+                  ORDER BY a.data_inicio ASC, a.id ASC'
+            );
+            $stmt->execute(['inscricao' => (int) $inscricaoId, 'evento' => (int) $eventoId]);
+
+            return $stmt->fetchAll();
+        } catch (\PDOException $e) {
+            error_log('[Certificado] Falha ao listar as presencas da inscricao ' . (int) $inscricaoId . ': ' . $e->getMessage());
+
+            return [];
+        }
+    }
+
+    /**
+     * Fase 59: a mesma lista para TODOS os inscritos do evento de uma vez, na
+     * forma [evento_inscricao_id => [linha, ...]]. Quem nao tem presenca nao
+     * aparece, entao a apuracao do evento inteiro percorre so' quem pode ter
+     * direito a alguma coisa.
+     */
+    public function intervalosDoEvento($eventoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT c.evento_inscricao_id, a.id AS atividade_id, a.nome, a.local,
+                    a.data_inicio, a.data_fim, a.emite_certificado, a.certificado_fundo_url
+               FROM evento_checkins c
+               INNER JOIN evento_atividades a ON a.id = c.atividade_id
+              WHERE a.evento_id = :evento AND c.removido_em IS NULL
+              ORDER BY c.evento_inscricao_id ASC, a.data_inicio ASC, a.id ASC'
+        );
+        $stmt->execute(['evento' => (int) $eventoId]);
+
+        $porInscricao = [];
+
+        foreach ($stmt->fetchAll() as $linha) {
+            $inscricao = (int) $linha['evento_inscricao_id'];
+
+            if (!isset($porInscricao[$inscricao])) {
+                $porInscricao[$inscricao] = [];
+            }
+
+            $porInscricao[$inscricao][] = $linha;
         }
 
         return $porInscricao;

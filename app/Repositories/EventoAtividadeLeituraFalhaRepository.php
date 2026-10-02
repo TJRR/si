@@ -10,14 +10,8 @@ if (!defined('SI_BOOT')) {
 use App\Core\Database;
 
 /**
- * Fase 47: rate limiting de EventoAppController::validarPresenca(), inspirado
- * em LeituraCodigoFalhaRepository (Fase 43) mas com assinatura propria -
- * cada metodo recebe $atividadeId alem de $usuarioId, aceitando null. Quando
- * o codigo lido bate numa atividade real, o limite e' chaveado por
- * (usuario, atividade); quando nao bate em nenhuma (caso mais comum de erro
- * de leitura/digitacao), cai num "balde" comum (atividade_id IS NULL) - sem
- * isso, alguem errando em varias atividades diferentes ao longo do dia
- * poderia se bloquear sem ter errado 10x numa mesma atividade.
+ * Limite de tentativas de EventoAppController::validarPresenca(), em
+ * tabela propria. Ver Implantar.md, secao 13.6.
  */
 class EventoAtividadeLeituraFalhaRepository
 {

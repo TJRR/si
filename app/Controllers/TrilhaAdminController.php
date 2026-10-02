@@ -97,7 +97,7 @@ class TrilhaAdminController extends Controller
 
         try {
             $this->trilhas->remover($id);
-            $_SESSION['flash'] = 'Trilha removida.';
+            flashSucesso('Trilha removida.');
         } catch (\PDOException $e) {
             flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: esta trilha já tem etapas, equipes, fórmula ou regras de desempate vinculadas.'

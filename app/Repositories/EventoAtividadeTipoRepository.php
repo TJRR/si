@@ -15,6 +15,10 @@ use App\Core\Database;
  * Sessao solene, Cultural, Experiencia...), usado como etiqueta colorida nos
  * componentes Destaques e Programacao. Catalogo por evento, nunca lista fixa
  * em codigo: cada edicao usa os seus.
+ *
+ * Fase 58: o tipo passou a dar tambem o padrao de pontos por presenca e do
+ * extra de pontualidade (migration 192). A atividade pode ter valor proprio
+ * (evento_atividades.pontos_presenca e pontos_pontualidade, migration 193).
  */
 class EventoAtividadeTipoRepository
 {
@@ -46,13 +50,15 @@ class EventoAtividadeTipoRepository
         $proximaOrdem = (int) $stmt->fetchColumn();
 
         $stmt = $pdo->prepare(
-            'INSERT INTO evento_atividade_tipos (evento_id, nome, cor, ordem)
-             VALUES (:evento_id, :nome, :cor, :ordem)'
+            'INSERT INTO evento_atividade_tipos (evento_id, nome, cor, pontos_presenca, pontos_pontualidade, ordem)
+             VALUES (:evento_id, :nome, :cor, :pontos_presenca, :pontos_pontualidade, :ordem)'
         );
         $stmt->execute([
             'evento_id' => $eventoId,
             'nome' => $dados['nome'],
             'cor' => $dados['cor'],
+            'pontos_presenca' => (int) $dados['pontos_presenca'],
+            'pontos_pontualidade' => (int) $dados['pontos_pontualidade'],
             'ordem' => $proximaOrdem,
         ]);
         $id = (int) $pdo->lastInsertId();
@@ -71,10 +77,18 @@ class EventoAtividadeTipoRepository
         }
 
         $pdo = Database::conexao();
-        $stmt = $pdo->prepare('UPDATE evento_atividade_tipos SET nome = :nome, cor = :cor WHERE id = :id AND evento_id = :evento_id');
+        // Fase 58: os pontos mudam so' daqui para frente. Presenca ja'
+        // creditada guarda o valor do instante (evento_presenca_creditos).
+        $stmt = $pdo->prepare(
+            'UPDATE evento_atividade_tipos
+                SET nome = :nome, cor = :cor, pontos_presenca = :pontos_presenca, pontos_pontualidade = :pontos_pontualidade
+              WHERE id = :id AND evento_id = :evento_id'
+        );
         $stmt->execute([
             'nome' => $dados['nome'],
             'cor' => $dados['cor'],
+            'pontos_presenca' => (int) $dados['pontos_presenca'],
+            'pontos_pontualidade' => (int) $dados['pontos_pontualidade'],
             'id' => $id,
             'evento_id' => $eventoId,
         ]);

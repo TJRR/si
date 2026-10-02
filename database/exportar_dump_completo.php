@@ -1,41 +1,13 @@
 <?php
 
 /**
- * Fase 17 (Melhoria 2): exporta um dump SQL completo (estrutura + dados) do
- * banco - mecanismo para atender pedido de auditoria ou ordem judicial que
- * exija entrega da base de dados.
+ * Exporta um arquivo SQL completo do banco (estrutura e dados), para
+ * pedido de auditoria ou ordem judicial. O arquivo contem todos os dados
+ * pessoais do sistema. Ver Implantar.md, secao 13.7.
  *
- * Usa PDO (ja disponivel no projeto, "pdo_mysql") em vez de mysqldump: o
- * servidor de producao nao tem o cliente "mysql"/"mysqldump" instalado (ver
- * memoria de deploy da Fase 13) - so' PHP com extensao de banco, mesmo padrao
- * ja usado pra restaurar o dump inicial em producao.
- *
- * Fase 18: arquivo passa a ser gravado na raiz do projeto (nao mais em
- * storage/exports/) - um backup por rodada e' suficiente pra rotina de
- * deploy.
- *
- * Fase 32: o arquivo passa a ser gravado UM NIVEL ACIMA da raiz do projeto
- * (em producao, /sites/npi/www/ - a mesma pasta onde ficam os bkp-faseXX.tar.gz).
- * Motivo: o bloqueio de seguranca do Apache (si-seguranca.conf) barra qualquer
- * .sql dentro de si/, entao gerar ali obrigava um "sudo mv" manual antes de
- * baixar. Gerando ja no lugar certo, o passo extra deixa de existir.
- *
- * ATENCAO - dado sensivel: o arquivo gerado contem TODOS os dados pessoais
- * do sistema (CPF, nome, e-mail, telefone de participantes/avaliadores/
- * usuarios). O servidor de producao nao tem scp funcional (ver memoria de
- * deploy) - a transferencia real acontece via curl numa URL publica
- * temporaria (ver DeployFaseXX.md), entao trate a janela entre gerar e
- * apagar como o unico controle de fato: apague a copia do servidor assim
- * que confirmar o download local.
- *
- * Por padrao roda em modo consulta (dry-run): so lista as tabelas e a
- * contagem de linhas, sem gravar nada. Para gerar o arquivo de verdade:
- *   php database/exportar_dump_completo.php --fase=32 --confirmar
- *
- * --fase= e obrigatorio pra gerar: define o nome do arquivo, sempre
- * dump_completo_faseXX.sql. Nome previsivel de proposito - o que protege o
- * arquivo nao e' o nome, e' ele ficar FORA de si/ (nao servido por HTTP) e ser
- * apagado logo apos o download.
+ * Ensaio por padrao: so' lista as tabelas e a contagem de linhas. Para
+ * gerar o arquivo:
+ *   php database/exportar_dump_completo.php --fase=NN --confirmar
  */
 
 if (php_sapi_name() !== 'cli') {
@@ -88,10 +60,8 @@ if (!$confirmar) {
     exit(0);
 }
 
-// Fase 32: um nivel ACIMA da raiz do projeto - em producao, /sites/npi/www/.
-// Fora de si/, o arquivo nao e' servido por HTTP, o que dispensa tanto o
-// "sudo mv" manual quanto o nome imprevisivel que a Fase 31 usava justamente
-// porque o arquivo ficava exposto enquanto nao fosse apagado.
+// Um nivel acima da raiz do projeto, fora do que o servidor web publica.
+// Ver Implantar.md, secao 13.7.
 $pastaDestino = __DIR__ . '/../..';
 $nomeArquivo = 'dump_completo_fase' . $fase . '.sql';
 $caminhoArquivo = $pastaDestino . '/' . $nomeArquivo;

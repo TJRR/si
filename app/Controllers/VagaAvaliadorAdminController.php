@@ -45,7 +45,7 @@ class VagaAvaliadorAdminController extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $quantidades = isset($_POST['quantidade']) && is_array($_POST['quantidade']) ? $_POST['quantidade'] : [];
             $this->vagas->salvarQuantidades($etapaId, $quantidades);
-            $_SESSION['flash'] = 'Vagas por categoria salvas.';
+            flashSucesso('Vagas por categoria salvas.');
             $this->redirecionar('vagasAvaliador/index/' . $etapaId);
             return;
         }

@@ -37,7 +37,7 @@ $esc = function ($texto) {
     <?php endif; ?>
     <table>
         <?php foreach ($grupo['itens'] as $item): ?>
-            <tr>
+            <tr id="sumario-item-<?php echo (int) $item['indice']; ?>">
                 <td>
                     <div class="titulo-trabalho"><?php echo $esc($item['titulo']); ?></div>
                     <?php if ($item['autores'] !== ''): ?>

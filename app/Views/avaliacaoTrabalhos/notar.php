@@ -82,10 +82,7 @@
                             <p class="avaliacao-ajuda-texto" id="<?php echo $idAjuda; ?>" hidden><?php echo htmlspecialchars($criterio['descricao'], ENT_QUOTES, 'UTF-8'); ?></p>
                         <?php endif; ?>
 
-                        <!-- Achado do usuário: um controle só - a caixa
-                        central mostra/recebe a nota (digitável, aceita
-                        vírgula), a régua abaixo é outro jeito de ajustar o
-                        MESMO valor, sempre em sincronia. -->
+                        <?php /* A caixa e a régua ajustam o mesmo valor, sempre em sincronia. */ ?>
                         <div class="avaliacao-criterio-controle">
                             <button type="button" class="avaliacao-numero-botao" data-passo="-0.1" aria-label="Diminuir 0,1">−</button>
                             <input type="text" inputmode="decimal" class="avaliacao-criterio-numero"
@@ -107,12 +104,7 @@
     </div>
 </div>
 
-<!-- Fase 49B, achado do usuário: painel de consulta aos critérios do
-     edital (nunca o edital inteiro), reaproveitando o mesmo painel
-     deslizante genérico do menu do app (assets/js/painel-lateral.js já
-     abre/fecha por id e reaproveita o backdrop que _menu_painel.php já
-     injeta nesta página) - só como variante "fundo" (desliza de baixo
-     para cima, ver .site-painel-fundo em site.css) em vez de lateral. -->
+
 <aside id="painel-criterios-edital" class="site-painel-lateral site-painel-fundo" aria-hidden="true">
     <div class="site-painel-cabecalho">
         <h2>Critérios de avaliação</h2>

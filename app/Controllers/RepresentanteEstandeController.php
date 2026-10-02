@@ -15,8 +15,12 @@ use App\Repositories\EstandeRepository;
 use App\Repositories\EstandeRepresentanteRepository;
 use App\Repositories\EstandeVisitaRepository;
 use App\Repositories\EventoInscricaoRepository;
+use App\Repositories\PesquisaConfigRepository;
+use App\Repositories\PesquisaPerguntaRepository;
+use App\Repositories\PesquisaRespondenteRepository;
 use App\Repositories\SemanaInovacaoRepository;
 use App\Services\ImagemService;
+use App\Services\PesquisaService;
 
 /**
  * Fase 54: painel de quem representa um estande (perfil
@@ -52,8 +56,21 @@ class RepresentanteEstandeController extends Controller
             return;
         }
 
+        $pesquisaAbertaPorEvento = [];
+        $eventos = new SemanaInovacaoRepository();
+
+        foreach ($estandes as $item) {
+            $eventoId = (int) $item['evento_id'];
+
+            if (!isset($pesquisaAbertaPorEvento[$eventoId])) {
+                $evento = $eventos->buscarPorId($eventoId);
+                $pesquisaAbertaPorEvento[$eventoId] = $evento !== null && $this->pesquisaAberta($evento);
+            }
+        }
+
         $this->renderizar('representanteEstande/index', [
             'estandes' => $estandes,
+            'pesquisaAbertaPorEvento' => $pesquisaAbertaPorEvento,
         ], 'Meus estandes');
     }
 
@@ -61,6 +78,7 @@ class RepresentanteEstandeController extends Controller
     {
         $estande = $this->estandeDoUsuario($id);
         $evento = (new SemanaInovacaoRepository())->buscarPorId($estande['evento_id']);
+        $pesquisaAberta = $evento !== null && $this->pesquisaAberta($evento);
 
         $this->renderizar('representanteEstande/estande', [
             'estande' => $estande,
@@ -68,6 +86,8 @@ class RepresentanteEstandeController extends Controller
             'totalVisitas' => (new EstandeVisitaRepository())->contarVisitas((int) $estande['id']),
             'maisDeUmEstande' => count($this->representantes->listarPorUsuario(Auth::usuarioId())) > 1,
             'inscritoNoEvento' => (new EventoInscricaoRepository())->buscarPorEventoEUsuario((int) $estande['evento_id'], Auth::usuarioId()) !== null,
+            'pesquisaAberta' => $pesquisaAberta,
+            'pesquisaRespondida' => $pesquisaAberta && (new PesquisaRespondenteRepository())->jaRespondeu((int) $estande['evento_id'], Auth::usuarioId()),
         ], 'Estande: ' . $estande['nome']);
     }
 
@@ -164,5 +184,24 @@ class RepresentanteEstandeController extends Controller
         ]);
 
         return null;
+    }
+
+    /**
+     * Mesma regra de EventoAppController::pesquisaAberta(): modulo ligado,
+     * pergunta ativa e dentro da janela.
+     */
+    private function pesquisaAberta(array $evento)
+    {
+        $config = (new PesquisaConfigRepository())->vigente($evento['id']);
+
+        if ((int) $config['ativo'] !== 1) {
+            return false;
+        }
+
+        if ((new PesquisaPerguntaRepository())->listarAtivas($evento['id']) === []) {
+            return false;
+        }
+
+        return (new PesquisaService())->dentroDaJanela($evento, $config);
     }
 }

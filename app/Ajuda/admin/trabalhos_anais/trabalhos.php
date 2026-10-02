@@ -19,6 +19,15 @@ return [
             'como' => 'Texto livre e opcional, guardado junto da exclusão, para a equipe lembrar por que o trabalho ficou de fora.',
         ],
         [
+            'nome' => 'Apresentado',
+            'como' => 'Mostra se o trabalho tem a marca de apresentado, dada em Certificados, Apresentações. "Não" em laranja quer dizer que o trabalho foi selecionado para apresentação e ainda não tem a marca. O traço aparece nos trabalhos que não foram selecionados para apresentação, que não têm o que marcar.',
+        ],
+        [
+            'nome' => 'Sugerir exclusão dos não apresentados',
+            'como' => 'Recarrega a lista com os trabalhos selecionados e sem a marca de apresentado já desmarcados e com o motivo "Trabalho não apresentado" preenchido, quando o motivo estiver vazio. Nada é gravado: confira e use "Salvar lista" para gravar, ou saia da tela para descartar.',
+            'observacao' => 'Se nenhum trabalho do evento tiver a marca de apresentado, a sugestão não é aplicada, porque desmarcaria todos os selecionados. Com os Anais publicados, o botão não aparece.',
+        ],
+        [
             'nome' => 'Declarações',
             'como' => 'Alerta "Pendente" quando falta o aceite de alguma declaração obrigatória (Trabalhos, Declarações), por exemplo a autorização de publicação. Não impede o trabalho de constar, mas vale conferir antes de publicar os Anais.',
         ],

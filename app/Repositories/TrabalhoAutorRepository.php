@@ -102,11 +102,7 @@ class TrabalhoAutorRepository
     }
 
     /**
-     * Fase 54 (achado do teste do dono): segunda camada da regra "um
-     * trabalho por pessoa no evento". O CPF e' digitado a cada envio e pode
-     * ser trocado; o e-mail, comparado sem diferenca de maiusculas e sem
-     * espacos, pega o mesmo autor com outro CPF. Mesmo escopo de
-     * cpfJaExisteNoEvento(): autor principal e coautores, qualquer situacao.
+     * Segunda camada da regra "um trabalho por pessoa no evento": ver Implantar.md, secao 13.13.
      */
     public function emailJaExisteNoEvento($eventoId, $email)
     {

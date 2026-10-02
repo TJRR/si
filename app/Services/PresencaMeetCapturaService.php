@@ -266,11 +266,8 @@ class PresencaMeetCapturaService
 
     /**
      * Incrementa a tentativa; ao estourar o limite, encerra o ciclo como
-     * indisponivel E notifica. A notificacao de falha existe porque uma causa
-     * sistemica (escopo nao autorizado na Delegacao em Todo o Dominio, edicao
-     * do Workspace sem rastreamento de presenca) faria TODOS os horarios
-     * falharem em silencio por horas, sem ninguem perceber ate' abrir uma tela
-     * manualmente.
+     * indisponivel e notifica, para uma causa sistemica nao fazer todos os
+     * horarios falharem em silencio.
      */
     private function registrarTentativaFalha($tipo, array $horario)
     {

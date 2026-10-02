@@ -114,7 +114,7 @@ class ConcursoAdminController extends Controller
 
         try {
             $this->concursos->remover($id);
-            $_SESSION['flash'] = 'Concurso removido.';
+            flashSucesso('Concurso removido.');
         } catch (\PDOException $e) {
             flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: este concurso já tem trilhas, formulários ou categorias de avaliador vinculados.'

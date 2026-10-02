@@ -18,8 +18,39 @@
             </span>
         </p>
 
+        <?php if (!empty($gamificacaoAtiva)): ?>
+            <?php /* Fase 58: cartão de pontos. Só o total da própria pessoa;
+            a posição e a classificação ficam em "Minha pontuação". */ ?>
+            <div class="admin-card">
+                <p>
+                    <?php if ($totalPontos === null): ?>
+                        <strong>Seus pontos na gincana</strong>
+                        <br><small>O total não pôde ser calculado agora. Tente de novo em alguns instantes.</small>
+                    <?php else: ?>
+                        <strong>Seus pontos na gincana: <?php echo (int) $totalPontos; ?></strong>
+                    <?php endif; ?>
+                    <?php if (!empty($gincanaEncerrada)): ?>
+                        <br><span class="status-pill laranja">Gincana encerrada: a classificação está congelada.</span>
+                    <?php endif; ?>
+                    <br>
+                    <a href="<?php echo url('eventoApp/pontuacao/' . (int) $evento['id']); ?>">Ver minha pontuação e a classificação</a>
+                    &middot;
+                    <a href="<?php echo url('eventoApp/regras/' . (int) $evento['id']); ?>">Regras do jogo</a>
+                </p>
+            </div>
+        <?php endif; ?>
+
         <p>
             <a href="<?php echo url('eventoApp/atividades/' . (int) $evento['id']); ?>" class="btn">Atividades</a>
+        </p>
+
+        <?php /* Fase 58: atalho para o leitor de códigos fixos. Antes, a
+        única entrada era a tela de Atividades; agora o mesmo leitor também
+        confirma o credenciamento no local e a participação em competições. */ ?>
+        <p>
+            <a href="<?php echo url('eventoApp/presenca/' . (int) $evento['id']); ?>" class="btn">Ler código</a>
+            <br>
+            <small>Presença em atividade, credenciamento no local e participação em competição.</small>
         </p>
 
         <?php if (!empty($conexoesAtivas)): ?>
@@ -111,9 +142,38 @@
                             <?php if (!$ganho && !empty($pesquisaAberta) && empty($pesquisaRespondida)): ?>
                                 <br>
                                 <a href="<?php echo url('eventoApp/pesquisa/' . (int) $evento['id']); ?>" class="btn">Responder à pesquisa</a>
-                                <br><small>Vale <?php echo (int) $bonus['pontos']; ?> <?php echo (int) $bonus['pontos'] === 1 ? 'ponto' : 'pontos'; ?>.</small>
+                                <?php if (empty($gincanaEncerrada)): ?>
+                                    <br><small>Vale <?php echo (int) $bonus['pontos']; ?> <?php echo (int) $bonus['pontos'] === 1 ? 'ponto' : 'pontos'; ?>.</small>
+                                <?php endif; ?>
                             <?php endif; ?>
-                        <?php elseif (!$ganho && !$anulado): ?>
+                        <?php elseif (!empty($bonus['acao_participante'])): ?>
+                            <?php /* Fase 58: ações do participante. Em vez de barra,
+                            a tela diz o que fazer e leva à tela certa. */ ?>
+                            <?php if (!$ganho && !$anulado && empty($gincanaEncerrada)): ?>
+                                <br>
+                                <?php if ($bonus['tipo'] === 'perfil_campos'): ?>
+                                    <small>
+                                        <?php if (!empty($bonus['campos_faltantes'])): ?>
+                                            Falta preencher: <?php echo htmlspecialchars(implode(', ', $bonus['campos_faltantes']), ENT_QUOTES, 'UTF-8'); ?>.
+                                        <?php else: ?>
+                                            Seu perfil já tem tudo o que este bônus pede.
+                                        <?php endif; ?>
+                                        Vale <?php echo (int) $bonus['pontos']; ?> <?php echo (int) $bonus['pontos'] === 1 ? 'ponto' : 'pontos'; ?>.
+                                    </small>
+                                    <br><a href="<?php echo url('eventoAppPerfil/index/' . (int) $evento['id']); ?>">Completar meu perfil</a>
+                                <?php elseif ($bonus['tipo'] === 'credenciamento_local'): ?>
+                                    <small>Leia o código do credenciamento, afixado no local do evento. Vale <?php echo (int) $bonus['pontos']; ?> <?php echo (int) $bonus['pontos'] === 1 ? 'ponto' : 'pontos'; ?>.</small>
+                                    <br><a href="<?php echo url('eventoApp/presenca/' . (int) $evento['id']); ?>">Ler código</a>
+                                <?php elseif ($bonus['tipo'] === 'trabalho_submetido'): ?>
+                                    <small>Vale para quem é autor de um trabalho submetido neste evento. Vale <?php echo (int) $bonus['pontos']; ?> <?php echo (int) $bonus['pontos'] === 1 ? 'ponto' : 'pontos'; ?>.</small>
+                                    <?php if (empty($ehAvaliadorDoEvento)): ?>
+                                        <br><a href="<?php echo url('trabalho/formulario/' . (int) $evento['id']); ?>">Submeter trabalho</a>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <small>Vale <?php echo (int) $bonus['pontos']; ?> <?php echo (int) $bonus['pontos'] === 1 ? 'ponto' : 'pontos'; ?>.</small>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        <?php elseif (!$ganho && !$anulado && empty($gincanaEncerrada)): ?>
                             <br>
                             <small><?php echo $atual; ?> de <?php echo $exigencia; ?> <?php echo htmlspecialchars($bonus['unidade'], ENT_QUOTES, 'UTF-8'); ?><?php echo !empty($bonus['tipo_atividade_nome']) ? ' (' . htmlspecialchars($bonus['tipo_atividade_nome'], ENT_QUOTES, 'UTF-8') . ')' : ''; ?>, valendo <?php echo (int) $bonus['pontos']; ?> <?php echo (int) $bonus['pontos'] === 1 ? 'ponto' : 'pontos'; ?></small>
                             <span class="app-progresso-barra-fundo">
@@ -171,6 +231,18 @@
                 <?php if (!empty($anais['descricao'])): ?>
                     <br><small><?php echo htmlspecialchars($anais['descricao'], ENT_QUOTES, 'UTF-8'); ?></small>
                 <?php endif; ?>
+            </p>
+        <?php endif; ?>
+
+        <?php if (!empty($certificadosAbertos)): ?>
+            <?php /* Fase 59: o botão aparece quando as duas travas da emissão
+            estão satisfeitas (o evento terminou e a organização abriu a
+            chave). A própria tela dos certificados diz, com os números da
+            pessoa, o que falta a quem ainda não tem direito a nenhum: por
+            isso o botão não depende de apurar o direito aqui, o que custaria
+            várias consultas na tela mais aberta do aplicativo. */ ?>
+            <p>
+                <a href="<?php echo url('eventoApp/certificados/' . (int) $evento['id']); ?>" class="btn">Meus certificados</a>
             </p>
         <?php endif; ?>
     </div>

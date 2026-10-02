@@ -10,6 +10,7 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auditoria;
 use App\Repositories\BonusConfigRepository;
 use App\Repositories\BonusCreditoRepository;
+use App\Repositories\BonusFatosRepository;
 use App\Repositories\BonusRepository;
 use App\Repositories\EventoCheckinResumoRepository;
 use App\Repositories\PesquisaRespondenteRepository;
@@ -23,6 +24,17 @@ use App\Repositories\PesquisaRespondenteRepository;
  * fase futura, e' uma entrada em TIPOS mais um ramo em atingiu() e em
  * progressoAtual(), sem migration.
  *
+ * Fase 58: quatro tipos novos, as "acoes do participante" da dinamica de
+ * pontos v2 (criar conta, perfil, contato e minicurriculo, credenciamento
+ * no local, resumo expandido submetido). Eles nao dependem de presenca, e
+ * sim de fatos lidos por BonusFatosRepository. Nenhum deles e' anulado pelo
+ * sistema, exceto o de trabalho submetido, quando a desclassificacao tira a
+ * base (reapurarAutoresDoTrabalho()). O de perfil, uma vez concedido, fica
+ * mesmo que a pessoa apague a foto: o documento o define como "unico".
+ *
+ * Com a gincana encerrada (GamificacaoService::encerrada()), nenhum metodo
+ * daqui credita, anula ou reverte: e' o congelamento da classificacao.
+ *
  * NAO abre transacao e NAO bloqueia linha, ao contrario de ConexaoService e
  * DivulgacaoService, e a diferenca e' deliberada: o credito e' idempotente
  * pela chave unica (evento_inscricao_id, bonus_id) e a regra so' cresce.
@@ -35,32 +47,89 @@ class BonusApuracaoService
      * Os tipos que o sistema sabe apurar, com o rotulo da tela e o que o
      * cadastro pede de cada um. Fica aqui, e nao no controller, porque quem
      * define o que cada tipo significa e' quem o apura.
+     *
+     * acao_participante: o tipo depende de um fato da pessoa (Fase 58), e
+     * nao de presenca nem da pesquisa.
      */
     const TIPOS = [
         'atividades_distintas' => [
             'rotulo' => 'Atividades diferentes com presença',
             'pede_numero' => true,
             'pede_tipo_atividade' => false,
+            'pede_campos_perfil' => false,
+            'acao_participante' => false,
             'unidade' => 'atividades diferentes',
         ],
         'dias_distintos' => [
             'rotulo' => 'Dias diferentes com presença',
             'pede_numero' => true,
             'pede_tipo_atividade' => false,
+            'pede_campos_perfil' => false,
+            'acao_participante' => false,
             'unidade' => 'dias diferentes',
         ],
         'atividades_do_tipo' => [
             'rotulo' => 'Atividades de um tipo escolhido',
             'pede_numero' => true,
             'pede_tipo_atividade' => true,
+            'pede_campos_perfil' => false,
+            'acao_participante' => false,
             'unidade' => 'atividades do tipo escolhido',
         ],
         'responder_pesquisa' => [
             'rotulo' => 'Responder à pesquisa de satisfação',
             'pede_numero' => false,
             'pede_tipo_atividade' => false,
+            'pede_campos_perfil' => false,
+            'acao_participante' => false,
             'unidade' => '',
         ],
+        'inscricao_evento' => [
+            'rotulo' => 'Ter inscrição no evento (criar conta)',
+            'pede_numero' => false,
+            'pede_tipo_atividade' => false,
+            'pede_campos_perfil' => false,
+            'acao_participante' => true,
+            'unidade' => '',
+        ],
+        'perfil_campos' => [
+            'rotulo' => 'Preencher campos do perfil',
+            'pede_numero' => false,
+            'pede_tipo_atividade' => false,
+            'pede_campos_perfil' => true,
+            'acao_participante' => true,
+            'unidade' => 'campos do perfil',
+        ],
+        'credenciamento_local' => [
+            'rotulo' => 'Confirmar o credenciamento no local',
+            'pede_numero' => false,
+            'pede_tipo_atividade' => false,
+            'pede_campos_perfil' => false,
+            'acao_participante' => true,
+            'unidade' => '',
+        ],
+        'trabalho_submetido' => [
+            'rotulo' => 'Ser autor de trabalho submetido',
+            'pede_numero' => false,
+            'pede_tipo_atividade' => false,
+            'pede_campos_perfil' => false,
+            'acao_participante' => true,
+            'unidade' => '',
+        ],
+    ];
+
+    /**
+     * Fase 58: rotulos dos campos que o tipo perfil_campos confere, na
+     * ordem de BonusFatosRepository::CAMPOS_PERFIL.
+     */
+    const CAMPOS_PERFIL_ROTULOS = [
+        'foto' => 'Foto',
+        'cargo' => 'Cargo',
+        'orgao_origem' => 'Órgão de origem',
+        'categoria_profissional' => 'Categoria profissional',
+        'minicurriculo' => 'Minicurrículo',
+        'telefone' => 'Telefone',
+        'redes' => 'Ao menos uma rede social',
     ];
 
     private $config;
@@ -68,6 +137,7 @@ class BonusApuracaoService
     private $creditos;
     private $presencas;
     private $respondentes;
+    private $fatos;
 
     public function __construct()
     {
@@ -76,6 +146,7 @@ class BonusApuracaoService
         $this->creditos = new BonusCreditoRepository();
         $this->presencas = new EventoCheckinResumoRepository();
         $this->respondentes = new PesquisaRespondenteRepository();
+        $this->fatos = new BonusFatosRepository();
     }
 
     public static function rotuloDoTipo($tipo)
@@ -88,6 +159,26 @@ class BonusApuracaoService
         return isset(self::TIPOS[$tipo]) ? self::TIPOS[$tipo]['unidade'] : '';
     }
 
+    public static function ehAcaoDoParticipante($tipo)
+    {
+        return isset(self::TIPOS[$tipo]) && self::TIPOS[$tipo]['acao_participante'];
+    }
+
+    /**
+     * Fase 58: os campos exigidos por um bonus do tipo perfil_campos, na
+     * ordem fixa de BonusFatosRepository::CAMPOS_PERFIL.
+     */
+    public static function camposDoBonus(array $bonus)
+    {
+        if (empty($bonus['campos_perfil'])) {
+            return [];
+        }
+
+        $marcados = explode(',', (string) $bonus['campos_perfil']);
+
+        return array_values(array_intersect(BonusFatosRepository::CAMPOS_PERFIL, $marcados));
+    }
+
     /**
      * Apura os bonus de UMA pessoa e credita o que fechou agora. Devolve a
      * lista do que foi creditado nesta chamada, na forma
@@ -95,17 +186,19 @@ class BonusApuracaoService
      *
      * Recebe a inscricao E o usuario: o credito e' chaveado pela inscricao,
      * mas o bonus de responder a pesquisa consulta a tabela de respondentes,
-     * que desde o bloco E e' chaveada por usuario (pendencia 34).
+     * que desde o bloco E e' chaveada por usuario (pendencia 34), e os tipos
+     * de acao do participante leem perfil e autoria pelo usuario.
      *
      * Custo: duas consultas (resumo de presencas e creditos ja' existentes),
      * mais uma terceira so' quando o evento tem bonus por tipo de atividade,
+     * mais uma por fato de acao do participante que o evento de fato usa,
      * mais uma gravacao por bonus que fecha.
      */
     public function apurarInscricao(array $evento, $inscricaoId, $usuarioId)
     {
         $eventoId = (int) $evento['id'];
 
-        if (!$this->config->estaAtivo($eventoId)) {
+        if (GamificacaoService::encerrada($eventoId) || !$this->config->estaAtivo($eventoId)) {
             return [];
         }
 
@@ -118,6 +211,7 @@ class BonusApuracaoService
         $creditosAtuais = $this->creditos->resumoParticipante($inscricaoId);
         $resumo = $this->presencas->resumoDaInscricao($eventoId, $inscricaoId);
         $porTipo = $this->precisaDeTipos($ativos) ? $this->presencas->porTipoDaInscricao($eventoId, $inscricaoId) : [];
+        $fatos = $this->fatosDaPessoa($ativos, $eventoId, $inscricaoId, $usuarioId);
         $respondeu = null;
 
         $creditados = [];
@@ -132,6 +226,8 @@ class BonusApuracaoService
                 }
 
                 $cumpre = $respondeu;
+            } elseif (self::ehAcaoDoParticipante($bonus['tipo'])) {
+                $cumpre = $this->cumpreAcao($bonus, $fatos);
             } else {
                 $cumpre = $this->atingiu($bonus, $resumo, $porTipo);
             }
@@ -139,8 +235,8 @@ class BonusApuracaoService
             // Ja' existe linha deste bonus: o unico movimento possivel e'
             // desfazer uma anulacao PELO SISTEMA quando a condicao voltou a
             // ser cumprida (a presenca removida por engano foi registrada de
-            // novo). Anulacao feita por pessoa nunca volta por aqui, e
-            // credito valido nao e' tocado.
+            // novo, ou outro trabalho foi submetido). Anulacao feita por
+            // pessoa nunca volta por aqui, e credito valido nao e' tocado.
             if ($credito !== null) {
                 if ($cumpre && $credito['anulado_em'] !== null && $credito['anulado_por'] === null) {
                     $this->creditos->reverterAnulacaoAutomatica($credito['id']);
@@ -153,7 +249,7 @@ class BonusApuracaoService
                 continue;
             }
 
-            $creditado = $this->gravar($eventoId, $bonus, $inscricaoId, $resumo, $porTipo);
+            $creditado = $this->gravar($eventoId, $bonus, $inscricaoId, $resumo, $porTipo, $fatos);
 
             if ($creditado !== null) {
                 $creditados[] = $creditado;
@@ -161,6 +257,28 @@ class BonusApuracaoService
         }
 
         return $creditados;
+    }
+
+    /**
+     * Fase 58: apuracao na abertura do painel, que e' o que alcanca o perfil
+     * completado pelo "Meu Perfil" do Concurso (tela que esta fase nao toca).
+     *
+     * So' roda quando existe bonus ATIVO de acao do participante que a
+     * pessoa ainda nao tem - os creditos dela ja' sao lidos para a propria
+     * tela, entao a conferencia nao custa consulta a mais. Assim a tela mais
+     * aberta do aplicativo so' grava quando ha' o que gravar. Quem chama
+     * confere antes o modo "visualizar como" (nunca grava em nome de outra
+     * pessoa).
+     */
+    public function apurarAcoesPendentes(array $evento, $inscricaoId, $usuarioId, array $progresso)
+    {
+        foreach ($progresso as $item) {
+            if (self::ehAcaoDoParticipante($item['tipo']) && $item['credito'] === null) {
+                return $this->apurarInscricao($evento, $inscricaoId, $usuarioId);
+            }
+        }
+
+        return [];
     }
 
     /**
@@ -179,6 +297,11 @@ class BonusApuracaoService
     public function reapurarAposRemocao(array $evento, $inscricaoId)
     {
         $eventoId = (int) $evento['id'];
+
+        if (GamificacaoService::encerrada($eventoId)) {
+            return [];
+        }
+
         $creditosAtuais = $this->creditos->resumoParticipante($inscricaoId);
 
         if ($creditosAtuais['por_bonus'] === []) {
@@ -203,9 +326,10 @@ class BonusApuracaoService
 
             $bonus = $catalogo[$bonusId];
 
-            // O credito da pesquisa nao depende de presenca: remover uma
-            // presenca nunca o alcanca.
-            if ($bonus['tipo'] === 'responder_pesquisa' || $this->atingiu($bonus, $resumo, $porTipo)) {
+            // O credito da pesquisa e os das acoes do participante nao
+            // dependem de presenca: remover uma presenca nunca os alcanca.
+            if ($bonus['tipo'] === 'responder_pesquisa' || self::ehAcaoDoParticipante($bonus['tipo'])
+                || $this->atingiu($bonus, $resumo, $porTipo)) {
                 continue;
             }
 
@@ -225,19 +349,145 @@ class BonusApuracaoService
     }
 
     /**
-     * Reconfere o evento inteiro e credita quem passou a cumprir. Roda ao
-     * salvar, desativar ou reordenar um bonus e no botao "Reconferir agora".
-     * Devolve quantos creditos foram criados.
+     * Fase 58: chamado depois da desclassificacao de um trabalho. Para cada
+     * autor com inscricao no evento, anula PELO SISTEMA o credito de
+     * trabalho_submetido de quem ficou sem nenhum trabalho valido, e apura
+     * de novo quem continua cumprindo (o credito anulado volta sozinho se a
+     * pessoa tiver outro trabalho valido).
      *
-     * Duas consultas agregadas (tres com bonus por tipo de atividade) e uma
-     * gravacao por credito novo. Quem nao tem nenhuma presenca nem aparece
-     * no agrupamento, entao o laco percorre so' quem pode ganhar algo.
+     * Devolve a lista de anulacoes, com o usuario de cada uma, para o aviso
+     * no sino.
+     */
+    /**
+     * Fase 58 (rodada de 01/10/2026): chamado depois que o Administrador
+     * remove o credenciamento no local de alguem pela tela de Gamificacao.
+     *
+     * O credito do tipo credenciamento_local nao passa por
+     * reapurarAposRemocao(), que trata so' dos bonus de presenca, nem por
+     * apurarInscricao(), que nunca anula credito existente. Sem este metodo,
+     * a pessoa perdia o registro do credenciamento e continuava com os
+     * pontos do bonus.
+     *
+     * Anulacao PELO SISTEMA (anulado_por nulo), como a de presenca: se a
+     * pessoa se credenciar de novo dentro da janela, a apuracao seguinte
+     * desfaz a anulacao sozinha. Devolve o que foi anulado, para o aviso.
+     */
+    public function reapurarAposRemocaoDeCredenciamento(array $evento, $inscricaoId)
+    {
+        $eventoId = (int) $evento['id'];
+
+        if (GamificacaoService::encerrada($eventoId)) {
+            return [];
+        }
+
+        $bonusDeCredenciamento = [];
+
+        foreach ($this->bonus->listarPorEvento($eventoId) as $bonus) {
+            if ($bonus['tipo'] === 'credenciamento_local') {
+                $bonusDeCredenciamento[(int) $bonus['id']] = $bonus;
+            }
+        }
+
+        if ($bonusDeCredenciamento === []) {
+            return [];
+        }
+
+        $creditosAtuais = $this->creditos->resumoParticipante($inscricaoId);
+        $motivo = 'A organização removeu o seu credenciamento no local, e este bônus deixou de ser devido.';
+        $anulados = [];
+
+        foreach ($bonusDeCredenciamento as $bonusId => $bonus) {
+            if (!isset($creditosAtuais['por_bonus'][$bonusId])) {
+                continue;
+            }
+
+            $credito = $creditosAtuais['por_bonus'][$bonusId];
+
+            if ($credito['anulado_em'] === null && $this->creditos->anularPeloSistema($credito['id'], $motivo)) {
+                $anulados[] = [
+                    'id' => $bonusId,
+                    'nome' => $bonus['nome'],
+                    'pontos' => (int) $credito['pontos'],
+                    'motivo' => $motivo,
+                ];
+            }
+        }
+
+        return $anulados;
+    }
+
+    public function reapurarAutoresDoTrabalho(array $evento, $trabalhoId)
+    {
+        $eventoId = (int) $evento['id'];
+
+        if (GamificacaoService::encerrada($eventoId)) {
+            return [];
+        }
+
+        $bonusDeTrabalho = [];
+
+        foreach ($this->bonus->listarPorEvento($eventoId) as $bonus) {
+            if ($bonus['tipo'] === 'trabalho_submetido') {
+                $bonusDeTrabalho[(int) $bonus['id']] = $bonus;
+            }
+        }
+
+        if ($bonusDeTrabalho === []) {
+            return [];
+        }
+
+        $anulados = [];
+        $motivo = 'O trabalho que dava direito a este bônus foi desclassificado.';
+
+        foreach ($this->fatos->inscricoesDosAutoresDoTrabalho($trabalhoId) as $autor) {
+            $inscricaoId = (int) $autor['inscricao_id'];
+            $usuarioId = (int) $autor['usuario_id'];
+
+            if ($this->fatos->ehAutorDeTrabalhoValido($eventoId, $usuarioId)) {
+                $this->apurarInscricao($evento, $inscricaoId, $usuarioId);
+                continue;
+            }
+
+            $creditosAtuais = $this->creditos->resumoParticipante($inscricaoId);
+
+            foreach ($bonusDeTrabalho as $bonusId => $bonus) {
+                if (!isset($creditosAtuais['por_bonus'][$bonusId])) {
+                    continue;
+                }
+
+                $credito = $creditosAtuais['por_bonus'][$bonusId];
+
+                if ($credito['anulado_em'] === null && $this->creditos->anularPeloSistema($credito['id'], $motivo)) {
+                    $anulados[] = [
+                        'usuario_id' => $usuarioId,
+                        'nome' => $bonus['nome'],
+                        'pontos' => (int) $credito['pontos'],
+                        'motivo' => $motivo,
+                    ];
+                }
+            }
+        }
+
+        return $anulados;
+    }
+
+    /**
+     * Reconfere o evento inteiro e credita quem passou a cumprir. Roda ao
+     * salvar um bonus, ao salvar as configuracoes, no botao "Reconferir
+     * agora" de Bonus e no de Gamificacao. Devolve quantos creditos foram
+     * criados.
+     *
+     * Presenca: duas consultas agregadas (tres com bonus por tipo de
+     * atividade); quem nao tem nenhuma presenca nem aparece no agrupamento.
+     * Acoes do participante (Fase 58): um laco proprio sobre TODAS as
+     * inscricoes do evento, com os fatos lidos em lote, uma consulta por
+     * fato que o evento usa.
      */
     public function apurarEvento(array $evento)
     {
         $eventoId = (int) $evento['id'];
 
-        if (!$this->config->estaAtivo($eventoId)) {
+        if (GamificacaoService::encerrada($eventoId) || !$this->config->estaAtivo($eventoId)) {
             return 0;
         }
 
@@ -247,49 +497,62 @@ class BonusApuracaoService
             return 0;
         }
 
-        $resumos = $this->presencas->resumoDoEvento($eventoId);
-        $porTipoGeral = $this->precisaDeTipos($ativos) ? $this->presencas->porTipoDoEvento($eventoId) : [];
-        $creditadosPorInscricao = $this->creditos->creditadosPorInscricaoNoEvento($eventoId);
         $bonusDePresenca = [];
+        $bonusDeAcao = [];
 
         foreach ($ativos as $bonus) {
-            if ($bonus['tipo'] !== 'responder_pesquisa') {
+            if (self::ehAcaoDoParticipante($bonus['tipo'])) {
+                $bonusDeAcao[] = $bonus;
+            } elseif ($bonus['tipo'] !== 'responder_pesquisa') {
                 $bonusDePresenca[] = $bonus;
             }
         }
 
-        if ($bonusDePresenca === []) {
+        if ($bonusDePresenca === [] && $bonusDeAcao === []) {
             return 0;
         }
 
+        $creditadosPorInscricao = $this->creditos->creditadosPorInscricaoNoEvento($eventoId);
         $total = 0;
 
-        foreach ($resumos as $inscricaoId => $resumo) {
-            $jaCreditados = isset($creditadosPorInscricao[$inscricaoId]) ? $creditadosPorInscricao[$inscricaoId] : [];
-            $porTipo = isset($porTipoGeral[$inscricaoId]) ? $porTipoGeral[$inscricaoId] : [];
+        if ($bonusDePresenca !== []) {
+            $resumos = $this->presencas->resumoDoEvento($eventoId);
+            $porTipoGeral = $this->precisaDeTipos($bonusDePresenca) ? $this->presencas->porTipoDoEvento($eventoId) : [];
 
-            foreach ($bonusDePresenca as $bonus) {
-                $bonusId = (int) $bonus['id'];
-                $credito = isset($jaCreditados[$bonusId]) ? $jaCreditados[$bonusId] : null;
-                $cumpre = $this->atingiu($bonus, $resumo, $porTipo);
+            foreach ($resumos as $inscricaoId => $resumo) {
+                $jaCreditados = isset($creditadosPorInscricao[$inscricaoId]) ? $creditadosPorInscricao[$inscricaoId] : [];
+                $porTipo = isset($porTipoGeral[$inscricaoId]) ? $porTipoGeral[$inscricaoId] : [];
 
-                // Mesma regra da apuracao individual: linha existente so' se
-                // move para desfazer anulacao PELO SISTEMA, e a reconferencia
-                // do Administrador tambem conserta esses casos.
-                if ($credito !== null) {
-                    if ($cumpre && $credito['anulado_em'] !== null && $credito['anulado_por'] === null) {
-                        $this->creditos->reverterAnulacaoAutomatica($credito['id']);
+                foreach ($bonusDePresenca as $bonus) {
+                    $cumpre = $this->atingiu($bonus, $resumo, $porTipo);
+
+                    if ($this->creditarOuReverter($eventoId, $bonus, $inscricaoId, $jaCreditados, $cumpre, $resumo, $porTipo, [])) {
+                        $total++;
                     }
-
-                    continue;
                 }
+            }
+        }
 
-                if (!$cumpre) {
-                    continue;
-                }
+        if ($bonusDeAcao !== []) {
+            $pessoas = $this->fatos->inscricoesComPerfilDoEvento($eventoId);
+            $credenciados = $this->usaTipo($bonusDeAcao, 'credenciamento_local') ? $this->fatos->credenciadosDoEvento($eventoId) : [];
+            $autores = $this->usaTipo($bonusDeAcao, 'trabalho_submetido') ? $this->fatos->autoresValidosDoEvento($eventoId) : [];
+            $vazio = ['atividades' => 0, 'dias' => 0];
 
-                if ($this->gravar($eventoId, $bonus, $inscricaoId, $resumo, $porTipo) !== null) {
-                    $total++;
+            foreach ($pessoas as $inscricaoId => $pessoa) {
+                $jaCreditados = isset($creditadosPorInscricao[$inscricaoId]) ? $creditadosPorInscricao[$inscricaoId] : [];
+                $fatos = [
+                    'campos' => $pessoa['campos'],
+                    'credenciado' => isset($credenciados[$inscricaoId]),
+                    'autor' => isset($autores[$pessoa['usuario_id']]),
+                ];
+
+                foreach ($bonusDeAcao as $bonus) {
+                    $cumpre = $this->cumpreAcao($bonus, $fatos);
+
+                    if ($this->creditarOuReverter($eventoId, $bonus, $inscricaoId, $jaCreditados, $cumpre, $vazio, [], $fatos)) {
+                        $total++;
+                    }
                 }
             }
         }
@@ -316,7 +579,7 @@ class BonusApuracaoService
         // Quem responde sem ter inscricao no evento (facilitador, avaliador
         // avulso) responde e nao pontua: o credito vive em
         // evento_bonus_creditos.evento_inscricao_id, que exige inscricao.
-        if ($inscricaoId === null || !$this->config->estaAtivo($eventoId)) {
+        if ($inscricaoId === null || GamificacaoService::encerrada($eventoId) || !$this->config->estaAtivo($eventoId)) {
             return [];
         }
 
@@ -328,7 +591,7 @@ class BonusApuracaoService
                 continue;
             }
 
-            $creditado = $this->gravar($eventoId, $bonus, $inscricaoId, ['atividades' => 0, 'dias' => 0], []);
+            $creditado = $this->gravar($eventoId, $bonus, $inscricaoId, ['atividades' => 0, 'dias' => 0], [], []);
 
             if ($creditado !== null) {
                 $creditados[] = $creditado;
@@ -342,8 +605,12 @@ class BonusApuracaoService
      * Situacao de cada bonus ativo para o painel do participante: quanto a
      * pessoa ja' tem, quanto falta, e o credito quando ja' fechou. Leitura
      * pura, protegida contra falha de banco pelos repositorios.
+     *
+     * Fase 58: os tipos de acao do participante trazem 'cumpre' e, no de
+     * perfil, os campos que faltam ('campos_faltantes'), para a tela dizer o
+     * que fazer em vez de mostrar uma barra.
      */
-    public function progressoDe(array $evento, $inscricaoId)
+    public function progressoDe(array $evento, $inscricaoId, $usuarioId = null)
     {
         $eventoId = (int) $evento['id'];
         $ativos = $this->bonus->listarAtivos($eventoId);
@@ -355,12 +622,23 @@ class BonusApuracaoService
         $resumo = $this->presencas->resumoDaInscricao($eventoId, $inscricaoId);
         $porTipo = $this->precisaDeTipos($ativos) ? $this->presencas->porTipoDaInscricao($eventoId, $inscricaoId) : [];
         $creditos = $this->creditos->resumoParticipante($inscricaoId);
+        $fatos = $usuarioId !== null ? $this->fatosDaPessoa($ativos, $eventoId, $inscricaoId, $usuarioId) : $this->fatosVazios();
 
         $lista = [];
 
         foreach ($ativos as $bonus) {
             $id = (int) $bonus['id'];
             $credito = isset($creditos['por_bonus'][$id]) ? $creditos['por_bonus'][$id] : null;
+            $ehAcao = self::ehAcaoDoParticipante($bonus['tipo']);
+            $camposFaltantes = [];
+
+            if ($bonus['tipo'] === 'perfil_campos') {
+                foreach (self::camposDoBonus($bonus) as $campo) {
+                    if (!in_array($campo, $fatos['campos'], true)) {
+                        $camposFaltantes[] = self::CAMPOS_PERFIL_ROTULOS[$campo];
+                    }
+                }
+            }
 
             $lista[] = [
                 'id' => $id,
@@ -371,7 +649,10 @@ class BonusApuracaoService
                 'tipo_atividade_nome' => $bonus['tipo_atividade_nome'],
                 'exigencia' => (int) $bonus['exigencia'],
                 'pontos' => (int) $bonus['pontos'],
-                'atual' => $this->progressoAtual($bonus, $resumo, $porTipo),
+                'atual' => $ehAcao ? 0 : $this->progressoAtual($bonus, $resumo, $porTipo),
+                'acao_participante' => $ehAcao,
+                'cumpre' => $ehAcao ? $this->cumpreAcao($bonus, $fatos) : false,
+                'campos_faltantes' => $camposFaltantes,
                 'credito' => $credito,
             ];
         }
@@ -380,14 +661,44 @@ class BonusApuracaoService
     }
 
     /**
+     * Credita (quando cumpre e ainda nao ha' linha) ou desfaz anulacao pelo
+     * sistema (quando ha' linha anulada pelo sistema e a condicao voltou).
+     * Devolve true so' quando criou credito novo. Mesma regra de
+     * apurarInscricao(), para a reconferencia em lote.
+     */
+    private function creditarOuReverter($eventoId, array $bonus, $inscricaoId, array $jaCreditados, $cumpre, array $resumo, array $porTipo, array $fatos)
+    {
+        $bonusId = (int) $bonus['id'];
+        $credito = isset($jaCreditados[$bonusId]) ? $jaCreditados[$bonusId] : null;
+
+        if ($credito !== null) {
+            if ($cumpre && $credito['anulado_em'] !== null && $credito['anulado_por'] === null) {
+                $this->creditos->reverterAnulacaoAutomatica($credito['id']);
+            }
+
+            return false;
+        }
+
+        if (!$cumpre) {
+            return false;
+        }
+
+        return $this->gravar($eventoId, $bonus, $inscricaoId, $resumo, $porTipo, $fatos) !== null;
+    }
+
+    /**
      * Grava o credito com os pontos e a exigencia do momento, congelados.
      * Devolve null quando a linha ja' existia (outra apuracao chegou antes).
      */
-    private function gravar($eventoId, array $bonus, $inscricaoId, array $resumo, array $porTipo)
+    private function gravar($eventoId, array $bonus, $inscricaoId, array $resumo, array $porTipo, array $fatos)
     {
-        $exigenciaAtingida = $bonus['tipo'] === 'responder_pesquisa'
-            ? 1
-            : $this->progressoAtual($bonus, $resumo, $porTipo);
+        if ($bonus['tipo'] === 'perfil_campos') {
+            $exigenciaAtingida = count(self::camposDoBonus($bonus));
+        } elseif ($bonus['tipo'] === 'responder_pesquisa' || self::ehAcaoDoParticipante($bonus['tipo'])) {
+            $exigenciaAtingida = 1;
+        } else {
+            $exigenciaAtingida = $this->progressoAtual($bonus, $resumo, $porTipo);
+        }
 
         $inseriu = $this->creditos->creditar(
             $eventoId,
@@ -406,6 +717,76 @@ class BonusApuracaoService
             'nome' => $bonus['nome'],
             'pontos' => (int) $bonus['pontos'],
         ];
+    }
+
+    /**
+     * Fase 58: se a acao do participante esta' cumprida. O tipo de perfil
+     * sem campos marcados nunca cumpre, pelo mesmo motivo da regra de
+     * exigencia zero dos tipos de presenca: seria creditar todo mundo.
+     */
+    private function cumpreAcao(array $bonus, array $fatos)
+    {
+        switch ($bonus['tipo']) {
+            case 'inscricao_evento':
+                return true;
+
+            case 'perfil_campos':
+                $exigidos = self::camposDoBonus($bonus);
+
+                if ($exigidos === []) {
+                    return false;
+                }
+
+                return array_diff($exigidos, $fatos['campos']) === [];
+
+            case 'credenciamento_local':
+                return $fatos['credenciado'];
+
+            case 'trabalho_submetido':
+                return $fatos['autor'];
+
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Fatos de uma pessoa, lidos so' quando o evento tem bonus ativo que
+     * precisa deles.
+     */
+    private function fatosDaPessoa(array $ativos, $eventoId, $inscricaoId, $usuarioId)
+    {
+        $fatos = $this->fatosVazios();
+
+        if ($this->usaTipo($ativos, 'perfil_campos')) {
+            $fatos['campos'] = $this->fatos->camposPreenchidosDoUsuario($usuarioId);
+        }
+
+        if ($this->usaTipo($ativos, 'credenciamento_local')) {
+            $fatos['credenciado'] = $this->fatos->estaCredenciado($inscricaoId);
+        }
+
+        if ($this->usaTipo($ativos, 'trabalho_submetido')) {
+            $fatos['autor'] = $this->fatos->ehAutorDeTrabalhoValido($eventoId, $usuarioId);
+        }
+
+        return $fatos;
+    }
+
+    private function fatosVazios()
+    {
+        return ['campos' => [], 'credenciado' => false, 'autor' => false];
+    }
+
+    private function usaTipo(array $bonusLista, $tipo)
+    {
+        foreach ($bonusLista as $bonus) {
+            if ($bonus['tipo'] === $tipo) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -444,12 +825,6 @@ class BonusApuracaoService
 
     private function precisaDeTipos(array $ativos)
     {
-        foreach ($ativos as $bonus) {
-            if ($bonus['tipo'] === 'atividades_do_tipo') {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->usaTipo($ativos, 'atividades_do_tipo');
     }
 }

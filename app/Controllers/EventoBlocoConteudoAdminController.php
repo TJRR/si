@@ -125,7 +125,7 @@ class EventoBlocoConteudoAdminController extends Controller
                 $this->imagens->remover($bloco['imagem_path']);
             }
 
-            $_SESSION['flash'] = 'Bloco removido.';
+            flashSucesso('Bloco removido.');
         } catch (\PDOException $e) {
             flashErro('Não foi possível remover o bloco.');
         }

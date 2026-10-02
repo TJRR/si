@@ -10,18 +10,14 @@ if (!defined('SI_BOOT')) {
 use App\Core\GoogleServiceAccountAuth;
 
 /**
- * Fase 32: orquestrador da leitura de presenca no Google Meet - irmao de
- * GoogleCalendarSyncService, mas deliberadamente separado dele.
+ * Orquestrador da leitura de presenca no Google Meet, separado de
+ * GoogleCalendarSyncService de proposito: aquele escreve evento e
+ * convidados de forma sincrona, dentro de um pedido de tela; este le
+ * presenca de forma assincrona, numa rotina agendada, horas depois da
+ * reuniao, com permissao propria de leitura.
  *
- * Por que nao reaproveitar GoogleCalendarSyncService: sao preocupacoes e
- * janelas de tempo diferentes. Aquele escreve evento/attendees de forma
- * SINCRONA dentro de um request de admin/participante, com escopos de
- * calendario; este LE presenca de forma ASSINCRONA dentro de um cron, horas
- * depois da reuniao acabar, com um escopo proprio (meetings.space.readonly).
- * Misturar os dois faria o request web carregar um escopo que ele nunca usa.
- *
- * Fail-soft igual ao resto da integracao: qualquer falha vira null, nunca
- * excecao - o cron precisa seguir para os proximos horarios.
+ * Qualquer falha vira null, nunca excecao: a rotina precisa seguir para os
+ * proximos horarios.
  */
 class GoogleMeetPresencaService
 {
@@ -94,9 +90,8 @@ class GoogleMeetPresencaService
     }
 
     /**
-     * Revalida elegibilidade a cada chamada (defesa em profundidade, mesmo
-     * padrao de GoogleCalendarSyncService::obterToken) - o organizador pode
-     * ter deixado de ser conta institucional desde que o horario foi criado.
+     * Revalida a elegibilidade do organizador a cada chamada. Ver
+     * Implantar.md, secao 13.6.
      */
     private function obterToken($organizadorEmail)
     {

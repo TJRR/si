@@ -1,29 +1,18 @@
 <?php
 
 /**
- * Desfaz as vinculacoes de ACESSO (Google e/ou Senha) de um usuario,
- * devolvendo-o ao estagio "Nenhum ainda" (coluna Acesso da tela de Usuarios -
- * ver app/Views/admin/usuarios.php). Uso tipico: setup de ambiente de teste,
- * pra repetir o fluxo de primeiro acesso (convite/definir senha ou login
- * Google) sem precisar excluir o usuario inteiro (ver excluir_usuario.php).
+ * Desfaz o acesso de um usuario (senha e conta Google), para repetir o
+ * primeiro acesso em ambiente de teste sem excluir o usuario. Ver
+ * Implantar.md, secao 13.7.
  *
- * NAO mexe em status (pendente/aprovado/rejeitado), ativo/suspenso, perfis
- * nem no vinculo com participante (usuario_participante) - so' a credencial
- * de login em si:
- *   - usuarios.senha_hash e usuarios.google_id voltam pra NULL;
- *   - qualquer token_senha tipo "definir" ainda pendente (nao usado, nao
- *     expirado) e' invalidado, pra nao sobrar um link antigo de "definir
- *     senha" ainda valido depois do reset (mesmo cuidado do reenvio manual
- *     de convite, ver AcessoParticipanteService::reenviarConvite).
- *
- * Uso (identifique por id, e-mail OU nome exato - se o nome bater com mais
+ * Uso (identifique por id, e-mail OU nome exato; se o nome bater com mais
  * de um usuario, o script lista os ids e para):
  *   php database/limpar_acesso_usuario.php --id=42
- *   php database/limpar_acesso_usuario.php --email=fulano@teste.com
- *   php database/limpar_acesso_usuario.php --nome="Fulano da Silva"
- *   ... --confirmar (em qualquer uma das formas acima, pra aplicar de verdade)
+ *   php database/limpar_acesso_usuario.php --email=pessoa@exemplo.com
+ *   php database/limpar_acesso_usuario.php --nome="Nome Completo"
+ *   ... --confirmar (em qualquer uma das formas acima, para aplicar)
  *
- * Por padrao roda em modo consulta (dry-run): so mostra o que seria feito.
+ * Ensaio por padrao: so' mostra o que seria feito.
  */
 
 if (php_sapi_name() !== 'cli') {

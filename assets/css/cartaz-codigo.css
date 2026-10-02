@@ -1,0 +1,97 @@
+/*
+ * Fase 58: cartaz de um codigo fixo de 6 caracteres (credenciamento no local
+ * e participacao em competicao), no molde do cartaz de atividade
+ * (admin/atividades/codigo_impressao.php, Fase 47). Arquivo proprio, e nao
+ * bloco <style> na view, para as views novas nao carregarem propriedade de
+ * estilo escrita em ingles no meio do texto da tela. As cores do tema
+ * padrao entram pela view, nas variaveis --cor-faixa e --cor-texto-faixa.
+ */
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    padding: 24px;
+    background: #f2f2f2;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #222;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+.cartaz {
+    width: 210mm;
+    height: 297mm;
+    background: #fff;
+    border: 1px solid #ccc;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+}
+.cartaz-faixa {
+    background: var(--cor-faixa);
+    color: var(--cor-texto-faixa);
+    padding: 24mm 16mm;
+    text-align: center;
+}
+.cartaz-evento {
+    font-size: 28px;
+    margin: 0;
+}
+.cartaz-corpo {
+    flex: 1;
+    padding: 16mm;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.cartaz-nome {
+    font-size: 52px;
+    font-weight: bold;
+    margin: 0 0 16px;
+    word-break: break-word;
+    line-height: 1.15;
+}
+.cartaz-info {
+    font-size: 26px;
+    color: #555;
+    margin: 0 0 32px;
+}
+.cartaz-qr {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+.cartaz-qr svg {
+    width: 340px;
+    height: 340px;
+}
+.cartaz-codigo {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: #555;
+    margin: 0;
+}
+.cartaz-instrucao {
+    font-size: 20px;
+    color: #777;
+    margin: 16px 0 0;
+}
+.botao-imprimir {
+    background: var(--cor-faixa);
+    color: var(--cor-texto-faixa);
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+}
+@media print {
+    body { background: #fff; padding: 0; }
+    .cartaz { box-shadow: none; border: none; width: auto; height: auto; min-height: 100vh; }
+    .no-print { display: none; }
+}

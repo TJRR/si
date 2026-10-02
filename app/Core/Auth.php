@@ -118,11 +118,9 @@ class Auth
     }
 
     /**
-     * Fase 17 (Melhoria 2): Admin visualiza o sistema como outro usuario,
-     * somente leitura (o bloqueio de escrita fica em Router::despachar()).
-     * Guarda a identidade real do Admin em 'visualizando_de' e sobrescreve a
-     * sessao com a do alvo - nao e' um novo login (mesmo navegador/pessoa),
-     * por isso nao regenera o id de sessao.
+     * Administrador visualiza o sistema como outro usuario, somente leitura.
+     * Guarda a identidade real em 'visualizando_de' e sobrescreve a sessao com
+     * a do alvo; nao e' um novo login, por isso nao regenera o id de sessao.
      */
     public static function iniciarVisualizacaoComo($usuarioAlvoId, $nomeAlvo, array $perfisAlvo)
     {

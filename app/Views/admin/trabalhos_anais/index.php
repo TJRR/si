@@ -196,6 +196,19 @@ foreach ($versoes as $versao) {
             <input type="checkbox" name="avisar_autores" value="1" <?php echo $primeiraPublicacao ? 'checked' : ''; ?>>
             Avisar os autores dos trabalhos incluídos (sino do aplicativo e e-mail). Marque na primeira publicação; nas versões seguintes, só se fizer sentido reavisar.
         </label>
+        <?php if (!$primeiraPublicacao): ?>
+            <fieldset>
+                <legend>Quem recebe o aviso, se marcado acima</legend>
+                <label style="display:block;">
+                    <input type="radio" name="modo_aviso" value="novos" checked>
+                    Só os autores de trabalhos que ainda não foram avisados
+                </label>
+                <label style="display:block;">
+                    <input type="radio" name="modo_aviso" value="todos">
+                    Todos os autores dos trabalhos incluídos
+                </label>
+            </fieldset>
+        <?php endif; ?>
         <div class="form-acoes">
             <button type="submit">Publicar</button>
         </div>

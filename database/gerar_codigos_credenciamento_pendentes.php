@@ -1,22 +1,15 @@
 <?php
 
 /**
- * Preenche evento_inscricoes.codigo_credenciamento (Fase 42) em toda linha
- * que ainda esta' com o valor NULL - caso das inscricoes gravadas ANTES
- * desta fase existir (migration 129 so' adiciona a coluna, sem backfill em
- * SQL de proposito: RAND()/UUID() do MySQL nao sao CSPRNG, e a mesma coluna
- * vai servir de credencial de credenciamento presencial na Fase 43 - toda
- * geracao precisa vir da mesma fonte de entropia).
+ * Preenche evento_inscricoes.codigo_credenciamento nas linhas ainda
+ * nulas, pelo mesmo gerador de EventoInscricaoRepository::inscrever(), sem
+ * reimplementar geracao nem conferencia de unicidade. Nunca preencher por
+ * SQL: ver Implantar.md, secao 13.7.
  *
- * Chama EventoInscricaoRepository::gerarCodigoCredenciamentoUnico() - o
- * MESMO metodo usado por inscrever() para inscricao nova - sem reimplementar
- * geracao nem checagem de unicidade aqui.
- *
- * Idempotente: so' afeta linhas com codigo_credenciamento IS NULL, nunca
- * sobrescreve um codigo ja gerado. Reexecutar e' seguro.
+ * Idempotente: so' afeta linhas sem codigo. Reexecutar e' seguro.
  *
  * Uso:
- *   php database/gerar_codigos_credenciamento_pendentes.php            (dry-run)
+ *   php database/gerar_codigos_credenciamento_pendentes.php            (ensaio)
  *   php database/gerar_codigos_credenciamento_pendentes.php --confirmar
  */
 

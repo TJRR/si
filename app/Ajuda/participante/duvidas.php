@@ -7,16 +7,16 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Minhas dúvidas',
-    'resumo' => 'Lista de dúvidas registradas pela sua equipe: qualquer integrante (não só o líder) pode registrar e ver.',
+    'resumo' => 'Aqui ficam todas as dúvidas registradas pela sua equipe, com a situação de cada uma. Qualquer integrante, e não só o líder, pode registrar uma dúvida nova e acompanhar as respostas.',
     'operacoes' => [
         [
             'nome' => 'Registrar dúvida',
-            'como' => 'Abre o formulário de uma nova dúvida.',
+            'como' => 'Abre o formulário para fazer uma pergunta nova à organização.',
         ],
         [
             'nome' => 'Ver',
             'icone' => 'ver',
-            'como' => 'Abre a conversa completa da dúvida.',
+            'como' => 'Abre a conversa completa da dúvida, com a pergunta, as respostas e os anexos. A cor mostra em que pé ela está:',
             'pills' => [
                 ['cor' => 'azul', 'rotulo' => 'Recebida'],
                 ['cor' => 'laranja', 'rotulo' => 'Em análise'],

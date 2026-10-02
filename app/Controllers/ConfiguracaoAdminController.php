@@ -36,7 +36,7 @@ class ConfiguracaoAdminController extends Controller
                 $erro = 'Informe um tempo de expiração de sessão válido (em minutos, maior que zero).';
             } else {
                 $this->configuracoes->atualizarSessaoTimeoutMinutos($minutos);
-                $_SESSION['flash'] = 'Configurações atualizadas.';
+                flashSucesso('Configurações atualizadas.');
                 $this->redirecionar('configuracoes/index');
                 return;
             }
@@ -52,7 +52,7 @@ class ConfiguracaoAdminController extends Controller
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->configuracoes->desativarSistema();
-            $_SESSION['flash'] = 'Sistema desativado: apenas administradores conseguem acessar agora.';
+            flashSucesso('Sistema desativado: apenas administradores conseguem acessar agora.');
         }
 
         $this->redirecionar('configuracoes/index');
@@ -62,7 +62,7 @@ class ConfiguracaoAdminController extends Controller
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->configuracoes->reativarSistema();
-            $_SESSION['flash'] = 'Sistema reativado: acesso normal restabelecido para todos.';
+            flashSucesso('Sistema reativado: acesso normal restabelecido para todos.');
         }
 
         $this->redirecionar('configuracoes/index');

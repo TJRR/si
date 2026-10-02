@@ -220,9 +220,8 @@ class GoogleCalendarSyncService
     }
 
     /**
-     * Revalida elegibilidade a cada chamada (defesa em profundidade - ver
-     * plano da Fase 31), nao so' no momento em que o horario foi marcado
-     * como integrado.
+     * Revalida a elegibilidade do organizador a cada chamada, nao so' quando
+     * o horario foi marcado como integrado. Ver Implantar.md, secao 13.6.
      */
     private function obterToken($organizadorEmail)
     {

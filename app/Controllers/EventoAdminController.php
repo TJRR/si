@@ -147,6 +147,67 @@ class EventoAdminController extends Controller
     }
 
     /**
+     * Conferencia de cracha pela organizacao: le o codigo de credenciamento
+     * impresso e mostra de quem e' a inscricao, sem gravar conexao, presenca
+     * nem credenciamento.
+     */
+    public function conferirCracha($id)
+    {
+        $evento = $this->eventos->buscarPorId($id);
+
+        if ($evento === null) {
+            http_response_code(404);
+            exit('Evento não encontrado.');
+        }
+
+        $this->renderizar('admin/eventos/conferir_cracha', [
+            'evento' => $evento,
+        ], 'Conferir crachá: ' . $evento['nome'], ['tipo' => 'eventoConferirCracha', 'id' => (int) $id]);
+    }
+
+    public function validarCracha($id)
+    {
+        header('Content-Type: application/json');
+
+        $evento = $this->eventos->buscarPorId($id);
+
+        if ($evento === null || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(404);
+            echo json_encode(['valido' => false, 'mensagem' => 'Evento não encontrado.']);
+            return;
+        }
+
+        $falhas = new \App\Repositories\CrachaConferenciaFalhaRepository();
+        $usuarioId = \App\Core\Auth::usuarioId();
+
+        if ($falhas->excedeuOLimite($usuarioId)) {
+            http_response_code(429);
+            echo json_encode(['valido' => false, 'mensagem' => 'Muitos códigos inexistentes seguidos. Aguarde alguns minutos e tente novamente.']);
+            return;
+        }
+
+        $corpo = json_decode(file_get_contents('php://input'), true);
+        $codigo = isset($corpo['codigo']) ? strtoupper(trim((string) $corpo['codigo'])) : '';
+        $inscricao = $codigo !== '' ? $this->inscricoes->buscarPorCodigo((int) $evento['id'], $codigo) : null;
+
+        if ($inscricao === null) {
+            $falhas->registrarFalha($usuarioId, (int) $evento['id']);
+            echo json_encode(['valido' => false, 'mensagem' => 'Nenhuma inscrição deste evento tem esse código.']);
+            return;
+        }
+
+        $falhas->limparFalhas($usuarioId);
+        $usuario = (new \App\Repositories\UsuarioRepository())->buscarPorId((int) $inscricao['usuario_id']);
+        $homologada = !empty($inscricao['homologado_em']);
+
+        echo json_encode([
+            'valido' => $homologada,
+            'mensagem' => $inscricao['usuario_nome'] . ($homologada ? ': inscrição homologada.' : ': inscrição pendente de homologação.'),
+            'foto' => $usuario !== null && !empty($usuario['foto_path']) ? config('base_path') . '/assets/' . $usuario['foto_path'] : null,
+        ]);
+    }
+
+    /**
      * Fase 48 (correcao pos-teste de fumaca): sub-aba "Perfis" do Evento -
      * cadastro dos perfis da equipe de organizacao (Instrutor, Professor,
      * Palestrante, ...), usados por AtividadeAdminController::vincularFacilitador().
@@ -397,6 +458,8 @@ class EventoAdminController extends Controller
             'data_fim' => trim(isset($_POST['data_fim']) ? $_POST['data_fim'] : ''),
             'status' => isset($_POST['status']) && $_POST['status'] === 'encerrado' ? 'encerrado' : 'ativo',
             'modo_credenciamento' => isset($_POST['modo_credenciamento']) && $_POST['modo_credenciamento'] === 'assistido' ? 'assistido' : 'automatico',
+            // Fase 58: cracha impresso opcional por evento.
+            'oferece_cracha' => isset($_POST['oferece_cracha']) ? 1 : 0,
         ];
     }
 

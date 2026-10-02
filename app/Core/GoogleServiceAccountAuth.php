@@ -8,17 +8,12 @@ if (!defined('SI_BOOT')) {
 }
 
 /**
- * Fase 31: fluxo "Service Account + Domain-Wide Delegation" do Google
- * (RFC 7523, JWT Bearer) - impersona um e-mail do dominio institucional
- * (@tjrr.jus.br) sem consentimento individual, ao contrario do login social
- * (App\Core\GoogleOAuth, que fica intocado). So existe UMA credencial no
- * sistema inteiro (config/google_calendar.php); ver DeployFase31.md para o
- * setup completo no Google Cloud/Workspace.
+ * Conta de servico do Google com delegacao no dominio, para agir em nome do
+ * organizador, sem consentimento individual (diferente da entrada com
+ * Google, em GoogleOAuth). Ver Implantar.md, secao 13.4.
  *
- * Curl cru, mesmo estilo de GoogleOAuth/ItiValidadorService - sem lib nova
- * via Composer. Fail-soft: qualquer falha (config vazia, chave invalida,
- * rede fora, escopo nao autorizado) devolve null, nunca lanca excecao -
- * quem chama decide a mensagem pro usuario.
+ * Curl cru, sem biblioteca nova. Qualquer falha devolve null, nunca lanca
+ * excecao: quem chama decide a mensagem.
  */
 class GoogleServiceAccountAuth
 {

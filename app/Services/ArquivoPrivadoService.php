@@ -8,14 +8,10 @@ if (!defined('SI_BOOT')) {
 }
 
 /**
- * Fase 30: extrai o padrao de gravar/servir arquivo protegido (fora de
- * assets/, sem controle de acesso pelo servidor web - so' este ponto de
- * entrada decide quem baixa o que), ja usado antes em SubmissaoService
- * (grava) e AvaliacaoController::baixarArquivo() (serve, com a protecao
- * contra path traversal ja corrigida num commit anterior). Quem chama
- * valida o formato do arquivo ANTES de chamar salvar() (ex.:
- * UploadPdfValidador) - este servico so' grava/serve/remove, nao valida
- * conteudo.
+ * Grava, serve e remove arquivo protegido, fora de assets/: so' este ponto
+ * de entrada decide quem baixa o que. Quem chama valida o formato do
+ * arquivo ANTES de chamar salvar() (ex.: UploadPdfValidador); este servico
+ * nao valida conteudo. Ver Implantar.md, secao 13.6.
  */
 class ArquivoPrivadoService
 {
@@ -52,10 +48,7 @@ class ArquivoPrivadoService
             throw new \RuntimeException('Envio inválido.');
         }
 
-        // Fase 31 (Auditoria de Seguranca, achado #15): validacao de MIME
-        // real (nao extensao/Content-Type declarado) direto aqui, em vez de
-        // depender so' de quem chama (UploadPdfValidador) - fecha o
-        // contrato implicito, ja que este metodo so' grava ".pdf" mesmo.
+        // Tipo real do arquivo conferido aqui: ver Implantar.md, secao 13.6.
         $tipoReal = finfo_file(finfo_open(FILEINFO_MIME_TYPE), $arquivo['tmp_name']);
 
         if ($tipoReal !== 'application/pdf') {
@@ -87,13 +80,9 @@ class ArquivoPrivadoService
     }
 
     /**
-     * Resolve e serve um arquivo dentro de storage/uploads/ - mesma
-     * protecao contra path traversal ja corrigida em
-     * AvaliacaoController::baixarArquivo(): realpath() da base e do alvo,
-     * strpos() comparando prefixo (com DIRECTORY_SEPARATOR no final do
-     * base, pra nao colar em falso-positivo tipo "uploads-outracoisa"),
-     * is_file(). Sai com 404 direto se qualquer checagem falhar - quem
-     * chama nao precisa tratar retorno de erro.
+     * Resolve e serve um arquivo dentro de storage/uploads/. Sai com 404 direto
+     * se qualquer conferencia falhar; quem chama nao precisa tratar retorno de
+     * erro. Ver Implantar.md, secao 13.6.
      */
     public static function servir($caminhoRelativo, $nomeOriginal)
     {

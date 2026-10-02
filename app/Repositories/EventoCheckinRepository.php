@@ -239,14 +239,18 @@ class EventoCheckinRepository
     }
 
     /**
-     * Metodo puro, sem banco - calcula a janela [data_inicio, data_inicio +
-     * duracao x (tolerancia/100)] e devolve true so' se $checkinEm cair
-     * dentro dela NOS DOIS LIMITES. O limite inferior e' obrigatorio: a
-     * aceitacao do check-in em si e' ampla (qualquer momento ate data_fim,
-     * inclusive antes de data_inicio), mas sem o limite inferior aqui,
-     * alguem confirmando presenca antes da atividade comecar contaria
-     * indevidamente como presenca efetiva - e essa conta alimenta direto a
+     * Metodo puro, sem banco - calcula a janela [abertura da leitura,
+     * data_inicio + duracao x (tolerancia/100)] e devolve true so' se
+     * $checkinEm cair dentro dela NOS DOIS LIMITES. Essa conta alimenta a
      * elegibilidade de certificado na Fase 59.
+     *
+     * Fase 58 (decisao do dono): o limite inferior deixou de ser data_inicio
+     * e passou a ser a abertura da leitura (data_inicio menos
+     * antecedencia_abertura_presenca). Com o limite antigo, quem chegava
+     * antes do inicio e lia o codigo - exatamente quem a dinamica de pontos
+     * premia com o extra de pontualidade - ficava marcado como "nao
+     * efetivo". O limite inferior continua existindo, porque a leitura so'
+     * e' aceita a partir da abertura (EventoAppController::validarPresenca()).
      */
     public function presencaEfetiva(array $atividade, $checkinEm)
     {
@@ -254,10 +258,47 @@ class EventoCheckinRepository
         $fim = strtotime($atividade['data_fim']);
         $checkin = strtotime($checkinEm);
         $tolerancia = (int) $atividade['tolerancia_presenca_efetiva'];
+        $abertura = $inicio - ((int) $atividade['antecedencia_abertura_presenca'] * 60);
 
         $duracaoSegundos = $fim - $inicio;
         $limiteSuperior = $inicio + (int) round($duracaoSegundos * ($tolerancia / 100));
 
-        return $checkin >= $inicio && $checkin <= $limiteSuperior;
+        return $checkin >= $abertura && $checkin <= $limiteSuperior;
+    }
+
+    /**
+     * Fase 58 (N2 do plano): desfaz a remocao feita pelo Administrador,
+     * PRESERVANDO o horario original da leitura - ao contrario da
+     * reativacao por nova leitura em registrar(), que troca o horario pelo
+     * da leitura nova. E' o unico caminho de volta depois do fim da
+     * atividade, porque a partir da Fase 58 a leitura fecha em data_fim.
+     *
+     * Idempotente: devolve false quando a presenca nao estava removida.
+     */
+    public function restaurar($id, $usuarioId)
+    {
+        $antes = $this->buscarPorId($id);
+
+        if ($antes === null || $antes['removido_em'] === null) {
+            return false;
+        }
+
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'UPDATE evento_checkins
+                SET removido_em = NULL, removido_por = NULL, motivo_remocao = NULL
+              WHERE id = :id AND removido_em IS NOT NULL'
+        );
+        $stmt->execute(['id' => (int) $id]);
+
+        if ($stmt->rowCount() === 0) {
+            return false;
+        }
+
+        Auditoria::registrar('restaurar_presenca', 'evento_checkins', (int) $id, $antes, [
+            'restaurado_por' => (int) $usuarioId,
+        ]);
+
+        return true;
     }
 }

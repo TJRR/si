@@ -37,6 +37,11 @@ return [
             'observacao' => 'Só é possível publicar depois de publicar o resultado de Trabalhos. O arquivo publicado fica acessível a qualquer pessoa com o endereço: confira antes que não há CPF, telefone pessoal ou qualquer dado que não deva ser público.',
         ],
         [
+            'nome' => 'Quem recebe o aviso',
+            'como' => 'A partir da segunda publicação, a tela pergunta quem recebe o aviso: só os autores de trabalhos que ainda não foram avisados (o padrão, para quem entrou numa versão nova do volume) ou todos os autores dos trabalhos incluídos. O sistema guarda quais trabalhos já tiveram os autores avisados.',
+            'observacao' => 'Publicação feita antes de o sistema guardar esse registro não conta: o primeiro aviso "só os novos" depois disso alcança todos os autores.',
+        ],
+        [
             'nome' => 'Despublicar os Anais',
             'icone' => 'despublicar',
             'como' => 'Tira o botão da página e do aplicativo. As versões continuam guardadas, e a lista de trabalhos dos Anais volta a poder ser editada.',

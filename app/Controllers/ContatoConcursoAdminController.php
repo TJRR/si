@@ -40,13 +40,8 @@ class ContatoConcursoAdminController extends Controller
                 }
             }
 
-            // Estes dois campos sao texto livre digitado pelo Admin e viram
-            // href no rodape publico: mesma convencao de link_meet (ver
-            // linkHttpValido() em app/helpers.php) - valida na gravacao aqui
-            // e de novo na exibicao, como defesa em profundidade. Sem isso,
-            // "instagram.com/premio" (sem esquema) virava caminho relativo e
-            // o link nascia quebrado, e "javascript:..." virava XSS
-            // armazenado ao ser clicado.
+            // Estes dois campos viram link no rodape publico: validados na gravacao e
+            // de novo na exibicao.
             $mapaUrl = $this->campoOuNulo('mapa_url');
 
             foreach ($redesSociais as $rede => $link) {

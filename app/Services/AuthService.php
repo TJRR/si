@@ -32,13 +32,8 @@ class AuthService
     }
 
     /**
-     * Fase 31 (Auditoria de Seguranca): achado #11 (rate limiting) e achado
-     * #12 (mensagem genericizada) resolvidos juntos aqui - a MESMA mensagem
-     * cobre e-mail inexistente, senha errada e status pendente/rejeitado/
-     * suspenso, pra nao dar pista de qual dos casos e' o real. So' credencial
-     * errada conta pra rate limiting (status bloqueado com senha certa nao
-     * conta - quem digitou a senha certa ja provou que sabe a credencial,
-     * nao e' tentativa de adivinhar).
+     * Entrada por e-mail e senha, com limite de tentativas e mensagem unica
+     * de recusa. Ver Implantar.md, secao 13.6.
      */
     public function autenticar($email, $senha)
     {
@@ -99,15 +94,8 @@ class AuthService
     }
 
     /**
-     * "Esqueci minha senha" - sempre silenciosa pra quem chama: nunca revela
-     * se o e-mail existe, esta ativo ou aprovado (evita enumeracao de
-     * contas). So' gera token/envia e-mail quando a conta realmente existe e
-     * pode logar (mesma condicao de AuthService::autenticar: aprovado e
-     * ativo); caso contrario, nao faz nada e retorna do mesmo jeito.
-     *
-     * Reaproveita o token tipo "definir" (mesmo do convite/homologacao) e a
-     * pagina auth/definirSenha ja existente - funciona tanto pra definir a
-     * primeira senha quanto pra redefinir uma esquecida.
+     * "Esqueci minha senha". Reaproveita o endereco do tipo "definir" (o
+     * mesmo do convite) e a pagina auth/definirSenha. Ver Implantar.md, secao 13.6.
      */
     public function solicitarRecuperacaoSenha($email)
     {
@@ -124,7 +112,7 @@ class AuthService
         try {
             (new NotificacaoService())->recuperacaoSenha($usuario['email'], $usuario['nome'], $link);
         } catch (\Exception $e) {
-            // Falha de notificacao nunca deve alterar a resposta generica ao usuario.
+            // Falha de notificacao nunca altera a resposta: ver Implantar.md, secao 13.6.
         }
     }
 

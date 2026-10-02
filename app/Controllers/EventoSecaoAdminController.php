@@ -14,6 +14,7 @@ use App\Repositories\EventoSecaoCartoesRepository;
 use App\Repositories\EventoSecaoContagemRepository;
 use App\Repositories\EventoSecaoCronogramaRepository;
 use App\Repositories\EventoSecaoDestaquesRepository;
+use App\Repositories\EventoSecaoAnaisRepository;
 use App\Repositories\EventoSecaoEstandesRepository;
 use App\Repositories\EventoSecaoFaqRepository;
 use App\Repositories\EventoSecaoLocalRepository;
@@ -55,6 +56,7 @@ class EventoSecaoAdminController extends Controller
         // Fase 54: lista publica dos estandes ativos do evento (os itens sao
         // os proprios estandes, cadastrados no no Estandes da arvore).
         'estandes' => ['rotulo' => 'Estandes', 'classe' => EventoSecaoEstandesRepository::class, 'view' => 'evento_estandes', 'tem_itens' => false],
+        'anais' => ['rotulo' => 'Anais', 'classe' => EventoSecaoAnaisRepository::class, 'view' => 'evento_anais', 'tem_itens' => false],
     ];
 
     private static $rotulosFixos = [
@@ -299,6 +301,8 @@ class EventoSecaoAdminController extends Controller
                 return array_merge($comuns, ['fonte', 'mostrar_local']);
             case 'local':
                 return array_merge($comuns, ['endereco', 'mapa_embed_url', 'mapa_link', 'imagem_path', 'imagem_alt']);
+            case 'anais':
+                return array_merge($comuns, ['mostrar_selecionados']);
             default:
                 return $comuns;
         }
@@ -311,6 +315,7 @@ class EventoSecaoAdminController extends Controller
             'fonte' => 'atividades',
             'mostrar_local' => 1,
             'mostrar_contato' => 0,
+            'mostrar_selecionados' => 1,
             'efeito_hover' => 'elevar',
             'efeito_abrir' => 'deslizar',
             'efeito_fechar' => 'deslizar',
@@ -365,7 +370,7 @@ class EventoSecaoAdminController extends Controller
             return $bruto !== null ? sanitizarHtmlRico($bruto) : null;
         }
 
-        if ($coluna === 'mostrar_local' || $coluna === 'mostrar_contato') {
+        if ($coluna === 'mostrar_local' || $coluna === 'mostrar_contato' || $coluna === 'mostrar_selecionados') {
             return isset($_POST[$coluna]) ? 1 : 0;
         }
 

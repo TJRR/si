@@ -23,6 +23,8 @@ use App\Core\Database;
  */
 class BonusCreditoRepository
 {
+    use OperacaoEmLote;
+
     /**
      * Grava o credito se a pessoa ainda nao tiver aquele bonus. Devolve true
      * quando inseriu e false quando ja' existia.
@@ -197,6 +199,21 @@ class BonusCreditoRepository
             $sql .= ' AND c.anulado_em IS NOT NULL';
         } elseif (isset($filtros['situacao']) && $filtros['situacao'] === 'validos') {
             $sql .= ' AND c.anulado_em IS NULL';
+        }
+
+        if (!empty($filtros['busca'])) {
+            $sql .= ' AND (u.nome LIKE :busca OR u.email LIKE :busca)';
+            $parametros['busca'] = '%' . $filtros['busca'] . '%';
+        }
+
+        if (!empty($filtros['data_inicio'])) {
+            $sql .= ' AND DATE(c.creditado_em) >= :data_inicio';
+            $parametros['data_inicio'] = $filtros['data_inicio'];
+        }
+
+        if (!empty($filtros['data_fim'])) {
+            $sql .= ' AND DATE(c.creditado_em) <= :data_fim';
+            $parametros['data_fim'] = $filtros['data_fim'];
         }
 
         $sql .= ' ORDER BY c.creditado_em DESC, c.id DESC';
@@ -473,5 +490,80 @@ class BonusCreditoRepository
         }
 
         return $alterou;
+    }
+
+    /**
+     * Fase 58: anulacao e reversao em lote das linhas marcadas na tela, pelo
+     * traco OperacaoEmLote. Diferente de anularEmLote por bonus, que ja'
+     * existia: aqui o alcance e' a selecao do Administrador.
+     *
+     * A reversao so' alcanca o que uma PESSOA anulou (anulado_por nao nulo):
+     * o credito anulado pelo sistema por falta de presenca volta sozinho
+     * quando a presenca volta, e nunca pela mao do Administrador.
+     */
+    public function anularSelecionadosEmLote($eventoId, array $ids, $usuarioId, $motivo)
+    {
+        return $this->aplicarSelecaoEmLote(
+            $eventoId,
+            $ids,
+            'anular',
+            'UPDATE evento_bonus_creditos SET anulado_em = NOW(), anulado_por = ?, motivo_anulacao = ?',
+            'anulado_em IS NULL',
+            [(int) $usuarioId, $motivo]
+        );
+    }
+
+    public function reverterSelecionadosEmLote($eventoId, array $ids)
+    {
+        return $this->aplicarSelecaoEmLote(
+            $eventoId,
+            $ids,
+            'reverter_anulacao',
+            'UPDATE evento_bonus_creditos SET anulado_em = NULL, anulado_por = NULL, motivo_anulacao = NULL',
+            'anulado_em IS NOT NULL AND anulado_por IS NOT NULL',
+            []
+        );
+    }
+
+    private function aplicarSelecaoEmLote($eventoId, array $ids, $acao, $comando, $condicao, array $valores)
+    {
+        $identificadores = $this->identificadoresDoLote($ids);
+
+        if ($identificadores === []) {
+            return [];
+        }
+
+        $marcadores = implode(', ', array_fill(0, count($identificadores), '?'));
+        $condicaoComApelido = preg_replace('/\\b(anulado_em|anulado_por)\\b/', 'c.$1', $condicao);
+
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT c.*, b.nome AS bonus_nome, u.nome AS participante_nome, i.usuario_id
+               FROM evento_bonus_creditos c
+               INNER JOIN evento_bonus b ON b.id = c.bonus_id
+               INNER JOIN evento_inscricoes i ON i.id = c.evento_inscricao_id
+               INNER JOIN usuarios u ON u.id = i.usuario_id
+              WHERE c.id IN (' . $marcadores . ') AND c.evento_id = ? AND ' . $condicaoComApelido
+        );
+        $stmt->execute(array_merge($identificadores, [(int) $eventoId]));
+        $alcancados = $stmt->fetchAll();
+
+        if ($alcancados === []) {
+            return [];
+        }
+
+        $this->executarLote(
+            $comando,
+            $condicao,
+            $eventoId,
+            array_map(function ($linha) {
+                return (int) $linha['id'];
+            }, $alcancados),
+            $valores,
+            $acao,
+            'evento_bonus_creditos'
+        );
+
+        return $alcancados;
     }
 }

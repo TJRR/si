@@ -10,9 +10,7 @@ if (!defined('SI_BOOT')) {
 use App\Core\Database;
 
 /**
- * Fase 31 (Auditoria de Seguranca, achado #11): rate limiting de login por
- * e-mail digitado - conta falhas recentes independente de o e-mail existir
- * ou nao no sistema (nao abre canal novo de enumeracao).
+ * Limite de tentativas de entrada. Ver Implantar.md, secao 13.6.
  */
 class TentativaLoginRepository
 {

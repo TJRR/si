@@ -7,12 +7,12 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Meus dados',
-    'resumo' => 'Dados pessoais de um integrante; cada um só edita os próprios dados, inclusive o líder.',
+    'resumo' => 'Nesta tela cada integrante confere e corrige os próprios dados pessoais. Ninguém edita os dados de outra pessoa, nem o líder.',
     'operacoes' => [
         [
-            'nome' => 'Nome / CPF / Telefone',
-            'como' => 'CPF é validado no navegador (dígitos verificadores) antes de enviar.',
-            'observacao' => 'Alterar o CPF volta automaticamente o vínculo do integrante para "pendente"; o Suporte precisa conferir de novo. E-mail é travado, não editável por aqui.',
+            'nome' => 'Passo a passo',
+            'como' => '1. Corrija o nome, o CPF ou o telefone. 2. Clique em "Salvar". O CPF é conferido antes do envio: se algum número estiver errado, a tela avisa na hora.',
+            'observacao' => 'Mudar o CPF faz a sua participação voltar para "pendente" até a organização conferir o dado novo. O e-mail não muda por aqui, porque é ele que identifica a sua conta.',
         ],
     ],
     'conceitos' => [],

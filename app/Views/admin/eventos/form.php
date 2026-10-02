@@ -58,6 +58,16 @@
         precisa de conferência manual antes de liberar o participante.
     </p>
 
+    <?php $ofereceCracha = $evento === null || !isset($evento['oferece_cracha']) || (int) $evento['oferece_cracha'] === 1; ?>
+    <label>
+        <input type="checkbox" name="oferece_cracha" value="1" <?php echo $ofereceCracha ? 'checked' : ''; ?>>
+        Oferecer a impressão de crachá ao participante
+    </label>
+    <p style="color:#555;font-size:0.9em;">
+        Desmarcado, o aplicativo não oferece mais o botão "Imprimir crachá". O código do participante continua
+        na tela "Minha inscrição" e na tela "Conectar com participante", que servem de crachá na tela do celular.
+    </p>
+
     <div class="form-acoes">
         <a href="<?php echo url('eventos/index'); ?>" class="btn-voltar">Voltar</a>
         <button type="submit">Salvar</button>

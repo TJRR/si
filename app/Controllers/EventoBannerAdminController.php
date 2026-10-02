@@ -115,7 +115,7 @@ class EventoBannerAdminController extends Controller
                 $this->imagens->remover($banner['imagem_mobile_path']);
             }
 
-            $_SESSION['flash'] = 'Faixa removida.';
+            flashSucesso('Faixa removida.');
         } catch (\PDOException $e) {
             flashErro('Não foi possível remover a faixa.');
         }

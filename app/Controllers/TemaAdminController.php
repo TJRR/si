@@ -44,7 +44,7 @@ class TemaAdminController extends Controller
             $this->salvarFavicon();
 
             if (empty($_SESSION['flash'])) {
-                $_SESSION['flash'] = 'Favicon atualizado.';
+                flashSucesso('Favicon atualizado.');
             }
 
             $this->redirecionar('tema/index');
@@ -253,7 +253,7 @@ class TemaAdminController extends Controller
             $this->salvarCabecalho();
 
             if (empty($_SESSION['flash'])) {
-                $_SESSION['flash'] = 'Cabeçalho atualizado.';
+                flashSucesso('Cabeçalho atualizado.');
             }
 
             $this->redirecionar('tema/cabecalho');
@@ -271,7 +271,7 @@ class TemaAdminController extends Controller
             $this->salvarRodape();
 
             if (empty($_SESSION['flash'])) {
-                $_SESSION['flash'] = 'Rodapé atualizado.';
+                flashSucesso('Rodapé atualizado.');
             }
 
             $this->redirecionar('tema/rodape');

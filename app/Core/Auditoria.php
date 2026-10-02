@@ -18,17 +18,7 @@ class Auditoria
      * principal que esta sendo auditada.
      */
     /**
-     * Fase 35 (Parte C): campos cujo VALOR nunca pode ser gravado na trilha
-     * de auditoria. Rede de seguranca em codigo compartilhado - quem chamar
-     * registrar() daqui a seis meses nao precisa conhecer esta regra.
-     *
-     * Por que importa tanto: log_auditoria entra no arquivo de exportacao
-     * completa do banco (exportar_dump_completo.php faz SHOW TABLES e leva
-     * TUDO), que e' baixado por endereco publico durante a atualizacao, e
-     * tambem alimenta o relatorio de conferencia em PDF. Um segredo que
-     * entre aqui vaza pelos dois caminhos de uma vez - e ainda por cima
-     * ficaria em texto puro na tabela vizinha aquela onde ele esta cifrado,
-     * anulando a cifragem inteira.
+     * Campos cujo valor nunca e' gravado na trilha de auditoria. Ver Implantar.md, secao 13.6.
      */
     private static $camposProtegidos = [
         'private_key',

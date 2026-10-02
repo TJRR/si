@@ -12,7 +12,7 @@
 </div>
 
 <?php if ((int) $config['ativo'] === 1): ?>
-    <p class="status-pill verde">Pesquisa ativa<?php echo $janelaTexto !== '' ? ', de ' . htmlspecialchars($janelaTexto, ENT_QUOTES, 'UTF-8') : ''; ?></p>
+    <p class="status-pill verde">Pesquisa ativa<?php echo $janelaTexto !== '' ? ', ' . htmlspecialchars($janelaTexto, ENT_QUOTES, 'UTF-8') : ', sem limite de data'; ?></p>
 <?php else: ?>
     <p class="status-pill laranja">Pesquisa desativada neste evento</p>
 <?php endif; ?>

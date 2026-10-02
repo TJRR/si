@@ -10,6 +10,7 @@ if (!defined('SI_BOOT')) {
 use App\Repositories\EventoAnaisRepository;
 use App\Repositories\EventoAnaisVersaoRepository;
 use App\Repositories\EventoTrabalhoTermoRepository;
+use App\Repositories\TrabalhoApresentacaoRepository;
 use App\Repositories\TrabalhoAutorRepository;
 use App\Repositories\TrabalhoRepository;
 use App\Repositories\TrabalhoTermoAceiteRepository;
@@ -241,6 +242,7 @@ class EventoAnaisService
     public function montarSelecao($eventoId)
     {
         $exclusoes = $this->anais->listarExclusoes($eventoId);
+        $apresentados = (new TrabalhoApresentacaoRepository())->idsApresentadosDoEvento($eventoId);
         $autores = new TrabalhoAutorRepository();
         $aceites = new TrabalhoTermoAceiteRepository();
 
@@ -296,6 +298,8 @@ class EventoAnaisService
                 'incluido' => !isset($exclusoes[(int) $trabalho['id']]),
                 'motivo' => isset($exclusoes[(int) $trabalho['id']]) ? (string) $exclusoes[(int) $trabalho['id']]['motivo'] : '',
                 'declaracoes_pendentes' => $pendentes,
+                'selecionado' => (int) $trabalho['selecionado'] === 1,
+                'apresentado' => isset($apresentados[(int) $trabalho['id']]),
             ];
         }
 

@@ -10,13 +10,9 @@ if (!defined('SI_BOOT')) {
 use App\Core\Database;
 
 /**
- * Fase 57: O QUE foi respondido na pesquisa (anonimo).
- *
- * Nenhum metodo deste repositorio recebe, devolve ou consulta identificacao
- * de pessoa, e NENHUM deles chama Auditoria::registrar(): a trilha carimba
- * usuario, endereco de rede e instante, e auditar aqui abriria sozinha a
- * ligacao que o desenho das tabelas fecha. O fato nominal ("fulano
- * respondeu") e' auditado em PesquisaRespondenteRepository.
+ * O QUE foi respondido na pesquisa (anonimo). Nenhum metodo deste
+ * repositorio recebe, devolve ou consulta identificacao de pessoa, e nenhum
+ * chama Auditoria::registrar(): ver Implantar.md, secao 13.16.
  *
  * valor_numero guarda a nota da escala (1 a 5), a POSICAO da opcao escolhida
  * ou marcada (a partir de 1), ou zero no texto livre. Multipla escolha grava

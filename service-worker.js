@@ -1,36 +1,15 @@
-/*
- * Fase 41: service worker do aplicativo web instalavel (PWA) do Evento.
- * Arquivo estatico solto na raiz do projeto (mesmo padrao de favicon.ico/
- * termos.php/politica.php) - precisa ficar aqui para o escopo de registro
- * cobrir /si/* em producao (nao da' pra restringir por path, todo o
- * roteamento do sistema e' via query string index.php?r=modulo/acao).
+/**
+ * Service worker do aplicativo instalavel do Evento. Fica na raiz do
+ * projeto para o escopo de registro cobrir todas as rotas, que passam
+ * todas por index.php?r=modulo/acao.
  *
- * Regra de seguranca central (ver plano da Fase 41): o sistema roda tudo por
- * index.php?r=..., entao a HOME PUBLICA tambem nao tem "r=" na URL - uma
- * allowlist que decidisse "sem r= e' asset estatico, pode cachear" cacharia
- * a propria home, que mistura divulgacao do Evento com banners/blocos do
- * Concurso vigente (5o Premio de Inovacao, em avaliacao real). Por isso o
- * criterio AQUI e' `request.mode`, nunca a presenca de "r=" na URL:
+ * O criterio de cache e' `request.mode`, nunca a presenca de "r=" na URL
+ * (a pagina inicial publica tambem nao tem "r="): navegacao de pagina
+ * nunca e' interceptada; so' sub-recursos dentro de /assets/ saem do
+ * cache. Ver Implantar.md, secao 13.4.
  *
- *   1. Navegacao de pagina (qualquer HTML, com ou sem r=) NUNCA e'
- *      interceptada - handler nem chama respondWith(), passa direto pra
- *      rede como se este arquivo nao existisse. Cobre home, admin,
- *      avaliacao, concurso E as proprias telas do evento.
- *   2. So' sub-recursos estaticos dentro de /assets/ (CSS/JS/icones) podem
- *      ser servidos do cache - identificados por PATH, nunca por
- *      querystring. Estrategia "stale-while-revalidate": serve do cache
- *      se ja tiver, atualiza em segundo plano, cai pra rede se nao tiver
- *      nada ainda.
- *   3. eventoApp/manifesto fica de fora de proposito - e' conteudo
- *      dinamico (nome/icone configuraveis pelo Admin em Configuracoes
- *      Gerais), sem cache-buster proprio como os icones (?v=<timestamp>);
- *      cachear traria o mesmo risco de dado desatualizado que esta fase
- *      existe para evitar. Como nao mora em /assets/, a regra 2 ja o
- *      exclui automaticamente.
- *
- * CACHE_NAME e' versionado a mao - trocar o sufixo (v1 -> v2) quando a lista
- * de assets relevantes mudar numa fase futura, para o `activate` limpar o
- * cache antigo (documentado em Implantar.md).
+ * CACHE_NAME e' versionado a mao: trocar o sufixo quando a lista de
+ * arquivos relevantes mudar, para o `activate` limpar o cache antigo.
  */
 
 const CACHE_NAME = 'evento-app-v2';

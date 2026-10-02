@@ -55,6 +55,8 @@ class AtividadeTipoAdminController extends Controller
                 $this->tipos->criar($eventoId, [
                     'nome' => $nome,
                     'cor' => !empty($_POST['cor']) ? trim($_POST['cor']) : null,
+                    'pontos_presenca' => $this->pontosDoFormulario('pontos_presenca'),
+                    'pontos_pontualidade' => $this->pontosDoFormulario('pontos_pontualidade'),
                 ]);
                 flashSucesso('Tipo cadastrado.');
             }
@@ -77,6 +79,8 @@ class AtividadeTipoAdminController extends Controller
         $this->tipos->atualizar($eventoId, $id, [
             'nome' => trim(isset($_POST['nome']) ? $_POST['nome'] : ''),
             'cor' => !empty($_POST['cor']) ? trim($_POST['cor']) : null,
+            'pontos_presenca' => $this->pontosDoFormulario('pontos_presenca'),
+            'pontos_pontualidade' => $this->pontosDoFormulario('pontos_pontualidade'),
         ]);
 
         flashSucesso('Tipo atualizado.');
@@ -96,6 +100,21 @@ class AtividadeTipoAdminController extends Controller
         }
 
         $this->redirecionar('atividadeTipos/index/' . $eventoId);
+    }
+
+    /**
+     * Fase 58: pontos do tipo, de 0 a 1000. Campo vazio ou invalido vale
+     * zero, que e' "este tipo nao pontua".
+     */
+    private function pontosDoFormulario($campo)
+    {
+        $valor = isset($_POST[$campo]) ? trim((string) $_POST[$campo]) : '';
+
+        if ($valor === '' || !ctype_digit($valor)) {
+            return 0;
+        }
+
+        return min(1000, (int) $valor);
     }
 
     public function reordenar($eventoId)

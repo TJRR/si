@@ -18,8 +18,8 @@
     <?php endif; ?>
 <?php endif; ?>
 
-<p>Define como a Nota Final (NF) da trilha é calculada a partir das notas das etapas. Ex.: Editais 12/2026 e 13/2026
-    usam NF = NE2 x 0,4 + NE3 x 0,6.</p>
+<p>Define como a Nota Final (NF) da trilha é calculada a partir das notas das etapas. Exemplo: com peso 4 para a
+    Etapa 2 e peso 6 para a Etapa 3, a fórmula é NF = NE2 x 0,4 + NE3 x 0,6.</p>
 
 <?php if (empty($etapasDaTrilha)): ?>
     <p>Nenhuma etapa cadastrada nesta trilha ainda.</p>

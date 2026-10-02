@@ -121,14 +121,9 @@ class RegraDesempateRepository
     }
 
     /**
-     * Fase 50: renumera pela posicao no array recebido - quem chama
-     * (view + JS de arrastar-e-soltar) sempre agrupa por etapa (cada
-     * "<ul>" so' contem ids de uma etapa), tanto na tela dedicada de
-     * Desempate quanto na secao "Desempate" dentro do resumo de Apuracao
-     * (que junta varias etapas na mesma tela, mas em listas separadas).
-     * Fase 50 (achado de seguranca): WHERE inclui etapa_id, nao so' id -
-     * sem isso, um id de regra de OUTRA etapa seria aceito e teria sua
-     * ordem alterada, sem checagem de posse.
+     * Renumera pela posicao no array recebido: quem chama sempre agrupa por
+     * etapa, na tela de Desempate e na secao de Desempate do resumo de
+     * Apuracao. Escopo da etapa no proprio comando: ver Implantar.md, secao 13.6.
      */
     public function reordenar($etapaId, array $ids)
     {

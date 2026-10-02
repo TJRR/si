@@ -139,9 +139,9 @@ class MeuPerfilController extends Controller
                         Auditoria::registrar('corrigir_cpf_nos_trabalhos', 'trabalho_autores', $usuario['id'], null, ['trabalhos_corrigidos' => $trabalhosCorrigidos]);
                     }
 
-                    $_SESSION['flash'] = $trabalhosCorrigidos > 0
+                    flashSucesso($trabalhosCorrigidos > 0
                         ? 'Perfil atualizado. O CPF também foi corrigido nos trabalhos que você enviou.'
-                        : 'Perfil atualizado.';
+                        : 'Perfil atualizado.');
                     $this->redirecionar('meuPerfil/index');
                     return;
                 }
@@ -197,19 +197,9 @@ class MeuPerfilController extends Controller
     }
 
     /**
-     * Fase 33: troca de senha pelo proprio usuario. So' existe para conta que
-     * JA' tem senha (coluna "Acesso: Senha" da tela de Usuarios) - conta que
-     * entra so' pelo Google nao tem senha atual pra conferir, e o caminho dela
-     * e' o convite/"esqueci minha senha", que define a primeira senha por
-     * token de uso unico.
-     *
-     * O modo "visualizar como outro usuario" nao precisa de checagem aqui: o
-     * Router ja' bloqueia toda requisicao nao-GET durante a visualizacao. A
-     * view esconde o bloco mesmo assim, pra nao exibir um formulario de senha
-     * de outra pessoa a um administrador.
-     *
-     * Erros saem por flash (nunca re-renderizando o formulario): campo de
-     * senha nao se repopula, entao nao ha' nada a preservar.
+     * Troca de senha pelo proprio usuario, so' para conta que ja tem senha:
+     * quem entra so' pelo Google define a primeira senha pelo endereco de uso
+     * unico. Erros saem por mensagem, sem repovoar o formulario.
      */
     public function alterarSenha()
     {
@@ -245,13 +235,9 @@ class MeuPerfilController extends Controller
         } else {
             $this->usuarios->definirSenha($usuario['id'], password_hash($nova, PASSWORD_DEFAULT));
 
-            // Link de "definir senha" ainda pendente (convite ou recuperacao)
-            // deixa de valer: quem acabou de provar a senha atual nao pode
-            // ficar com um link antigo de pe' servindo de segunda porta.
+            // Troca de credencial: ver Implantar.md, secao 13.6.
             (new TokenSenhaRepository())->invalidarPendentes($usuario['id'], 'definir');
 
-            // Id de sessao novo depois de trocar credencial, mesmo cuidado que
-            // Auth::login() ja' toma.
             session_regenerate_id(true);
 
             flashSucesso('Senha alterada.');

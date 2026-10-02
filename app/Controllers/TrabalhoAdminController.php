@@ -22,7 +22,9 @@ use App\Repositories\TrabalhoNaturezaRepository;
 use App\Repositories\TrabalhoNotaRepository;
 use App\Repositories\TrabalhoRegraDesempateRepository;
 use App\Repositories\TrabalhoRepository;
+use App\Repositories\NotificacaoPainelRepository;
 use App\Repositories\UsuarioRepository;
+use App\Services\BonusApuracaoService;
 use App\Services\TrabalhoArquivoValidador;
 use App\Services\TrabalhoAvaliadorConviteService;
 use App\Services\TrabalhoResultadoAvisoService;
@@ -114,9 +116,8 @@ class TrabalhoAdminController extends Controller
     }
 
     /**
-     * Achado do usuário na revisão de fumaça (19/09/2026): eixos temáticos
-     * viviam dentro de Configurações, ganharam aba própria (mesmo status
-     * de Critérios/Avaliadores/etc.).
+     * Eixos tematicos em aba propria, com o mesmo status de Criterios e
+     * Avaliadores.
      */
     public function eixos($eventoId)
     {
@@ -264,6 +265,7 @@ class TrabalhoAdminController extends Controller
             'quantidade_avaliadores_por_trabalho' => (int) $_POST['quantidade_avaliadores_por_trabalho'],
             'sigilo_cego' => isset($_POST['sigilo_cego']) ? 1 : 0,
             'metodo_agregacao_nota' => $_POST['metodo_agregacao_nota'] === 'mediana' ? 'mediana' : 'media_aritmetica',
+            'casas_decimais' => isset($_POST['casas_decimais']) ? max(0, min(4, (int) $_POST['casas_decimais'])) : 2,
             'metodos_submissao_json' => json_encode($metodos),
             'extensoes_editavel_json' => json_encode($extensoes),
             'tamanho_maximo_mb' => (int) $_POST['tamanho_maximo_mb'],
@@ -326,10 +328,8 @@ class TrabalhoAdminController extends Controller
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             RoleMiddleware::exigir(['administrador']);
 
-            // Fase 49B (achado do usuário): o resumo dos critérios para o
-            // avaliador (edital) mudou de aba (era em "Configurações") -
-            // acao distingue os dois formulários desta mesma tela, mesmo
-            // padrão já usado em index()/salvar_config.
+            // O resumo dos criterios para o avaliador tem formulario proprio nesta
+            // tela; 'acao' distingue os dois.
             if (isset($_POST['acao']) && $_POST['acao'] === 'salvar_resumo') {
                 // Fase 53 (correcao): o texto e' exibido ao avaliador; passa
                 // pelo mesmo filtro dos demais editores ricos ao salvar (e
@@ -359,9 +359,8 @@ class TrabalhoAdminController extends Controller
     }
 
     /**
-     * Fase 49B, achado do usuário: sub-aba própria, separada de "Critérios
-     * de avaliação" - regra de desempate decide COMO desempatar dois
-     * trabalhos, não O QUE é avaliado, e poluía a tela de critérios.
+     * Regra de desempate em aba propria: ela decide COMO desempatar dois
+     * trabalhos, nao O QUE e' avaliado.
      */
     public function desempate($eventoId)
     {
@@ -429,12 +428,9 @@ class TrabalhoAdminController extends Controller
     }
 
     /**
-     * Achado do usuário na revisão de fumaça (19/09/2026): busca em tempo
-     * real de usuário já cadastrado, mesmo endpoint/contrato JSON de
-     * AtividadeAdminController::buscarUsuarios() (Fase 48), reaproveitando
-     * UsuarioRepository::buscarPorTermo() - so' preenche nome/e-mail no
-     * formulário de convite (ver assets/js/busca-usuario.js), nunca cria
-     * vínculo nenhum sozinho.
+     * Busca em tempo real de usuario ja cadastrado, no contrato JSON de
+     * AtividadeAdminController::buscarUsuarios(): so' preenche nome e e-mail no
+     * formulario de convite, nunca cria vinculo sozinho.
      */
     public function buscarUsuarios()
     {
@@ -613,10 +609,8 @@ class TrabalhoAdminController extends Controller
     }
 
     /**
-     * Fase 49B, achado do teste de fumaça (item 6.c): desfaz uma
-     * designação individual (trabalho_designacoes), diferente de
-     * avaliadorRemover() acima, que tira a pessoa do pool geral de
-     * avaliadores do evento (trabalho_avaliadores).
+     * Desfaz uma designacao individual (trabalho_designacoes), diferente de
+     * avaliadorRemover(), que tira a pessoa do conjunto de avaliadores do evento.
      */
     public function recebidoDesignacaoRemover($id)
     {
@@ -649,7 +643,35 @@ class TrabalhoAdminController extends Controller
             flashErro('Informe o motivo da desclassificação.');
         } else {
             $this->trabalhos->desclassificar($id, $motivo);
-            flashSucesso('Trabalho desclassificado.');
+            $mensagem = 'Trabalho desclassificado.';
+
+            // Fase 58: o bonus "ser autor de trabalho submetido" perde a base
+            // para quem ficou sem nenhum trabalho valido no evento. E'
+            // anulacao PELO SISTEMA, com aviso no sino, e volta sozinha se a
+            // pessoa submeter outro trabalho. Bloco de protecao proprio: a
+            // desclassificacao ja' foi gravada.
+            try {
+                $evento = $this->eventos->buscarPorId($trabalho['evento_id']);
+                $anulados = $evento !== null ? (new BonusApuracaoService())->reapurarAutoresDoTrabalho($evento, (int) $id) : [];
+
+                foreach ($anulados as $anulado) {
+                    (new NotificacaoPainelRepository())->criar(
+                        (int) $anulado['usuario_id'],
+                        'bonus_anulacao',
+                        'Pontos de bônus removidos',
+                        'O bônus "' . $anulado['nome'] . '" em ' . $evento['nome'] . ' foi anulado. ' . $anulado['motivo'],
+                        ['url' => url('eventoApp/index/' . (int) $evento['id'])]
+                    );
+                }
+
+                if ($anulados !== []) {
+                    $mensagem .= ' ' . count($anulados) . (count($anulados) === 1 ? ' bônus de autor foi anulado' : ' bônus de autores foram anulados') . ', com aviso a cada pessoa.';
+                }
+            } catch (\Throwable $e) {
+                error_log('[Bonus] Falha ao reapurar os autores do trabalho ' . (int) $id . ': ' . $e->getMessage());
+            }
+
+            flashSucesso($mensagem);
         }
 
         $this->redirecionar('trabalhos/recebidoVer/' . $id);
@@ -708,6 +730,7 @@ class TrabalhoAdminController extends Controller
             'publicadoEm' => $config !== null && !empty($config['resultado_publicado_em']) ? $config['resultado_publicado_em'] : null,
             'publicadoPor' => $publicadoPor,
             'semNota' => $semNota,
+            'casasDecimais' => TrabalhoConfigRepository::casasDecimais($config),
         ], 'Resultado de Trabalhos: ' . $evento['nome'], ['tipo' => 'trabalhosResultado', 'id' => (int) $eventoId]);
     }
 

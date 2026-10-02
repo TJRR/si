@@ -13,24 +13,14 @@ use App\Core\Cifra;
 use App\Core\Database;
 
 /**
- * Fase 35 (Parte C): credenciais de integracao (migration 115). Substitui os
- * blocos 'google', 'google_service_account' e 'smtp' de config/local.php,
- * que continuam existindo como reserva enquanto a transferencia nao for
- * confirmada em producao - ver config/google.php, google_calendar.php e
- * smtp.php.
- *
- * O que e' sigiloso (cifrado) e o que nao e' esta declarado aqui, em
- * $sigilosos, e nao no banco: assim uma chave nova nasce com a decisao
- * tomada no codigo, revisada como codigo, em vez de depender de alguem
- * lembrar de marcar uma coluna certo.
+ * Credenciais de integracao guardadas no banco (migration 115), com
+ * reserva no config/local.php enquanto a transferencia nao for confirmada.
+ * Ver Implantar.md, secao 13.6.
  */
 class CredencialSistemaRepository
 {
     /**
-     * grupo => campos cujo valor precisa ser cifrado. Todo campo que NAO
-     * aparece aqui e' gravado em texto legivel de proposito (client_email,
-     * token_uri, host, porta, remetente): nao sao segredo, e poder le-los
-     * direto no banco ajuda no diagnostico.
+     * Grupo => campos cifrados. Ver Implantar.md, secao 13.6.
      */
     private static $sigilosos = [
         'google_service_account' => ['private_key'],
@@ -39,14 +29,9 @@ class CredencialSistemaRepository
     ];
 
     /**
-     * Valores prontos para uso, ja decifrados. Devolve array vazio quando o
-     * grupo nao foi transferido ainda - quem chama trata isso como "usa o
-     * config/local.php".
-     *
-     * Campo sigiloso que nao decifra (chave-mestra ausente, trocada, ou
-     * conteudo corrompido) e' OMITIDO em vez de vir como null: assim o
-     * grupo fica incompleto e quem chama cai na reserva, em vez de tentar
-     * autenticar no Google com uma chave vazia.
+     * Valores prontos para uso. Grupo nao transferido devolve array vazio, e
+     * campo que nao decifra e' omitido: nos dois casos, quem chama cai na
+     * reserva do config/local.php.
      */
     public function obterGrupo($grupo)
     {
@@ -140,9 +125,7 @@ class CredencialSistemaRepository
             $alterados[] = $chave;
         }
 
-        // So' a LISTA de campos vai para a trilha, nunca os valores. O
-        // filtro de App\Core\Auditoria e' a segunda linha de defesa; esta
-        // aqui e' a primeira, e a que deve bastar.
+        // So' a lista de campos vai para a trilha, nunca os valores.
         Auditoria::registrar(
             'atualizar',
             'credenciais_sistema',

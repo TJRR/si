@@ -111,7 +111,7 @@ class ApresentacaoPitchController extends Controller
             $this->sincronizarGoogleAposReserva($slotId, $etapaId, (int) $contexto['equipe']['id'], $contexto['config']);
         }
 
-        $_SESSION['flash'] = 'Horário reservado.';
+        flashSucesso('Horário reservado.');
         $this->redirecionar('apresentacaoPitch/index/' . (int) $etapaId);
     }
 

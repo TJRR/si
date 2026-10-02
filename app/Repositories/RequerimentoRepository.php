@@ -341,10 +341,7 @@ class RequerimentoRepository
     }
 
     /**
-     * Abre a janela de validacao automatica no ITI: grava so' o hash do
-     * token (sha256) - o token bruto nunca fica no banco, so' na URL que o
-     * proprio servidor monta e usa na hora (ver RequerimentoAdminController::
-     * validarIti()). iti_token_usado_em volta a NULL a cada nova tentativa.
+     * Abre a janela de validacao automatica no ITI. Ver Implantar.md, secao 13.6.
      */
     public function gravarTokenValidacaoIti($id, $tokenHash, $expiraEm)
     {
@@ -355,10 +352,8 @@ class RequerimentoRepository
     }
 
     /**
-     * Reivindicacao atomica de uso unico: so' devolve true (e marca
-     * iti_token_usado_em) se o hash bate, o token ainda nao expirou e ainda
-     * nao foi usado - UPDATE com WHERE cobrindo as tres condicoes evita
-     * corrida entre duas chamadas simultaneas reivindicando o mesmo token.
+     * Reivindicacao de uso unico da janela de validacao, sem corrida entre
+     * chamadas simultaneas.
      */
     public function reivindicarTokenValidacaoIti($id, $tokenHash)
     {
@@ -375,9 +370,7 @@ class RequerimentoRepository
     }
 
     /**
-     * Fecha a janela assim que a chamada ao ITI termina (sucesso ou falha) -
-     * nao espera o token expirar sozinho. Chamado sempre, mesmo se o ITI
-     * nunca chegou a reivindicar o token (erro de rede, timeout).
+     * Fecha a janela assim que a chamada ao ITI termina, com sucesso ou falha.
      */
     public function invalidarTokenValidacaoIti($id)
     {

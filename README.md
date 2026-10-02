@@ -84,6 +84,10 @@ reais, avaliadores reais e prazos reais.
 | Divulgação do evento | O participante comprova que publicou sobre o evento nas próprias redes sociais, ou que passou a acompanhar os canais do órgão, e recebe pontos na hora; a organização confere depois, por amostragem |
 | Bônus do evento | Conquistas que o sistema apura sozinho a partir das presenças confirmadas, como participar de cinco atividades diferentes ou estar presente em todos os dias; a organização cadastra quais valem, quanto valem e o que cada uma exige |
 | Pesquisa de satisfação | Questionário próprio do evento, com perguntas cadastradas pela organização; as respostas ficam guardadas separadas de quem respondeu, e responder pode valer pontos |
+| Pontos por presença | Cada tipo de atividade vale os pontos que a organização definir, com um extra para quem confirma a presença antes do início; uma atividade pode ter valor próprio |
+| Credenciamento no local | Código afixado na entrada do evento, lido pelo próprio participante no aplicativo para registrar a chegada |
+| Competições e experiências | Karaokê, batalha de ideias e afins: quem participa lê na hora o código que o responsável mostra, e pontua pela participação, sem inscrição prévia nem vencedor |
+| Classificação do evento | Soma de todas as origens de pontos em tempo real, com critérios de desempate escolhidos pela organização, "Minha pontuação" e "Regras do jogo" no aplicativo, e encerramento que congela a classificação |
 
 ### Para quem avalia
 
@@ -239,9 +243,11 @@ Cada inscrição gera um **crachá digital de credenciamento**, com código
 único pronto para impressão, disponível assim que a pessoa se inscreve. O
 próprio aplicativo lê esse código pela câmera do celular (quando o
 navegador suportar) ou por digitação manual, sempre pelo próprio
-participante — não existe leitura feita pela equipe organizadora. A
+participante. A organização também pode **conferir o crachá** na entrada, por
+uma tela própria que mostra nome, foto e situação da inscrição sem registrar
+nada. A
 confirmação de inscrição chega por e-mail e também como notificação dentro
-do próprio aplicativo. O evento tem sua própria **agenda de atividades**
+do próprio aplicativo, com textos que a própria organização escreve. O evento tem sua própria **agenda de atividades**
 (cursos, palestras, seminários), cada uma com inscrição e vagas opcionais —
 limitadas ou não, com ou sem lista de espera, à escolha de quem organiza —
 e emissão de certificado configurável por atividade. Cada atividade tem
@@ -254,6 +260,19 @@ ou mais **Facilitadores** (instrutor, professor, palestrante) vinculados,
 sempre alguém já cadastrado no sistema. A lista de inscritos, do evento
 inteiro ou de uma atividade específica, pode ser exportada no formato
 exigido por sistemas parceiros de certificação.
+
+Ao fim do evento, o sistema emite os **certificados**: o de participação no
+evento, o de cada atividade e o de apresentação de trabalho. Quem tem direito
+a cada um é definido pela organização, que escreve o texto do documento e
+escolhe a arte de fundo pela própria interface. A carga horária é apurada pelo
+sistema a partir das presenças confirmadas, descontando atividades que
+aconteceram no mesmo horário, de modo que o documento nunca declare mais horas
+do que o evento teve. Cada certificado sai com um código de conferência e
+endereço de uma **página pública de validação**, onde qualquer pessoa confirma
+que o documento é autêntico. O participante retira o dele no aplicativo, e a
+organização pode emitir e imprimir em lote, inclusive num arquivo único com um
+certificado por folha. Quando o documento fica disponível, a pessoa é avisada
+pelo sino e por e-mail, uma vez por certificado.
 
 Dentro da Semana de Inovação, **Trabalhos** organiza a submissão e a
 avaliação de artigos e resumos expandidos, com motor próprio (sem nenhuma
@@ -277,7 +296,9 @@ iniciais (folha de rosto, ficha catalográfica, expediente, comissões e apresen
 sumário por eixo temático e os trabalhos, numerando as páginas. O sistema guarda cada
 versão do arquivo, publica como documento do evento e no botão "Anais" do aplicativo,
 mantém a lista de quais trabalhos constam no volume e avisa os autores por e-mail e
-pelo sino.
+pelo sino. O PDF montado pelo sistema traz o sumário com ligações para cada trabalho e o
+painel de marcadores, e a página pública do evento pode ter uma seção própria dos Anais,
+com o volume publicado e a relação dos trabalhos selecionados.
 
 Os **estandes** de expositores e patrocinadores também têm um código fixo, impresso num
 cartaz com QR: o participante registra a visita pelo aplicativo, uma vez por estande, e
@@ -463,6 +484,9 @@ de tudo esse bloco de uma vez, junto com a Fase 51.
 | 55 | **Conexões entre participantes**: uma pessoa lê o crachá da outra no aplicativo e as duas ficam conectadas e pontuam, com pontos e limite definidos por evento; cada uma escolhe o que mostra à outra (foto, cargo, órgão, minicurrículo, telefone com WhatsApp e redes sociais), e **"Meu Perfil" passa a existir dentro do aplicativo**, com dados, contatos, escolha de tema e troca de senha |
 | 56 | **Divulgação em redes sociais**: o participante comprova pelo aplicativo que publicou sobre o evento, ou que passou a acompanhar um canal do órgão, e recebe os pontos no ato; valor, prova aceita e limites são definidos por rede social e por evento, e a organização confere depois, podendo anular a pontuação com justificativa que chega ao participante |
 | 57 | **Bônus automáticos e pesquisa de satisfação**: a organização cadastra os bônus do evento, com nome livre, forma de apurar, exigência e pontos, e o sistema os concede sozinho a partir das presenças já confirmadas, mostrando ao participante quanto falta para cada um; a pesquisa de satisfação tem perguntas configuráveis em quatro formatos e guarda as respostas separadas de quem respondeu, de modo que nem a organização consegue ligar uma coisa à outra; o **formulário de submissão de trabalhos** passa a poder ser visto e preenchido antes de entrar no sistema, com a entrada pedida só na hora de enviar, e o que foi preenchido, arquivos inclusive, volta ao formulário depois da entrada |
+| 58 | **Gamificação do evento**: pontos por presença definidos por tipo de atividade, com extra de pontualidade; credenciamento no local lido pelo próprio participante; competições e experiências em que se pontua por participar; e a **classificação geral**, que soma em tempo real as seis origens de pontos, aplica os critérios de desempate escolhidos pela organização e é congelada no encerramento definido por ela. No aplicativo, "Minha pontuação" e "Regras do jogo" montadas a partir do cadastro de cada módulo |
+| 59 | **Certificados do evento**: certificado de participação, de cada atividade e de apresentação de trabalho, com texto e arte definidos pela organização, carga horária apurada pelo sistema descontando atividades no mesmo horário, régua de quem tem direito configurável, retirada pelo próprio participante no aplicativo, emissão e impressão em lote pela organização, e **código de conferência com página pública de validação** |
+| 60 | **Pendências do sistema**: textos dos e-mails do evento editáveis pela organização, com palavras-chave; seção dos Anais na página pública, com a relação dos trabalhos selecionados; sumário do PDF dos Anais com ligações e marcadores; aviso de certificado disponível; conferência de crachá pela organização, sem registrar nada; operação em lote na Biblioteca de mídia; casas decimais configuráveis nas notas de Trabalhos; expurgo automático das imagens da Divulgação por prazo; e mensagens do sistema padronizadas pela causa |
 
 ---
 

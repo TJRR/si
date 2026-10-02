@@ -7,11 +7,11 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Novo requerimento',
-    'resumo' => 'Primeiro passo de um requerimento: descrever a necessidade e gerar o PDF a ser assinado.',
+    'resumo' => 'Primeiro passo de um requerimento: você descreve o que a equipe precisa e o sistema gera o documento em PDF para ser assinado digitalmente.',
     'operacoes' => [
         [
-            'nome' => 'Gerar PDF',
-            'como' => 'Preencha a textarea "Necessidade" e clique: isso cria o registro do requerimento e já baixa o PDF, ainda sem assinatura.',
+            'nome' => 'Passo a passo',
+            'como' => '1. Descreva a necessidade da equipe no campo de texto. 2. Clique em "Gerar PDF". O requerimento é criado e o PDF, ainda sem assinatura, é baixado no seu computador. 3. Assine o PDF no gov.br e volte ao requerimento para enviar o arquivo assinado.',
         ],
     ],
     'conceitos' => [],

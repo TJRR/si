@@ -7,11 +7,11 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Minhas conexões',
-    'resumo' => 'Pessoas do evento com quem você já se conectou, e os pontos ganhos. A conexão acontece quando uma das duas lê o crachá da outra: uma leitura só vale para as duas.',
+    'resumo' => 'Pessoas do evento com quem você já se conectou, e os pontos ganhos. A conexão acontece quando uma das duas lê o código da outra, na tela do aplicativo ou no crachá: uma leitura só vale para as duas.',
     'operacoes' => [
         [
             'nome' => '"Conectar com participante"',
-            'como' => 'Abre o leitor do código do crachá (câmera, quando o navegador permitir, ou digitação).',
+            'como' => 'Abre o leitor do código do participante (câmera, quando o navegador permitir, ou digitação) e mostra também o seu próprio código.',
         ],
         [
             'nome' => 'Seus pontos em conexões',

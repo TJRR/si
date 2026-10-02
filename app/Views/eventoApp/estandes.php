@@ -62,6 +62,8 @@
                 <p>
                     <?php if ($visitado): ?>
                         <span class="status-pill verde">Visitado: <?php echo (int) $visitados[(int) $estande['id']]['pontos_creditados']; ?> <?php echo (int) $visitados[(int) $estande['id']]['pontos_creditados'] === 1 ? 'ponto' : 'pontos'; ?></span>
+                    <?php elseif (!empty($gincanaEncerrada)): ?>
+                        <span class="status-pill">A gincana foi encerrada: a visita não pontua mais</span>
                     <?php else: ?>
                         <span class="status-pill"><?php echo (int) $estande['pontos_visita']; ?> <?php echo (int) $estande['pontos_visita'] === 1 ? 'ponto' : 'pontos'; ?> pela visita</span>
                     <?php endif; ?>

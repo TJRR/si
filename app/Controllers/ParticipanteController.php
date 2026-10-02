@@ -297,10 +297,7 @@ class ParticipanteController extends Controller
     }
 
     /**
-     * Fase 17 (Bug 4): so permite autoedicao - validarPermissaoEdicao barra
-     * qualquer tentativa de editar outro participante, mesmo sendo lider.
-     * Rota mantida por defesa em profundidade (a tela ja nao linka mais para
-     * ela com um id de colega).
+     * So' permite autoedicao: ninguem edita outro integrante, nem o lider.
      */
     public function editarIntegrante($participanteId)
     {
@@ -350,7 +347,7 @@ class ParticipanteController extends Controller
 
         $this->equipes->alterarLider($equipe['id'], $novoLiderId);
 
-        $_SESSION['flash'] = 'Liderança da equipe transferida para "' . $alvo['nome'] . '".';
+        flashSucesso('Liderança da equipe transferida para "' . $alvo['nome'] . '".');
         $this->redirecionar('participante/index');
     }
 
@@ -408,7 +405,7 @@ class ParticipanteController extends Controller
         $this->participantes->atualizarEmail($participanteId, $email);
         $this->notificarAdminEmailCompleto($equipe, $participanteId, $alvo['nome'], $email);
 
-        $_SESSION['flash'] = 'E-mail de "' . $alvo['nome'] . '" cadastrado. O Admin foi avisado para liberar o acesso dele(a).';
+        flashSucesso('E-mail de "' . $alvo['nome'] . '" cadastrado. O Admin foi avisado para liberar o acesso dele(a).');
         $this->redirecionar('participante/index');
     }
 
@@ -485,7 +482,7 @@ class ParticipanteController extends Controller
         $this->equipes->desvincularParticipante($equipe['id'], $participanteId);
         $this->notificarAdminSuporteIntegranteRemovido($equipe, $alvo, $liderAtual);
 
-        $_SESSION['flash'] = 'Integrante "' . $alvo['nome'] . '" removido da equipe.';
+        flashSucesso('Integrante "' . $alvo['nome'] . '" removido da equipe.');
         $this->redirecionar('participante/index');
     }
 
@@ -721,10 +718,7 @@ class ParticipanteController extends Controller
     }
 
     /**
-     * Fase 17 (Bug 4): apenas autoedicao e' permitida - o lider deixou de
-     * poder editar dados de outros integrantes (risco de exposicao/alteracao
-     * indevida de dados pessoais de colegas). Validado aqui no servidor,
-     * nunca so pela ausencia do icone na tela.
+     * So' autoedicao: ninguem edita os dados de outro integrante, nem o lider.
      */
     private function validarPermissaoEdicao(array $euAtual, $participanteId)
     {

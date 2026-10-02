@@ -72,14 +72,9 @@ class ModeloDocumentoRepository
     }
 
     /**
-     * Grava a nova ordem em lote (índice do array = nova posição) - mesmo
-     * padrão de DocumentoRepository::reordenar() (Fase 29, arrastar-e-soltar
-     * de Documentos), usado pela lista de Modelos de Documento.
-     * Fase 50 (achado de seguranca): WHERE passou a incluir etapa_id, nao
-     * so' id - sem isso, um id de modelo de OUTRA etapa seria aceito e
-     * teria sua ordem alterada, sem checagem de posse (o controller ja
-     * confirmava que o admin pode mexer NAQUELA etapa via
-     * etapaAutorizada(), mas nao que os ids recebidos pertencem a ela).
+     * Grava a nova ordem em lote (índice do array = nova posição), no mesmo
+     * padrão de DocumentoRepository::reordenar(). A posse de cada id e'
+     * conferida no proprio WHERE. Ver Implantar.md, secao 13.6.
      */
     public function reordenar($etapaId, array $ids)
     {

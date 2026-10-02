@@ -10,6 +10,7 @@
 </div>
 
 <p style="color:#555;font-size:0.9em;">O tipo aparece como etiqueta colorida nas seções "Destaques" e "Programação" da página pública. Cada evento tem os seus; nenhuma atividade é obrigada a ter tipo.</p>
+<p style="color:#555;font-size:0.9em;">Pontos de presença: quanto vale confirmar presença numa atividade deste tipo, pela sala ou pela internet. Extra de pontualidade: pontos a mais para quem confirma até o número de minutos antes do início definido em Gamificação, Configurações. Zero nos dois significa que o tipo não pontua. Cada atividade pode ter valor próprio no cadastro dela, e mudar os valores aqui não altera presença já pontuada.</p>
 
 <?php if (empty($tipos)): ?>
     <p>Nenhum tipo cadastrado ainda.</p>
@@ -23,6 +24,8 @@
                     <input type="hidden" name="id" value="<?php echo (int) $tipo['id']; ?>">
                     <label>Nome: <input type="text" name="nome" maxlength="60" required value="<?php echo htmlspecialchars($tipo['nome'], ENT_QUOTES, 'UTF-8'); ?>"></label>
                     <label>Cor: <input type="text" name="cor" maxlength="7" placeholder="#006699" value="<?php echo htmlspecialchars((string) $tipo['cor'], ENT_QUOTES, 'UTF-8'); ?>"></label>
+                    <label>Pontos de presença: <input type="number" name="pontos_presenca" min="0" max="1000" step="1" style="width:6em;" value="<?php echo isset($tipo['pontos_presenca']) ? (int) $tipo['pontos_presenca'] : 0; ?>"></label>
+                    <label>Extra de pontualidade: <input type="number" name="pontos_pontualidade" min="0" max="1000" step="1" style="width:6em;" value="<?php echo isset($tipo['pontos_pontualidade']) ? (int) $tipo['pontos_pontualidade'] : 0; ?>"></label>
                     <button type="submit" class="btn-acao">Salvar</button>
                 </form>
             </div>
@@ -53,5 +56,7 @@
 <form method="post" action="<?php echo url('atividadeTipos/index/' . (int) $evento['id']); ?>"><?= campoCsrf() ?>
     <label>Nome: <input type="text" name="nome" maxlength="60" required placeholder="Oficina"></label>
     <label>Cor: <input type="text" name="cor" maxlength="7" placeholder="#006699"></label>
+    <label>Pontos de presença: <input type="number" name="pontos_presenca" min="0" max="1000" step="1" value="0" style="width:6em;"></label>
+    <label>Extra de pontualidade: <input type="number" name="pontos_pontualidade" min="0" max="1000" step="1" value="0" style="width:6em;"></label>
     <button type="submit">Cadastrar tipo</button>
 </form>

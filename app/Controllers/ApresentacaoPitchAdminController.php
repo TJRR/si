@@ -404,13 +404,13 @@ class ApresentacaoPitchAdminController extends Controller
 
         if (empty($slot['google_event_id'])) {
             $this->sincronizarGoogleAposReserva($id, $etapaId, (int) $slot['equipe_id']);
-            $_SESSION['flash'] = 'Integração com o Google Agenda concluída.';
+            flashSucesso('Integração com o Google Agenda concluída.');
         } else {
             $resultado = $this->googleSync->reconciliar('apresentacao_pitch', $slot, $emailOrganizador);
 
             if ($resultado !== null) {
                 $this->apresentacoes->atualizarGoogle($id, $resultado);
-                $_SESSION['flash'] = 'Status atualizado.';
+                flashSucesso('Situação da integração com o Google Agenda atualizada.');
             } else {
                 flashAlerta('Nenhuma novidade agora (ou aguarde um pouco antes de verificar de novo).');
             }

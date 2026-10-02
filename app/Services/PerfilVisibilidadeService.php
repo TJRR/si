@@ -22,11 +22,7 @@ use App\Repositories\UsuarioPerfilRepository;
  * para a conexao: desligar uma marca esconde o dado tambem das conexoes ja'
  * feitas.
  *
- * Endereco de rede social e' conteudo digitado pela propria pessoa e
- * mostrado a terceiros, o mesmo risco do endereco do trabalho na Fase 49:
- * passa por linkHttpValido() aqui de novo, mesmo ja tendo passado na
- * gravacao, para que linha antiga ou gravada por outro caminho nunca vire
- * endereco clicavel.
+ * Endereco de rede social passa por linkHttpValido() de novo na exibicao.
  */
 class PerfilVisibilidadeService
 {

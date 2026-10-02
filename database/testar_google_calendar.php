@@ -1,16 +1,14 @@
 <?php
 
 /**
- * Fase 31: diagnostico de conectividade da integracao Google Agenda -
- * so' LEITURA (lista as agendas visiveis pro e-mail informado, nao cria
- * nem altera nada). Uso:
- *   php database/testar_google_calendar.php seu-email@tjrr.jus.br
+ * Diagnostico de conectividade da integracao Google Agenda: so' LEITURA
+ * (lista as agendas visiveis para o e-mail informado, nao cria nem altera
+ * nada). Uso:
+ *   php database/testar_google_calendar.php <e-mail>
  *
- * Rode isso depois de preencher config/local.php (bloco
- * google_service_account) e depois que a TI autorizar o Client ID no
- * Admin Console do Workspace (DeployFase31.md, secao 1) - e' o jeito mais
- * rapido de confirmar se a delegacao esta funcionando, sem precisar criar
- * um horario de verdade pela tela.
+ * Rode depois de configurar a conta de servico e a delegacao (ver
+ * Implantar.md, secao 13.4): e' o jeito mais rapido de confirmar que a
+ * delegacao funciona, sem criar um horario de verdade pela tela.
  */
 
 if (php_sapi_name() !== 'cli') {
@@ -55,10 +53,8 @@ if (empty($config['client_email']) || empty($config['private_key'])) {
 
 echo "[OK] Chave da Service Account encontrada em config/local.php ({$config['client_email']}).\n\n";
 
-// Passo 2: a chave assina corretamente e o Google aceita trocar por um
-// access token para ESTE e-mail (e' aqui que a Delegacao em Todo o Dominio
-// entra em jogo - se a TI ainda nao autorizou o Client ID no Admin Console,
-// ou autorizou com o escopo errado, a falha acontece exatamente aqui).
+// Passo 2: a chave assina e o Google aceita trocar por um token para este
+// e-mail. Ver Implantar.md, secao 13.4.
 echo "Tentando obter um access token impersonando {$email}...\n";
 $token = GoogleServiceAccountAuth::obterAccessToken($email, GoogleCalendarSyncService::ESCOPOS);
 

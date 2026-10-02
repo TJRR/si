@@ -10,7 +10,7 @@ if (!defined('SI_BOOT')) {
 use App\Core\Auditoria;
 use App\Core\Database;
 use App\Repositories\DivulgacaoComprovacaoRepository;
-use App\Repositories\UsuarioPerfilRepository;
+use App\Repositories\DivulgacaoConfigRepository;
 
 /**
  * Fase 56: regra de negocio da comprovacao de divulgacao. Fica fora do
@@ -45,35 +45,60 @@ class DivulgacaoService
     }
 
     /**
-     * A comprovacao so' pontua dentro da janela. Por decisao do dono, a
-     * janela e' propria do modulo (divulgacao acontece na vespera e no dia
-     * seguinte tambem), e as duas datas em branco fazem valer as datas do
-     * evento. As colunas sao de data, entao o ultimo dia conta inteiro.
+     * A comprovacao so' pontua dentro da janela que o ADMINISTRADOR
+     * escreveu. Cada extremo limita por conta propria: data de inicio em
+     * branco nao limita o comeco, data de fim em branco nao limita o fim, e
+     * as duas em branco significam sem limite de data nenhum, valendo
+     * enquanto o modulo estiver ativo.
+     *
+     * Fase 58 (defeito corrigido): antes, campo em branco caia na data
+     * correspondente do evento, e a tela chegava a anunciar "comprovacoes
+     * valem nas datas do evento" ao lado do selo de modulo desativado. Quem
+     * define o periodo de liberacao e' o Administrador; o sistema nunca
+     * assume um periodo que ninguem escreveu.
+     *
+     * As colunas sao de data, entao o ultimo dia conta inteiro. $evento fica
+     * na assinatura para manter a mesma forma de chamada de PesquisaService
+     * e ConexaoService.
      */
     public function dentroDaJanela(array $evento, array $config)
     {
-        $inicio = !empty($config['data_inicio']) ? $config['data_inicio'] : (!empty($evento['data_inicio']) ? substr((string) $evento['data_inicio'], 0, 10) : null);
-        $fim = !empty($config['data_fim']) ? $config['data_fim'] : (!empty($evento['data_fim']) ? substr((string) $evento['data_fim'], 0, 10) : null);
-
-        if ($inicio === null || $fim === null) {
-            return true;
-        }
-
         $hoje = date('Y-m-d');
 
-        return $hoje >= $inicio && $hoje <= $fim;
-    }
-
-    public function janelaTexto(array $evento, array $config)
-    {
-        $inicio = !empty($config['data_inicio']) ? $config['data_inicio'] : (!empty($evento['data_inicio']) ? substr((string) $evento['data_inicio'], 0, 10) : null);
-        $fim = !empty($config['data_fim']) ? $config['data_fim'] : (!empty($evento['data_fim']) ? substr((string) $evento['data_fim'], 0, 10) : null);
-
-        if ($inicio === null || $fim === null) {
-            return '';
+        if (!empty($config['data_inicio']) && $hoje < $config['data_inicio']) {
+            return false;
         }
 
-        return date('d/m/Y', strtotime($inicio)) . ' a ' . date('d/m/Y', strtotime($fim));
+        if (!empty($config['data_fim']) && $hoje > $config['data_fim']) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Texto do periodo escrito pelo Administrador, ou '' quando ele nao
+     * limitou por data. Quem exibe acrescenta a preposicao que couber: o
+     * texto ja' vem com "de ... a ...", "a partir de ..." ou "ate' ...".
+     */
+    public function janelaTexto(array $evento, array $config)
+    {
+        $inicio = !empty($config['data_inicio']) ? $config['data_inicio'] : null;
+        $fim = !empty($config['data_fim']) ? $config['data_fim'] : null;
+
+        if ($inicio !== null && $fim !== null) {
+            return 'de ' . date('d/m/Y', strtotime($inicio)) . ' a ' . date('d/m/Y', strtotime($fim));
+        }
+
+        if ($inicio !== null) {
+            return 'a partir de ' . date('d/m/Y', strtotime($inicio));
+        }
+
+        if ($fim !== null) {
+            return 'até ' . date('d/m/Y', strtotime($fim));
+        }
+
+        return '';
     }
 
     /**
@@ -91,7 +116,13 @@ class DivulgacaoService
     {
         $valor = is_string($valor) ? trim($valor) : '';
 
-        if ($valor === '' || !isset(UsuarioPerfilRepository::REDES_ENDERECO[$rede])) {
+        // Fase 58: os dominios vem da lista de redes da Divulgacao
+        // (DivulgacaoConfigRepository::dominiosDaRede()), que continua lendo
+        // UsuarioPerfilRepository::REDES_ENDERECO para as redes do perfil.
+        // Lista vazia: a rede nao aceita endereco.
+        $dominios = DivulgacaoConfigRepository::dominiosDaRede($rede);
+
+        if ($valor === '' || $dominios === []) {
             return null;
         }
 
@@ -112,7 +143,7 @@ class DivulgacaoService
         }
 
         $dominioConfere = false;
-        foreach (UsuarioPerfilRepository::REDES_ENDERECO[$rede]['dominios'] as $dominio) {
+        foreach ($dominios as $dominio) {
             if ($host === $dominio || substr($host, -(strlen($dominio) + 1)) === '.' . $dominio) {
                 $dominioConfere = true;
                 break;
@@ -149,6 +180,13 @@ class DivulgacaoService
      */
     public function registrar(array $evento, array $inscricao, array $configRede, array $dados)
     {
+        // Fase 58: depois do encerramento da gincana, divulgacao nao
+        // registra nada. O controlador ja' recusa antes; esta conferencia e'
+        // a defesa de quem chamar o servico por outro caminho.
+        if (GamificacaoService::encerrada((int) $evento['id'])) {
+            return ['id' => null, 'pontos' => 0, 'motivo_sem_pontos' => 'gincana_encerrada'];
+        }
+
         $pdo = Database::conexao();
         $motivo = '';
         $pdo->beginTransaction();
@@ -171,6 +209,7 @@ class DivulgacaoService
                 'evento_id' => (int) $evento['id'],
                 'evento_inscricao_id' => (int) $inscricao['id'],
                 'rede' => $dados['rede'],
+                'rede_informada' => isset($dados['rede_informada']) ? $dados['rede_informada'] : null,
                 'tipo_acao' => $dados['tipo_acao'],
                 'endereco' => isset($dados['endereco']) ? $dados['endereco'] : null,
                 'endereco_hash' => isset($dados['endereco_hash']) ? $dados['endereco_hash'] : null,

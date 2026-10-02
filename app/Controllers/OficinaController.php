@@ -162,7 +162,7 @@ class OficinaController extends Controller
             $this->sincronizarAttendeesGoogle($horario);
         }
 
-        $_SESSION['flash'] = 'Inscrição cancelada.';
+        flashSucesso('Inscrição cancelada.');
         $this->redirecionar('oficina/index');
     }
 

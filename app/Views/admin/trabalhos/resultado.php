@@ -33,7 +33,7 @@
             <td><?php echo $posicao + 1; ?></td>
             <td><?php echo htmlspecialchars($linha['titulo'], ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars((string) $linha['autor_principal_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?php echo $linha['nota'] !== null ? htmlspecialchars(number_format($linha['nota'], 2, ',', '.'), ENT_QUOTES, 'UTF-8') : 'sem nota lançada'; ?></td>
+            <td><?php echo $linha['nota'] !== null ? htmlspecialchars(number_format($linha['nota'], $casasDecimais, ',', '.'), ENT_QUOTES, 'UTF-8') : 'sem nota lançada'; ?></td>
             <?php
             // Fase 51: item 7.6 do edital - só as linhas que empataram na
             // nota final com o trabalho de cima mostram a regra que decidiu.

@@ -7,25 +7,24 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Ver requerimento',
-    'resumo' => 'Detalhe de um requerimento e, enquanto ele estiver "Aguardando documento assinado", o fluxo de gerar/assinar/enviar o PDF.',
+    'resumo' => 'Aqui você acompanha um requerimento da equipe. Enquanto ele estiver "Aguardando documento assinado", é também aqui que você gera o PDF, assina e envia o arquivo assinado.',
     'operacoes' => [
         [
             'nome' => 'Gerar PDF',
-            'como' => 'Necessidade é editável até o documento ser assinado; gerar de novo substitui a versão anterior (não assinada ainda).',
+            'como' => 'Enquanto o documento não for enviado assinado, você pode corrigir a necessidade e gerar o PDF de novo. A versão nova substitui a anterior.',
         ],
         [
             'nome' => 'Enviar documento assinado',
-            'como' => 'Envio do PDF já assinado no gov.br (limite de tamanho mostrado na própria tela).',
-            'observacao' => 'O servidor recusa o envio se o PDF não tiver o marcador de assinatura digital embutida (é uma checagem estrutural, não uma verificação criptográfica completa; a validação de fato acontece na tela de atendimento, via Instituto Nacional de Tecnologia da Informação (ITI)).',
+            'como' => '1. Assine o PDF no gov.br. 2. Escolha o arquivo assinado e envie. O limite de tamanho aparece na própria tela. Depois do envio, o pedido entra para análise da organização.',
+            'observacao' => 'Se o arquivo não trouxer assinatura digital, o envio é recusado e a tela avisa. Assine pelo gov.br e envie de novo.',
         ],
         [
             'nome' => 'Descartar rascunho',
-            'como' => 'Apaga o requerimento, com confirmação.',
-            'observacao' => 'Só disponível se nada foi enviado ainda (nenhum documento assinado).',
+            'como' => 'Apaga o requerimento, depois de uma confirmação. Só aparece enquanto nenhum documento assinado foi enviado.',
         ],
         [
-            'nome' => 'Baixar documento/anexos de resposta',
-            'como' => 'Disponível quando o atendente já respondeu ou quando o documento não foi expurgado.',
+            'nome' => 'Baixar a resposta',
+            'como' => 'Quando a organização responder, o documento e os anexos da resposta ficam disponíveis para baixar aqui.',
         ],
     ],
     'conceitos' => [],

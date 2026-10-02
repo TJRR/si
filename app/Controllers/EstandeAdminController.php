@@ -64,9 +64,16 @@ class EstandeAdminController extends Controller
     {
         $evento = $this->eventoOu404($eventoId);
 
+        $filtros = [
+            'busca' => isset($_GET['busca']) ? trim((string) $_GET['busca']) : '',
+            'categoria' => isset($_GET['categoria']) ? trim((string) $_GET['categoria']) : '',
+            'situacao' => isset($_GET['situacao']) ? trim((string) $_GET['situacao']) : '',
+        ];
+
         $this->renderizar('admin/estandes/index', [
             'evento' => $evento,
-            'estandes' => $this->estandes->listarPorEvento($eventoId),
+            'estandes' => $this->estandes->listarPorEvento($eventoId, $filtros),
+            'filtros' => $filtros,
             'podeEditar' => \App\Core\Auth::possuiPerfil('administrador'),
         ], 'Estandes: ' . $evento['nome'], ['tipo' => 'estandes', 'id' => (int) $eventoId]);
     }
@@ -147,7 +154,9 @@ class EstandeAdminController extends Controller
                 flashErro($resultado['mensagem']);
             }
         } catch (\PDOException $e) {
-            flashErro('Não foi possível remover o estande.');
+            flashErro($e->getCode() === '23000'
+                ? 'Não é possível remover: este estande acabou de receber uma visita. Para tirá-lo do aplicativo e da página, desmarque "Ativo".'
+                : 'Não foi possível remover o estande.');
         }
 
         $this->redirecionar('estandes/index/' . $eventoId);

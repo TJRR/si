@@ -20,7 +20,12 @@ use App\Repositories\EventoSecaoCartoesRepository;
 use App\Repositories\EventoSecaoContagemRepository;
 use App\Repositories\EventoSecaoCronogramaRepository;
 use App\Repositories\EventoSecaoDestaquesRepository;
+use App\Repositories\EventoAnaisRepository;
+use App\Repositories\EventoSecaoAnaisRepository;
 use App\Repositories\EventoSecaoEstandesRepository;
+use App\Repositories\TrabalhoAutorRepository;
+use App\Repositories\TrabalhoConfigRepository;
+use App\Repositories\TrabalhoRepository;
 use App\Repositories\EventoSecaoFaqRepository;
 use App\Repositories\EstandeRepository;
 use App\Repositories\EventoSecaoLocalRepository;
@@ -195,6 +200,7 @@ class EventoPublicoController extends Controller
             'faq' => new EventoSecaoFaqRepository(),
             'local' => new EventoSecaoLocalRepository(),
             'estandes' => new EventoSecaoEstandesRepository(),
+            'anais' => new EventoSecaoAnaisRepository(),
         ];
 
         $resolvidas = [];
@@ -231,9 +237,7 @@ class EventoPublicoController extends Controller
                 $secao['itens'] = $repositorio->listarItens((int) $secao['referencia_id']);
                 $secao['dados']['botao1_url'] = $this->destinoBotaoDocumento($eventoId, $dados, 'botao1');
                 $secao['dados']['botao3_url'] = $this->destinoBotaoDocumento($eventoId, $dados, 'botao3');
-                // Fase 57 (achado do teste de fumaca): o nome sugerido no
-                // download sai do titulo do documento, e nao do nome gerado
-                // com que ele e' guardado no servidor.
+                // O nome sugerido no download sai do titulo do documento.
                 $secao['dados']['botao1_download'] = $this->nomeDownloadBotaoDocumento($eventoId, $dados, 'botao1');
                 $secao['dados']['botao3_download'] = $this->nomeDownloadBotaoDocumento($eventoId, $dados, 'botao3');
             } elseif ($tipo === 'faq') {
@@ -242,6 +246,9 @@ class EventoPublicoController extends Controller
                 // Fase 54: os itens sao os estandes ativos do evento, sem o
                 // codigo de visita (so' o cartaz impresso o mostra).
                 $secao['itens'] = (new EstandeRepository())->listarAtivosPublico($eventoId);
+            } elseif ($tipo === 'anais') {
+                $secao['dados']['volume'] = (new EventoAnaisRepository())->buscarPublicadoParaParticipante($eventoId);
+                $secao['itens'] = !empty($dados['mostrar_selecionados']) ? $this->selecionadosPublicos($eventoId) : [];
             } elseif ($tipo !== 'local') {
                 $secao['itens'] = $repositorio->listarItens((int) $secao['referencia_id']);
             }
@@ -250,6 +257,36 @@ class EventoPublicoController extends Controller
         }
 
         return $resolvidas;
+    }
+
+    /**
+     * Relacao publica dos selecionados, agrupada por eixo, so' com o
+     * resultado de Trabalhos publicado. Titulo e nomes dos autores; nunca
+     * nota, posicao, CPF ou e-mail.
+     */
+    private function selecionadosPublicos($eventoId)
+    {
+        $config = (new TrabalhoConfigRepository())->buscarPorEvento($eventoId);
+
+        if ($config === null || empty($config['resultado_publicado_em'])) {
+            return [];
+        }
+
+        $autores = new TrabalhoAutorRepository();
+        $grupos = [];
+
+        foreach ((new TrabalhoRepository())->listarSelecionadosPublicos($eventoId) as $trabalho) {
+            $eixo = $trabalho['eixo_nome'] !== null ? (string) $trabalho['eixo_nome'] : '';
+            $nomes = [];
+
+            foreach ($autores->listarPorTrabalho($trabalho['id']) as $autor) {
+                $nomes[] = $autor['nome'];
+            }
+
+            $grupos[$eixo][] = ['titulo' => $trabalho['titulo'], 'autores' => $nomes];
+        }
+
+        return $grupos;
     }
 
     /**

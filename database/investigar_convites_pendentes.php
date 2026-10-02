@@ -1,32 +1,21 @@
 <?php
 
 /**
- * Fase 29 (Bug 1): mapeia, em todo o banco, os padroes que explicam
- * integrantes indicados pelo lider que nunca receberam o convite de acesso.
- * So' leitura - nao altera nada. Uso:
+ * Mapeia, em todo o banco, os padroes que explicam integrantes indicados
+ * pelo lider que nunca receberam o convite de acesso. So' leitura, nao
+ * altera nada. Uso:
  *   php database/investigar_convites_pendentes.php
  *
- * Contexto (achado na investigacao dos casos reais kellyvinente@gmail.com,
- * juliano.amm77@gmail.com, mqtheus2005@gmail.com):
+ * Padrao A, conta orfa: a pessoa se cadastrou pela tela publica antes de
+ * o lider cadastrar o e-mail dela na equipe, e a inclusao pelo lider
+ * nao vincula a conta existente.
  *
- *   Padrao A - conta "orfa": a pessoa se auto-cadastrou pela tela publica de
- *   Cadastro (cria uma linha em usuarios com senha propria) ANTES ou em vez
- *   de o lider conseguir cadastrar o e-mail dela na equipe. Quando o lider
- *   tenta, ParticipanteController::incluirEmailIntegrante() barra em
- *   silencio (usuarios->buscarPorEmail() encontra a conta auto-cadastrada) -
- *   e o erro nunca aparece na tela (participante/painel.php nao renderiza
- *   flash), entao o lider nem sabe que falhou. Resultado: participantes.email
- *   fica NULL pra sempre e a conta em usuarios fica orfa (sem usuario_participante,
- *   sem perfil).
+ * Padrao B, convite nunca disparado: o e-mail foi cadastrado e o vinculo
+ * ja foi homologado, mas ninguem usou "Convidar acesso" na tela de
+ * Homologacao.
  *
- *   Padrao B - convite nunca disparado: o e-mail foi cadastrado com sucesso
- *   e o vinculo ja foi homologado, mas ninguem clicou em "Convidar acesso"
- *   na tela de Homologacao (o unico jeito de disparar o convite quando o
- *   e-mail chega DEPOIS da homologacao - AcessoParticipanteService::
- *   liberarAcesso() so roda automatico na hora do homologar()).
- *
- *   Padrao C (informativo, nao e' bug) - e-mail cadastrado mas vinculo ainda
- *   nao homologado: quando homologar, o convite dispara sozinho.
+ * Padrao C (informativo): e-mail cadastrado e vinculo ainda nao
+ * homologado; quando homologar, o convite sai sozinho.
  */
 
 if (php_sapi_name() !== 'cli') {

@@ -605,7 +605,7 @@ class MentoriaAdminController extends Controller
         }
 
         $this->mentorias->remover($id);
-        $_SESSION['flash'] = 'Horário removido.';
+        flashSucesso('Horário removido.');
         $this->redirecionar('mentoriaAdmin/index/' . $concursoId);
     }
 
@@ -660,7 +660,7 @@ class MentoriaAdminController extends Controller
                     );
                 }
 
-                $_SESSION['flash'] = 'Integração com o Google Agenda concluída.';
+                flashSucesso('Integração com o Google Agenda concluída.');
             } else {
                 flashErro('Ainda não foi possível conectar com o Google Agenda. Tente novamente em alguns instantes.');
             }
@@ -669,7 +669,7 @@ class MentoriaAdminController extends Controller
 
             if ($resultado !== null) {
                 $this->mentorias->atualizarGoogle($id, $resultado);
-                $_SESSION['flash'] = 'Status atualizado.';
+                flashSucesso('Situação da integração com o Google Agenda atualizada.');
             } else {
                 flashAlerta('Nenhuma novidade agora (ou aguarde um pouco antes de verificar de novo).');
             }

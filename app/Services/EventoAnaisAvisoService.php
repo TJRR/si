@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Repositories\EventoAnaisAvisadoRepository;
 use App\Repositories\EventoAnaisRepository;
 use App\Repositories\EventoComunicacaoRepository;
 use App\Repositories\NotificacaoPainelRepository;
@@ -49,9 +50,12 @@ class EventoAnaisAvisoService
     }
 
     /**
-     * Devolve a quantidade de avisos criados: ['sinos' => n, 'emails' => n].
+     * Devolve a quantidade de avisos criados: ['sinos' => n, 'emails' => n,
+     * 'trabalhos' => n]. Com $modo 'novos', so' entram os trabalhos que
+     * ainda nao estao em evento_anais_trabalhos_avisados; com 'todos', todos
+     * os incluidos. Os dois registram os trabalhos avisados.
      */
-    public function avisarAutores($eventoId, $adminUsuarioId)
+    public function avisarAutores($eventoId, $adminUsuarioId, $modo = 'todos', $numeroVersao = 0)
     {
         $evento = $this->eventos->buscarPorId($eventoId);
         $publicado = $this->anais->buscarPublicadoParaParticipante($eventoId);
@@ -63,8 +67,17 @@ class EventoAnaisAvisoService
 
         $sinos = 0;
         $destinatarios = [];
+        $avisados = new EventoAnaisAvisadoRepository();
+        $jaAvisados = $modo === 'novos' ? $avisados->idsAvisados($eventoId) : [];
+        $trabalhosAvisados = [];
 
         foreach ($this->anais->listarTrabalhosIncluidos($eventoId) as $trabalho) {
+            if (isset($jaAvisados[(int) $trabalho['id']])) {
+                continue;
+            }
+
+            $trabalhosAvisados[] = (int) $trabalho['id'];
+
             foreach ($this->autores->listarPorTrabalho($trabalho['id']) as $autor) {
                 if (!empty($autor['usuario_id'])) {
                     $this->painel->criar(
@@ -107,7 +120,9 @@ class EventoAnaisAvisoService
             ], array_values($destinatarios));
         }
 
-        return ['sinos' => $sinos, 'emails' => count($destinatarios)];
+        $avisados->registrar($eventoId, $trabalhosAvisados, $numeroVersao);
+
+        return ['sinos' => $sinos, 'emails' => count($destinatarios), 'trabalhos' => count($trabalhosAvisados)];
     }
 
     private function montarCorpo(array $evento, array $publicado, array $dadosAnais)

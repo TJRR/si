@@ -125,7 +125,7 @@ class ModeloDocumentoAdminController extends Controller
 
         try {
             $this->modelos->remover($id);
-            $_SESSION['flash'] = 'Modelo removido.';
+            flashSucesso('Modelo removido.');
         } catch (\PDOException $e) {
             flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: já existe pedido protocolado a partir deste modelo.'
@@ -178,8 +178,8 @@ class ModeloDocumentoAdminController extends Controller
 
         $pendentes = $this->requerimentos->contarNaoTerminaisPorEtapa($etapaId);
 
-        $_SESSION['flash'] = $expurgados . ' documento(s) expurgado(s).'
-            . ($pendentes > 0 ? ' ' . $pendentes . ' pedido(s) ficaram de fora por ainda estarem em análise.' : '');
+        flashSucesso($expurgados . ' documento(s) expurgado(s).'
+            . ($pendentes > 0 ? ' ' . $pendentes . ' pedido(s) ficaram de fora por ainda estarem em análise.' : ''));
         $this->redirecionar('modelosDocumento/index/' . $etapaId);
     }
 

@@ -51,7 +51,7 @@ return [
         ],
         [
             'nome' => '5. Gerar prévia do volume',
-            'como' => 'O botão só fica disponível com o resultado de Trabalhos publicado, o título dos Anais salvo e a versão final de todos os trabalhos enviada. O pedido entra numa fila e uma rotina agendada do servidor monta o volume em alguns minutos: capa, folha de rosto, ficha catalográfica, expediente, comissões, apresentação, sumário e os trabalhos. O número de cada página sai no rodapé a partir do primeiro trabalho; as páginas anteriores contam na sequência, sem número impresso, e o sumário aponta para esses números.',
+            'como' => 'O botão só fica disponível com o resultado de Trabalhos publicado, o título dos Anais salvo e a versão final de todos os trabalhos enviada. O pedido entra numa fila e uma rotina agendada do servidor monta o volume em alguns minutos: capa, folha de rosto, ficha catalográfica, expediente, comissões, apresentação, sumário e os trabalhos. O número de cada página sai no rodapé a partir do primeiro trabalho; as páginas anteriores contam na sequência, sem número impresso, e o sumário aponta para esses números. No PDF gerado, clicar numa entrada do sumário leva à primeira página do trabalho, e o painel de marcadores do leitor de PDF mostra as partes do volume, os eixos e os trabalhos.',
             'observacao' => 'Quando o pedido aparecer como Concluída, abra a aba Anais, confira a versão nova e publique por lá, como qualquer outra versão. Se o pedido falhar, a mensagem diz o motivo (por exemplo, qual trabalho tem o arquivo com problema); corrija e peça de novo. Um pedido por vez para cada evento.',
         ],
     ],

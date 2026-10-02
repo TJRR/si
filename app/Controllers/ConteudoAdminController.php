@@ -30,7 +30,7 @@ class ConteudoAdminController extends Controller
             $this->salvarTextos();
             $this->salvarImagens();
 
-            $_SESSION['flash'] = 'Páginas atualizadas.';
+            flashSucesso('Páginas atualizadas.');
             $this->redirecionar('conteudo/index');
             return;
         }

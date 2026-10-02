@@ -28,20 +28,41 @@ class EstandeRepository
      * Lista administrativa: inclui inativos, a contagem de visitas e quem
      * representa cada estande.
      */
-    public function listarPorEvento($eventoId)
+    public function listarPorEvento($eventoId, array $filtros = [])
     {
-        $pdo = Database::conexao();
-        $stmt = $pdo->prepare(
+        $sql =
             'SELECT e.*,
                     (SELECT COUNT(*) FROM evento_estande_visitas v WHERE v.estande_id = e.id) AS total_visitas,
                     u.nome AS representante_nome, u.email AS representante_email
              FROM evento_estandes e
              LEFT JOIN evento_estande_representantes r ON r.estande_id = e.id
              LEFT JOIN usuarios u ON u.id = r.usuario_id
-             WHERE e.evento_id = :evento_id
-             ORDER BY e.ordem ASC, e.id ASC'
-        );
-        $stmt->execute(['evento_id' => $eventoId]);
+             WHERE e.evento_id = :evento_id';
+        $parametros = ['evento_id' => (int) $eventoId];
+
+        // Fase 58: filtros da tela. A ordem continua sendo a do arraste, que
+        // e' o padrao de ordenacao do projeto: filtrar nao reordena nada.
+        if (!empty($filtros['busca'])) {
+            $sql .= ' AND (e.nome LIKE :busca OR u.nome LIKE :busca OR u.email LIKE :busca)';
+            $parametros['busca'] = '%' . $filtros['busca'] . '%';
+        }
+
+        if (!empty($filtros['categoria'])) {
+            $sql .= ' AND e.categoria = :categoria';
+            $parametros['categoria'] = $filtros['categoria'];
+        }
+
+        if (isset($filtros['situacao']) && $filtros['situacao'] === 'ativos') {
+            $sql .= ' AND e.ativo = 1';
+        } elseif (isset($filtros['situacao']) && $filtros['situacao'] === 'inativos') {
+            $sql .= ' AND e.ativo = 0';
+        }
+
+        $sql .= ' ORDER BY e.ordem ASC, e.id ASC';
+
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($parametros);
 
         return $stmt->fetchAll();
     }

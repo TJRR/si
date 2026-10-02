@@ -30,6 +30,20 @@
             <?php endforeach; ?>
         <?php endif; ?>
 
+        <?php if (!empty($certificados)): ?>
+            <?php /* Fase 59: o certificado de quem avaliou trabalhos. Mesmo
+            desenho do convite da pesquisa, um por evento: esta é a única tela
+            do avaliador avulso, que não tem inscrição nem painel do evento. */ ?>
+            <?php foreach ($certificados as $certificado): ?>
+                <div class="admin-card">
+                    <p><strong>Os certificados de <?php echo htmlspecialchars($certificado['evento_nome'], ENT_QUOTES, 'UTF-8'); ?> estão disponíveis.</strong></p>
+                    <p>
+                        <a href="<?php echo url('eventoApp/certificados/' . (int) $certificado['evento_id']); ?>" class="btn">Meus certificados</a>
+                    </p>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+
         <?php if (empty($designacoes)): ?>
             <p>Nenhum trabalho designado a você no momento.</p>
         <?php else: ?>

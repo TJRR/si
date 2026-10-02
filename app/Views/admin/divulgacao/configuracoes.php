@@ -33,70 +33,123 @@
             <input type="date" name="data_fim" value="<?php echo htmlspecialchars((string) $config['data_fim'], ENT_QUOTES, 'UTF-8'); ?>">
         </label>
         <p style="color:#555;font-size:0.9em;">
-            Período em que as comprovações valem. Com os dois campos em branco valem as datas do evento
-            (<?php echo htmlspecialchars(formatarData($evento['data_inicio']), ENT_QUOTES, 'UTF-8'); ?> a
-            <?php echo htmlspecialchars(formatarData($evento['data_fim']), ENT_QUOTES, 'UTF-8'); ?>). Preencha
-            para aceitar também a divulgação feita antes da abertura ou para dar prazo de envio depois do
-            encerramento. O último dia conta inteiro.
+            Período em que as comprovações valem. Cada campo limita por conta própria, e em branco aquele lado
+            não limita nada: com os dois em branco, a divulgação fica aberta enquanto estiver ativada, e quem
+            decide liberar e fechar é a marca acima. Preencha para aceitar a divulgação feita antes da abertura
+            do evento ou para dar prazo de envio depois do encerramento. O último dia conta inteiro.
+        </p>
+
+        <label>Apagar as imagens de comprovação automaticamente depois de quantos dias do fim do evento
+            <input type="number" name="dias_retencao_imagens" min="0" max="3650" step="1" value="<?php echo $config['dias_retencao_imagens'] !== null ? (int) $config['dias_retencao_imagens'] : ''; ?>">
+        </label>
+        <p style="color:#555;font-size:0.9em;">
+            Em branco, as imagens ficam guardadas até alguém apagá-las pela tela Comprovações. Preenchido, o sistema
+            apaga sozinho, uma vez por dia, as imagens deste evento quando o prazo vence, contado a partir do último
+            dia do evento. As comprovações e os pontos continuam registrados; só a imagem deixa de existir.
         </p>
     </fieldset>
 
+    <?php /* Fase 58: a tela desenha só as redes que o Administrador incluiu
+    neste evento, e cada uma mostra só o que aceita: Spotify e Flickr só
+    "seguir", WhatsApp e "Qualquer rede" só publicação, e só com imagem. O
+    servidor aplica as mesmas restrições ao gravar. */ ?>
+    <?php if (empty($redes)): ?>
+        <p>Nenhuma rede escolhida: o aplicativo não oferece envio de comprovação. Acrescente abaixo a rede que vale neste evento.</p>
+    <?php endif; ?>
+
     <?php foreach ($redes as $chave => $rede): ?>
+        <?php $campo = 'redes[' . htmlspecialchars($chave, ENT_QUOTES, 'UTF-8') . ']'; ?>
         <fieldset <?php echo $podeEditar ? '' : 'disabled'; ?>>
-            <legend><?php echo htmlspecialchars($rede['rotulo'], ENT_QUOTES, 'UTF-8'); ?></legend>
+            <legend>
+                <?php echo htmlspecialchars($rede['rotulo'], ENT_QUOTES, 'UTF-8'); ?>
+                <?php if ($podeEditar): ?>
+                    <?php /* O botão fica ligado por "form=" a um formulário declarado depois
+                    do principal: HTML não aceita formulário dentro de formulário. Mesma saída
+                    da tela de homologação de inscritos. */ ?>
+                    <button type="submit" form="retirar-rede-<?php echo htmlspecialchars($chave, ENT_QUOTES, 'UTF-8'); ?>" class="btn-icone" title="Retirar esta rede do evento">✕</button>
+                <?php endif; ?>
+            </legend>
 
-            <label>
-                <input type="checkbox" name="redes[<?php echo htmlspecialchars($chave, ENT_QUOTES, 'UTF-8'); ?>][publicacao_ativa]" value="1" <?php echo $rede['publicacao_ativa'] === 1 ? 'checked' : ''; ?>>
-                Aceitar comprovação de publicação sobre o evento
-            </label>
+            <?php if ($chave === 'qualquer'): ?>
+                <p style="color:#555;font-size:0.9em;">
+                    Publicação em qualquer rede, inclusive rede interna de outro órgão: basta a imagem da tela, sem
+                    conferência da rede nem da conta. A pessoa pode informar o nome da rede. Quem publica numa rede
+                    específica ligada abaixo também pode enviar por aqui.
+                </p>
+            <?php elseif ($chave === 'whatsapp'): ?>
+                <p style="color:#555;font-size:0.9em;">A conta é o telefone do perfil marcado como WhatsApp. A prova é a imagem da tela.</p>
+            <?php endif; ?>
 
-            <label>Pontos por publicação
-                <input type="number" name="redes[<?php echo htmlspecialchars($chave, ENT_QUOTES, 'UTF-8'); ?>][publicacao_pontos]" min="0" max="65535" value="<?php echo (int) $rede['publicacao_pontos']; ?>">
-            </label>
+            <?php if (!empty($rede['aceita_publicacao'])): ?>
+                <label>
+                    <input type="checkbox" name="<?php echo $campo; ?>[publicacao_ativa]" value="1" <?php echo $rede['publicacao_ativa'] === 1 ? 'checked' : ''; ?>>
+                    Aceitar comprovação de publicação sobre o evento
+                </label>
 
-            <label>O que a pessoa envia como prova da publicação
-                <select name="redes[<?php echo htmlspecialchars($chave, ENT_QUOTES, 'UTF-8'); ?>][publicacao_prova]">
-                    <option value="ambos"<?php echo $rede['publicacao_prova'] === 'ambos' ? ' selected' : ''; ?>>Imagem da tela ou endereço da publicação</option>
-                    <option value="imagem"<?php echo $rede['publicacao_prova'] === 'imagem' ? ' selected' : ''; ?>>Só a imagem da tela</option>
-                    <option value="endereco"<?php echo $rede['publicacao_prova'] === 'endereco' ? ' selected' : ''; ?>>Só o endereço da publicação</option>
-                </select>
-            </label>
+                <label>Pontos por publicação
+                    <input type="number" name="<?php echo $campo; ?>[publicacao_pontos]" min="0" max="65535" value="<?php echo (int) $rede['publicacao_pontos']; ?>">
+                </label>
 
-            <label>Limite de publicações que pontuam por dia
-                <input type="number" name="redes[<?php echo htmlspecialchars($chave, ENT_QUOTES, 'UTF-8'); ?>][publicacao_teto_dia]" min="0" max="65535" value="<?php echo (int) $rede['publicacao_teto_dia']; ?>">
-            </label>
+                <?php if (!empty($rede['so_imagem'])): ?>
+                    <p style="color:#555;font-size:0.9em;">Prova da publicação: só a imagem da tela.</p>
+                <?php else: ?>
+                    <label>O que a pessoa envia como prova da publicação
+                        <select name="<?php echo $campo; ?>[publicacao_prova]">
+                            <option value="ambos"<?php echo $rede['publicacao_prova'] === 'ambos' ? ' selected' : ''; ?>>Imagem da tela ou endereço da publicação</option>
+                            <option value="imagem"<?php echo $rede['publicacao_prova'] === 'imagem' ? ' selected' : ''; ?>>Só a imagem da tela</option>
+                            <option value="endereco"<?php echo $rede['publicacao_prova'] === 'endereco' ? ' selected' : ''; ?>>Só o endereço da publicação</option>
+                        </select>
+                    </label>
+                <?php endif; ?>
 
-            <label>Limite de publicações que pontuam no evento inteiro
-                <input type="number" name="redes[<?php echo htmlspecialchars($chave, ENT_QUOTES, 'UTF-8'); ?>][publicacao_teto_evento]" min="0" max="65535" value="<?php echo (int) $rede['publicacao_teto_evento']; ?>">
-            </label>
+                <label>Limite de publicações que pontuam por dia
+                    <input type="number" name="<?php echo $campo; ?>[publicacao_teto_dia]" min="0" max="65535" value="<?php echo (int) $rede['publicacao_teto_dia']; ?>">
+                </label>
 
-            <p style="color:#555;font-size:0.9em;">
-                Zero em um limite significa sem limite naquela contagem; os dois preenchidos valem juntos.
-                Passado o limite, a comprovação continua sendo registrada, só que sem pontos, e a tela avisa
-                isso à pessoa.
-            </p>
+                <label>Limite de publicações que pontuam no evento inteiro
+                    <input type="number" name="<?php echo $campo; ?>[publicacao_teto_evento]" min="0" max="65535" value="<?php echo (int) $rede['publicacao_teto_evento']; ?>">
+                </label>
 
-            <label>
-                <input type="checkbox" name="redes[<?php echo htmlspecialchars($chave, ENT_QUOTES, 'UTF-8'); ?>][acompanhar_ativa]" value="1" <?php echo $rede['acompanhar_ativa'] === 1 ? 'checked' : ''; ?>>
-                Aceitar comprovação de que passou a acompanhar este canal do Tribunal
-            </label>
+                <p style="color:#555;font-size:0.9em;">
+                    Zero em um limite significa sem limite naquela contagem; os dois preenchidos valem juntos.
+                    Passado o limite, a comprovação continua sendo registrada, só que sem pontos, e a tela avisa
+                    isso à pessoa. Para "vale uma vez só", use limite 1 no evento inteiro.
+                </p>
+            <?php endif; ?>
 
-            <label>Pontos por passar a acompanhar
-                <input type="number" name="redes[<?php echo htmlspecialchars($chave, ENT_QUOTES, 'UTF-8'); ?>][acompanhar_pontos]" min="0" max="65535" value="<?php echo (int) $rede['acompanhar_pontos']; ?>">
-            </label>
+            <?php if (!empty($rede['aceita_acompanhar'])): ?>
+                <label>
+                    <input type="checkbox" name="<?php echo $campo; ?>[acompanhar_ativa]" value="1" <?php echo $rede['acompanhar_ativa'] === 1 ? 'checked' : ''; ?>>
+                    Aceitar comprovação de que passou a seguir o canal indicado nesta rede
+                </label>
 
-            <label>O que a pessoa envia como prova de que acompanha
-                <select name="redes[<?php echo htmlspecialchars($chave, ENT_QUOTES, 'UTF-8'); ?>][acompanhar_prova]">
-                    <option value="imagem"<?php echo $rede['acompanhar_prova'] === 'imagem' ? ' selected' : ''; ?>>Só a imagem da tela</option>
-                    <option value="ambos"<?php echo $rede['acompanhar_prova'] === 'ambos' ? ' selected' : ''; ?>>Imagem da tela ou endereço</option>
-                    <option value="endereco"<?php echo $rede['acompanhar_prova'] === 'endereco' ? ' selected' : ''; ?>>Só o endereço</option>
-                </select>
-            </label>
+                <label>Nome do canal
+                    <input type="text" name="<?php echo $campo; ?>[acompanhar_canal_nome]" maxlength="100" placeholder="Por exemplo, o nome do canal oficial do evento" value="<?php echo htmlspecialchars((string) $rede['acompanhar_canal_nome'], ENT_QUOTES, 'UTF-8'); ?>">
+                </label>
 
-            <p style="color:#555;font-size:0.9em;">
-                Passar a acompanhar pontua uma única vez por rede. Quem acompanha três redes soma os pontos das
-                três.
-            </p>
+                <label>Endereço do canal
+                    <input type="text" name="<?php echo $campo; ?>[acompanhar_canal_endereco]" maxlength="255" placeholder="https://" value="<?php echo htmlspecialchars((string) $rede['acompanhar_canal_endereco'], ENT_QUOTES, 'UTF-8'); ?>">
+                </label>
+
+                <label>Pontos por passar a seguir
+                    <input type="number" name="<?php echo $campo; ?>[acompanhar_pontos]" min="0" max="65535" value="<?php echo (int) $rede['acompanhar_pontos']; ?>">
+                </label>
+
+                <label>O que a pessoa envia como prova de que segue
+                    <select name="<?php echo $campo; ?>[acompanhar_prova]">
+                        <option value="imagem"<?php echo $rede['acompanhar_prova'] === 'imagem' ? ' selected' : ''; ?>>Só a imagem da tela</option>
+                        <option value="ambos"<?php echo $rede['acompanhar_prova'] === 'ambos' ? ' selected' : ''; ?>>Imagem da tela ou endereço</option>
+                        <option value="endereco"<?php echo $rede['acompanhar_prova'] === 'endereco' ? ' selected' : ''; ?>>Só o endereço</option>
+                    </select>
+                </label>
+
+                <p style="color:#555;font-size:0.9em;">
+                    Seguir pontua uma única vez por rede, e não exige a conta da rede no perfil da pessoa. O nome e o
+                    endereço do canal aparecem para o participante; o endereço só fica clicável se começar por http
+                    ou https. Deixe a prova em "só a imagem": com endereço, todos colariam o mesmo endereço do canal, e
+                    só o primeiro pontuaria, porque cada endereço vale uma vez no evento.
+                </p>
+            <?php endif; ?>
         </fieldset>
     <?php endforeach; ?>
 
@@ -106,7 +159,7 @@
         ponto nenhum; para não registrar nada, deixe a rede desativada.
     </p>
 
-    <?php if ($podeEditar): ?>
+    <?php if ($podeEditar && !empty($redes)): ?>
     <div class="form-acoes">
         <button type="submit">Salvar</button>
     </div>
@@ -114,24 +167,28 @@
 </form>
 
 <?php if ($podeEditar): ?>
-<div class="admin-card">
-    <h2>Apagar as imagens de comprovação</h2>
-    <p style="color:#555;font-size:0.9em;">
-        As imagens de tela enviadas pelos participantes ficam guardadas em área restrita e podem conter dados de
-        outras pessoas. Depois do evento, apague-as. As comprovações, os pontos e a proteção contra reenvio da
-        mesma imagem continuam funcionando: só o arquivo é apagado, e a ação não pode ser desfeita.
-    </p>
-    <p><strong><?php echo (int) $totalImagens; ?></strong> <?php echo (int) $totalImagens === 1 ? 'imagem guardada' : 'imagens guardadas'; ?></p>
-
-    <?php if (!$eventoEncerrado): ?>
-        <p class="status-pill laranja">Disponível depois que o evento passar da própria data final.</p>
-    <?php elseif ((int) $totalImagens > 0): ?>
-        <form method="post" action="<?php echo url('divulgacao/expurgarImagens/' . (int) $evento['id']); ?>" onsubmit="return confirm('Apagar definitivamente todas as imagens de comprovação deste evento?');"><?= campoCsrf() ?>
-            <label>Digite o nome do evento para confirmar
-                <input type="text" name="confirmacao" required placeholder="<?php echo htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8'); ?>">
-            </label>
-            <button type="submit">Apagar as imagens</button>
+    <?php foreach ($redes as $chave => $rede): ?>
+        <form method="post" id="retirar-rede-<?php echo htmlspecialchars($chave, ENT_QUOTES, 'UTF-8'); ?>"
+              action="<?php echo url('divulgacao/retirarRede/' . (int) $evento['id']); ?>"
+              onsubmit="return confirm('Retirar <?php echo htmlspecialchars(addslashes($rede['rotulo']), ENT_QUOTES, 'UTF-8'); ?> deste evento? Pontos e limites ficam guardados para o caso de ela voltar, e as comprovações já enviadas continuam valendo com os pontos daquele momento.');"><?= campoCsrf() ?>
+            <input type="hidden" name="rede" value="<?php echo htmlspecialchars($chave, ENT_QUOTES, 'UTF-8'); ?>">
         </form>
+    <?php endforeach; ?>
+
+    <?php if (!empty($disponiveis)): ?>
+        <h2>Acrescentar rede</h2>
+        <form method="post" action="<?php echo url('divulgacao/incluirRede/' . (int) $evento['id']); ?>"><?= campoCsrf() ?>
+            <label>Rede
+                <select name="rede" required>
+                    <?php foreach ($disponiveis as $chave => $rotulo): ?>
+                        <option value="<?php echo htmlspecialchars($chave, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($rotulo, ENT_QUOTES, 'UTF-8'); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <button type="submit">Acrescentar ao evento</button>
+        </form>
+        <p style="color:#555;font-size:0.9em;">
+            A rede acrescentada entra desligada: marque o que ela aceita e quanto vale, e salve.
+        </p>
     <?php endif; ?>
-</div>
 <?php endif; ?>

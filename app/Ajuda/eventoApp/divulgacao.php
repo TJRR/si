@@ -7,19 +7,31 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Divulgação',
-    'resumo' => 'Ganhe pontos divulgando o evento nas suas redes sociais e acompanhando os canais do Tribunal. Você envia a comprovação e os pontos entram na hora.',
+    'resumo' => 'Ganhe pontos divulgando o evento nas redes sociais e seguindo os canais indicados pela organização. Você envia a comprovação e os pontos entram na hora, sem conferência prévia; a organização pode auditar depois.',
     'operacoes' => [
         [
+            'nome' => 'Quando vale',
+            'como' => 'A organização define o período em que as comprovações valem. Quando há um período, a tela diz qual é; quando não há, vale enquanto a divulgação estiver aberta neste evento.',
+        ],
+        [
             'nome' => 'Antes de enviar',
-            'como' => 'Informe o seu perfil daquela rede em Meu Perfil. A comprovação é conferida contra a conta que você cadastrou, então sem ela o envio é recusado.',
+            'como' => 'Publicação numa rede específica (Instagram, Facebook, YouTube, LinkedIn ou X) precisa ser da conta que você cadastrou em Meu Perfil. No WhatsApp, a conta é o telefone do seu perfil marcado como WhatsApp. Publicação no TikTok e seguir um canal não exigem conta cadastrada.',
+        ],
+        [
+            'nome' => 'O que o formulário pede',
+            'como' => 'O formulário pergunta só o que tem mais de uma resposta possível. Quando o evento liga uma rede só, ou aceita uma ação só, a tela já diz o que vale e não pergunta nada disso; e aparece só o campo da prova que aquela rede aceita, o endereço ou a imagem da tela.',
         ],
         [
             'nome' => 'Publiquei sobre o evento',
-            'como' => 'Escolha a rede, cole o endereço da sua publicação ou envie a imagem da tela, conforme o que a rede aceita neste evento. Cada publicação vale os pontos indicados em "O que vale neste evento".',
+            'como' => 'Cole o endereço da sua publicação ou envie a imagem da tela, conforme o que a rede aceita neste evento. Cada publicação vale os pontos indicados em "O que vale neste evento".',
         ],
         [
-            'nome' => 'Passei a acompanhar o canal do Tribunal',
-            'como' => 'Vale uma única vez por rede social. Acompanhando mais de uma, você soma os pontos de cada uma.',
+            'nome' => 'Qualquer rede',
+            'como' => 'Para publicar em qualquer rede, inclusive a rede interna de outro órgão: basta a imagem da tela, sem conta cadastrada. Se quiser, informe em que rede publicou, até 60 caracteres, o que ajuda a organização a entender a sua comprovação.',
+        ],
+        [
+            'nome' => 'Passei a seguir o canal indicado',
+            'como' => 'Vale uma única vez por rede. Seguindo o canal em mais de uma rede, você soma os pontos de cada uma. O nome e o endereço do canal aparecem em "O que vale neste evento".',
         ],
         [
             'nome' => 'Situação de cada comprovação',
@@ -28,12 +40,12 @@ return [
         ],
         [
             'nome' => 'A imagem que você envia',
-            'como' => 'Fica guardada em área restrita e é vista pela organização do evento para a conferência. Evite enviar captura com informação de outras pessoas que você não queira compartilhar.',
+            'como' => 'Fica guardada em área restrita e é vista pela organização do evento na auditoria. Evite enviar captura com informação de outras pessoas que você não queira compartilhar.',
             'observacao' => 'Depois do evento, a organização apaga as imagens. Os seus pontos continuam.',
         ],
         [
             'nome' => 'Pontos de cada ação',
-            'como' => 'São os do momento do envio. Se a organização mudar os valores depois, o que você já ganhou não muda.',
+            'como' => 'São os do momento do envio. Se a organização mudar os valores depois, o que você já ganhou não muda. Depois do encerramento da gincana, as comprovações deixam de ser aceitas.',
         ],
     ],
     'conceitos' => [],

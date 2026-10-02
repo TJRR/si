@@ -113,7 +113,7 @@ class EventoSlideAdminController extends Controller
                 $this->imagens->remover($slide['imagem_mobile_path']);
             }
 
-            $_SESSION['flash'] = 'Slide removido.';
+            flashSucesso('Quadro removido.');
         } catch (\PDOException $e) {
             flashErro('Não foi possível remover o quadro.');
         }

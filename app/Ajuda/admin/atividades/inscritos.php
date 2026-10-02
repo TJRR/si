@@ -16,7 +16,7 @@ return [
         ],
         [
             'nome' => 'Exportar (.csv)',
-            'como' => 'Gera a lista de inscritos confirmados nesta atividade, com as colunas exigidas pela EJURR (Educa Enfam), incluindo os facilitadores vinculados. Quem está na lista de espera não entra na exportação.',
+            'como' => 'Gera a lista de inscritos confirmados nesta atividade, com as colunas no formato exigido pela instituição que certifica as horas, incluindo os facilitadores vinculados. Quem está na lista de espera não entra na exportação.',
         ],
     ],
     'conceitos' => [],

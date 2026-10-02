@@ -104,12 +104,8 @@ class CampoDinamicoRepository
     }
 
     /**
-     * Fase 50 (achado de seguranca): WHERE inclui formulario_id, nao so' id -
-     * sem isso, um id de campo de OUTRO formulario (de outra etapa/trilha
-     * que o mesmo administrador nao deveria mexer) seria aceito e teria sua
-     * ordem alterada, sem nenhuma checagem de posse. Mesmo padrao ja usado
-     * por PremioRepository/FaqConcursoRepository/TemaRepository/
-     * DesafioRepository (que ja faziam certo antes desta fase).
+     * Reordena os campos do formulario. Escopo do formulario no proprio
+     * comando: ver Implantar.md, secao 13.6.
      */
     public function reordenar($formularioId, array $ids)
     {

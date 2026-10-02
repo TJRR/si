@@ -22,13 +22,9 @@ use App\Services\GoogleCalendarSyncService;
 use App\Services\PermissaoParticipanteService;
 
 /**
- * Fase 19 (#106): lado do participante - ve horarios vagos do concurso da
- * propria equipe e reserva/cancela.
- *
- * Fase 36: reservar() passou a exigir participante homologado
- * (PermissaoParticipanteService::podeExecutar()) - o comentario antigo
- * dizia "so' equipes homologadas fazem sentido aqui" mas nunca chegou a
- * checar nada; foi exatamente essa lacuna que abriu a Fase 36.
+ * Lado do participante: horarios vagos do concurso da propria equipe, com
+ * reserva e cancelamento. reservar() exige participante homologado
+ * (PermissaoParticipanteService::podeExecutar()).
  */
 class MentoriaController extends Controller
 {
@@ -156,7 +152,7 @@ class MentoriaController extends Controller
             }
         }
 
-        $_SESSION['flash'] = 'Horário reservado.';
+        flashSucesso('Horário reservado.');
         $this->redirecionar('mentoria/index');
     }
 
@@ -190,7 +186,7 @@ class MentoriaController extends Controller
             }
         }
 
-        $_SESSION['flash'] = 'Reserva cancelada.';
+        flashSucesso('Reserva cancelada.');
         $this->redirecionar('mentoria/index');
     }
 

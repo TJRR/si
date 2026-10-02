@@ -15,7 +15,6 @@ use App\Repositories\EventoAnaisVersaoRepository;
 use App\Repositories\SemanaInovacaoRepository;
 use App\Repositories\TrabalhoAutorRepository;
 use App\Repositories\TrabalhoConfigRepository;
-use setasign\Fpdi\Fpdi;
 
 /**
  * Fase 54: monta o volume dos Anais a partir do pedido da tela "Montagem
@@ -133,27 +132,39 @@ class EventoAnaisGeradorService
             $caminhoSumario = $pasta . '/sumario.pdf';
             $this->gravarTemporario($caminhoSumario, $sumario['conteudo']);
             $paginasSumario = $sumario['paginas'];
+            $ligacoesDoSumario = $this->ligacoesDoSumario($sumario['posicoes'], $sumario['destinos']);
             unset($sumario);
 
-            $pdf = new Fpdi();
+            $pdf = new EventoAnaisPdf();
             $pdf->SetAutoPageBreak(false);
             $pdf->SetTitle(trim((string) $anais['titulo']), true);
 
             if ($capa !== null) {
-                $this->anexar($pdf, $capa, 1, false, 'a capa');
+                $this->anexar($pdf, $capa, 1, false, 'a capa', [['Capa', 0]]);
             }
 
-            $this->anexar($pdf, $caminhoIniciais, null, false, 'as páginas iniciais');
-            $this->anexar($pdf, $caminhoSumario, null, false, 'o sumário');
+            $this->anexar($pdf, $caminhoIniciais, null, false, 'as páginas iniciais', [['Páginas iniciais', 0]]);
+            $this->anexar($pdf, $caminhoSumario, null, false, 'o sumário', [['Sumário', 0]], $ligacoesDoSumario);
 
             if ($pdf->PageNo() !== $paginasCapa + $paginasIniciais + $paginasSumario) {
                 throw new \RuntimeException('A contagem das páginas iniciais não bateu com o sumário. Peça a geração de novo; se repetir, avise o suporte técnico.');
             }
 
+            $eixoAtual = null;
+
             foreach ($trabalhos as $trabalho) {
                 $id = (int) $trabalho['id'];
                 $descricao = 'o PDF final do trabalho ' . $this->rotuloTrabalho($trabalho);
-                $anexadas = $this->anexar($pdf, $conferidos[$id]['caminho'], null, true, $descricao);
+                $eixo = $trabalho['eixo_id'] !== null ? (int) $trabalho['eixo_id'] : 0;
+                $marcadores = [];
+
+                if ($eixo !== 0 && $eixo !== $eixoAtual) {
+                    $marcadores[] = [(string) $trabalho['eixo_nome'], 0];
+                }
+
+                $marcadores[] = [(string) $trabalho['titulo'], $eixo !== 0 ? 1 : 0];
+                $eixoAtual = $eixo;
+                $anexadas = $this->anexar($pdf, $conferidos[$id]['caminho'], null, true, $descricao, $marcadores);
 
                 if ($anexadas !== $conferidos[$id]['paginas']) {
                     throw new \RuntimeException('O PDF final do trabalho ' . $this->rotuloTrabalho($trabalho) . ' mudou durante a geração. Peça a geração de novo.');
@@ -262,12 +273,21 @@ class EventoAnaisGeradorService
 
         for ($volta = 1; $volta <= 5; $volta++) {
             $primeiraPagina = 1 + $paginasAntes + $paginasSumario;
+            $grupos = $this->montarGruposDoSumario($trabalhos, $conferidos, $primeiraPagina);
             $html = View::renderizarString('pdf/anais_sumario', [
-                'grupos' => $this->montarGruposDoSumario($trabalhos, $conferidos, $primeiraPagina),
+                'grupos' => $grupos,
             ]);
-            $sumario = $this->renderizarPdf($html);
+            $sumario = $this->renderizarPdf($html, 'sumario-item-');
 
             if ($sumario['paginas'] === $paginasSumario) {
+                $sumario['destinos'] = [];
+
+                foreach ($grupos as $grupo) {
+                    foreach ($grupo['itens'] as $item) {
+                        $sumario['destinos'][$item['indice']] = $item['pagina'];
+                    }
+                }
+
                 return $sumario;
             }
 
@@ -287,6 +307,7 @@ class EventoAnaisGeradorService
         $grupos = [];
         $eixoAtual = null;
         $pagina = $primeiraPagina;
+        $indice = 0;
 
         foreach ($trabalhos as $trabalho) {
             $id = (int) $trabalho['id'];
@@ -301,6 +322,7 @@ class EventoAnaisGeradorService
             }
 
             $grupos[count($grupos) - 1]['itens'][] = [
+                'indice' => $indice++,
                 'titulo' => $trabalho['titulo'],
                 'autores' => $conferidos[$id]['autores'],
                 'pagina' => $pagina,
@@ -317,7 +339,7 @@ class EventoAnaisGeradorService
      * mais a pasta assets/ liberada para as imagens inseridas pelo editor.
      * Devolve ['conteudo' => PDF, 'paginas' => quantidade].
      */
-    private function renderizarPdf($html)
+    private function renderizarPdf($html, $prefixoPosicoes = null)
     {
         $opcoes = ['isRemoteEnabled' => false, 'defaultFont' => 'DejaVu Sans'];
         $assets = realpath(__DIR__ . '/../../assets');
@@ -327,6 +349,40 @@ class EventoAnaisGeradorService
         }
 
         $dompdf = new \Dompdf\Dompdf($opcoes);
+        $posicoes = [];
+
+        // Pagina e retangulo de cada elemento cujo id comeca com o prefixo,
+        // para as ligacoes internas do sumario: a FPDI importa so' o desenho
+        // da pagina, e as ligacoes do Dompdf nao sobrevivem a montagem.
+        if ($prefixoPosicoes !== null) {
+            $dompdf->setCallbacks([[
+                'event' => 'end_frame',
+                'f' => function ($quadro, $tela) use ($prefixoPosicoes, &$posicoes) {
+                    $no = $quadro->get_node();
+
+                    if (!($no instanceof \DOMElement)) {
+                        return;
+                    }
+
+                    $id = (string) $no->getAttribute('id');
+
+                    if (strpos($id, $prefixoPosicoes) !== 0) {
+                        return;
+                    }
+
+                    $caixa = $quadro->get_border_box();
+                    $posicoes[] = [
+                        'indice' => (int) substr($id, strlen($prefixoPosicoes)),
+                        'pagina' => (int) $tela->get_page_number(),
+                        'x' => (float) $caixa['x'],
+                        'y' => (float) $caixa['y'],
+                        'w' => (float) $caixa['w'],
+                        'h' => (float) $caixa['h'],
+                    ];
+                },
+            ]]);
+        }
+
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
@@ -334,7 +390,27 @@ class EventoAnaisGeradorService
         return [
             'conteudo' => $dompdf->output(),
             'paginas' => (int) $dompdf->getCanvas()->get_page_count(),
+            'posicoes' => $posicoes,
         ];
+    }
+
+    /**
+     * Ligacoes do sumario por pagina do proprio sumario: retangulo em pontos
+     * e pagina de destino no volume.
+     */
+    private function ligacoesDoSumario(array $posicoes, array $destinos)
+    {
+        $porPagina = [];
+
+        foreach ($posicoes as $posicao) {
+            if (!isset($destinos[$posicao['indice']]) || $posicao['w'] <= 0 || $posicao['h'] <= 0) {
+                continue;
+            }
+
+            $porPagina[$posicao['pagina']][] = $posicao + ['destino' => (int) $destinos[$posicao['indice']]];
+        }
+
+        return $porPagina;
     }
 
     /**
@@ -342,17 +418,36 @@ class EventoAnaisGeradorService
      * $numerar carimba o numero da pagina no volume (rodape, centralizado).
      * Devolve quantas paginas entraram.
      */
-    private function anexar(Fpdi $pdf, $caminho, $ultimaPagina, $numerar, $descricao)
+    private function anexar(EventoAnaisPdf $pdf, $caminho, $ultimaPagina, $numerar, $descricao, array $marcadores = [], array $ligacoes = [])
     {
         try {
             $total = (int) $pdf->setSourceFile($caminho);
             $limite = $ultimaPagina !== null ? min((int) $ultimaPagina, $total) : $total;
+            $pontoParaMilimetro = 25.4 / 72;
 
             for ($pagina = 1; $pagina <= $limite; $pagina++) {
                 $modelo = $pdf->importPage($pagina);
                 $tamanho = $pdf->getTemplateSize($modelo);
                 $pdf->AddPage($tamanho['orientation'], [$tamanho['width'], $tamanho['height']]);
                 $pdf->useTemplate($modelo);
+
+                if ($pagina === 1) {
+                    foreach ($marcadores as $marcador) {
+                        $pdf->marcador($marcador[0], $marcador[1]);
+                    }
+                }
+
+                foreach (isset($ligacoes[$pagina]) ? $ligacoes[$pagina] : [] as $ligacao) {
+                    $destino = $pdf->AddLink();
+                    $pdf->SetLink($destino, 0, $ligacao['destino']);
+                    $pdf->Link(
+                        $ligacao['x'] * $pontoParaMilimetro,
+                        $ligacao['y'] * $pontoParaMilimetro,
+                        $ligacao['w'] * $pontoParaMilimetro,
+                        $ligacao['h'] * $pontoParaMilimetro,
+                        $destino
+                    );
+                }
 
                 if ($numerar) {
                     $pdf->SetFont('Helvetica', '', 9);

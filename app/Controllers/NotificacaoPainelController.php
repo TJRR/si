@@ -125,7 +125,7 @@ class NotificacaoPainelController extends Controller
 
         if (empty($usuarioParticipante->usuariosDoParticipante($participanteId))) {
             (new AcessoParticipanteService())->liberarAcesso($participante, $equipe['trilha_id'], $equipe['nome_equipe']);
-            $_SESSION['flash'] = 'Convite enviado para "' . $participante['nome'] . '".';
+            flashSucesso('Convite enviado para "' . $participante['nome'] . '".');
         }
 
         $this->notificacoes->removerPorTipoEParticipante('participante_email_completo', $participanteId);
@@ -179,7 +179,7 @@ class NotificacaoPainelController extends Controller
             $contextoAnterior = PermissaoParticipanteService::contextoDeCorrecao($equipes->buscarUltimaTransicao($vinculoId));
 
             $equipes->homologarVinculo($vinculoId, Auth::usuarioId());
-            $_SESSION['flash'] = 'Participante homologado.' . ($contextoAnterior !== null ? ' ' . $contextoAnterior : '');
+            flashSucesso('Participante homologado.' . ($contextoAnterior !== null ? ' ' . $contextoAnterior : ''));
         }
 
         $this->notificacoes->removerPorTipoEParticipante('cpf_alterado_pendente', $participanteId);

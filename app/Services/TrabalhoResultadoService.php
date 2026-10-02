@@ -329,6 +329,7 @@ class TrabalhoResultadoService
             $selecionados = $this->calcularSelecao($linhas, $config);
             $criterios = $this->criterios->listarPorEvento($eventoId);
             $notaMaxima = $this->criterios->notaMaximaTotal($eventoId);
+            $casas = TrabalhoConfigRepository::casasDecimais($config);
 
             $totalAvaliados = 0;
 
@@ -350,7 +351,7 @@ class TrabalhoResultadoService
 
                     $detalhe['criterios'][] = [
                         'nome' => $criterio['nome'],
-                        'media' => $media !== null ? round($media, 2) : null,
+                        'media' => $media !== null ? round($media, $casas) : null,
                         'maximo' => (float) $criterio['nota_maxima'],
                     ];
                 }
@@ -360,7 +361,7 @@ class TrabalhoResultadoService
                     $linha['aprovado'] ? 'aprovado' : 'reprovado',
                     in_array($linha['trabalho_id'], $selecionados, true),
                     $linha['desempate_criterio'],
-                    $linha['nota'] !== null ? round($linha['nota'], 2) : null,
+                    $linha['nota'] !== null ? round($linha['nota'], $casas) : null,
                     $linha['nota'] !== null ? $indice + 1 : null,
                     json_encode($detalhe)
                 );
@@ -473,8 +474,9 @@ class TrabalhoResultadoService
             $detalhe = [];
         }
 
-        $formatar = function ($valor) {
-            return number_format((float) $valor, 2, ',', '.');
+        $casas = TrabalhoConfigRepository::casasDecimais($config);
+        $formatar = function ($valor) use ($casas) {
+            return number_format((float) $valor, $casas, ',', '.');
         };
 
         $aprovado = $trabalho['status'] === 'aprovado';

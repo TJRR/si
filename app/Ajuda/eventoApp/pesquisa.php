@@ -10,6 +10,10 @@ return [
     'resumo' => 'Conte à organização o que você achou do evento. Quando há bônus cadastrado para isso, responder também vale pontos.',
     'operacoes' => [
         [
+            'nome' => 'Quando vale',
+            'como' => 'A organização define quando a pesquisa abre e fecha. Quando há um período, a tela diz qual é; quando não há, ela fica aberta enquanto estiver ativada neste evento.',
+        ],
+        [
             'nome' => 'As suas respostas ficam separadas do seu nome',
             'como' => 'A organização vê que você respondeu, para creditar os pontos, e vê o conjunto das respostas, mas não consegue ligar uma coisa à outra pelo sistema. Nenhuma tela mostra o que uma pessoa específica respondeu.',
         ],

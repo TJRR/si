@@ -10,11 +10,9 @@ if (!defined('SI_BOOT')) {
 use App\Core\Database;
 
 /**
- * Fase 43: rate limiting de EventoAppController::validarCodigo() por
- * usuario_id (o leitor ja' esta' autenticado, sem necessidade de rastrear
- * IP). Mesmo contrato de TentativaLoginRepository (Fase 31, achado #11), mas
- * em tabela dedicada - nunca a mesma tabela do login, para nao misturar
- * "errou a leitura de um codigo" com "esta' quase bloqueado para logar".
+ * Limite de tentativas de EventoAppController::validarCodigo(), em tabela
+ * dedicada: nunca a mesma tabela da entrada nem a de outra leitura, para
+ * nao misturar contagens. Ver Implantar.md, secao 13.6.
  */
 class LeituraCodigoFalhaRepository
 {

@@ -350,7 +350,7 @@ class HomeController extends Controller
             Mailer::enviar($contato['email'], 'Nova mensagem via formulário de contato', $corpo);
         }
 
-        $_SESSION['flash'] = 'Mensagem enviada com sucesso. Em breve entraremos em contato.';
+        flashSucesso('Mensagem enviada com sucesso. Em breve entraremos em contato.');
         $this->redirecionar('home/index#contato');
     }
 

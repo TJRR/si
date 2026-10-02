@@ -30,6 +30,7 @@
                 <option value="<?php echo htmlspecialchars($valor, ENT_QUOTES, 'UTF-8'); ?>"
                         data-pede-numero="<?php echo $regra['pede_numero'] ? '1' : '0'; ?>"
                         data-pede-tipo-atividade="<?php echo $regra['pede_tipo_atividade'] ? '1' : '0'; ?>"
+                        data-pede-campos-perfil="<?php echo $regra['pede_campos_perfil'] ? '1' : '0'; ?>"
                         <?php echo $dados['tipo'] === $valor ? 'selected' : ''; ?>>
                     <?php echo htmlspecialchars($regra['rotulo'], ENT_QUOTES, 'UTF-8'); ?>
                 </option>
@@ -43,6 +44,13 @@
     <p style="color:#555;font-size:0.9em;">
         O tipo é a forma de apurar, e o sistema só apura as que estão nesta lista. O nome do bônus é livre:
         "Bingo da Inovação" é um bônus do tipo "atividades diferentes com presença", exigindo cinco.
+    </p>
+    <p style="color:#555;font-size:0.9em;">
+        Os quatro últimos tipos são ações do participante, apuradas uma vez por pessoa e também para quem
+        já as tinha feito antes de o bônus existir: "ter inscrição no evento" (criar conta), "preencher campos
+        do perfil", "confirmar o credenciamento no local" (código de Gamificação, Credenciamento) e "ser autor
+        de trabalho submetido" (vale para autor principal e coautores inscritos; trabalho desclassificado tira
+        o bônus). O de perfil, uma vez concedido, fica, mesmo que a pessoa apague a foto depois.
     </p>
 
     <div id="bonus-exigencia">
@@ -77,6 +85,25 @@
         <?php endif; ?>
     </div>
 
+    <?php
+    $camposMarcados = !empty($dados['campos_perfil']) ? explode(',', (string) $dados['campos_perfil']) : [];
+    ?>
+    <div id="bonus-campos-perfil">
+        <p><strong>Campos do perfil que o bônus exige</strong></p>
+        <?php foreach (\App\Services\BonusApuracaoService::CAMPOS_PERFIL_ROTULOS as $campo => $rotuloCampo): ?>
+            <label>
+                <input type="checkbox" name="campos_perfil[]" value="<?php echo htmlspecialchars($campo, ENT_QUOTES, 'UTF-8'); ?>" <?php echo in_array($campo, $camposMarcados, true) ? 'checked' : ''; ?>>
+                <?php echo htmlspecialchars($rotuloCampo, ENT_QUOTES, 'UTF-8'); ?>
+            </label><br>
+        <?php endforeach; ?>
+        <?php if (isset($erros['campos_perfil'])): ?><p style="color:red;"><?php echo htmlspecialchars($erros['campos_perfil'], ENT_QUOTES, 'UTF-8'); ?></p><?php endif; ?>
+        <p style="color:#555;font-size:0.9em;">
+            O bônus fecha quando todos os campos marcados estão preenchidos no perfil da pessoa. Exemplo: "Completar
+            perfil" com Foto, Cargo e Órgão de origem, e "Contato e minicurrículo" com Telefone e Minicurrículo.
+            A conferência acontece quando a pessoa abre o painel ou grava o perfil no aplicativo.
+        </p>
+    </div>
+
     <label>Pontos:
         <input type="number" name="pontos" min="0" max="65535" value="<?php echo (int) $dados['pontos']; ?>">
     </label>
@@ -104,11 +131,13 @@
     var selectTipo = document.getElementById('bonus-tipo');
     var blocoExigencia = document.getElementById('bonus-exigencia');
     var blocoTipoAtividade = document.getElementById('bonus-tipo-atividade');
+    var blocoCamposPerfil = document.getElementById('bonus-campos-perfil');
 
     function ajustar() {
         var opcao = selectTipo.options[selectTipo.selectedIndex];
         blocoExigencia.style.display = opcao.getAttribute('data-pede-numero') === '1' ? 'block' : 'none';
         blocoTipoAtividade.style.display = opcao.getAttribute('data-pede-tipo-atividade') === '1' ? 'block' : 'none';
+        blocoCamposPerfil.style.display = opcao.getAttribute('data-pede-campos-perfil') === '1' ? 'block' : 'none';
     }
 
     selectTipo.addEventListener('change', ajustar);

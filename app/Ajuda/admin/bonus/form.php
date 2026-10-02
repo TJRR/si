@@ -16,7 +16,16 @@ return [
         [
             'nome' => 'Tipo',
             'como' => 'A forma de apurar. "Atividades diferentes com presença" conta as atividades em que a pessoa confirmou presença, cada uma uma vez. "Dias diferentes com presença" conta os dias em que houve ao menos uma presença. "Atividades de um tipo escolhido" faz a primeira contagem restrita a um tipo de atividade. "Responder à pesquisa de satisfação" credita quem enviou a pesquisa.',
-            'observacao' => 'O dia que conta é o dia em que a atividade começa, e não o instante da leitura do código, porque a confirmação abre até uma hora antes.',
+            'observacao' => 'O dia que conta é o dia em que a atividade começa, e não o instante da leitura do código, porque a confirmação abre até uma hora antes. A presença de quem é facilitador da própria atividade não conta para os bônus.',
+        ],
+        [
+            'nome' => 'Tipos de ação do participante',
+            'como' => '"Ter inscrição no evento" credita todo inscrito (é o "criar conta" da dinâmica de pontos). "Preencher campos do perfil" credita quem tem preenchidos todos os campos marcados no bônus. "Confirmar o credenciamento no local" credita quem leu o código de Gamificação, Credenciamento. "Ser autor de trabalho submetido" credita o autor principal e os coautores com conta e inscrição no evento. Cada um vale uma vez por pessoa, e também para quem já tinha feito a ação antes de o bônus existir.',
+            'observacao' => 'O de perfil, uma vez concedido, fica, mesmo que a pessoa apague a foto depois. O de trabalho é anulado pelo sistema quando todos os trabalhos da pessoa são desclassificados, e volta sozinho se ela submeter outro.',
+        ],
+        [
+            'nome' => 'Campos do perfil que o bônus exige',
+            'como' => 'Só aparece no tipo "Preencher campos do perfil". Marque ao menos um. Dois bônus desse tipo com campos diferentes podem existir juntos, por exemplo "Completar perfil" (foto, cargo, órgão de origem) e "Contato e minicurrículo" (telefone, minicurrículo). A conferência acontece quando a pessoa abre o painel do aplicativo ou grava o perfil nele.',
         ],
         [
             'nome' => 'Quantas o bônus exige',

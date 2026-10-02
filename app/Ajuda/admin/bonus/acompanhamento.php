@@ -12,6 +12,7 @@ return [
         [
             'nome' => 'Reconferir agora',
             'como' => 'Refaz a conferência de todos os inscritos e concede o que estiver vencido. A conferência já acontece sozinha a cada presença confirmada e a cada alteração no cadastro dos bônus; este botão serve para o que não passa por nenhuma das duas, como a data de uma atividade corrigida depois do evento.',
+            'observacao' => 'Depois do encerramento da gincana (Gamificação, Configurações), a classificação fica congelada: o botão some, e nenhum crédito pode ser anulado, restabelecido ou cancelado em lote.',
         ],
         [
             'nome' => 'Exigência atingida',
@@ -38,7 +39,22 @@ return [
         ],
         [
             'nome' => 'Filtros',
-            'como' => 'A lista pode ser reduzida a um bônus específico e à situação (válidos ou anulados). A seleção é aplicada na hora, sem botão.',
+            'como' => 'Busca por nome ou correio eletrônico, bônus, situação e período do crédito, todos combináveis. Clique no funil para aplicar e na seta para limpar.',
+            'observacao' => 'O número de créditos encontrados e a exportação acompanham o filtro escolhido.',
+        ],
+        [
+            'nome' => 'Marcar linhas',
+            'como' => 'A caixa do cabeçalho marca e desmarca todas as linhas. As operações em lote agem só sobre o que estiver marcado, e o envio sem nada marcado é recusado com aviso.',
+        ],
+        [
+            'nome' => 'Anular e desfazer os selecionados',
+            'como' => 'Marque as linhas, escreva um motivo e use "Anular": ele vale para todos os créditos selecionados, e cada pessoa recebe o aviso no sino. "Desfazer anulação" devolve os pontos dos selecionados.',
+            'observacao' => 'Desfazer alcança só o que uma pessoa anulou. O crédito anulado pelo sistema volta sozinho quando a presença que faltava for registrada outra vez, e por isso não tem botão.',
+        ],
+        [
+            'nome' => 'Exportar',
+            'icone' => 'baixar',
+            'como' => 'Baixa a lista filtrada em planilha de texto separada por ponto e vírgula, com bônus, nome, correio eletrônico, pontos, exigência atingida, horário, situação e motivo.',
         ],
     ],
     'conceitos' => ['permissao_suporte_admin'],

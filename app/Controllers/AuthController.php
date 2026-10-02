@@ -220,10 +220,7 @@ class AuthController extends Controller
     }
 
     /**
-     * "Esqueci minha senha": formulario publico de e-mail. A resposta e'
-     * sempre a mesma mensagem generica, exista ou nao o e-mail no sistema -
-     * ver AuthService::solicitarRecuperacaoSenha() pro motivo (evitar que a
-     * tela vire um jeito de descobrir quais e-mails tem cadastro ativo).
+     * "Esqueci minha senha": formulario publico de e-mail. Ver Implantar.md, secao 13.6.
      */
     public function esqueciSenha()
     {
@@ -268,7 +265,7 @@ class AuthController extends Controller
                 (new UsuarioRepository())->definirSenha($registro['usuario_id'], password_hash($senha, PASSWORD_DEFAULT));
                 (new TokenSenhaRepository())->marcarUsado($registro['id']);
 
-                $_SESSION['flash'] = 'Senha definida com sucesso. Faça login normalmente.';
+                flashSucesso('Senha definida com sucesso. Faça login normalmente.');
                 $this->redirecionar('auth/login');
                 return;
             }

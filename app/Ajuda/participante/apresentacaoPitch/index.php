@@ -7,25 +7,25 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Apresentação de pitch',
-    'resumo' => 'Agendamento da apresentação oral da sua equipe: escolha data, horário e modalidade (presencial ou online) dentro da janela definida pelo Admin.',
+    'resumo' => 'Nesta tela a sua equipe escolhe quando vai fazer a apresentação oral do projeto, o pitch: data, horário e modalidade, presencial ou pela internet. A escolha só pode ser feita dentro do período aberto pela organização.',
     'operacoes' => [
         [
-            'nome' => 'Quem pode reservar',
-            'como' => 'Qualquer integrante homologado da equipe, não só o líder.',
+            'nome' => 'Quem pode escolher',
+            'como' => 'Qualquer integrante homologado da equipe, e não só o líder. A escolha vale para a equipe inteira.',
         ],
         [
-            'nome' => 'Escolher horário',
-            'como' => 'Selecione a modalidade e confirme pelo ícone; disponível só dentro da janela aberta pelo Admin.',
-            'observacao' => 'A reserva pode falhar se outra equipe confirmar o mesmo horário no mesmo instante (duas equipes confirmaram ao mesmo tempo); nesse caso a tela mostra um aviso e o horário continua na lista para escolher outro. Sem reagendamento pelo próprio sistema depois de escolhido; em caso de necessidade, entre em contato com o ' . nomeUnidadeResponsavel() . '.',
+            'nome' => 'Escolher o horário',
+            'como' => '1. Escolha a modalidade no horário que preferir. 2. Confirme pelo ícone ao lado. O horário passa a ser da sua equipe.',
+            'observacao' => 'Se outra equipe confirmar o mesmo horário no mesmo instante, só uma consegue: a tela avisa e você escolhe outro. Depois de escolhido, o horário não muda pelo sistema; se precisar mudar, procure o ' . nomeUnidadeResponsavel() . '.',
         ],
         [
-            'nome' => 'Se a janela fechar sem você escolher',
-            'como' => 'O Administrador atribui um horário, sempre em modalidade online.',
+            'nome' => 'Se o período acabar sem escolha',
+            'como' => 'A organização define um horário para a equipe, sempre na modalidade pela internet.',
         ],
         [
-            'nome' => 'Entrar na sala (Google Meet)',
-            'como' => 'Aparece só quando a modalidade é online e a integração já criou o hiperlink.',
-            'observacao' => 'Se o horário foi reservado há pouco tempo, a sala pode ainda estar sendo gerada; atualize a página em alguns instantes.',
+            'nome' => 'Entrar na sala',
+            'como' => 'Na modalidade pela internet, o botão para entrar na sala do Google Meet aparece quando a sala já foi criada.',
+            'observacao' => 'Se o horário foi escolhido há pouco, a sala ainda pode estar sendo criada: abra esta tela de novo daqui a alguns instantes.',
         ],
     ],
     'conceitos' => [],

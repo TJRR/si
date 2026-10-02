@@ -12,12 +12,14 @@ use App\Core\Controller;
 use App\Middleware\RoleMiddleware;
 use App\Repositories\BonusConfigRepository;
 use App\Repositories\BonusCreditoRepository;
+use App\Repositories\BonusFatosRepository;
 use App\Repositories\BonusRepository;
 use App\Repositories\EventoAtividadeTipoRepository;
 use App\Repositories\EventoInscricaoRepository;
 use App\Repositories\NotificacaoPainelRepository;
 use App\Repositories\SemanaInovacaoRepository;
 use App\Services\BonusApuracaoService;
+use App\Services\GamificacaoService;
 use App\Validation\CpfValidador;
 
 /**
@@ -72,6 +74,23 @@ class BonusAdminController extends Controller
         }
 
         return $bonus;
+    }
+
+    /**
+     * Fase 58: depois do encerramento da gincana nenhuma anulacao, reversao
+     * ou reconferencia move pontos - e' o congelamento da classificacao. A
+     * tela esconde os botoes; esta conferencia e' a que vale.
+     */
+    private function recusarSeEncerrada(array $evento)
+    {
+        if (!GamificacaoService::encerrada((int) $evento['id'])) {
+            return false;
+        }
+
+        flashErro('A gincana deste evento foi encerrada e a classificação está congelada: nenhuma pontuação pode ser alterada.');
+        $this->redirecionar('bonus/acompanhamento/' . (int) $evento['id']);
+
+        return true;
     }
 
     /**
@@ -150,6 +169,7 @@ class BonusAdminController extends Controller
             'tipo_atividade_id' => $bonus['tipo_atividade_id'] !== null ? (int) $bonus['tipo_atividade_id'] : null,
             'pontos' => (int) $bonus['pontos'],
             'ativo' => (int) $bonus['ativo'],
+            'campos_perfil' => $bonus['campos_perfil'],
         ];
 
         $this->renderizarFormulario($evento, $dados, [], $bonus, $temCredito);
@@ -213,10 +233,7 @@ class BonusAdminController extends Controller
         $evento = $this->eventoOu404($eventoId);
         $id = (int) $evento['id'];
 
-        $filtros = [
-            'bonus_id' => isset($_GET['bonus_id']) ? (int) $_GET['bonus_id'] : 0,
-            'situacao' => isset($_GET['situacao']) ? (string) $_GET['situacao'] : '',
-        ];
+        $filtros = $this->filtrosDoAcompanhamento();
 
         $this->renderizar('admin/bonus/acompanhamento', [
             'evento' => $evento,
@@ -226,6 +243,7 @@ class BonusAdminController extends Controller
             'creditos' => $this->creditos->listarDoEvento($id, $filtros),
             'filtros' => $filtros,
             'podeEditar' => Auth::possuiPerfil('administrador'),
+            'gincanaEncerrada' => GamificacaoService::encerrada($id),
         ], 'Acompanhamento dos bônus: ' . $evento['nome'], ['tipo' => 'bonusAcompanhamento', 'id' => $id]);
     }
 
@@ -242,6 +260,10 @@ class BonusAdminController extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirecionar('bonus/acompanhamento/' . $id);
+            return;
+        }
+
+        if ($this->recusarSeEncerrada($evento)) {
             return;
         }
 
@@ -324,6 +346,10 @@ class BonusAdminController extends Controller
             return;
         }
 
+        if ($this->recusarSeEncerrada($evento)) {
+            return;
+        }
+
         $credito = $this->creditos->buscarPorId($creditoId);
 
         if ($credito === null || (int) $credito['evento_id'] !== $id) {
@@ -362,6 +388,10 @@ class BonusAdminController extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirecionar('bonus/acompanhamento/' . $id);
+            return;
+        }
+
+        if ($this->recusarSeEncerrada($evento)) {
             return;
         }
 
@@ -406,6 +436,10 @@ class BonusAdminController extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirecionar('bonus/acompanhamento/' . $id);
+            return;
+        }
+
+        if ($this->recusarSeEncerrada($evento)) {
             return;
         }
 
@@ -456,6 +490,10 @@ class BonusAdminController extends Controller
             return;
         }
 
+        if ($this->recusarSeEncerrada($evento)) {
+            return;
+        }
+
         $bonus = $this->bonusDoEventoOu404($evento, $bonusId);
         $atingidos = $this->creditos->reverterAnulacaoEmLote((int) $bonus['id'], Auth::usuarioId());
 
@@ -476,6 +514,178 @@ class BonusAdminController extends Controller
      * massa do Evento ja' usa; com algumas centenas de creditos a requisicao
      * demora, e a tela avisa isso antes do clique.
      */
+    /**
+     * Filtros do acompanhamento: bonus, situacao, busca por pessoa e periodo
+     * do credito. Convencao do projeto: campo em branco vira '' ou 0 e nao
+     * entra na consulta.
+     */
+    private function filtrosDoAcompanhamento()
+    {
+        return [
+            'bonus_id' => isset($_GET['bonus_id']) ? (int) $_GET['bonus_id'] : 0,
+            'situacao' => isset($_GET['situacao']) ? trim((string) $_GET['situacao']) : '',
+            'busca' => isset($_GET['busca']) ? trim((string) $_GET['busca']) : '',
+            'data_inicio' => isset($_GET['data_inicio']) ? trim((string) $_GET['data_inicio']) : '',
+            'data_fim' => isset($_GET['data_fim']) ? trim((string) $_GET['data_fim']) : '',
+        ];
+    }
+
+    /**
+     * Exportacao dos creditos, respeitando o filtro da tela. Diferente de
+     * exportar(), que e' por bonus: aqui sai o que esta' na tela.
+     */
+    public function acompanhamentoExportar($eventoId)
+    {
+        $evento = $this->eventoOu404($eventoId);
+        $id = (int) $evento['id'];
+        $linhas = $this->creditos->listarDoEvento($id, $this->filtrosDoAcompanhamento());
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="bonus-creditos-evento-' . $id . '.csv"');
+
+        $saida = fopen('php://output', 'w');
+        fwrite($saida, "\xEF\xBB\xBF"); // BOM UTF-8, pro Excel abrir acentuacao certo.
+        fputcsv($saida, ['Bônus', 'Nome', 'Correio eletrônico', 'Pontos', 'Exigência atingida', 'Creditado em', 'Situação', 'Motivo'], ';');
+
+        foreach ($linhas as $linha) {
+            fputcsv($saida, [
+                $linha['bonus_nome'],
+                $linha['participante_nome'],
+                $linha['participante_email'],
+                (int) $linha['pontos_creditados'],
+                (int) $linha['exigencia_atingida'],
+                formatarDataHora($linha['creditado_em']),
+                $linha['anulado_em'] === null ? 'Válido' : ($linha['anulado_por'] === null ? 'Anulado pelo sistema' : 'Anulado'),
+                (string) $linha['motivo_anulacao'],
+            ], ';');
+        }
+
+        fclose($saida);
+        exit;
+    }
+
+    /**
+     * Fase 58: anulacao e reversao em lote dos creditos marcados na tela.
+     * Diferente de cancelarEmLote, que age sobre um bonus inteiro: aqui o
+     * alcance e' a selecao do Administrador.
+     */
+    public function anularSelecionadosEmLote($eventoId)
+    {
+        $evento = $this->prepararLoteDeCreditos($eventoId);
+
+        if ($evento === null) {
+            return;
+        }
+
+        $id = (int) $evento['id'];
+        $motivo = trim(isset($_POST['motivo']) ? (string) $_POST['motivo'] : '');
+
+        if ($motivo === '') {
+            flashErro('Informe o motivo da anulação: ele é mostrado a cada participante atingido.');
+            $this->redirecionar('bonus/acompanhamento/' . $id);
+            return;
+        }
+
+        $motivo = mb_substr($motivo, 0, 500);
+        $atingidos = $this->creditos->anularSelecionadosEmLote($id, $this->identificadoresDoLote(), Auth::usuarioId(), $motivo);
+
+        if ($atingidos === []) {
+            flashAlerta('Nenhum dos créditos marcados podia ser anulado.');
+            $this->redirecionar('bonus/acompanhamento/' . $id);
+            return;
+        }
+
+        $this->avisarCreditosEmLote($evento, $atingidos, $motivo);
+
+        flashSucesso(count($atingidos) . ' crédito(s) anulado(s), e os participantes atingidos foram avisados.');
+        $this->redirecionar('bonus/acompanhamento/' . $id);
+    }
+
+    public function reverterSelecionadosEmLote($eventoId)
+    {
+        $evento = $this->prepararLoteDeCreditos($eventoId);
+
+        if ($evento === null) {
+            return;
+        }
+
+        $id = (int) $evento['id'];
+        $atingidos = $this->creditos->reverterSelecionadosEmLote($id, $this->identificadoresDoLote());
+
+        if ($atingidos === []) {
+            flashAlerta('Nenhum dos créditos marcados estava anulado por uma pessoa. O crédito anulado pelo sistema volta sozinho quando a presença volta.');
+            $this->redirecionar('bonus/acompanhamento/' . $id);
+            return;
+        }
+
+        $this->avisarCreditosEmLote($evento, $atingidos, null);
+
+        flashSucesso(count($atingidos) . ' anulação(ões) desfeita(s): a pontuação voltou a valer.');
+        $this->redirecionar('bonus/acompanhamento/' . $id);
+    }
+
+    private function prepararLoteDeCreditos($eventoId)
+    {
+        RoleMiddleware::exigir(['administrador']);
+        $evento = $this->eventoOu404($eventoId);
+        $id = (int) $evento['id'];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirecionar('bonus/acompanhamento/' . $id);
+            return null;
+        }
+
+        if (GamificacaoService::encerrada($id)) {
+            flashErro('A gincana deste evento foi encerrada e a classificação está congelada: nenhuma pontuação pode ser alterada.');
+            $this->redirecionar('bonus/acompanhamento/' . $id);
+            return null;
+        }
+
+        if ($this->identificadoresDoLote() === []) {
+            flashAlerta('Selecione ao menos um crédito.');
+            $this->redirecionar('bonus/acompanhamento/' . $id);
+            return null;
+        }
+
+        return $evento;
+    }
+
+    private function identificadoresDoLote()
+    {
+        return isset($_POST['credito_ids']) && is_array($_POST['credito_ids']) ? $_POST['credito_ids'] : [];
+    }
+
+    /**
+     * Aviso no sino de cada pessoa atingida. Diferente de avisarEmLote(), o
+     * nome do bonus varia linha a linha: a selecao pode misturar bonus.
+     */
+    private function avisarCreditosEmLote(array $evento, array $atingidos, $motivo)
+    {
+        $sino = new NotificacaoPainelRepository();
+
+        foreach ($atingidos as $credito) {
+            if (empty($credito['usuario_id'])) {
+                continue;
+            }
+
+            if ($motivo !== null) {
+                $titulo = 'Pontos de bônus removidos';
+                $mensagem = 'O bônus "' . $credito['bonus_nome'] . '" em ' . $evento['nome'] . ' foi anulado pela organização. Motivo: ' . $motivo;
+            } else {
+                $titulo = 'Pontos de bônus restabelecidos';
+                $mensagem = 'A anulação do bônus "' . $credito['bonus_nome'] . '" em ' . $evento['nome'] . ' foi desfeita, e a pontuação voltou a valer.';
+            }
+
+            $sino->criar(
+                (int) $credito['usuario_id'],
+                'bonus_anulacao',
+                $titulo,
+                $mensagem,
+                ['url' => url('eventoApp/index/' . (int) $evento['id'])]
+            );
+        }
+    }
+
     private function avisarEmLote(array $evento, array $bonus, array $atingidos, $motivo)
     {
         $sino = new NotificacaoPainelRepository();
@@ -513,6 +723,7 @@ class BonusAdminController extends Controller
             'tipo_atividade_id' => null,
             'pontos' => 0,
             'ativo' => 1,
+            'campos_perfil' => null,
         ];
     }
 
@@ -526,7 +737,20 @@ class BonusAdminController extends Controller
 
         $pedeNumero = BonusApuracaoService::TIPOS[$tipo]['pede_numero'];
         $pedeTipoAtividade = BonusApuracaoService::TIPOS[$tipo]['pede_tipo_atividade'];
+        $pedeCamposPerfil = BonusApuracaoService::TIPOS[$tipo]['pede_campos_perfil'];
         $tipoAtividadeId = isset($_POST['tipo_atividade_id']) ? (int) $_POST['tipo_atividade_id'] : 0;
+
+        // Fase 58: os campos ocultos continuam sendo enviados quando o tipo
+        // escolhido nao os pede (a rotina da tela so' esconde o bloco), por
+        // isso a lista so' e' aproveitada no tipo que a pede. A ordem vem de
+        // BonusFatosRepository::CAMPOS_PERFIL, nunca do formulario.
+        $camposPerfil = null;
+
+        if ($pedeCamposPerfil) {
+            $marcados = isset($_POST['campos_perfil']) && is_array($_POST['campos_perfil']) ? array_map('strval', $_POST['campos_perfil']) : [];
+            $lista = array_values(array_intersect(BonusFatosRepository::CAMPOS_PERFIL, $marcados));
+            $camposPerfil = $lista !== [] ? implode(',', $lista) : '';
+        }
 
         return [
             'nome' => mb_substr(trim(isset($_POST['nome']) ? (string) $_POST['nome'] : ''), 0, 150),
@@ -536,6 +760,7 @@ class BonusAdminController extends Controller
             'tipo_atividade_id' => $pedeTipoAtividade && $tipoAtividadeId > 0 ? $tipoAtividadeId : null,
             'pontos' => max(0, (int) (isset($_POST['pontos']) ? $_POST['pontos'] : 0)),
             'ativo' => isset($_POST['ativo']) ? 1 : 0,
+            'campos_perfil' => $camposPerfil,
         ];
     }
 
@@ -556,8 +781,16 @@ class BonusAdminController extends Controller
             $erros['tipo_atividade_id'] = 'Escolha o tipo de atividade que este bônus considera.';
         }
 
-        if ($erros === [] && $this->bonus->existeDuplicata($eventoId, $dados['tipo'], $dados['exigencia'], $dados['tipo_atividade_id'], $bonusId)) {
-            $erros['tipo'] = 'Já existe um bônus deste tipo com a mesma exigência neste evento.';
+        // Fase 58: sem campo marcado, todo inscrito ganharia o bonus, pelo
+        // mesmo motivo da exigencia zero acima.
+        if ($regra['pede_campos_perfil'] && (string) $dados['campos_perfil'] === '') {
+            $erros['campos_perfil'] = 'Marque ao menos um campo do perfil que este bônus exige.';
+        }
+
+        if ($erros === [] && $this->bonus->existeDuplicata($eventoId, $dados['tipo'], $dados['exigencia'], $dados['tipo_atividade_id'], $bonusId, $dados['campos_perfil'])) {
+            $erros['tipo'] = $regra['pede_campos_perfil']
+                ? 'Já existe um bônus deste tipo com os mesmos campos neste evento.'
+                : 'Já existe um bônus deste tipo com a mesma exigência neste evento.';
         }
 
         return $erros;

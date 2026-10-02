@@ -9,6 +9,11 @@ return [
     'titulo' => 'Estandes do Evento',
     'resumo' => 'Estandes de expositores e de patrocinadores do evento. Cada estande tem um código de visita fixo, gerado pelo sistema e impresso no cartaz: o participante lê esse código no aplicativo do evento e ganha os pontos da visita, uma vez por estande. O Suporte vê tudo e imprime cartazes, mas só o Administrador altera.',
     'operacoes' => [
+        [
+            'nome' => 'Filtros',
+            'como' => 'Busca por nome do estande ou do representante, categoria e situação. Clique no funil para aplicar e na seta para limpar.',
+            'observacao' => 'Com filtro aplicado, a ordenação por arraste fica desligada: a ordem vale sobre a lista inteira, e gravá-la a partir de uma lista parcial embaralharia o resto. Limpe os filtros para reordenar.',
+        ],
         ['nome' => '+ Novo estande', 'como' => 'Abre o cadastro de um estande novo. O código de visita é gerado ao salvar.'],
         ['nome' => 'Editar', 'icone' => 'editar', 'como' => 'Abre os dados do estande, o código de visita e o bloco do representante (convidar, substituir ou remover).'],
         ['nome' => 'Imprimir cartaz', 'como' => 'Abre o cartaz A4 do estande, com o QR e o código em texto, pronto para imprimir.'],

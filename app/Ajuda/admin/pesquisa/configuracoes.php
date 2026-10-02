@@ -15,7 +15,7 @@ return [
         ],
         [
             'nome' => 'Abre em / Fecha em',
-            'como' => 'As duas datas em branco fazem valer as datas do evento. A pesquisa costuma abrir no último dia e ficar aberta por alguns dias depois do encerramento, e para isso basta preencher as duas.',
+            'como' => 'Cada campo limita por conta própria, e em branco aquele lado não limita nada: com os dois em branco, a pesquisa fica aberta enquanto estiver ativada. A pesquisa costuma abrir no último dia e ficar aberta por alguns dias depois do encerramento, e para isso basta preencher as duas.',
             'observacao' => 'A comparação é por data, então o último dia conta inteiro.',
         ],
         [

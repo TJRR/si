@@ -34,10 +34,20 @@ foreach ($linhas as $linha) {
 
     <p><strong><?php echo (int) $totalIncluidos; ?></strong> de <?php echo count($linhas); ?> trabalho(s) constam nos Anais.</p>
 
+    <?php if (!$estaPublicado): ?>
+        <p><a href="<?php echo url('trabalhoAnais/trabalhos/' . (int) $evento['id']); ?>&amp;sugerir=1" class="btn">Sugerir exclusão dos não apresentados</a></p>
+    <?php endif; ?>
+
+    <?php if ($sugestao === 'aplicada'): ?>
+        <p><span class="selo-situacao laranja">Sugestão aplicada, nada foi gravado</span> Os trabalhos selecionados para apresentação que não têm a marca de apresentado (Certificados, Apresentações) aparecem desmarcados e com o motivo preenchido. Confira a lista e use "Salvar lista" para gravar, ou volte sem salvar para descartar a sugestão.</p>
+    <?php elseif ($sugestao === 'sem_marcas'): ?>
+        <p><span class="selo-situacao laranja">Sugestão não aplicada</span> Nenhum trabalho deste evento tem a marca de apresentado (Certificados, Apresentações). Sem nenhuma marca, a sugestão desmarcaria todos os trabalhos selecionados, então nada foi alterado.</p>
+    <?php endif; ?>
+
     <form method="post" action="<?php echo url('trabalhoAnais/trabalhos/' . (int) $evento['id']); ?>"><?= campoCsrf() ?>
         <table border="1" cellpadding="6">
             <tr>
-                <th>Consta</th><th>Posição</th><th>Protocolo</th><th>Título</th><th>Autoria</th><th>Eixo</th><th>Nota</th><th>Declarações</th><th>Motivo, se não constar</th>
+                <th>Consta</th><th>Posição</th><th>Protocolo</th><th>Título</th><th>Autoria</th><th>Eixo</th><th>Nota</th><th>Apresentado</th><th>Declarações</th><th>Motivo, se não constar</th>
             </tr>
             <?php foreach ($linhas as $linha): ?>
             <tr>
@@ -53,7 +63,16 @@ foreach ($linhas as $linha) {
                     <?php endforeach; ?>
                 </td>
                 <td><?php echo $esc($linha['eixo_nome']); ?></td>
-                <td><?php echo $linha['nota_final'] !== null ? $esc(number_format((float) $linha['nota_final'], 2, ',', '.')) : '&mdash;'; ?></td>
+                <td><?php echo $linha['nota_final'] !== null ? $esc(number_format((float) $linha['nota_final'], $casasDecimais, ',', '.')) : '&mdash;'; ?></td>
+                <td>
+                    <?php if (!$linha['selecionado']): ?>
+                        <span title="Trabalho não selecionado para apresentação">&mdash;</span>
+                    <?php elseif ($linha['apresentado']): ?>
+                        Sim
+                    <?php else: ?>
+                        <span class="status-pill laranja">Não</span>
+                    <?php endif; ?>
+                </td>
                 <td>
                     <?php if (empty($linha['declaracoes_pendentes'])): ?>
                         Aceitas

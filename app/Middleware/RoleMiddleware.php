@@ -66,13 +66,8 @@ class RoleMiddleware
     }
 
     /**
-     * HTTP_REFERER e' cabecalho controlado pelo CLIENTE - usa-lo sem validar
-     * abriria um open redirect (um link malicioso poderia forjar o Referer
-     * para mandar a pessoa, apos o "acesso negado", a um site externo com a
-     * URL do proprio sistema aparecendo antes do clique). So aceita o
-     * Referer como destino se for da MESMA origem (mesmo host, esquema
-     * http/https, caminho relativo) - qualquer coisa fora disso cai no
-     * painel do proprio perfil.
+     * Destino depois do acesso negado: o endereco de origem so' quando e' da
+     * mesma origem; senao, o painel do proprio perfil. Ver Implantar.md, secao 13.6.
      */
     private static function destinoSeguro()
     {

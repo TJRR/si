@@ -23,6 +23,9 @@ use App\Controllers\BonusAdminController;
 use App\Controllers\CadastroController;
 use App\Controllers\CampoAdminController;
 use App\Controllers\CategoriaAvaliadorAdminController;
+use App\Controllers\CertificadoAdminController;
+use App\Controllers\CertificadoPublicoController;
+use App\Controllers\CompeticaoAdminController;
 use App\Controllers\ConcursoAdminController;
 use App\Controllers\ConexaoAdminController;
 use App\Controllers\DivulgacaoAdminController;
@@ -54,6 +57,7 @@ use App\Controllers\FaqAdminController;
 use App\Controllers\FaqConcursoAdminController;
 use App\Controllers\FormulaPontuacaoAdminController;
 use App\Controllers\FormularioAdminController;
+use App\Controllers\GamificacaoAdminController;
 use App\Controllers\HomeController;
 use App\Controllers\HomeSecaoOrdemAdminController;
 use App\Controllers\HomologacaoController;
@@ -86,6 +90,7 @@ use App\Controllers\SlideAdminController;
 use App\Controllers\SubmissaoController;
 use App\Controllers\TemaAdminController;
 use App\Controllers\TemaDesafioAdminController;
+use App\Controllers\TextosAvisoEventoAdminController;
 use App\Controllers\TrabalhoAdminController;
 use App\Controllers\TrabalhoAnaisAdminController;
 use App\Controllers\TrabalhoAvaliacaoController;
@@ -196,6 +201,16 @@ class Router
         'bonus' => BonusAdminController::class,
         'pesquisa' => PesquisaAdminController::class,
         'eventoAppPerfil' => EventoAppPerfilController::class,
+        // Fase 58: Competicoes (participacao lida num codigo "na mao do
+        // responsavel") e Gamificacao (classificacao geral, credenciamento
+        // no local, desempate e encerramento da gincana).
+        'competicoes' => CompeticaoAdminController::class,
+        'gamificacao' => GamificacaoAdminController::class,
+        // Fase 59: Certificados (do evento, de atividade e de apresentacao de
+        // trabalho) e a pagina publica de conferencia por codigo.
+        'certificados' => CertificadoAdminController::class,
+        'certificadoPublico' => CertificadoPublicoController::class,
+        'textosAvisoEvento' => TextosAvisoEventoAdminController::class,
     ];
 
     /**
@@ -262,16 +277,9 @@ class Router
 
         if (Auth::autenticado()) {
             if (!Auth::validarAtividade($timeoutMinutos * 60)) {
-                // Reabertura da Fase 51 (achado do teste de fumaca, item 4):
-                // sessao vencida numa rota do fluxo do Evento (pagina
-                // publica, inscricao, aplicativo, submissao de trabalho)
-                // nao pode cair no login do Concurso, que depois leva ao
-                // painel administrativo. Nesses modulos a pessoa segue como
-                // visitante sem sessao, e cada controller ja sabe o que
-                // fazer com visitante (mostrar a pagina, pedir cadastro ou
-                // entrada pelo fluxo do evento, guardando o retorno). A
-                // sessao antiga ja foi destruida por validarAtividade();
-                // abre-se uma nova, com identificador novo e token novo.
+                // Sessao vencida numa rota do fluxo do Evento nao cai na entrada do
+                // Concurso: nesses modulos a pessoa segue como visitante, numa sessao nova,
+                // e cada controlador sabe o que fazer com visitante.
                 if (in_array($modulo, self::$modulosFluxoEvento, true)) {
                     session_start();
                     session_regenerate_id(true);
@@ -294,14 +302,9 @@ class Router
                 exit('Ação bloqueada: modo de visualização somente leitura. Volte para sua conta de administrador para realizar ações.');
             }
 
-            // Fase 56: envio maior que o post_max_size chega aqui com
-            // $_POST e $_FILES vazios, porque o PHP descarta o corpo
-            // inteiro antes de o codigo rodar. Sem essa conferencia, o
-            // token de verificacao tambem sumia e a resposta era "Sessao
-            // expirada" - mensagem que nao tem relacao com a causa e que
-            // ja afetava os envios de PDF do Concurso (requerimentos e
-            // Anais). A varredura ampla de casos parecidos e' a pendencia
-            // 31 de SGSI/pendencias.md.
+            // Envio maior que o post_max_size chega aqui com $_POST e $_FILES vazios,
+            // porque o PHP descarta o corpo inteiro: a resposta diz o limite, em vez de
+            // uma mensagem sem relacao com a causa.
             if ($_SERVER['REQUEST_METHOD'] !== 'GET'
                 && empty($_POST) && empty($_FILES)
                 && isset($_SERVER['CONTENT_LENGTH'])
@@ -310,12 +313,7 @@ class Router
                 exit('O arquivo enviado é maior que o limite de ' . \App\Services\ArquivoService::limiteMaximoMB() . 'MB do servidor. Reduza o tamanho do arquivo e envie outra vez.');
             }
 
-            // Fase 31 (Auditoria de Seguranca, achado #1/#3): protecao CSRF
-            // central - cobre toda acao de escrita de uma vez, sem precisar
-            // validar em cada Controller. Token aceito via campo de form
-            // (campoCsrf(), em app/helpers.php) ou header X-CSRF-Token
-            // (usado pelos 2 pontos que enviam POST via fetch() em vez de
-            // <form>: editor-rico.js e reordenar-arrastar.js).
+            // Conferencia central do codigo de protecao de formulario. Ver Implantar.md, secao 13.6.
             if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
                 $tokenRecebido = isset($_POST['csrf_token'])
                     ? $_POST['csrf_token']

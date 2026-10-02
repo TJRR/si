@@ -58,6 +58,13 @@ class NotificacaoService
     {
         $assunto = 'Inscrição confirmada: ' . $evento['nome'];
         $corpo = $this->montarCorpoConfirmacaoEvento($nomeParticipante, $evento);
+        $this->aplicarModeloEvento('confirmacao_inscricao_evento', [
+            'nome' => $nomeParticipante,
+            'evento' => $evento['nome'],
+            'evento_inicio' => formatarData($evento['data_inicio']),
+            'evento_fim' => formatarData($evento['data_fim']),
+            'mensagem_do_evento' => $this->mensagemConfirmacaoEvento($evento),
+        ], $assunto, $corpo);
 
         $id = $this->notificacoes->criar(
             'evento_inscricao_confirmada',
@@ -112,11 +119,16 @@ class NotificacaoService
         return $resultado['sucesso'];
     }
 
-    private function montarCorpoConfirmacaoEvento($nomeDestinatario, array $evento)
+    private function mensagemConfirmacaoEvento(array $evento)
     {
-        $mensagem = !empty($evento['mensagem_confirmacao_inscricao'])
+        return !empty($evento['mensagem_confirmacao_inscricao'])
             ? $evento['mensagem_confirmacao_inscricao']
             : '<p>Sua inscrição foi recebida com sucesso. Acompanhe as novidades do evento pelos canais oficiais.</p>';
+    }
+
+    private function montarCorpoConfirmacaoEvento($nomeDestinatario, array $evento)
+    {
+        $mensagem = $this->mensagemConfirmacaoEvento($evento);
 
         return sprintf(
             '<p>Olá, %s,</p>'
@@ -213,16 +225,15 @@ class NotificacaoService
     }
 
     /**
-     * Fase 49: convite de avaliador avulso de Trabalhos de um Evento - texto
-     * proprio, nunca reaproveitando a mensagem de conviteAdministrativo()
-     * (que menciona "Prêmio de Inovação", contexto errado aqui). Mesmo
-     * mecanismo de conta/token, texto isolado por classe de destinatario.
+     * Convite de avaliador de Trabalhos de um Evento, com texto proprio: o de
+     * conviteAdministrativo() fala do Concurso.
      */
     public function conviteAvaliadorTrabalhos($destinatarioEmail, $nomeUsuario, array $evento, $linkDefinirSenha)
     {
         $assunto = 'Convite para avaliar trabalhos: ' . $evento['nome'];
         $abertura = 'Você foi convidado a avaliar trabalhos submetidos ao evento "' . htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8') . '".';
-        $corpo = $this->montarCorpoAcesso($nomeUsuario, $abertura, $linkDefinirSenha);
+        $corpo = $this->montarCorpoAcessoEvento($nomeUsuario, $abertura, $linkDefinirSenha);
+        $this->aplicarModeloEvento('convite_avaliador_trabalhos', $this->dadosAcessoContaNova($nomeUsuario, $evento, $linkDefinirSenha), $assunto, $corpo);
 
         $id = $this->notificacoes->criar(
             'convite_avaliador_trabalhos',
@@ -246,18 +257,15 @@ class NotificacaoService
     }
 
     /**
-     * Fase 49 (achado do usuário no teste de fumaça): variante do convite
-     * de avaliador avulso para quem JÁ tem conta no sistema. Texto
-     * diferente de propósito - a pessoa não vai se cadastrar nem definir
-     * senha nova, só ganhou autorização nova (avaliar Trabalhos deste
-     * evento) usando o acesso que já tem. Sem hiperlink de definir senha,
-     * sem menção a criar conta.
+     * Variante do convite de avaliador para quem ja tem conta: sem endereco de
+     * definir senha e sem mencao a criar conta.
      */
     public function conviteAvaliadorTrabalhosContaExistente($destinatarioEmail, $nomeUsuario, array $evento)
     {
         $assunto = 'Convite para avaliar trabalhos: ' . $evento['nome'];
         $mensagem = 'Você foi convidado a avaliar trabalhos submetidos ao evento "' . htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8') . '". Como você já tem conta neste sistema, não é preciso se cadastrar de novo: acesse normalmente com o e-mail e a senha que já usa (ou com sua conta Google, se for assim que costuma entrar).';
         $corpo = $this->montarCorpoAcessoExistente($nomeUsuario, $mensagem);
+        $this->aplicarModeloEvento('convite_avaliador_trabalhos_conta_existente', $this->dadosAcessoContaExistente($nomeUsuario, $evento), $assunto, $corpo);
 
         $id = $this->notificacoes->criar(
             'convite_avaliador_trabalhos_conta_existente',
@@ -290,6 +298,10 @@ class NotificacaoService
     {
         $assunto = 'Representante de estande: ' . $evento['nome'];
         $corpo = $this->montarCorpoConviteRepresentante($nomeUsuario, $evento, $estande, $mensagemHtml, $linkDefinirSenha);
+        $this->aplicarModeloEvento('convite_representante_estande', $this->dadosAcessoContaNova($nomeUsuario, $evento, $linkDefinirSenha) + [
+            'estande' => $estande['nome'],
+            'mensagem_do_evento' => $this->mensagemConviteRepresentante($mensagemHtml),
+        ], $assunto, $corpo);
 
         $id = $this->notificacoes->criar(
             'convite_representante_estande',
@@ -320,6 +332,10 @@ class NotificacaoService
     {
         $assunto = 'Representante de estande: ' . $evento['nome'];
         $corpo = $this->montarCorpoConviteRepresentante($nomeUsuario, $evento, $estande, $mensagemHtml, null);
+        $this->aplicarModeloEvento('convite_representante_estande_conta_existente', $this->dadosAcessoContaExistente($nomeUsuario, $evento) + [
+            'estande' => $estande['nome'],
+            'mensagem_do_evento' => $this->mensagemConviteRepresentante($mensagemHtml),
+        ], $assunto, $corpo);
 
         $id = $this->notificacoes->criar(
             'convite_representante_estande_conta_existente',
@@ -347,6 +363,13 @@ class NotificacaoService
      * fica num bloco proprio (pode ter paragrafos e listas, que nao cabem
      * dentro de outro paragrafo) e passa de novo pelo filtro de HTML.
      */
+    private function mensagemConviteRepresentante($mensagemHtml)
+    {
+        $mensagemHtml = trim(sanitizarHtmlRico((string) $mensagemHtml));
+
+        return $mensagemHtml !== '' ? '<div>' . $mensagemHtml . '</div>' : '';
+    }
+
     private function montarCorpoConviteRepresentante($nomeDestinatario, array $evento, array $estande, $mensagemHtml, $linkDefinirSenha)
     {
         $mensagemHtml = trim(sanitizarHtmlRico((string) $mensagemHtml));
@@ -380,23 +403,17 @@ class NotificacaoService
     }
 
     /**
-     * Fase 51: autor cujo trabalho foi recebido por canal alternativo (item
-     * 5.2 do edital) e trazido para o sistema pela importacao. Conta criada
-     * na hora, entao o texto leva o endereco de definir senha, como o
-     * convite de avaliador avulso ja faz.
-     *
-     * Texto fixo no codigo por decisao desta fase, e registrado na divida de
-     * textos de e-mail sem tela administrativa: nesta fase o aceite dos
-     * termos virou configuravel, mas o corpo do e-mail ainda nao.
-     *
-     * Devolve verdadeiro/falso para a fila de envio marcar o destinatario
-     * como enviado ou falhou, igual avisoIndividualEvento().
+     * Autor cujo trabalho foi recebido por canal alternativo e trazido para o
+     * sistema pela importacao, com conta criada na hora: o texto leva o
+     * endereco de definir senha. Devolve verdadeiro ou falso para a fila de
+     * envio marcar o destinatario.
      */
     public function conviteAutorTrabalhoImportado($destinatarioEmail, $nomeUsuario, array $evento, $linkDefinirSenha)
     {
         $assunto = 'Seu trabalho foi registrado: ' . $evento['nome'];
         $abertura = 'O trabalho que você enviou para o evento "' . htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8') . '" foi registrado no sistema oficial do evento. Para acompanhar a situação dele, defina sua senha de acesso no endereço abaixo.';
-        $corpo = $this->montarCorpoAcesso($nomeUsuario, $abertura, $linkDefinirSenha);
+        $corpo = $this->montarCorpoAcessoEvento($nomeUsuario, $abertura, $linkDefinirSenha);
+        $this->aplicarModeloEvento('convite_autor_trabalho_importado', $this->dadosAcessoContaNova($nomeUsuario, $evento, $linkDefinirSenha), $assunto, $corpo);
 
         $id = $this->notificacoes->criar(
             'convite_autor_trabalho_importado',
@@ -438,7 +455,22 @@ class NotificacaoService
     {
         $inscrito = in_array($pessoa['inscricao'], ['nova', 'ja_inscrito'], true);
         $assunto = ($inscrito ? 'Trabalho recebido e inscrição registrada: ' : 'Trabalho recebido: ') . $evento['nome'];
-        $corpo = $this->montarCorpoRecebimentoTrabalho($pessoa, $trabalho, $evento, $config, $nomePrincipal, $inscrito, $modoCredenciamento);
+        $partes = $this->partesRecebimentoTrabalho($pessoa, $trabalho, $evento, $config, $nomePrincipal, $inscrito, $modoCredenciamento);
+        $corpo = implode('', $partes) . $this->assinaturaContato();
+        $momento = strtotime($trabalho['recebido_em']);
+        $this->aplicarModeloEvento('recebimento_trabalho', [
+            'nome' => $pessoa['nome'],
+            'evento' => $evento['nome'],
+            'situacao' => $inscrito ? 'Trabalho recebido e inscrição registrada' : 'Trabalho recebido',
+            'titulo_trabalho' => $trabalho['titulo'],
+            'protocolo' => (string) (int) $trabalho['id'],
+            'recebido_em' => date('d/m/Y', $momento) . ' às ' . date('H:i', $momento),
+            'autor_principal' => (string) $nomePrincipal,
+            'paragrafo_autoria' => $partes['autoria'],
+            'paragrafo_inscricao' => $partes['inscricao'],
+            'paragrafo_acesso' => $partes['acesso'],
+            'mensagem_do_evento' => $partes['mensagem'],
+        ], $assunto, $corpo);
 
         $id = $this->notificacoes->criar(
             'trabalho_recebido',
@@ -463,25 +495,30 @@ class NotificacaoService
         return (bool) $resultado['sucesso'];
     }
 
-    private function montarCorpoRecebimentoTrabalho(array $pessoa, array $trabalho, array $evento, array $config, $nomePrincipal, $inscrito, $modoCredenciamento)
+    /**
+     * Os trechos do aviso de recebimento, na ordem em que o texto padrao os
+     * junta. As chaves nomeadas sao as palavras-chave do modelo editavel.
+     */
+    private function partesRecebimentoTrabalho(array $pessoa, array $trabalho, array $evento, array $config, $nomePrincipal, $inscrito, $modoCredenciamento)
     {
         $esc = function ($texto) {
             return htmlspecialchars((string) $texto, ENT_QUOTES, 'UTF-8');
         };
 
-        $partes = ['<p>Olá, ' . $esc($pessoa['nome']) . ',</p>'];
+        $partes = ['saudacao' => '<p>Olá, ' . $esc($pessoa['nome']) . ',</p>'];
 
         if ($pessoa['papel'] === 'coautor') {
-            $partes[] = '<p>' . $esc($nomePrincipal) . ' enviou o trabalho <strong>' . $esc($trabalho['titulo'])
+            $partes['autoria'] = '<p>' . $esc($nomePrincipal) . ' enviou o trabalho <strong>' . $esc($trabalho['titulo'])
                 . '</strong> para o evento <strong>' . $esc($evento['nome']) . '</strong> e indicou você como coautor(a).</p>';
         } else {
-            $partes[] = '<p>Recebemos o trabalho <strong>' . $esc($trabalho['titulo'])
+            $partes['autoria'] = '<p>Recebemos o trabalho <strong>' . $esc($trabalho['titulo'])
                 . '</strong> para o evento <strong>' . $esc($evento['nome']) . '</strong>.</p>';
         }
 
         $momento = strtotime($trabalho['recebido_em']);
-        $partes[] = '<p>Protocolo: <strong>nº ' . (int) $trabalho['id'] . '</strong>. Recebido em '
+        $partes['protocolo'] = '<p>Protocolo: <strong>nº ' . (int) $trabalho['id'] . '</strong>. Recebido em '
             . date('d/m/Y', $momento) . ' às ' . date('H:i', $momento) . '.</p>';
+        $partes['inscricao'] = '';
 
         if ($inscrito) {
             $periodo = !empty($evento['data_inicio']) && !empty($evento['data_fim'])
@@ -493,28 +530,28 @@ class NotificacaoService
                 $textoInscricao .= ' A sua inscrição será confirmada pela organização.';
             }
 
-            $partes[] = '<p>' . $textoInscricao . '</p>';
+            $partes['inscricao'] = '<p>' . $textoInscricao . '</p>';
         }
 
         if (!empty($pessoa['conta_nova']) && !empty($pessoa['token_senha'])) {
             $endereco = urlAbsoluta('auth/definirSenha/' . $pessoa['token_senha']);
-            $partes[] = '<p>Criamos um acesso para você no sistema do evento. Defina a sua senha neste endereço (vale por 7 dias) para acompanhar o trabalho e a sua participação:<br>'
+            $partes['acesso'] = '<p>Criamos um acesso para você no sistema do evento. Defina a sua senha neste endereço (vale por 7 dias) para acompanhar o trabalho e a sua participação:<br>'
                 . '<a href="' . $esc($endereco) . '">' . $esc($endereco) . '</a></p>';
         } else {
             $endereco = $inscrito
                 ? urlAbsoluta('eventoApp/index/' . (int) $evento['id'])
                 : urlAbsoluta('trabalho/meusTrabalhos');
-            $partes[] = '<p>Acompanhe a situação do trabalho'
+            $partes['acesso'] = '<p>Acompanhe a situação do trabalho'
                 . ($inscrito ? ' e a sua participação no evento' : '')
                 . ' entrando com o seu e-mail e a sua senha (ou com a sua conta Google):<br>'
                 . '<a href="' . $esc($endereco) . '">' . $esc($endereco) . '</a></p>';
         }
 
-        $partes[] = !empty($config['mensagem_recebimento_html'])
+        $partes['mensagem'] = !empty($config['mensagem_recebimento_html'])
             ? $config['mensagem_recebimento_html']
             : '<p>Guarde o número do protocolo. A avaliação segue o cronograma do edital, e o resultado será divulgado pela organização do evento.</p>';
 
-        return implode('', $partes) . $this->assinaturaContato();
+        return $partes;
     }
 
     /**
@@ -526,6 +563,7 @@ class NotificacaoService
         $assunto = 'Seu trabalho foi registrado: ' . $evento['nome'];
         $mensagem = 'O trabalho que você enviou para o evento "' . htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8') . '" foi registrado no sistema oficial do evento. Como você já tem conta neste sistema, acesse normalmente com o e-mail e a senha que já usa (ou com sua conta Google, se for assim que costuma entrar) para acompanhar a situação do trabalho.';
         $corpo = $this->montarCorpoAcessoExistente($nomeUsuario, $mensagem);
+        $this->aplicarModeloEvento('aviso_autor_trabalho_importado', $this->dadosAcessoContaExistente($nomeUsuario, $evento), $assunto, $corpo);
 
         $id = $this->notificacoes->criar(
             'aviso_autor_trabalho_importado',
@@ -644,6 +682,74 @@ class NotificacaoService
             $mensagem,
             htmlspecialchars($linkLogin, ENT_QUOTES, 'UTF-8')
         ) . $this->assinaturaContato();
+    }
+
+    /**
+     * Copia de montarCorpoAcesso() so' para os avisos do Evento, para que o
+     * texto deles possa mudar sem tocar no aviso do Concurso.
+     */
+    private function montarCorpoAcessoEvento($nomeDestinatario, $abertura, $linkDefinirSenha)
+    {
+        $linkGoogle = urlAbsoluta('auth/google');
+
+        return sprintf(
+            '<p>Olá, %s,</p>'
+            . '<p>%s</p>'
+            . '<p>Você já pode acessar o sistema de duas formas:</p>'
+            . '<ul>'
+            . '<li>🔵 Se este endereço de e-mail for de uma conta Google, clique em '
+            . '<a href="%s">Entrar com Google</a>; ou</li>'
+            . '<li>🔑 Clicando em <a href="%s">Definir minha senha</a> e entrando com este e-mail '
+            . 'e uma senha que você deverá definir.</li>'
+            . '</ul>'
+            . '<p style="color:#555;font-size:0.9em;">Este e-mail foi enviado automaticamente. Não compartilhe sua senha '
+            . 'com terceiros. Em caso de dúvida sobre a autenticidade deste e-mail, entre em contato pelos canais abaixo.</p>'
+            . '<p>Atenciosamente,</p>',
+            htmlspecialchars($nomeDestinatario, ENT_QUOTES, 'UTF-8'),
+            $abertura,
+            htmlspecialchars($linkGoogle, ENT_QUOTES, 'UTF-8'),
+            htmlspecialchars($linkDefinirSenha, ENT_QUOTES, 'UTF-8')
+        ) . $this->assinaturaContato();
+    }
+
+    private function linkHtml($endereco, $rotulo)
+    {
+        return '<a href="' . htmlspecialchars((string) $endereco, ENT_QUOTES, 'UTF-8') . '">' . $rotulo . '</a>';
+    }
+
+    private function dadosAcessoContaNova($nomeUsuario, array $evento, $linkDefinirSenha)
+    {
+        return [
+            'nome' => $nomeUsuario,
+            'evento' => $evento['nome'],
+            'link_definir_senha' => $this->linkHtml($linkDefinirSenha, 'Definir minha senha'),
+            'endereco_definir_senha' => $linkDefinirSenha,
+            'link_entrar_google' => $this->linkHtml(urlAbsoluta('auth/google'), 'Entrar com Google'),
+        ];
+    }
+
+    private function dadosAcessoContaExistente($nomeUsuario, array $evento)
+    {
+        return [
+            'nome' => $nomeUsuario,
+            'evento' => $evento['nome'],
+            'link_entrar' => $this->linkHtml(urlAbsoluta('auth/login'), 'Entrar no sistema'),
+        ];
+    }
+
+    /**
+     * Troca assunto e corpo pelo modelo gravado na tela "Textos dos avisos do
+     * Evento", quando existe. Sem modelo, ou com falha de leitura, fica o
+     * texto padrao ja' montado.
+     */
+    private function aplicarModeloEvento($chave, array $dados, &$assunto, &$corpo)
+    {
+        $modelo = (new EventoModeloAvisoService())->aplicar($chave, $dados);
+
+        if ($modelo !== null) {
+            $assunto = $modelo['assunto'];
+            $corpo = $modelo['corpo'] . $this->assinaturaContato();
+        }
     }
 
     /**

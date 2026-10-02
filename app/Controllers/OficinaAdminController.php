@@ -600,7 +600,7 @@ class OficinaAdminController extends Controller
         }
 
         $this->oficinas->remover($id);
-        $_SESSION['flash'] = 'Horário removido.';
+        flashSucesso('Horário removido.');
         $this->redirecionar('oficinaAdmin/index/' . $concursoId);
     }
 
@@ -655,7 +655,7 @@ class OficinaAdminController extends Controller
                     );
                 }
 
-                $_SESSION['flash'] = 'Integração com o Google Agenda concluída.';
+                flashSucesso('Integração com o Google Agenda concluída.');
             } else {
                 flashErro('Ainda não foi possível conectar com o Google Agenda. Tente novamente em alguns instantes.');
             }
@@ -664,7 +664,7 @@ class OficinaAdminController extends Controller
 
             if ($resultado !== null) {
                 $this->oficinas->atualizarGoogle($id, $resultado);
-                $_SESSION['flash'] = 'Status atualizado.';
+                flashSucesso('Situação da integração com o Google Agenda atualizada.');
             } else {
                 flashAlerta('Nenhuma novidade agora (ou aguarde um pouco antes de verificar de novo).');
             }

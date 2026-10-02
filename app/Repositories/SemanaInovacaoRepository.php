@@ -63,11 +63,13 @@ class SemanaInovacaoRepository
             'data_fim' => $dados['data_fim'],
             'status' => $dados['status'],
             'modo_credenciamento' => $dados['modo_credenciamento'],
+            // Fase 58: sem a chave, o evento oferece cracha, como antes.
+            'oferece_cracha' => isset($dados['oferece_cracha']) ? (int) $dados['oferece_cracha'] : 1,
         ];
 
         $stmt = $pdo->prepare(
-            'INSERT INTO eventos (nome, descricao, mensagem_confirmacao_inscricao, data_inicio, data_fim, status, modo_credenciamento)
-             VALUES (:nome, :descricao, :mensagem_confirmacao_inscricao, :data_inicio, :data_fim, :status, :modo_credenciamento)'
+            'INSERT INTO eventos (nome, descricao, mensagem_confirmacao_inscricao, data_inicio, data_fim, status, modo_credenciamento, oferece_cracha)
+             VALUES (:nome, :descricao, :mensagem_confirmacao_inscricao, :data_inicio, :data_fim, :status, :modo_credenciamento, :oferece_cracha)'
         );
         $stmt->execute($campos);
         $id = (int) $pdo->lastInsertId();
@@ -88,13 +90,17 @@ class SemanaInovacaoRepository
             'data_fim' => $dados['data_fim'],
             'status' => $dados['status'],
             'modo_credenciamento' => $dados['modo_credenciamento'],
+            'oferece_cracha' => isset($dados['oferece_cracha'])
+                ? (int) $dados['oferece_cracha']
+                : ($antes !== null && isset($antes['oferece_cracha']) ? (int) $antes['oferece_cracha'] : 1),
         ];
 
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'UPDATE eventos
                 SET nome = :nome, descricao = :descricao, mensagem_confirmacao_inscricao = :mensagem_confirmacao_inscricao,
-                    data_inicio = :data_inicio, data_fim = :data_fim, status = :status, modo_credenciamento = :modo_credenciamento
+                    data_inicio = :data_inicio, data_fim = :data_fim, status = :status, modo_credenciamento = :modo_credenciamento,
+                    oferece_cracha = :oferece_cracha
               WHERE id = :id'
         );
         $stmt->execute($campos + ['id' => $id]);

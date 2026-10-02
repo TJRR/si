@@ -168,7 +168,17 @@ class EventoAtividadeFacilitadorRepository
             $stmt = $pdo->prepare(
                 'INSERT INTO evento_atividade_facilitadores (atividade_id, usuario_id, perfil_id) VALUES (:atividade_id, :usuario_id, :perfil_id)'
             );
-            $stmt->execute(['atividade_id' => $atividadeId, 'usuario_id' => $usuarioId, 'perfil_id' => $perfilId]);
+
+            try {
+                $stmt->execute(['atividade_id' => $atividadeId, 'usuario_id' => $usuarioId, 'perfil_id' => $perfilId]);
+            } catch (\PDOException $e) {
+                if ($e->getCode() === '23000' && isset($e->errorInfo[1]) && (int) $e->errorInfo[1] === 1062) {
+                    throw new \RuntimeException('Este usuário já está vinculado como facilitador desta atividade.');
+                }
+
+                throw $e;
+            }
+
             $id = (int) $pdo->lastInsertId();
         }
 
@@ -221,5 +231,75 @@ class EventoAtividadeFacilitadorRepository
         if (!$perfis->possuiPerfil($usuarioId, $perfilInscrito['id'], null)) {
             $perfis->atribuir($usuarioId, $perfilInscrito['id'], null);
         }
+    }
+
+    /**
+     * Fase 59: as atividades que UMA pessoa conduz no evento, com o periodo
+     * de cada uma e o que o certificado precisa saber da atividade. Base da
+     * carga horaria de quem facilita: sem inscricao nao existe presenca
+     * gravavel (evento_checkins e' chaveada por evento_inscricao_id), entao a
+     * designacao e' a propria prova de participacao dela.
+     *
+     * Metodo proprio, e nao colunas acrescentadas a
+     * listarPorUsuarioNoEvento(): aquela consulta serve a tela "Minhas
+     * facilitacoes" desde a Fase 48 e nao se mexe sem necessidade, e esta
+     * fase precisa tambem do par do evento inteiro, que nao existia.
+     */
+    public function intervalosDoUsuarioNoEvento($usuarioId, $eventoId)
+    {
+        try {
+            $pdo = Database::conexao();
+            $stmt = $pdo->prepare(
+                'SELECT a.id AS atividade_id, a.nome, a.local, a.data_inicio, a.data_fim,
+                        a.emite_certificado, a.certificado_fundo_url, p.nome AS perfil_nome
+                   FROM evento_atividade_facilitadores f
+                   INNER JOIN evento_atividades a ON a.id = f.atividade_id
+                   INNER JOIN evento_perfis_organizacao p ON p.id = f.perfil_id
+                  WHERE f.usuario_id = :usuario_id AND a.evento_id = :evento_id AND f.removido_em IS NULL
+                  ORDER BY a.data_inicio ASC, a.id ASC'
+            );
+            $stmt->execute(['usuario_id' => (int) $usuarioId, 'evento_id' => (int) $eventoId]);
+
+            return $stmt->fetchAll();
+        } catch (\PDOException $e) {
+            error_log('[Certificado] Falha ao listar as facilitacoes do usuario ' . (int) $usuarioId . ': ' . $e->getMessage());
+
+            return [];
+        }
+    }
+
+    /**
+     * Fase 59: a mesma lista para todo o evento de uma vez, na forma
+     * [usuario_id => [linha, ...]]. Quem nao conduz nada nao aparece.
+     */
+    public function intervalosDoEvento($eventoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT f.usuario_id, a.id AS atividade_id, a.nome, a.local, a.data_inicio, a.data_fim,
+                    a.emite_certificado, a.certificado_fundo_url, p.nome AS perfil_nome,
+                    u.nome AS usuario_nome, u.email AS usuario_email
+               FROM evento_atividade_facilitadores f
+               INNER JOIN evento_atividades a ON a.id = f.atividade_id
+               INNER JOIN usuarios u ON u.id = f.usuario_id
+               INNER JOIN evento_perfis_organizacao p ON p.id = f.perfil_id
+              WHERE a.evento_id = :evento_id AND f.removido_em IS NULL
+              ORDER BY f.usuario_id ASC, a.data_inicio ASC, a.id ASC'
+        );
+        $stmt->execute(['evento_id' => (int) $eventoId]);
+
+        $porUsuario = [];
+
+        foreach ($stmt->fetchAll() as $linha) {
+            $usuario = (int) $linha['usuario_id'];
+
+            if (!isset($porUsuario[$usuario])) {
+                $porUsuario[$usuario] = [];
+            }
+
+            $porUsuario[$usuario][] = $linha;
+        }
+
+        return $porUsuario;
     }
 }

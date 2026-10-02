@@ -9,6 +9,7 @@ if (!defined('SI_BOOT')) {
 
 use App\Core\Auth;
 use App\Core\Controller;
+use App\Repositories\ContatoConcursoRepository;
 use App\Repositories\EventoCampoInscricaoRepository;
 use App\Repositories\EventoInscricaoRepository;
 use App\Repositories\NotificacaoPainelRepository;
@@ -20,33 +21,15 @@ use App\Services\NotificacaoService;
 use App\Validation\CpfValidador;
 
 /**
- * Fase 39/40: tela publica de inscricao em Evento. Nome do controller evita
- * "EventoController" generico - "evento" ja' e' o termo usado no sistema pra
- * evento de agenda do Google (Mentoria/Oficina), ver decisao de arquitetura
- * do plano da funcionalidade. Renomeado na Fase 40 de "SemanaInovacaoController"
- * (nome especifico do evento atual) para este nome generico, coerente com N
- * eventos simultaneos podendo existir ao mesmo tempo (ver
- * SemanaInovacaoRepository::listar()).
+ * Tela publica de inscricao em Evento. Qualquer conta aprovada pode se
+ * inscrever; quem nao tem conta faz cadastro ou entrada pelo fluxo do
+ * evento e volta a esta mesma tela.
  *
- * Qualquer conta ja' aprovada (equipe, avaliador, colaborador, inscrito ou
- * visitante sem nenhum perfil) pode se inscrever - por isso a checagem aqui e'
- * Auth::autenticado() direto, sem RoleMiddleware (que exige perfil
- * especifico). Quem nao tem conta faz login/cadastro pelas telas ja'
- * existentes (auth/login, eventoInscricao/cadastrar, auth/google) e volta a
- * esta mesma URL pra concluir a inscricao (ver
- * AuthController::redirecionarPosLogin(), Fase 40).
+ * "Documento" e' o unico campo estrutural; os demais vem de
+ * EventoCampoInscricaoRepository, configuraveis pelo Administrador.
  *
- * Fase 39 (correcao pos-teste): "Documento" e' o unico campo estrutural -
- * os demais vem de EventoCampoInscricaoRepository (configuraveis pelo
- * Admin, sub-aba "Formulario de inscricao" do evento), montados/validados
- * dinamicamente aqui, mesmo espirito de SubmissaoService::processar() mas
- * bem mais simples (so' 2 tipos: texto e lista_opcoes).
- *
- * Fase 40: todas as acoes aceitam $id (evento_id) na URL - com N eventos
- * divulgados simultaneamente na home, cada bloco precisa levar ao formulario
- * do seu proprio evento, nao sempre ao "ativo mais recente" (limitacao da
- * Fase 39, so' tinha 1 evento). $id omitido mantem o fallback antigo, para
- * compatibilidade de quem acessa a rota sem parametro.
+ * Todas as acoes aceitam o evento no endereco; sem ele, vale o evento ativo
+ * mais recente.
  */
 class EventoInscricaoPublicaController extends Controller
 {
@@ -56,15 +39,7 @@ class EventoInscricaoPublicaController extends Controller
         $evento = $id !== null ? $repositorioEventos->buscarPorId($id) : $repositorioEventos->buscarAtivoMaisRecente();
 
         if ($evento === null) {
-            $this->renderizar('publico/evento_inscricao', [
-                'evento' => null,
-                'campos' => [],
-                'inscricao' => null,
-                'respostas' => [],
-                'erroGeral' => null,
-                'erros' => [],
-                'dados' => [],
-            ], 'Semana de Inovação');
+            $this->responderEventoInexistente();
             return;
         }
 
@@ -127,8 +102,8 @@ class EventoInscricaoPublicaController extends Controller
         $evento = $id !== null ? $repositorioEventos->buscarPorId($id) : $repositorioEventos->buscarAtivoMaisRecente();
 
         if ($evento === null) {
-            http_response_code(404);
-            exit('Nenhum evento disponível para inscrição no momento.');
+            $this->responderEventoInexistente();
+            return;
         }
 
         $erro = null;
@@ -142,10 +117,9 @@ class EventoInscricaoPublicaController extends Controller
             if ($nome === '' || $email === '' || $senha === '') {
                 $erro = 'Preencha nome, e-mail e senha.';
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                // Fase 57 (reabertura): formato do e-mail e tamanho da senha
-                // conferidos no servidor, antes de qualquer consulta (a
-                // recusa nao diz nada sobre o e-mail ja' ter conta). A regra
-                // da senha e' a mesma de AuthController::definirSenha().
+                // Formato do e-mail e tamanho da senha conferidos no servidor, antes de
+                // qualquer consulta. A regra da senha e' a mesma de
+                // AuthController::definirSenha().
                 $erro = 'Informe um e-mail válido.';
             } elseif (strlen($senha) < 8) {
                 $erro = 'A senha deve ter ao menos 8 caracteres.';
@@ -157,8 +131,7 @@ class EventoInscricaoPublicaController extends Controller
                     $perfis = (new UsuarioRepository())->perfisDoUsuario($resultado['usuario_id']);
                     Auth::login($usuario, $perfis);
 
-                    // Fase 54 (achado do teste do dono): veio do botao de
-                    // enviar trabalho, segue direto para o formulario de
+                    // Veio do botao de enviar trabalho: segue direto para o formulario de
                     // submissao, sem passar pela inscricao.
                     if ($destinoSubmissao !== null) {
                         unset($_SESSION['retorno_apos_login']);
@@ -217,8 +190,8 @@ class EventoInscricaoPublicaController extends Controller
         $evento = $eventoId > 0 ? $repositorioEventos->buscarPorId($eventoId) : $repositorioEventos->buscarAtivoMaisRecente();
 
         if ($evento === null) {
-            http_response_code(404);
-            exit('Nenhum evento disponível para inscrição no momento.');
+            $this->responderEventoInexistente();
+            return;
         }
 
         $repository = new EventoInscricaoRepository();
@@ -312,7 +285,19 @@ class EventoInscricaoPublicaController extends Controller
 
         (new UsuarioPerfilRepository())->atualizarParcial(Auth::usuarioId(), $camposPerfil);
 
-        $repository->inscrever($evento['id'], Auth::usuarioId(), $respostas, $evento['modo_credenciamento']);
+        try {
+            $inscreveuAgora = $repository->inscrever($evento['id'], Auth::usuarioId(), $respostas, $evento['modo_credenciamento']);
+        } catch (\RuntimeException $e) {
+            flashErro($e->getMessage());
+            $this->redirecionar('eventoInscricao/index/' . $evento['id']);
+            return;
+        }
+
+        if (!$inscreveuAgora) {
+            flashAlerta('Você já está inscrito neste evento.');
+            $this->redirecionar('eventoApp/index/' . $evento['id']);
+            return;
+        }
 
         $usuario = (new UsuarioRepository())->buscarPorId(Auth::usuarioId());
 
@@ -337,5 +322,22 @@ class EventoInscricaoPublicaController extends Controller
         // inscricao - que continua alcancavel a partir de la' pelo link "Ver
         // minha inscrição".
         $this->redirecionar('eventoApp/index/' . $evento['id']);
+    }
+
+    /**
+     * Mesma tela de EventoPublicoController::responderEventoInexistente(),
+     * para endereco sem evento, evento inexistente ou sem inscricao aberta.
+     */
+    private function responderEventoInexistente()
+    {
+        http_response_code(404);
+
+        $this->renderizar('publico/evento_inexistente', [
+            'logoSrc' => logoAtual(true),
+            'altLogoTexto' => nomeInstituicao(),
+            'contato' => (new ContatoConcursoRepository())->buscar(),
+            'menuRodape' => [],
+            'configVisual' => [],
+        ], 'Este evento não existe');
     }
 }

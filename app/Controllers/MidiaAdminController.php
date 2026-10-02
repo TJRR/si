@@ -22,6 +22,8 @@ use App\Services\ImagemService;
  */
 class MidiaAdminController extends Controller
 {
+    const LIMITE_LOTE = 100;
+
     private $midias;
     private $pastas;
     private $concursos;
@@ -159,14 +161,10 @@ class MidiaAdminController extends Controller
             $this->midias->remover($id);
 
             if ($midia !== null) {
-                if ($midia['tipo'] === 'imagem') {
-                    $this->imagens->remover($midia['arquivo_path']);
-                } else {
-                    $this->arquivos->remover($midia['arquivo_path']);
-                }
+                $this->removerArquivoDaMidia($midia);
             }
 
-            $_SESSION['flash'] = 'Mídia removida.';
+            flashSucesso('Mídia removida.');
         } catch (\PDOException $e) {
             flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: esta mídia está em uso.'
@@ -174,6 +172,97 @@ class MidiaAdminController extends Controller
         }
 
         $this->redirecionar('midia/index');
+    }
+
+    public function moverEmLote()
+    {
+        $origem = !empty($_POST['pasta_atual']) ? (int) $_POST['pasta_atual'] : null;
+        $ids = $this->idsDoLoteOuVolta($origem);
+
+        if ($ids === null) {
+            return;
+        }
+
+        $destino = !empty($_POST['pasta_id']) ? (int) $_POST['pasta_id'] : null;
+
+        if ($destino !== null && $this->pastas->buscarPorId($destino) === null) {
+            flashErro('A pasta de destino não existe mais. Escolha outra.');
+            $this->redirecionar('midia/index' . ($origem !== null ? '?pasta=' . $origem : ''));
+            return;
+        }
+
+        $movidas = $this->midias->moverEmLote($ids, $destino);
+        flashSucesso($movidas === 1 ? '1 mídia movida.' : $movidas . ' mídias movidas.');
+        $this->redirecionar('midia/index' . ($origem !== null ? '?pasta=' . $origem : ''));
+    }
+
+    public function removerEmLote()
+    {
+        $origem = !empty($_POST['pasta_atual']) ? (int) $_POST['pasta_atual'] : null;
+        $ids = $this->idsDoLoteOuVolta($origem);
+
+        if ($ids === null) {
+            return;
+        }
+
+        try {
+            $removidas = $this->midias->removerEmLote($ids);
+        } catch (\PDOException $e) {
+            flashErro($e->getCode() === '23000'
+                ? 'Nada foi removido: pelo menos uma das mídias selecionadas está em uso. Remova-as uma a uma para saber qual.'
+                : 'Não foi possível remover as mídias selecionadas.');
+            $this->redirecionar('midia/index' . ($origem !== null ? '?pasta=' . $origem : ''));
+            return;
+        }
+
+        foreach ($removidas as $midia) {
+            $this->removerArquivoDaMidia($midia);
+        }
+
+        flashSucesso(count($removidas) === 1 ? '1 mídia removida.' : count($removidas) . ' mídias removidas.');
+        $this->redirecionar('midia/index' . ($origem !== null ? '?pasta=' . $origem : ''));
+    }
+
+    /**
+     * Identificadores marcados na tela, ou null depois de avisar e
+     * redirecionar quando a lista esta' vazia ou passa do teto.
+     */
+    private function idsDoLoteOuVolta($origem)
+    {
+        $ids = MidiaRepository::idsDoFormulario(isset($_POST['ids']) ? $_POST['ids'] : []);
+        $destino = 'midia/index' . ($origem !== null ? '?pasta=' . $origem : '');
+
+        if ($ids === []) {
+            flashAlerta('Marque pelo menos uma mídia.');
+            $this->redirecionar($destino);
+            return null;
+        }
+
+        if (count($ids) > self::LIMITE_LOTE) {
+            flashAlerta('Marque no máximo ' . self::LIMITE_LOTE . ' mídias por vez.');
+            $this->redirecionar($destino);
+            return null;
+        }
+
+        return $ids;
+    }
+
+    /**
+     * So' apaga arquivo enviado pela Biblioteca (assets/uploads): a arte
+     * padrao do certificado e' registrada como midia apontando para um
+     * arquivo do proprio sistema, que nunca pode ser apagado daqui.
+     */
+    private function removerArquivoDaMidia(array $midia)
+    {
+        if (strpos((string) $midia['arquivo_path'], 'uploads/') !== 0) {
+            return;
+        }
+
+        if ($midia['tipo'] === 'imagem') {
+            $this->imagens->remover($midia['arquivo_path']);
+        } else {
+            $this->arquivos->remover($midia['arquivo_path']);
+        }
     }
 
     private function salvarNovo()

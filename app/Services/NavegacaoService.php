@@ -70,6 +70,7 @@ class NavegacaoService
             ['tipo' => 'configuracaoBanners', 'rotulo' => 'Faixas', 'rota' => 'banners/index'],
             ['tipo' => 'configuracaoBlocos', 'rotulo' => 'Blocos de conteúdo', 'rota' => 'blocos/index'],
             ['tipo' => 'configuracaoContato', 'rotulo' => 'Contato', 'rota' => 'contatosConcurso/index'],
+            ['tipo' => 'configuracaoTextosAvisos', 'rotulo' => 'Textos dos avisos do Evento', 'rota' => 'textosAvisoEvento/index'],
             ['tipo' => 'configuracaoOrdenacao', 'rotulo' => 'Ordenação', 'rota' => 'ordenacaoHome/index'],
             // Fase 35: o emoji entra no proprio rotulo - layout.php passa por
             // htmlspecialchars(), que nao interfere, entao nao foi preciso
@@ -89,8 +90,10 @@ class NavegacaoService
          * Concurso e Evento passaram a ter paginas publicas totalmente
          * separadas, sem integracao cruzada. No lugar entraram Cabecalho/
          * Slideshow/Faixas/Blocos de conteudo, proprios de cada evento.
-         * Certificado/Comunicacao continuam para as fases seguintes do
-         * plano.
+         * Comunicacao entrou na propria Fase 50. Fase 59: Certificados
+         * entrou como FILHO DE ARVORE do Evento (ver noCertificados()), e
+         * nao como sub-aba daqui, porque tem telas de trabalho proprias
+         * (quem tem direito, emitidos, apresentacoes e configuracoes).
          */
         'evento' => [
             ['tipo' => 'evento', 'rotulo' => 'Dados Gerais', 'rota' => 'eventos/editar'],
@@ -107,6 +110,7 @@ class NavegacaoService
             ['tipo' => 'atividadeTipos', 'rotulo' => 'Tipos de atividade', 'rota' => 'atividadeTipos/index'],
             ['tipo' => 'eventoFormulario', 'rotulo' => 'Formulário de inscrição', 'rota' => 'eventoFormulario/index'],
             ['tipo' => 'eventoInscritos', 'rotulo' => 'Inscritos', 'rota' => 'eventos/inscritos'],
+            ['tipo' => 'eventoConferirCracha', 'rotulo' => 'Conferir crachá', 'rota' => 'eventos/conferirCracha'],
             // Fase 48 (correcao pos-teste de fumaca): perfis da equipe de
             // organizacao (Instrutor, Professor, ...), usados ao vincular
             // um Facilitador de Atividade.
@@ -115,10 +119,15 @@ class NavegacaoService
         ],
         /**
          * Fase 46: abas de uma Atividade especifica (filha de arvore do
-         * Evento, mesmo desenho de 'etapa' dentro de 'trilha'). Certificado
-         * fica de fora ate' a Fase 59 chegar - mesmo criterio ja' usado para
-         * Certificado do proprio Evento (numeracao vigente das fases). "Presencas"
+         * Evento, mesmo desenho de 'etapa' dentro de 'trilha'). "Presencas"
          * (Fase 47) reaproveita o codigo fixo da atividade gerado na Fase 46.
+         *
+         * Fase 59: a atividade continua SEM aba de certificado, e isso agora
+         * e' decisao e nao espera. O certificado por atividade nao tem tela
+         * propria aqui: o texto e' um so' para todas as atividades (em
+         * Certificados, Configuracoes, com as palavras chave da atividade), e
+         * o que a atividade decide por conta propria sao duas marcas no
+         * cadastro dela, "Emite certificado" e o plano de fundo.
          */
         'atividade' => [
             ['tipo' => 'atividade', 'rotulo' => 'Dados Gerais', 'rota' => 'atividades/editar'],
@@ -136,18 +145,14 @@ class NavegacaoService
          */
         'trabalhos' => [
             ['tipo' => 'trabalhos', 'rotulo' => 'Configurações', 'rota' => 'trabalhos/index'],
-            // Achado do usuário (19/09/2026 revisão de fumaça): eixos e
-            // naturezas viviam dentro de Configurações, mas são catálogos
-            // próprios (mesmo status de Critérios) - ganharam aba própria.
+            // Eixos e naturezas sao catalogos proprios, com aba propria, como Criterios.
             ['tipo' => 'trabalhosEixos', 'rotulo' => 'Eixos temáticos', 'rota' => 'trabalhos/eixos'],
             ['tipo' => 'trabalhosNaturezas', 'rotulo' => 'Naturezas do trabalho', 'rota' => 'trabalhos/naturezas'],
             // Fase 51: declaracoes que o autor aceita ao submeter, por evento.
             ['tipo' => 'trabalhosTermos', 'rotulo' => 'Declarações', 'rota' => 'trabalhos/termos'],
             ['tipo' => 'trabalhosCriterios', 'rotulo' => 'Critérios de avaliação', 'rota' => 'trabalhos/criterios'],
-            // Fase 49B (achado do usuário): regra de desempate não tem
-            // relação direta com critério de nota (é sobre COMO decidir
-            // entre dois trabalhos empatados, não sobre O QUE é avaliado)
-            // - ganhou aba própria para não poluir "Critérios de avaliação".
+            // Regra de desempate em aba propria: decide COMO desempatar dois trabalhos,
+            // nao O QUE e' avaliado.
             ['tipo' => 'trabalhosDesempate', 'rotulo' => 'Regras de desempate', 'rota' => 'trabalhos/desempate'],
             ['tipo' => 'trabalhosAvaliadores', 'rotulo' => 'Avaliadores', 'rota' => 'trabalhos/avaliadores'],
             ['tipo' => 'trabalhosRecebidos', 'rotulo' => 'Trabalhos recebidos', 'rota' => 'trabalhos/recebidos'],
@@ -185,6 +190,9 @@ class NavegacaoService
          */
         'divulgacao' => [
             ['tipo' => 'divulgacao', 'rotulo' => 'Divulgação', 'rota' => 'divulgacao/index'],
+            // Fase 58: a lista nominal saiu do acompanhamento e virou aba
+            // propria, com filtros, selecao e operacoes em lote.
+            ['tipo' => 'divulgacaoComprovacoes', 'rotulo' => 'Comprovações', 'rota' => 'divulgacao/comprovacoes'],
             ['tipo' => 'divulgacaoConfiguracoes', 'rotulo' => 'Configurações', 'rota' => 'divulgacao/configuracoes'],
         ],
         /**
@@ -206,6 +214,38 @@ class NavegacaoService
             ['tipo' => 'pesquisa', 'rotulo' => 'Resultado', 'rota' => 'pesquisa/index'],
             ['tipo' => 'pesquisaPerguntas', 'rotulo' => 'Perguntas', 'rota' => 'pesquisa/perguntas'],
             ['tipo' => 'pesquisaConfiguracoes', 'rotulo' => 'Configurações', 'rota' => 'pesquisa/configuracoes'],
+        ],
+        /**
+         * Fase 58: no unico "Competicoes" do Evento (sem no por competicao,
+         * como Estandes): a dinamica de pontos v2 pontua a participacao, sem
+         * resultado nem vencedor, entao o no por competicao com abas Regras e
+         * Resultado do plano mestre perdeu a razao de ser.
+         */
+        'competicoes' => [
+            ['tipo' => 'competicoes', 'rotulo' => 'Competições', 'rota' => 'competicoes/index'],
+            ['tipo' => 'competicoesParticipacoes', 'rotulo' => 'Participações', 'rota' => 'competicoes/participacoes'],
+        ],
+        /**
+         * Fase 58: no "Gamificacao" do Evento. A primeira aba e' a
+         * classificacao geral, que soma todas as origens de pontos.
+         */
+        /**
+         * Fase 59: Certificados. "Apresentações" (a marca de trabalho
+         * efetivamente apresentado) fica aqui, e não em Trabalhos, porque a
+         * marca existe para o certificado de apresentação e não tem outro
+         * consumidor.
+         */
+        'certificados' => [
+            ['tipo' => 'certificados', 'rotulo' => 'Quem tem direito', 'rota' => 'certificados/index'],
+            ['tipo' => 'certificadosEmitidos', 'rotulo' => 'Emitidos', 'rota' => 'certificados/emitidos'],
+            ['tipo' => 'certificadosApresentacoes', 'rotulo' => 'Apresentações', 'rota' => 'certificados/apresentacoes'],
+            ['tipo' => 'certificadosConfiguracoes', 'rotulo' => 'Configurações', 'rota' => 'certificados/configuracoes'],
+        ],
+        'gamificacao' => [
+            ['tipo' => 'gamificacao', 'rotulo' => 'Classificação', 'rota' => 'gamificacao/index'],
+            ['tipo' => 'gamificacaoCredenciamento', 'rotulo' => 'Credenciamento', 'rota' => 'gamificacao/credenciamento'],
+            ['tipo' => 'gamificacaoDesempate', 'rotulo' => 'Desempate', 'rota' => 'gamificacao/desempate'],
+            ['tipo' => 'gamificacaoConfiguracoes', 'rotulo' => 'Configurações', 'rota' => 'gamificacao/configuracoes'],
         ],
         /**
          * Fase 33: "Meu perfil" passa a usar as mesmas sub-abas das demais
@@ -254,6 +294,7 @@ class NavegacaoService
         'configuracaoBanners' => 'configuracao',
         'configuracaoBlocos' => 'configuracao',
         'configuracaoContato' => 'configuracao',
+        'configuracaoTextosAvisos' => 'configuracao',
         'configuracaoOrdenacao' => 'configuracao',
         'configuracaoSeguranca' => 'configuracao',
         'perfilDados' => 'perfil',
@@ -270,6 +311,7 @@ class NavegacaoService
         'atividadeTipos' => 'evento',
         'eventoFormulario' => 'evento',
         'eventoInscritos' => 'evento',
+        'eventoConferirCracha' => 'evento',
         'eventoPerfis' => 'evento',
         'eventoComunicacao' => 'evento',
         'atividade' => 'atividade',
@@ -293,6 +335,7 @@ class NavegacaoService
         'conexoes' => 'conexoes',
         'conexoesConfiguracoes' => 'conexoes',
         'divulgacao' => 'divulgacao',
+        'divulgacaoComprovacoes' => 'divulgacao',
         'divulgacaoConfiguracoes' => 'divulgacao',
         'bonus' => 'bonus',
         'bonusAcompanhamento' => 'bonus',
@@ -300,6 +343,17 @@ class NavegacaoService
         'pesquisa' => 'pesquisa',
         'pesquisaPerguntas' => 'pesquisa',
         'pesquisaConfiguracoes' => 'pesquisa',
+        'competicoes' => 'competicoes',
+        'competicoesParticipacoes' => 'competicoes',
+        'gamificacao' => 'gamificacao',
+        'gamificacaoCredenciamento' => 'gamificacao',
+        'gamificacaoDesempate' => 'gamificacao',
+        'gamificacaoConfiguracoes' => 'gamificacao',
+        // Fase 59
+        'certificados' => 'certificados',
+        'certificadosEmitidos' => 'certificados',
+        'certificadosApresentacoes' => 'certificados',
+        'certificadosConfiguracoes' => 'certificados',
     ];
 
     /**
@@ -509,6 +563,39 @@ class NavegacaoService
             return [self::noEvento($evento), self::noPesquisa($evento)];
         }
 
+        // Fase 58: 'competicoes' e 'gamificacao' seguem o mesmo criterio ($id
+        // = id do evento).
+        if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'competicoes') {
+            $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+            if ($evento === null) {
+                return [];
+            }
+
+            return [self::noEvento($evento), self::noCompeticoes($evento)];
+        }
+
+        if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'gamificacao') {
+            $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+            if ($evento === null) {
+                return [];
+            }
+
+            return [self::noEvento($evento), self::noGamificacao($evento)];
+        }
+
+        // Fase 59: 'certificados' segue o mesmo criterio ($id = id do evento).
+        if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'certificados') {
+            $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+            if ($evento === null) {
+                return [];
+            }
+
+            return [self::noEvento($evento), self::noCertificados($evento)];
+        }
+
         if (isset(self::$grupoPorTipo[$tipo]) && self::$grupoPorTipo[$tipo] === 'atividade') {
             $atividade = (new EventoAtividadeRepository())->buscarPorId($id);
 
@@ -639,8 +726,9 @@ class NavegacaoService
 
                 // Fase 49: Trabalhos entra como irmao de Atividades. Fase
                 // 54: Estandes, do mesmo jeito. Fase 55: Conexoes. Fase 56:
-                // Divulgacao. Fase 57: Bonus e Pesquisa. Competicoes entra
-                // aqui numa fase seguinte do plano.
+                // Divulgacao. Fase 57: Bonus e Pesquisa. Fase 58: Competicoes
+                // e Gamificacao. Fase 59: Certificados, por ultimo, que e' a
+                // ordem do que acontece: o certificado e' o fim do evento.
                 return [
                     self::noAtividades($evento),
                     self::noTrabalhos($evento),
@@ -649,6 +737,9 @@ class NavegacaoService
                     self::noDivulgacao($evento),
                     self::noBonus($evento),
                     self::noPesquisa($evento),
+                    self::noCompeticoes($evento),
+                    self::noGamificacao($evento),
+                    self::noCertificados($evento),
                 ];
 
             case 'atividades':
@@ -1019,6 +1110,47 @@ class NavegacaoService
             'rotulo' => 'Pesquisa',
             'folha' => true,
             'url' => 'pesquisa/index/' . (int) $evento['id'],
+        ];
+    }
+
+    /**
+     * Fase 58: mesmo formato de noPesquisa() - no unico, sem filhos, id =
+     * id do EVENTO.
+     */
+    private static function noCompeticoes(array $evento)
+    {
+        return [
+            'tipo' => 'competicoes',
+            'id' => (int) $evento['id'],
+            'rotulo' => 'Competições',
+            'folha' => true,
+            'url' => 'competicoes/index/' . (int) $evento['id'],
+        ];
+    }
+
+    private static function noGamificacao(array $evento)
+    {
+        return [
+            'tipo' => 'gamificacao',
+            'id' => (int) $evento['id'],
+            'rotulo' => 'Gamificação',
+            'folha' => true,
+            'url' => 'gamificacao/index/' . (int) $evento['id'],
+        ];
+    }
+
+    /**
+     * Fase 59: mesmo formato de noGamificacao() - no unico, sem filhos, id =
+     * id do EVENTO.
+     */
+    private static function noCertificados(array $evento)
+    {
+        return [
+            'tipo' => 'certificados',
+            'id' => (int) $evento['id'],
+            'rotulo' => 'Certificados',
+            'folha' => true,
+            'url' => 'certificados/index/' . (int) $evento['id'],
         ];
     }
 }

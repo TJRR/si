@@ -130,7 +130,7 @@ class EventoInscricaoRepository
             'usuario_id' => $usuarioId,
             'respostas_json' => json_encode($respostas),
             'homologado_em' => $modoCredenciamento === 'automatico' ? date('Y-m-d H:i:s') : null,
-            'codigo_credenciamento' => $this->gerarCodigoCredenciamentoUnico(),
+            'codigo_credenciamento' => null,
         ];
 
         $pdo = Database::conexao();
@@ -138,12 +138,36 @@ class EventoInscricaoRepository
             'INSERT INTO evento_inscricoes (evento_id, usuario_id, respostas_json, homologado_em, codigo_credenciamento)
              VALUES (:evento_id, :usuario_id, :respostas_json, :homologado_em, :codigo_credenciamento)'
         );
-        $stmt->execute($campos);
-        $id = (int) $pdo->lastInsertId();
 
-        Auditoria::registrar('inscrever', 'evento_inscricoes', $id, null, $campos);
+        // Duas chaves unicas podem recusar este INSERT: (evento_id, usuario_id),
+        // quando outro clique inscreveu a mesma pessoa, e o codigo de
+        // credenciamento, quando dois sorteios simultaneos coincidem. So' a
+        // segunda justifica sortear de novo.
+        for ($tentativa = 1; $tentativa <= 3; $tentativa++) {
+            $campos['codigo_credenciamento'] = $this->gerarCodigoCredenciamentoUnico();
 
-        return true;
+            try {
+                $stmt->execute($campos);
+            } catch (\PDOException $e) {
+                if ($e->getCode() !== '23000' || !isset($e->errorInfo[1]) || (int) $e->errorInfo[1] !== 1062) {
+                    throw $e;
+                }
+
+                if ($this->estaInscrito($eventoId, $usuarioId)) {
+                    return false;
+                }
+
+                continue;
+            }
+
+            $id = (int) $pdo->lastInsertId();
+
+            Auditoria::registrar('inscrever', 'evento_inscricoes', $id, null, $campos);
+
+            return true;
+        }
+
+        throw new \RuntimeException('Não foi possível concluir a inscrição agora. Tente de novo em instantes.');
     }
 
     /**
@@ -161,11 +185,8 @@ class EventoInscricaoRepository
     }
 
     /**
-     * Fase 43: busca de uma inscricao pelo codigo de credenciamento lido
-     * (QR ou digitacao manual) - SEMPRE restrita ao evento do LEITOR, nunca
-     * uma busca global. Isso, por si so', garante que um codigo de outro
-     * evento simplesmente "nao e' encontrado", sem precisar de nenhuma
-     * logica extra para nao vazar a existencia dele.
+     * Busca uma inscricao pelo codigo de credenciamento, sempre restrita ao
+     * evento informado.
      */
     public function buscarPorCodigo($eventoId, $codigo)
     {

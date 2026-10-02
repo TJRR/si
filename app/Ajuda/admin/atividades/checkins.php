@@ -24,12 +24,20 @@ return [
         ],
         [
             'nome' => 'O que acontece com os bônus',
-            'como' => 'Na hora da remoção, o sistema confere os bônus daquela pessoa e anula os que perderam a quantidade exigida, avisando ela pelo sino. Essa anulação é do sistema, e por isso é desfeita sozinha: se a pessoa confirmar presença de novo naquela atividade, o bônus volta.',
-            'observacao' => 'Anulação feita à mão pelo Administrador, na tela de Bônus, é diferente: aquela nunca volta sozinha.',
+            'como' => 'Na hora da remoção, o sistema anula os pontos da própria presença e confere os bônus daquela pessoa, anulando os que perderam a quantidade exigida, com aviso pelo sino. Essa anulação é do sistema, e por isso é desfeita sozinha quando a presença volta.',
+            'observacao' => 'Anulação feita à mão pelo Administrador, na tela de Bônus, é diferente: aquela nunca volta sozinha. Depois do encerramento da gincana, a presença pode ser removida, mas os pontos não se movem.',
+        ],
+        [
+            'nome' => 'Restaurar presença',
+            'como' => 'Desfaz a remoção com o horário original da leitura e devolve os pontos da presença e os bônus anulados por ela. É o caminho de volta depois do fim da atividade, quando o aplicativo já não aceita a leitura.',
         ],
         [
             'nome' => 'Confirmar presença de novo',
-            'como' => 'Quem teve a presença removida continua podendo confirmar presença naquela atividade pelo aplicativo, e o registro volta com o horário da leitura nova.',
+            'como' => 'Antes do fim da atividade, quem teve a presença removida também pode confirmar presença de novo pelo aplicativo. O registro volta com o horário da leitura nova, e os pontos são recalculados por ela.',
+        ],
+        [
+            'nome' => 'Coluna Pontos',
+            'como' => 'Pontos de presença e o extra de pontualidade de cada confirmação, congelados no momento da leitura, com quantos minutos antes ou depois do início ela aconteceu e quantos minutos o extra exigia. "Sem pontos" quando a atividade não pontuava, quando a pessoa é facilitadora da atividade ou quando a leitura foi depois do encerramento da gincana.',
         ],
     ],
     'conceitos' => ['permissao_suporte_admin'],

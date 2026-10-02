@@ -7,29 +7,29 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Minha inscrição',
-    'resumo' => 'Tela central do participante: equipe, trilha, tema/desafio escolhido, integrantes com situação de homologação, e as etapas de submissão já liberadas para a equipe.',
+    'resumo' => 'Esta é a tela principal da sua participação no concurso. Ela mostra a equipe, a trilha, o tema e o desafio escolhidos, os integrantes com a situação de cada um e as etapas de envio já abertas para a equipe. É daqui que você chega a todas as outras telas.',
     'operacoes' => [
         [
-            'nome' => 'Mentoria / Oficinas / Dúvidas / Requerimentos',
-            'como' => 'Botões condicionais: só aparecem quando aquele recurso está disponível para a sua trilha/etapa atual. Os botões de Mentoria e Oficinas levam em conta o vínculo com etapa: se todos os horários do concurso forem restritos a etapas em que a sua equipe não está habilitada, o botão não aparece (em vez de abrir uma tela vazia).',
+            'nome' => 'Mentoria, Oficinas, Dúvidas e Requerimentos',
+            'como' => 'Os botões aparecem só quando o recurso está disponível para a sua trilha e etapa. Se todos os horários de mentoria ou de oficina forem de uma etapa em que a sua equipe não está, o botão não aparece, em vez de abrir uma tela vazia.',
         ],
         [
             'nome' => 'Editar equipe',
-            'como' => 'Só disponível para o líder.',
+            'como' => 'Só o líder vê este botão. Ele leva aos dados gerais da equipe.',
         ],
         [
             'nome' => 'Editar integrante',
-            'como' => 'Cada integrante só edita a si mesmo (inclusive o líder); bloqueado no servidor, com acesso negado, se tentar editar outro.',
+            'como' => 'Cada pessoa edita só os próprios dados, inclusive o líder.',
         ],
         [
-            'nome' => 'Incluir e-mail / Promover / Excluir integrante',
-            'como' => 'Só o líder, sempre com confirmação para ações que mudam a equipe.',
-            'observacao' => 'Não é possível excluir o líder, nem reduzir a equipe abaixo de 2 integrantes.',
+            'nome' => 'Incluir e-mail, promover a líder e excluir integrante',
+            'como' => 'Só o líder faz essas mudanças na equipe, e cada uma pede confirmação antes de valer.',
+            'observacao' => 'O líder não pode ser excluído, e a equipe não pode ficar com menos de 2 integrantes.',
         ],
         [
-            'nome' => 'Preencher / Ver notas e comentário',
-            'como' => 'Por etapa: "Preencher" leva ao formulário de submissão; "Ver notas e comentário" só aparece depois que o resultado da etapa é publicado.',
-            'observacao' => 'Uma etapa só aparece se a equipe estiver homologada. Cada etapa pode estar bloqueada por um motivo próprio: fora do prazo, ou equipe não classificada na etapa anterior.',
+            'nome' => 'Preencher e ver notas',
+            'como' => 'Para cada etapa aberta: "Preencher" leva ao formulário de envio da etapa; "Ver notas e comentário" aparece depois que a organização publica o resultado daquela etapa.',
+            'observacao' => 'As etapas só aparecem para equipe homologada. Uma etapa pode estar fechada por estar fora do prazo ou porque a equipe não foi classificada na etapa anterior; o motivo aparece ao lado dela.',
         ],
     ],
     'conceitos' => ['cadastro_pendente_aprovacao'],

@@ -22,7 +22,7 @@
             Ativar as conexões neste evento
         </label>
         <p style="color:#555;font-size:0.9em;">
-            Com as conexões desativadas, o aplicativo não oferece a leitura de crachá entre participantes e
+            Com as conexões desativadas, o aplicativo não oferece a leitura do código entre participantes e
             nenhuma conexão nova é registrada. As conexões já registradas continuam visíveis para quem as fez.
         </p>
 
@@ -30,7 +30,8 @@
             <input type="number" name="pontos_por_conexao" min="0" max="65535" value="<?php echo (int) $config['pontos_por_conexao']; ?>">
         </label>
         <p style="color:#555;font-size:0.9em;">
-            Quanto cada uma das duas pessoas ganha quando uma lê o crachá da outra. Com zero, a conexão é
+            Quanto cada uma das duas pessoas ganha quando uma lê o código da outra, na tela do aplicativo ou no
+            crachá. Com zero, a conexão é
             registrada e aparece na lista das duas, mas sem creditar ponto nenhum: serve para o evento que quer
             a lista de contatos sem a disputa de pontos. Para não registrar nada, desative as conexões acima.
         </p>

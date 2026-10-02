@@ -85,9 +85,7 @@ class SubmissaoController extends Controller
 
         $submissao = (new SubmissaoRepository())->buscarPorId($submissaoId);
 
-        // Fase 31 (Auditoria de Seguranca, achado #13): confirma que a
-        // submissao pertence a equipe do participante autenticado, mesmo
-        // padrao ja usado em ParticipanteController::verFeedback().
+        // A submissao precisa ser da equipe de quem pede.
         $participantes = (new UsuarioParticipanteRepository())->participantesDoUsuario(Auth::usuarioId());
         $equipe = !empty($participantes) ? (new EquipeRepository())->buscarPorParticipante($participantes[0]['id']) : null;
 

@@ -55,14 +55,8 @@
         </form>
 
         <?php
-        // Fase 31 (melhoria pos-auditoria, correcao): nao existe coluna
-        // nenhuma tipo "pdf sem assinatura ja gerado" - o registro so' entra
-        // em status aguardando_assinatura no mesmo INSERT que ja gera e
-        // transmite o PDF (RequerimentoController::gerarPdf()). Ou seja,
-        // toda vez que esta secao aparece, um PDF ja foi gerado antes -
-        // esconder o bloco de envio por padrao (tentativa anterior, corrigida
-        // aqui) escondia algo que deveria estar sempre visivel numa
-        // revisita, inclusive dias depois.
+        // Toda vez que esta secao aparece, um PDF ja foi gerado antes: o bloco de
+        // envio fica sempre visivel, inclusive numa revisita dias depois.
         ?>
         <p style="margin-top:1rem;">Depois de assinar no gov.br, envie o documento assinado abaixo.</p>
         <form method="post" action="<?php echo url('requerimento/enviarAssinado/' . (int) $requerimento['id']); ?>" enctype="multipart/form-data"><?= campoCsrf() ?>

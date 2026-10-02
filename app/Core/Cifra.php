@@ -8,33 +8,8 @@ if (!defined('SI_BOOT')) {
 }
 
 /**
- * Fase 35 (Parte C): cifragem simetrica das credenciais guardadas em
- * credenciais_sistema (migration 115). Desenho copiado do modulo GPI
- * (MdGPICifragemUtil), com duas diferencas deliberadas:
- *
- * 1. A chave-mestra vem de config/local.php, nao de variavel de ambiente.
- *    Este projeto nao tem acesso ao servidor - toda configuracao passa por
- *    um guia que outra pessoa executa, e variavel de ambiente e' um passo a
- *    mais que precisa ser refeito a cada reinstalacao e some sem avisar.
- *    O config/local.php precisa existir de qualquer jeito (a senha do banco
- *    nao pode vir do banco), entao a chave-mestra nao acrescenta arquivo
- *    nenhum ao que ja existe.
- *
- * 2. impressaoDigital() no lugar da mascara com asteriscos. Mascarar os
- *    ultimos caracteres de uma chave PEM mostra o rodape "EY-----", que e'
- *    identico em qualquer chave do mundo e nao identifica coisa alguma. O
- *    resumo criptografico identifica QUAL chave esta instalada sem revelar
- *    nenhum byte dela.
- *
- * O que isso protege: vazamento ISOLADO do banco (arquivo de exportacao,
- * copia de seguranca, replica) - a chave-mestra nao esta la'. O que NAO
- * protege: comprometimento total do servidor de aplicacao, onde o arquivo
- * e o banco estao ambos ao alcance do mesmo processo.
- *
- * ATENCAO: trocar a chave-mestra torna ILEGIVEL tudo que ja foi guardado.
- * Nao existe rotacao automatica de proposito (decisao da Fase 35): sao tres
- * segredos ao todo, entao o procedimento e' trocar a chave e recadastra-los
- * pela tela. Ver NotasInternas.md.
+ * Cifragem simetrica das credenciais de integracao guardadas no banco.
+ * Ver Implantar.md, secao 13.6.
  */
 class Cifra
 {
@@ -78,9 +53,7 @@ class Cifra
 
     /**
      * Devolve o texto claro, ou null quando nao ha chave-mestra, quando o
-     * conteudo esta corrompido, ou quando a chave-mestra e' outra. O modo
-     * autenticado (a etiqueta do GCM) detecta os tres casos sozinho - e' por
-     * isso que a tela consegue dizer "recadastre" em vez de devolver lixo.
+     * conteudo esta corrompido ou quando a chave-mestra e' outra.
      */
     public static function decifrar($valorCifrado)
     {
@@ -110,11 +83,9 @@ class Cifra
     }
 
     /**
-     * Identifica um segredo sem revelar nada dele: 16 primeiros digitos
-     * hexadecimais do resumo SHA-256. Serve pra responder "e' a mesma chave
-     * de antes?" e "desenvolvimento e producao estao com a mesma chave?" -
-     * basta comparar a linha das duas telas. E' a mesma ideia do digito
-     * verificador de uma conta: confere sem expor.
+     * Identifica um segredo sem revelar nada dele: os 16 primeiros digitos
+     * hexadecimais do resumo SHA-256, para conferir se duas instalacoes usam a
+     * mesma credencial.
      */
     public static function impressaoDigital($valorClaro)
     {

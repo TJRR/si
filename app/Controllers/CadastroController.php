@@ -25,21 +25,13 @@ class CadastroController extends Controller
             if ($nome === '' || $email === '' || $senha === '') {
                 $erro = 'Preencha nome, e-mail e senha.';
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                // Fase 57 (reabertura): formato do e-mail e tamanho da senha
-                // conferidos no servidor, antes de chegar ao servico: a
-                // recusa nao depende de o e-mail ja' ter conta, entao nao
-                // abre o canal de enumeracao fechado logo abaixo. A regra da
+                // Formato do e-mail e tamanho da senha conferidos no servidor; a regra da
                 // senha e' a mesma de AuthController::definirSenha().
                 $erro = 'Informe um e-mail válido.';
             } elseif (strlen($senha) < 8) {
                 $erro = 'A senha deve ter ao menos 8 caracteres.';
             } else {
-                // Fase 31 (Auditoria de Seguranca, achado #10): mensagem de
-                // sucesso e' sempre a mesma, exista ou nao o e-mail antes -
-                // AuthService::cadastrar() continua recusando duplicidade
-                // internamente (nunca cria conta repetida), so' nao revela
-                // isso pra quem preenche o formulario (evita enumeracao de
-                // contas cadastradas).
+                // Mensagem de sucesso unica: ver Implantar.md, secao 13.6.
                 (new AuthService())->cadastrar($nome, $email, $senha);
                 $sucesso = 'Cadastro recebido. Se este e-mail ainda não tinha conta, aguarde a aprovação do Administrador para acessar o sistema.';
             }

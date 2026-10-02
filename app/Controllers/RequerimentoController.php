@@ -183,7 +183,7 @@ class RequerimentoController extends Controller
 
         $this->requerimentos->descartar($id);
 
-        $_SESSION['flash'] = 'Rascunho descartado.';
+        flashSucesso('Rascunho descartado.');
         $this->redirecionar('requerimento/index');
     }
 
@@ -228,7 +228,7 @@ class RequerimentoController extends Controller
         $this->requerimentos->marcarEnviado($id, $caminho, $_FILES['pdf_assinado']['name']);
         $this->notificarAdministradoresNovoRequerimento($this->requerimentos->buscarPorId($id));
 
-        $_SESSION['flash'] = 'Documento assinado enviado. Seu pedido entrou para análise.';
+        flashSucesso('Documento assinado enviado. Seu pedido entrou para análise.');
         $this->redirecionar('requerimento/ver/' . $id);
     }
 

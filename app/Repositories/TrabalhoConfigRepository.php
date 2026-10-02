@@ -39,6 +39,19 @@ class TrabalhoConfigRepository
      * serializando qualquer submissao/checagem de duplicidade concorrente
      * daquele evento.
      */
+    /**
+     * Casas decimais do resultado de Trabalhos (0 a 4). Duas quando o evento
+     * ainda nao tem configuracao ou a migration 203 ainda nao rodou.
+     */
+    public static function casasDecimais($config)
+    {
+        if ($config === null || !isset($config['casas_decimais'])) {
+            return 2;
+        }
+
+        return max(0, min(4, (int) $config['casas_decimais']));
+    }
+
     public function buscarPorEventoParaAtualizar($eventoId)
     {
         $pdo = Database::conexao();
@@ -63,7 +76,7 @@ class TrabalhoConfigRepository
         $campos = [
             'data_abertura_submissao', 'data_fim_submissao', 'data_inicio_avaliacao', 'data_fim_avaliacao',
             'quantidade_maxima_autores', 'permite_multiplos_trabalhos_por_pessoa',
-            'quantidade_avaliadores_por_trabalho', 'sigilo_cego', 'metodo_agregacao_nota',
+            'quantidade_avaliadores_por_trabalho', 'sigilo_cego', 'metodo_agregacao_nota', 'casas_decimais',
             'metodos_submissao_json', 'extensoes_editavel_json', 'tamanho_maximo_mb',
             'exige_telefone_contato', 'nota_corte_aprovacao', 'regra_selecao_tipo',
             'regra_selecao_valor', 'status',

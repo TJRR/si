@@ -12,17 +12,9 @@ use App\Core\Database;
 use App\Repositories\ConexaoRepository;
 
 /**
- * Fase 55: regra de negocio da conexao entre dois participantes do mesmo
- * Evento. Fica fora do controlador porque a gravacao precisa de transacao
- * propria, e fora do repositorio porque a transacao cobre contagem e
- * gravacao juntas.
- *
- * A ordem das recusas e a distincao entre "erro de leitura" e "restricao
- * legitima" seguem o molde de EventoAppController::validarEstande() (Fase
- * 54): so' codigo inexistente conta no limite de tentativas; modulo
- * desligado, fora da janela, autoleitura, inscricao pendente de homologacao
- * e dupla ja conectada sao respostas normais do sistema, nao engano de quem
- * esta lendo.
+ * Regra de negocio da conexao entre dois participantes do mesmo Evento.
+ * Fica fora do controlador porque a gravacao precisa de transacao propria,
+ * e fora do repositorio porque a transacao cobre contagem e gravacao juntas.
  */
 class ConexaoService
 {
@@ -89,6 +81,14 @@ class ConexaoService
 
             $pontosMenor = $this->pontosParaLado($menor, $config);
             $pontosMaior = $this->pontosParaLado($maior, $config);
+
+            // Fase 58: depois do encerramento da gincana a conexao continua
+            // sendo registrada (ela vale como contato entre as pessoas), mas
+            // nao pontua para nenhum dos lados.
+            if (GamificacaoService::encerrada((int) $evento['id'])) {
+                $pontosMenor = 0;
+                $pontosMaior = 0;
+            }
 
             $id = $this->conexoes->inserirNaTransacaoAtual(
                 (int) $evento['id'],

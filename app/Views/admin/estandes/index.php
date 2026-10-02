@@ -14,13 +14,62 @@
 
 <p style="color:#555;font-size:0.9em;">Cada estande tem um código de visita fixo, impresso no cartaz. O participante lê esse código no aplicativo do evento e ganha os pontos da visita, uma vez por estande. A lista pública aparece na página do evento quando o componente "Estandes" é acrescentado em Seções da página.</p>
 
+<?php
+$parametrosFiltro = array_filter($filtros, function ($valor) {
+    return $valor !== '' && $valor !== null;
+});
+?>
+<div class="filtros-barra-wrapper">
+    <form method="get" action="<?php echo config('base_path'); ?>/index.php" class="filtros-barra">
+        <input type="hidden" name="r" value="estandes/index/<?php echo (int) $evento['id']; ?>">
+        <label class="filtro-busca">Busca:
+            <input type="text" name="busca" placeholder="Nome do estande ou representante" value="<?php echo htmlspecialchars($filtros['busca'], ENT_QUOTES, 'UTF-8'); ?>">
+        </label>
+        <label>Categoria:
+            <select name="categoria">
+                <option value="">Todas</option>
+                <?php foreach (\App\Repositories\EstandeRepository::CATEGORIAS as $chave => $rotulo): ?>
+                    <option value="<?php echo htmlspecialchars($chave, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $filtros['categoria'] === $chave ? ' selected' : ''; ?>><?php echo htmlspecialchars($rotulo, ENT_QUOTES, 'UTF-8'); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <label>Situação:
+            <select name="situacao">
+                <option value="">Todas</option>
+                <option value="ativos"<?php echo $filtros['situacao'] === 'ativos' ? ' selected' : ''; ?>>Ativos</option>
+                <option value="inativos"<?php echo $filtros['situacao'] === 'inativos' ? ' selected' : ''; ?>>Inativos</option>
+            </select>
+        </label>
+        <div class="filtros-barra-acoes">
+            <button type="submit" class="btn-icone" title="Filtrar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+            </button>
+            <a href="<?php echo url('estandes/index/' . (int) $evento['id']); ?>" class="btn-icone" title="Limpar filtros">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+            </a>
+        </div>
+    </form>
+</div>
+
 <?php if (empty($estandes)): ?>
-    <p>Nenhum estande cadastrado ainda.</p>
+    <p>Nenhum estande encontrado<?php echo $parametrosFiltro !== [] ? ' com estes filtros' : ' neste evento ainda'; ?>.</p>
 <?php else: ?>
-    <ul class="reordenar-lista"<?php echo $podeEditar ? ' data-reordenar-rota="estandes/reordenar/' . (int) $evento['id'] . '"' : ''; ?>>
+    <?php /* O arraste é o padrão de ordenação do projeto e vale sobre a lista
+    inteira: com filtro aplicado, ele fica desligado, para não gravar uma ordem
+    tirada de uma lista parcial. */ ?>
+    <?php $podeArrastar = $podeEditar && $parametrosFiltro === []; ?>
+    <?php if ($podeEditar && $parametrosFiltro !== []): ?>
+        <p class="status-pill laranja">Com filtro aplicado, a ordenação por arraste fica desligada. Limpe os filtros para reordenar.</p>
+    <?php endif; ?>
+    <ul class="reordenar-lista"<?php echo $podeArrastar ? ' data-reordenar-rota="estandes/reordenar/' . (int) $evento['id'] . '"' : ''; ?>>
         <?php foreach ($estandes as $indice => $estande): ?>
-        <li class="reordenar-item"<?php echo $podeEditar ? ' draggable="true"' : ''; ?> data-id="<?php echo (int) $estande['id']; ?>">
-            <?php if ($podeEditar): ?>
+        <li class="reordenar-item"<?php echo $podeArrastar ? ' draggable="true"' : ''; ?> data-id="<?php echo (int) $estande['id']; ?>">
+            <?php if ($podeArrastar): ?>
                 <span class="reordenar-alca" aria-hidden="true" title="Arraste para reordenar">⠿</span>
             <?php endif; ?>
             <?php if (!empty($estande['logotipo_path'])): ?>
@@ -69,7 +118,7 @@
                 </form>
                 <?php endif; ?>
             </div>
-            <?php if ($podeEditar): ?>
+            <?php if ($podeArrastar): ?>
             <div class="reordenar-botoes">
                 <button type="button" class="btn-icone" data-mover="cima" aria-label="Mover para cima" <?php echo $indice === 0 ? 'disabled' : ''; ?>>▲</button>
                 <button type="button" class="btn-icone" data-mover="baixo" aria-label="Mover para baixo" <?php echo $indice === count($estandes) - 1 ? 'disabled' : ''; ?>>▼</button>

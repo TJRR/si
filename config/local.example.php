@@ -17,18 +17,9 @@ return [
         'base_path' => '',
         'env' => 'local',
     ],
-    // Fase 35 (Parte C): chave-mestra que cifra as credenciais guardadas em
-    // credenciais_sistema (migration 115). Gere uma com bastante entropia:
-    //
-    //     openssl rand -base64 32
-    //
-    // ATENCAO: trocar esta chave torna ILEGIVEL tudo que ja foi guardado no
-    // banco. Nao ha rotacao automatica de proposito - sao tres segredos ao
-    // todo, entao o procedimento e' trocar a chave e recadastra-los pela aba
-    // "Segurança" (ver NotasInternas.md).
-    //
-    // Vazia = a tela de Segurança avisa que nao consegue ler nem gravar, e o
-    // sistema continua usando os blocos abaixo, sem quebrar nada.
+    // Chave-mestra da cifragem das credenciais guardadas no banco. Gere com
+    // "openssl rand -base64 32". Trocar a chave torna ilegivel o que ja foi
+    // guardado. Ver Implantar.md, secoes 5 e 13.6.
     'cifra' => [
         'chave_mestra' => '',
     ],
@@ -37,32 +28,17 @@ return [
         'client_secret' => 'SEU_CLIENT_SECRET',
         'redirect_uri' => 'http://localhost:8090/index.php?r=auth/googleCallback',
     ],
-    // Fase 31: Service Account com Domain-Wide Delegation, usada para
-    // integrar Mentoria/Oficina com o Google Agenda do organizador (nunca
-    // OAuth individual por admin - ver DeployFase31.md para o setup
-    // completo no Google Cloud/Workspace). Cole private_key entre ASPAS
-    // DUPLAS, exatamente como aparece no campo "private_key" do .json
-    // baixado (com os \n no meio do texto tal como estao) - aspas duplas
-    // fazem o PHP converter cada \n numa quebra de linha real sozinho, sem
-    // precisar reformatar nada na mao. Vazio = integracao com Google
-    // Agenda fica indisponivel, sem quebrar o resto da aplicacao (fail-soft).
-    //
-    // Fase 32: a MESMA credencial passou a ser usada tambem pra ler a
-    // presenca real na sala do Meet - nao ha chave nova, nem campo novo
-    // aqui. O que habilita isso e' externo a este arquivo: ativar a "Google
-    // Meet API" no Google Cloud e autorizar o escopo
-    // meetings.space.readonly no MESMO registro de Delegacao em Todo o
-    // Dominio que ja tem os escopos de calendario (ver DeployFase32.md,
-    // secao 1). Se o escopo nao estiver autorizado, so' a presenca fica
-    // indisponivel - a integracao de agenda continua funcionando normal.
+    // Conta de servico do Google (Agenda e presenca no Meet). Cole private_key
+    // entre aspas duplas, como aparece no arquivo .json baixado, com os \n no
+    // meio do texto. Vazio: a integracao fica indisponivel, sem quebrar o
+    // resto. Ver Implantar.md, secao 13.4.
     'google_service_account' => [
         'client_email' => '',
         'private_key' => '',
         'token_uri' => 'https://oauth2.googleapis.com/token',
     ],
-    // Em producao: preencher 'user'/'pass' com a conta e senha de app do Google Workspace
-    // ja validadas no spike tecnico (smtp.gmail.com:587). Vazio = notificacoes ficam
-    // registradas como 'falhou' sem quebrar o restante da aplicacao.
+    // Conta de envio de e-mail. Vazio: os avisos ficam registrados como
+    // "falhou", sem quebrar o resto.
     'smtp' => [
         'host' => 'smtp.gmail.com',
         'port' => 587,

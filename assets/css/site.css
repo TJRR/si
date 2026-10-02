@@ -1,13 +1,9 @@
-/*
- * Identidade visual baseada no site de referencia do NPI/Inovajurr
- * (https://npi.tjrr.jus.br/4premio/). --cor-primaria-inicio/--cor-primaria-fim
- * sao definidas em tempo de execucao pelo layout.php (vem de
- * configuracoes_visuais, editavel pelo Admin) - os valores abaixo sao so o
- * fallback caso a variavel nao chegue a ser injetada.
+/**
+ * --cor-primaria-inicio/--cor-primaria-fim sao definidas em tempo de
+ * execucao pelo layout.php (configuracoes_visuais, editavel pelo Admin);
+ * os valores abaixo valem so' se a variavel nao chegar a ser injetada.
  * Aplica-se as paginas publicas (site-page) e, num bloco proprio abaixo,
- * ao painel administrativo (body.admin-page) - desktop-first, conforme
- * requisito nao-funcional (nao precisa ser responsivo, mas precisa ter
- * identidade visual).
+ * ao painel administrativo (body.admin-page).
  */
 
 :root {
@@ -6772,4 +6768,137 @@ div.campo-com-erro {
     height: 100%;
     border-radius: 999px;
     transition: width 0.3s ease;
+}
+
+/* ---------------------------------------------------------------------
+ * Fase 59: seletor de plano de fundo do certificado e a galeria que ele
+ * abre na janela sobreposta.
+ *
+ * Classes novas, nenhuma existente alterada: o seletor aparece so' nas
+ * telas de certificado, e a galeria vive dentro de #modal-conteudo, que
+ * ja' tem o enquadramento e o fechamento prontos desde a Fase 17.
+ * --------------------------------------------------------------------- */
+.seletor-fundo {
+    margin: .75rem 0 1rem;
+}
+
+.seletor-fundo-rotulo {
+    font-weight: 600;
+    margin: 0 0 .35rem;
+}
+
+.seletor-fundo-corpo {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+.seletor-fundo-amostra {
+    display: block;
+    width: 148px;
+    height: 105px;
+    border: 1px solid var(--cor-borda, #d4d4d4);
+    border-radius: 6px;
+    background-size: cover;
+    background-position: center;
+    background-color: #fff;
+    flex: 0 0 auto;
+}
+
+.seletor-fundo-acoes {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+
+.seletor-fundo-cor {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+}
+
+.seletor-fundo-texto {
+    color: #555;
+    font-size: .9em;
+}
+
+.galeria-fundo-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: .6rem;
+    max-height: 48vh;
+    overflow-y: auto;
+    padding: .25rem;
+}
+
+.galeria-fundo-item {
+    display: block;
+    width: 100%;
+    background: none;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    padding: .25rem;
+    cursor: pointer;
+    text-align: center;
+}
+
+.galeria-fundo-item img {
+    display: block;
+    width: 100%;
+    height: 92px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.galeria-fundo-item span {
+    display: block;
+    font-size: .8em;
+    color: #444;
+    margin-top: .2rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.galeria-fundo-item.escolhida {
+    border-color: var(--cor-primaria-fim, #2a6f97);
+}
+
+.galeria-fundo-envio {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--cor-borda, #e3e3e3);
+    padding-top: .6rem;
+}
+
+/* Secao "Anais" da pagina do evento (volume publicado e relacao dos selecionados). */
+.evento-anais-volume {
+    margin: 0 0 24px;
+}
+
+.evento-anais-selecionados h4 {
+    margin: 20px 0 8px;
+}
+
+.evento-anais-selecionados ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.evento-anais-selecionados li {
+    margin: 0 0 10px;
+}
+
+/* Foto de quem teve o cracha conferido pela organizacao. */
+.leitor-codigo-foto {
+    display: block;
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin: 12px 0 8px;
 }

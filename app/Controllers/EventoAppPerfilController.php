@@ -18,28 +18,17 @@ use App\Repositories\TokenSenhaRepository;
 use App\Repositories\TrabalhoAutorRepository;
 use App\Repositories\UsuarioPerfilRepository;
 use App\Repositories\UsuarioRepository;
+use App\Services\BonusApuracaoService;
 use App\Services\ImagemService;
 use App\Validation\CpfValidador;
 
 /**
- * Fase 55: "Meu Perfil" DENTRO do aplicativo do Evento, com tres abas -
- * meus dados e o que compartilho, Aparencia (pendencia 18) e Alterar senha.
- * Nasce porque as Conexoes precisam de um lugar em que o participante
- * escolha o que mostra a quem se conectar com ele, e o aplicativo nao tinha
- * nenhum caminho ate' a tela "Meu perfil" do painel administrativo.
+ * "Meu Perfil" dentro do aplicativo do Evento: dados e o que a pessoa
+ * compartilha, Aparencia e Alterar senha.
  *
- * CONTROLADOR PROPRIO, e nao metodos novos em MeuPerfilController, por
- * decisao do dono: aquela tela esta em uso real por todos os perfis,
- * inclusive no caminho de troca de senha, e o precedente do projeto (Fase
- * 54, EstandeRepresentanteConviteService) e' COPIAR a logica de que se
- * precisa em arquivo novo do Evento, nunca reescrever por dentro codigo
- * ativo do Concurso. MeuPerfilController e app/Views/meuPerfil/* ficam
- * intocados. A duplicacao e' proposital e esta registrada na pendencia 25,
- * para ser unificada depois do fim do concurso.
- *
- * Conferencia de posse igual a de EventoAppController: evento existe e a
- * pessoa tem inscricao NELE, com o mesmo redirecionamento neutro nos dois
- * casos de falha.
+ * Controlador proprio, e nao metodos em MeuPerfilController, para nao
+ * tocar codigo em uso pelo Concurso; a duplicacao e' proposital e esta
+ * registrada na pendencia 25.
  */
 class EventoAppPerfilController extends Controller
 {
@@ -76,6 +65,7 @@ class EventoAppPerfilController extends Controller
             $erro = $this->salvarDados($usuario, $valores);
 
             if ($erro === null) {
+                $this->apurarAcoesDoParticipante($contexto['evento'], $contexto['inscricao']);
                 $this->redirecionar('eventoAppPerfil/index/' . (int) $contexto['evento']['id']);
                 return;
             }
@@ -191,13 +181,9 @@ class EventoAppPerfilController extends Controller
         } else {
             $this->usuarios->definirSenha($usuario['id'], password_hash($nova, PASSWORD_DEFAULT));
 
-            // Endereco de "definir senha" ainda pendente (convite ou
-            // recuperacao) deixa de valer: quem acabou de provar a senha
-            // atual nao pode ficar com uma segunda porta aberta.
+            // Troca de credencial: ver Implantar.md, secao 13.6.
             (new TokenSenhaRepository())->invalidarPendentes($usuario['id'], 'definir');
 
-            // Sessao nova depois de trocar credencial, mesmo cuidado de
-            // Auth::login().
             session_regenerate_id(true);
 
             flashSucesso('Senha alterada.');
@@ -207,9 +193,7 @@ class EventoAppPerfilController extends Controller
     }
 
     /**
-     * Evento existe e a pessoa tem inscricao nele. Devolve null e ja
-     * redireciona quando qualquer um dos dois falha, com o mesmo destino
-     * neutro usado em todo o aplicativo.
+     * Evento e inscricao da pessoa. Devolve null depois de redirecionar.
      */
     private function contextoOu404($id)
     {
@@ -224,6 +208,38 @@ class EventoAppPerfilController extends Controller
         }
 
         return ['evento' => $evento, 'inscricao' => $inscricao];
+    }
+
+    /**
+     * Fase 58: o perfil recem gravado pode fechar um bonus do tipo
+     * "preencher campos do perfil". A apuracao roda depois da gravacao e num
+     * bloco de protecao proprio: o perfil e' o fato principal, e falha na
+     * apuracao nunca desfaz a gravacao nem vira erro na tela. Os bonus
+     * creditados aparecem numa mensagem a mais.
+     */
+    private function apurarAcoesDoParticipante(array $evento, array $inscricao)
+    {
+        try {
+            $creditados = (new BonusApuracaoService())->apurarInscricao($evento, (int) $inscricao['id'], Auth::usuarioId());
+        } catch (\Throwable $e) {
+            error_log('[Bonus] Falha ao apurar depois do perfil da inscricao ' . (int) $inscricao['id'] . ': ' . $e->getMessage());
+            return;
+        }
+
+        if ($creditados === []) {
+            return;
+        }
+
+        // A mensagem de gravacao ja' foi definida por salvarDados(); a do
+        // bonus vai no fim dela, porque a faixa de mensagem mostra uma so'.
+        $mensagem = isset($_SESSION['flash']) ? (string) $_SESSION['flash'] : 'Perfil atualizado.';
+
+        foreach ($creditados as $credito) {
+            $mensagem .= ' Você fechou o bônus ' . $credito['nome'] . ': ' . (int) $credito['pontos']
+                . ((int) $credito['pontos'] === 1 ? ' ponto.' : ' pontos.');
+        }
+
+        flashSucesso($mensagem);
     }
 
     private function temaEstaDisponivel($temaId, array $disponiveis)

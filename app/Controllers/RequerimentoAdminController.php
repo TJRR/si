@@ -188,20 +188,14 @@ class RequerimentoAdminController extends Controller
 
         $this->notificarLider($requerimento, $desfecho);
 
-        $_SESSION['flash'] = 'Resposta registrada.';
+        flashSucesso('Resposta registrada.');
         $this->redirecionar('requerimentoAdmin/ver/' . (int) $id);
     }
 
     /**
-     * Abre uma janela publica curta e de uso unico (ver ValidacaoPublicaController
-     * e RequerimentoRepository::gravarTokenValidacaoIti()), chama a rota que
-     * validar.iti.gov.br usa no proprio site pra checar um PDF assinado a
-     * partir de uma URL, e fecha a janela assim que a chamada termina -
-     * sucesso ou falha. So' um apoio/atalho pra conferencia da assinatura:
-     * o resultado, quando existe, aparece na tela junto do mesmo aviso que
-     * ja vale pro certificado extraido localmente - nunca dispensa a
-     * conferencia manual no site oficial, nem a caixa de confirmacao
-     * obrigatoria pra aprovar.
+     * Atalho para a conferencia da assinatura no ITI: nunca dispensa a
+     * conferencia manual no site oficial nem a caixa de confirmacao
+     * obrigatoria para aprovar. Ver Implantar.md, secao 13.6.
      */
     public function validarIti($id)
     {
@@ -349,7 +343,7 @@ class RequerimentoAdminController extends Controller
         $this->requerimentos->escalar((int) $id, $novoResponsavelId);
         $this->notificarResponsavel($novoResponsavelId, $requerimento);
 
-        $_SESSION['flash'] = 'Requerimento escalado.';
+        flashSucesso('Requerimento escalado.');
         $this->redirecionar('requerimentoAdmin/ver/' . (int) $id);
     }
 
@@ -374,7 +368,7 @@ class RequerimentoAdminController extends Controller
         $this->requerimentos->retomar((int) $id);
         $this->notificarAdministradoresFilaGeral($requerimento);
 
-        $_SESSION['flash'] = 'Requerimento retomado: de volta à fila geral.';
+        flashSucesso('Requerimento retomado: de volta à fila geral.');
         $this->redirecionar('home/administrativo');
     }
 

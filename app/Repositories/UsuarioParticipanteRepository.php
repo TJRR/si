@@ -20,8 +20,7 @@ class UsuarioParticipanteRepository
         );
         $stmt->execute(['usuario_id' => $usuarioId, 'participante_id' => $participanteId]);
 
-        // INSERT IGNORE: so' audita quando o vinculo era realmente novo (rowCount
-        // 0 = ja existia, chamada foi um no-op) - Fase 31 (Auditoria de Seguranca).
+        // INSERT IGNORE: so' audita quando o vinculo era realmente novo.
         if ($stmt->rowCount() > 0) {
             Auditoria::registrar('vincular', 'usuario_participante', $usuarioId, null, ['participante_id' => $participanteId]);
         }

@@ -11,11 +11,11 @@ return [
     'operacoes' => [
         [
             'nome' => 'Ativar as conexões neste evento',
-            'como' => 'Desativado, o aplicativo não oferece a leitura de crachá entre participantes e nenhuma conexão nova é registrada. As já registradas continuam visíveis para quem as fez.',
+            'como' => 'Desativado, o aplicativo não oferece a leitura do código entre participantes e nenhuma conexão nova é registrada. As já registradas continuam visíveis para quem as fez.',
         ],
         [
             'nome' => 'Pontos por conexão',
-            'como' => 'Quanto cada uma das duas pessoas ganha quando uma lê o crachá da outra. Com zero, a conexão é registrada e entra na lista das duas, mas sem creditar ponto: serve para o evento que quer a lista de contatos sem a disputa de pontos.',
+            'como' => 'Quanto cada uma das duas pessoas ganha quando uma lê o código da outra (na tela do aplicativo ou no crachá). Com zero, a conexão é registrada e entra na lista das duas, mas sem creditar ponto: serve para o evento que quer a lista de contatos sem a disputa de pontos.',
         ],
         [
             'nome' => 'Limite de conexões que pontuam por participante',
@@ -24,7 +24,7 @@ return [
         [
             'nome' => 'Quando a mudança vale',
             'como' => 'Pontos e limite valem só para as próximas conexões: o que já foi creditado não muda, nem para mais nem para menos.',
-            'observacao' => 'As conexões só pontuam entre a data de início e a data de fim do evento, e o último dia conta inteiro.',
+            'observacao' => 'As conexões só pontuam entre a data de início e a data de fim do evento, e o último dia conta inteiro. Depois do encerramento da gincana (Gamificação, Configurações), continuam sendo registradas, sem pontos.',
         ],
     ],
     'conceitos' => ['permissao_suporte_admin'],

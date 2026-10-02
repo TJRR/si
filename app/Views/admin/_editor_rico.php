@@ -50,9 +50,22 @@ $valorAtual = isset($valor) ? (string) $valor : '';
             <?php endif; ?>
             <button type="button" class="editor-rico-btn" data-comando="barra" title="Inserir barra separadora (usa a cor de texto selecionada)" aria-label="Inserir barra separadora">▬</button>
             <?php if (!empty($mostrarPalavrasChave)): ?>
+                <?php
+                /**
+                 * Fase 59: $palavrasChaveLista (opcional) troca o dicionario
+                 * oferecido no seletor. Existe porque o certificado tem
+                 * dicionario proprio, e por tipo de documento
+                 * (CertificadoTextoService::palavrasChaveDoTipo()). Sem a
+                 * variavel, nada muda para as telas que ja' usavam o
+                 * seletor: vale o dicionario dos modelos de documento.
+                 */
+                $listaPalavrasChave = !empty($palavrasChaveLista)
+                    ? $palavrasChaveLista
+                    : \App\Services\ModeloDocumentoService::PALAVRAS_CHAVE;
+                ?>
                 <select class="editor-rico-select" data-comando="palavraChave" title="Inserir palavra-chave" aria-label="Inserir palavra-chave">
                     <option value="">Inserir palavra-chave…</option>
-                    <?php foreach (\App\Services\ModeloDocumentoService::PALAVRAS_CHAVE as $chavePalavra => $descricaoPalavra): ?>
+                    <?php foreach ($listaPalavrasChave as $chavePalavra => $descricaoPalavra): ?>
                         <option value="[[<?php echo $chavePalavra; ?>]]"><?php echo htmlspecialchars($chavePalavra, ENT_QUOTES, 'UTF-8'); ?></option>
                     <?php endforeach; ?>
                 </select>
@@ -67,3 +80,11 @@ $valorAtual = isset($valor) ? (string) $valor : '';
     <input type="file" class="editor-rico-arquivo-oculto" data-editor-arquivo accept="image/*" hidden>
     <?php endif; ?>
 </div>
+<?php
+/**
+ * Fase 59: as views do projeto compartilham um escopo so', entao a lista
+ * deixada por uma inclusao valeria para a seguinte, que talvez queira o
+ * dicionario padrao. Cada inclusao precisa dizer o que quer.
+ */
+unset($palavrasChaveLista);
+?>

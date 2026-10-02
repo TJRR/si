@@ -79,9 +79,8 @@ class TrabalhoCriterioRepository
     }
 
     /**
-     * Fase 50 (achado de seguranca): WHERE inclui evento_id, nao so' id -
-     * sem isso, um id de criterio de OUTRO evento seria aceito e teria sua
-     * ordem alterada, sem checagem de posse.
+     * Grava a nova ordem; a posse de cada id e' conferida no proprio WHERE.
+     * Ver Implantar.md, secao 13.6.
      */
     public function reordenar($eventoId, array $ids)
     {

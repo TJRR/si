@@ -47,7 +47,7 @@ class EventoConfiguracaoVisualAdminController extends Controller
             $this->salvarCabecalho($eventoId);
 
             if (empty($_SESSION['flash'])) {
-                $_SESSION['flash'] = 'Cabeçalho atualizado.';
+                flashSucesso('Cabeçalho atualizado.');
             }
 
             $this->redirecionar('eventoCabecalho/cabecalho/' . $eventoId);

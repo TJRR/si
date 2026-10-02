@@ -151,11 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
             form.submit();
         });
 
-        // resumo.innerHTML aqui e' seguro: toda a subarvore foi montada so'
-        // com createElement/textContent (nunca concatenacao de string), que
-        // ja escapa qualquer valor digitado pelo avaliador - serializar de
-        // volta pra innerHTML so' devolve o HTML ja escapado, nao reabre
-        // brecha de injecao.
+        // Subarvore montada so' com createElement e textContent.
         abrirModal('Revisar antes de enviar', resumo.innerHTML);
 
         // Os botoes de acao precisam ser religados: abrirModal() reescreve

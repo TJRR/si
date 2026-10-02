@@ -1,30 +1,11 @@
 <?php
 
 /**
- * Fase 17 (Melhoria 2): gera um link de definicao de senha para uma conta JA
- * ATIVA (diferente de AcessoParticipanteService::reenviarConvite(), que so'
- * se aplica a quem nunca entrou) - uso excepcional, para liberar acesso a uma
- * conta especifica para fins de auditoria (ex.: pedido de auditor/processo
- * judicial que precisa inspecionar os dados de uma conta).
+ * Gera, para uma conta ja ativa, um endereco de definicao de senha, em uso
+ * excepcional autorizado. Ver Implantar.md, secao 13.7.
  *
- * Nao desativa nem substitui o login existente da conta (Google e/ou senha
- * anterior continuam funcionando) - so' adiciona/troca a senha local, ja que
- * "senha_hash" e "google_id" convivem sem conflito no schema atual.
- *
- * Reaproveita a mesma tabela/fluxo de "definir senha" (tokens_senha, rota
- * auth/definirSenha/{token}) ja usado pelo convite administrativo - so' que
- * sem a restricao de "so' quem nunca entrou" do reenviarConvite().
- *
- * O link e' impresso no terminal (nao enviado por e-mail automaticamente) -
- * quem roda o script decide como entregar o acesso a quem esta autorizado.
- *
- * ATENCAO: rodando via CLI nao ha $_SERVER['HTTP_HOST'] (urlAbsoluta() cairia
- * em "localhost") - por isso este script exige --dominio explicito (ex.:
- * https://npi.tjrr.jus.br) pra montar o link corretamente.
- *
- * Por padrao roda em modo consulta (dry-run): so mostra o que seria feito,
- * sem gravar nada. Para gravar de verdade:
- *   php liberar_acesso_auditoria.php --email=fulano@exemplo.com --dominio=https://npi.tjrr.jus.br --confirmar
+ * Ensaio por padrao. Para gravar:
+ *   php liberar_acesso_auditoria.php --email=pessoa@exemplo.com --dominio=https://endereco-do-sistema --confirmar
  */
 
 if (php_sapi_name() !== 'cli') {

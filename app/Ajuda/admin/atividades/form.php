@@ -7,7 +7,7 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Atividade: dados gerais',
-    'resumo' => 'Cadastro de uma atividade específica do evento (curso, palestra, seminário). Inscrição e certificado são decisões independentes desta atividade. Elas não seguem o que está configurado no evento como um todo.',
+    'resumo' => 'Cadastro de uma atividade específica do evento (curso, palestra, seminário). Inscrição e certificado próprio são decisões independentes desta atividade: elas não seguem o que está configurado no evento como um todo.',
     'operacoes' => [
         [
             'nome' => 'Tipo',
@@ -26,8 +26,12 @@ return [
             'como' => 'Quando marcado, quem está inscrito no evento vê esta atividade no aplicativo e pode se inscrever nela. Quando desmarcado, a atividade aparece só como informação, sem controle de quem vai participar.',
         ],
         [
-            'nome' => 'Emite certificado',
-            'como' => 'Só grava a intenção: a emissão do certificado em si ainda não está disponível.',
+            'nome' => 'Emite certificado por esta atividade',
+            'como' => 'Marcada, quem confirmou presença nesta atividade e quem a conduziu passam a ter um certificado próprio dela, com a duração dela (Início a Fim) como carga horária. O texto do documento é um só para todas as atividades do evento, escrito em Certificados, Configurações. Desmarcada, a atividade continua contando para o certificado de participação no evento, mas não gera documento próprio.',
+        ],
+        [
+            'nome' => 'Plano de fundo do certificado desta atividade',
+            'como' => 'O botão "Escolher imagem" abre a Biblioteca de mídia na pasta "Fundo Certificados", onde também é possível enviar uma arte nova na hora. O ícone ao lado deixa o fundo sem imagem e sem cor, e o seletor de cor pinta a folha de uma cor só. Sem escolha nenhuma aqui, vale a arte das atividades em Certificados, Configurações. A imagem precisa ter a proporção de uma folha A4 na horizontal.',
         ],
         [
             'nome' => 'Vagas',
@@ -43,7 +47,12 @@ return [
         ],
         [
             'nome' => 'Considerar presença efetiva se a confirmação de presença ocorrer até',
-            'como' => 'Não afeta se a leitura é aceita: só classifica, na sub-aba "Presenças" e futuramente no certificado, se aquela confirmação específica conta como presença efetiva. O percentual é sempre calculado sobre a duração real da atividade (Início a Fim).',
+            'como' => 'Não afeta se a leitura é aceita: só classifica, na sub-aba "Presenças", se aquela confirmação específica conta como presença efetiva. Conta como efetiva a confirmação feita desde a abertura da leitura (o campo anterior) até o percentual escolhido aqui. O percentual é sempre calculado sobre a duração real da atividade (Início a Fim). A leitura é recusada depois do fim da atividade.',
+        ],
+        [
+            'nome' => 'Pontos de presença e extra de pontualidade desta atividade',
+            'como' => 'Em branco, a atividade usa os valores do tipo dela (Tipos de atividade). Preencha só quando esta atividade valer diferente do tipo; zero significa que ela não pontua. O extra de pontualidade vale para quem confirma presença até o número de minutos antes do início definido em Gamificação, Configurações. A presença pela internet pontua do mesmo jeito.',
+            'observacao' => 'Mudar os valores não altera presença já pontuada. Para creditar presenças já registradas antes de a atividade ter pontos, use "Reconferir agora" em Gamificação, Classificação.',
         ],
         [
             'nome' => 'Código desta atividade / Imprimir código',
@@ -51,7 +60,7 @@ return [
         ],
         [
             'nome' => 'Código de presença online',
-            'como' => 'Só aparece quando a modalidade não é presencial. Fixo, definido uma vez. Comunique-o verbalmente durante a atividade: quem está participando online digita esse código no aplicativo para confirmar presença.',
+            'como' => 'Só aparece quando a modalidade não é presencial. Fixo, definido uma vez. Informe-o assim que a sala virtual abrir, antes do início: quem participa pela internet digita esse código no aplicativo para confirmar presença e pontua como quem está na sala, inclusive com o extra de pontualidade. O facilitador vê o código em "Minhas facilitações".',
         ],
     ],
     'conceitos' => [],

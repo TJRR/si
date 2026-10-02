@@ -19,7 +19,7 @@ return [
         ],
         [
             'nome' => 'Avaliação',
-            'como' => 'Quantidade de avaliadores por trabalho, se a avaliação é às cegas, como combinar as notas de mais de um avaliador (média ou mediana), nota de corte e regra de seleção entre os aprovados.',
+            'como' => 'Quantidade de avaliadores por trabalho, se a avaliação é às cegas, como combinar as notas de mais de um avaliador (média ou mediana), casas decimais da média por critério e da nota final (de 0 a 4; a nota que o avaliador lança continua com duas casas), nota de corte e regra de seleção entre os aprovados.',
         ],
         [
             'nome' => 'Formulário de submissão',

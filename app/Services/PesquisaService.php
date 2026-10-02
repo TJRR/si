@@ -62,34 +62,56 @@ class PesquisaService
     }
 
     /**
-     * Janela propria da pesquisa; as duas datas em branco fazem valer as
-     * datas do evento. As colunas sao de data, entao o ultimo dia conta
-     * inteiro. Mesmo desenho de DivulgacaoService (Fase 56).
+     * Janela que o ADMINISTRADOR escreveu. Cada extremo limita por conta
+     * propria: data de abertura em branco nao limita o comeco, data de
+     * fechamento em branco nao limita o fim, e as duas em branco significam
+     * sem limite de data nenhum, valendo enquanto a pesquisa estiver ativa.
+     *
+     * Fase 58 (defeito corrigido, igual ao de DivulgacaoService): antes,
+     * campo em branco caia na data correspondente do evento, e a tela
+     * anunciava um periodo que ninguem escreveu.
+     *
+     * As colunas sao de data, entao o ultimo dia conta inteiro. $evento fica
+     * na assinatura para manter a mesma forma de chamada dos modulos irmaos.
      */
     public function dentroDaJanela(array $evento, array $config)
     {
-        $inicio = $this->inicioDa($evento, $config);
-        $fim = $this->fimDa($evento, $config);
-
-        if ($inicio === null || $fim === null) {
-            return true;
-        }
-
         $hoje = date('Y-m-d');
 
-        return $hoje >= $inicio && $hoje <= $fim;
-    }
-
-    public function janelaTexto(array $evento, array $config)
-    {
-        $inicio = $this->inicioDa($evento, $config);
-        $fim = $this->fimDa($evento, $config);
-
-        if ($inicio === null || $fim === null) {
-            return '';
+        if (!empty($config['data_inicio']) && $hoje < $config['data_inicio']) {
+            return false;
         }
 
-        return date('d/m/Y', strtotime($inicio)) . ' a ' . date('d/m/Y', strtotime($fim));
+        if (!empty($config['data_fim']) && $hoje > $config['data_fim']) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Texto do periodo escrito pelo Administrador, ou '' quando ele nao
+     * limitou por data. Ja' vem com a preposicao: "de ... a ...", "a partir
+     * de ..." ou "ate' ...".
+     */
+    public function janelaTexto(array $evento, array $config)
+    {
+        $inicio = !empty($config['data_inicio']) ? $config['data_inicio'] : null;
+        $fim = !empty($config['data_fim']) ? $config['data_fim'] : null;
+
+        if ($inicio !== null && $fim !== null) {
+            return 'de ' . date('d/m/Y', strtotime($inicio)) . ' a ' . date('d/m/Y', strtotime($fim));
+        }
+
+        if ($inicio !== null) {
+            return 'a partir de ' . date('d/m/Y', strtotime($inicio));
+        }
+
+        if ($fim !== null) {
+            return 'até ' . date('d/m/Y', strtotime($fim));
+        }
+
+        return '';
     }
 
     /**
@@ -267,21 +289,4 @@ class PesquisaService
         return $indice === false ? null : ((int) $indice) + 1;
     }
 
-    private function inicioDa(array $evento, array $config)
-    {
-        if (!empty($config['data_inicio'])) {
-            return $config['data_inicio'];
-        }
-
-        return !empty($evento['data_inicio']) ? substr((string) $evento['data_inicio'], 0, 10) : null;
-    }
-
-    private function fimDa(array $evento, array $config)
-    {
-        if (!empty($config['data_fim'])) {
-            return $config['data_fim'];
-        }
-
-        return !empty($evento['data_fim']) ? substr((string) $evento['data_fim'], 0, 10) : null;
-    }
 }

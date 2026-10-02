@@ -11,13 +11,8 @@ use App\Repositories\RequerimentoRepository;
 use App\Services\ArquivoPrivadoService;
 
 /**
- * Fase 30 (validacao automatica no ITI): unica rota publica (sem login)
- * deste conjunto de telas - existe so' pra validar.iti.gov.br buscar, do
- * lado do servidor deles, o PDF assinado de um requerimento durante uma
- * janela curta e de uso unico aberta por RequerimentoAdminController::
- * validarIti(). Qualquer coisa fora do esperado (token errado, expirado, ja
- * usado, requerimento sem PDF ou ja expurgado) devolve 404 generico - nunca
- * uma mensagem que confirme se o requerimento existe.
+ * Rota publica, sem entrada, usada so' pela conferencia de assinatura do
+ * ITI, numa janela curta e de uso unico. Ver Implantar.md, secao 13.6.
  */
 class ValidacaoPublicaController
 {

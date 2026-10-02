@@ -21,29 +21,13 @@ use App\Services\GoogleCalendarService;
 use App\Services\GoogleCalendarSyncService;
 
 /**
- * Fase 35 (Parte C): aba "Segurança 🔐" dentro de Configurações - onde as
- * credenciais de integracao sao trocadas sem depender de acesso ao servidor.
+ * Aba Seguranca de Configuracoes: troca das credenciais de integracao sem
+ * acesso ao servidor. Ver Implantar.md, secao 13.6.
  *
- * Duas telas de proposito:
- *
- * - index() e' a ANTESSALA. Nao mostra nada sensivel, nao audita e nao
- *   avisa ninguem. Ela existe porque abrir a tela seguinte dispara aviso a
- *   todos os outros administradores globais, e isso e' irreversivel: sem a
- *   antessala, quem clicasse na aba por curiosidade ja teria alertado os
- *   colegas, e aviso que dispara a toa e' aviso que as pessoas aprendem a
- *   ignorar.
- *
- * - credenciais() e' a tela real. Audita e avisa SEMPRE que e' desenhada,
- *   venha de onde vier - e nao no clique da antessala. Auditar o clique
- *   deixaria de fora justamente o caminho torto (digitar
- *   seguranca/credenciais direto no endereco), que e' o unico que
- *   interessa vigiar.
- *
- * Perfil exigido: administrador GLOBAL. RoleMiddleware::exigir() sem
- * $concursoId e' exatamente esse criterio (Auth::temPerfil so' aceita
- * vinculo com concurso_id NULL quando nao ha concurso pra comparar). Nao
- * trocar por exigirEmQualquerConcurso(): credencial e' recurso
- * institucional, nao de uma edicao.
+ * Perfil exigido: administrador GLOBAL, que e' o criterio de
+ * RoleMiddleware::exigir() sem $concursoId. Nao trocar por
+ * exigirEmQualquerConcurso(): credencial e' recurso institucional, nao de
+ * uma edicao.
  */
 class SegurancaAdminController extends Controller
 {

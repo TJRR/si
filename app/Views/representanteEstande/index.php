@@ -17,6 +17,11 @@
             <span class="status-pill <?php echo $estande['ativo'] ? 'verde' : 'vermelho'; ?>"><?php echo $estande['ativo'] ? 'Recebendo visitas' : 'Inativo: não recebe visitas'; ?></span>
             <?php echo (int) $estande['total_visitas']; ?> <?php echo (int) $estande['total_visitas'] === 1 ? 'visita registrada' : 'visitas registradas'; ?>
         </p>
-        <p><a href="<?php echo url('representanteEstande/estande/' . (int) $estande['id']); ?>" class="btn-acao">Abrir estande</a></p>
+        <p>
+            <a href="<?php echo url('representanteEstande/estande/' . (int) $estande['id']); ?>" class="btn-acao">Abrir estande</a>
+            <?php if (!empty($pesquisaAbertaPorEvento[(int) $estande['evento_id']])): ?>
+                <a href="<?php echo url('eventoApp/pesquisa/' . (int) $estande['evento_id']); ?>" class="btn-acao">Pesquisa de satisfação</a>
+            <?php endif; ?>
+        </p>
     </section>
 <?php endforeach; ?>

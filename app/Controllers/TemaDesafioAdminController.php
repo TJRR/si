@@ -126,7 +126,7 @@ class TemaDesafioAdminController extends Controller
 
         try {
             $this->temas->remover($id);
-            $_SESSION['flash'] = 'Tema removido.';
+            flashSucesso('Tema removido.');
         } catch (\PDOException $e) {
             flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: este tema ainda tem desafios cadastrados.'
@@ -263,7 +263,7 @@ class TemaDesafioAdminController extends Controller
 
         try {
             $this->desafios->remover($id);
-            $_SESSION['flash'] = 'Desafio removido.';
+            flashSucesso('Desafio removido.');
         } catch (\PDOException $e) {
             flashErro($e->getCode() === '23000'
                 ? 'Não é possível remover: este desafio já tem equipes vinculadas.'

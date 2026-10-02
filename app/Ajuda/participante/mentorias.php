@@ -7,25 +7,25 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Mentorias',
-    'resumo' => 'Horários de mentoria 1:1 disponíveis; sua equipe pode ter no máximo 1 reserva ativa por vez.',
+    'resumo' => 'Mentoria é uma conversa individual da sua equipe com um mentor, num horário marcado. Nesta tela aparecem os horários disponíveis. A equipe pode ter uma reserva ativa por vez: para marcar outra, cancele a atual ou espere ela acontecer.',
     'operacoes' => [
         [
             'nome' => 'Quais horários aparecem',
-            'como' => 'Alguns horários são vinculados a uma etapa: nesse caso só aparecem para quem está habilitado a ela, ou seja, foi classificado na etapa anterior. Se um horário que você via sumiu da lista, é porque ele passou a ser restrito a uma etapa em que a sua equipe não está habilitada.',
+            'como' => 'Alguns horários são reservados a uma etapa e só aparecem para as equipes classificadas na etapa anterior. Se um horário que você via sumiu, foi porque ele passou a ser só de uma etapa em que a sua equipe não está.',
         ],
         [
             'nome' => 'Reservar',
-            'como' => 'Disponível em qualquer horário vago.',
-            'observacao' => 'A reserva pode falhar se outra equipe reservar o mesmo horário no mesmo instante (duas equipes reservaram ao mesmo tempo); nesse caso, a tela mostra um aviso e o horário some da lista.',
+            'como' => 'Clique em "Reservar" no horário vago que preferir. O horário passa a ser da sua equipe e sai da lista das outras.',
+            'observacao' => 'Se outra equipe reservar o mesmo horário no mesmo instante, só uma consegue: a tela avisa e o horário some da lista. Escolha outro.',
         ],
         [
             'nome' => 'Cancelar',
-            'como' => 'Disponível na sua própria reserva, com confirmação; libera o horário para outra equipe.',
+            'como' => 'Na reserva da sua equipe, clique em "Cancelar" e confirme. O horário volta a ficar livre para as outras equipes.',
         ],
         [
-            'nome' => 'Entrar (hiperlink do Meet)',
-            'como' => 'Só aparece quando o horário tem hiperlink disponível (manual ou gerado pela integração com o Google).',
-            'observacao' => 'Quando o horário usa integração com Google Agenda, a reconciliação da situação acontece sob demanda, ao carregar esta tela; pode levar um instante para o hiperlink aparecer.',
+            'nome' => 'Entrar na sala',
+            'como' => 'No horário marcado, use o botão "Entrar" para abrir a sala da reunião no Google Meet. O botão só aparece quando a sala já existe.',
+            'observacao' => 'Quando a sala é criada automaticamente pela agenda do Google, ela pode levar um instante para aparecer: abra esta tela de novo daqui a pouco.',
         ],
     ],
     'conceitos' => [],

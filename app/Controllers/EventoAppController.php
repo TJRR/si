@@ -11,6 +11,11 @@ use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\View;
 use App\Repositories\BonusConfigRepository;
+use App\Repositories\BonusRepository;
+use App\Repositories\CertificadoConfigRepository;
+use App\Repositories\CertificadoRepository;
+use App\Repositories\CompeticaoParticipacaoRepository;
+use App\Repositories\CompeticaoRepository;
 use App\Repositories\ConexaoConfigRepository;
 use App\Repositories\ConexaoRepository;
 use App\Repositories\ConfiguracaoSistemaRepository;
@@ -21,6 +26,7 @@ use App\Repositories\EventoAtividadeFacilitadorRepository;
 use App\Repositories\EventoAtividadeInscricaoRepository;
 use App\Repositories\EventoAtividadeLeituraFalhaRepository;
 use App\Repositories\EventoAtividadeRepository;
+use App\Repositories\EventoAtividadeTipoRepository;
 use App\Repositories\EventoCampoInscricaoRepository;
 use App\Repositories\EventoCheckinRepository;
 use App\Repositories\EventoComunicacaoRepository;
@@ -29,36 +35,38 @@ use App\Repositories\EstandeLeituraFalhaRepository;
 use App\Repositories\EstandeRepository;
 use App\Repositories\EstandeRepresentanteRepository;
 use App\Repositories\EstandeVisitaRepository;
+use App\Repositories\CredenciamentoLocalRepository;
+use App\Repositories\GamificacaoConfigRepository;
+use App\Repositories\GamificacaoDesempateRepository;
 use App\Repositories\LeituraCodigoFalhaRepository;
 use App\Repositories\NotificacaoPainelRepository;
 use App\Repositories\PerfilRepository;
 use App\Repositories\PesquisaConfigRepository;
 use App\Repositories\PesquisaPerguntaRepository;
 use App\Repositories\PesquisaRespondenteRepository;
+use App\Repositories\PresencaCreditoRepository;
 use App\Repositories\SemanaInovacaoRepository;
 use App\Repositories\TemaVisualRepository;
+use App\Repositories\TrabalhoApresentacaoRepository;
 use App\Repositories\TrabalhoAutorRepository;
 use App\Repositories\TrabalhoAvaliadorRepository;
 use App\Repositories\UsuarioPerfilRepository;
 use App\Services\ArquivoPrivadoService;
 use App\Services\BonusApuracaoService;
+use App\Services\CertificadoElegibilidadeService;
+use App\Services\CertificadoEmissaoService;
 use App\Services\ConexaoService;
 use App\Services\DivulgacaoService;
+use App\Services\GamificacaoService;
 use App\Services\ImagemComprovacaoService;
 use App\Services\NotificacaoService;
 use App\Services\PerfilVisibilidadeService;
 use App\Services\PesquisaService;
+use App\Services\PresencaPontuacaoService;
 
 /**
- * Fase 41: ponto de entrada ("shell") do aplicativo web instalavel (PWA) do
- * Evento - start_url do manifesto (ver manifesto()). Nome do modulo evita
- * "Evento" generico sozinho (mesma convencao de EventoInscricaoPublicaController)
- * e nao colide com o modulo 'participante' ja usado pelo fluxo do Concurso
- * (ParticipanteController).
- *
- * Sem conteudo funcional ainda (codigo de credenciamento e leitura de QR sao
- * Fases 42/43) - so' a casca navegavel: decide entre mandar a pessoa se
- * inscrever ou mostrar o painel de quem ja esta inscrita.
+ * Aplicativo do Evento, instalavel no celular: decide entre mandar a pessoa
+ * se inscrever ou mostrar o painel de quem ja esta inscrita.
  */
 class EventoAppController extends Controller
 {
@@ -94,26 +102,15 @@ class EventoAppController extends Controller
                 return;
             }
 
-            // Fase 49 (achado da revisao do plano), atualizado na Fase 49B:
-            // mesmo desvio do Facilitador acima, agora para quem ganhou o
-            // perfil `inscrito` so' por ser autor principal de algum
-            // Trabalho, sem nunca ter se inscrito no evento. A rota de
-            // destino (trabalho/meusTrabalhos) passou a fazer parte do
-            // aplicativo instalavel na Fase 49B (decisao revista do usuario -
-            // ja nao e' "fora do app" como o plano original registrava),
-            // mas continua sendo a mesma rota, so' com aparencia/instalacao
-            // diferentes agora (ver $ehAppEvento em layout.php).
+            // Quem tem o perfil de inscrito so' por ser autor de trabalho vai para
+            // Meus trabalhos.
             if ((new TrabalhoAutorRepository())->possuiTrabalhoEmQualquerEvento(Auth::usuarioId())) {
                 $this->redirecionar('trabalho/meusTrabalhos');
                 return;
             }
 
-            // Fase 49B, achado do teste de fumaça (item 7): mesmo desvio,
-            // agora para quem ganhou o perfil `inscrito` so' por ser
-            // avaliador avulso de Trabalhos em algum evento. Diferente do
-            // autor, a avaliacao continua deliberadamente fora do
-            // aplicativo instalavel (decisao confirmada na Fase 49B) -
-            // destino e' avaliacaoTrabalhos/index, navegador comum.
+            // Quem tem o perfil de inscrito so' por avaliar trabalhos vai para a
+            // avaliacao, que fica fora do aplicativo.
             if ((new TrabalhoAvaliadorRepository())->ehAvaliadorEmQualquerEvento(Auth::usuarioId())) {
                 $this->redirecionar('avaliacaoTrabalhos/index');
                 return;
@@ -146,19 +143,47 @@ class EventoAppController extends Controller
     {
         $evento = (new SemanaInovacaoRepository())->buscarPorId($inscricao['evento_id']);
 
-        // Fase 49B, achado do usuário: quem é avaliador avulso de
-        // Trabalhos DESTE evento vê "Avaliar trabalhos" no lugar de
-        // "Submeter trabalho"/"Meus trabalhos" - a exclusão mútua já
-        // impede a mesma pessoa de ser as duas coisas no mesmo evento
-        // (TrabalhoSubmissaoService/TrabalhoAvaliadorConviteService), a
-        // interface agora reflete isso em vez de oferecer um botão que
-        // sempre daria erro.
+        // Avaliador de Trabalhos deste evento ve "Avaliar trabalhos" no lugar de
+        // submeter: a exclusao mutua impede a mesma pessoa de ser as duas coisas.
         $ehAvaliadorDoEvento = (new TrabalhoAvaliadorRepository())->estaAtivo($evento['id'], Auth::usuarioId());
 
         // Fase 57: com o modulo desligado nao ha' o que consultar, entao o
         // painel nem paga o custo das consultas de progresso.
         $bonusAtivo = (new BonusConfigRepository())->estaAtivo($evento['id']);
         $pesquisaAberta = $this->pesquisaAberta($evento);
+        $progressoBonus = $bonusAtivo ? (new BonusApuracaoService())->progressoDe($evento, $inscricao['id'], Auth::usuarioId()) : [];
+
+        // Fase 58: a abertura do painel e' o que alcanca a acao feita fora do
+        // aplicativo (perfil completado pelo "Meu Perfil" do Concurso, que
+        // esta fase nao toca). So' grava quando ha' bonus ativo de acao do
+        // participante que a pessoa ainda nao tem, nunca em "visualizar como"
+        // (que e' so' leitura) e nunca depois do encerramento. Bloco de
+        // protecao proprio: o painel abre mesmo que a apuracao falhe.
+        if ($bonusAtivo && !Auth::estaVisualizandoComoOutro()) {
+            try {
+                $creditadosAgora = (new BonusApuracaoService())->apurarAcoesPendentes($evento, $inscricao['id'], Auth::usuarioId(), $progressoBonus);
+
+                if ($creditadosAgora !== []) {
+                    $progressoBonus = (new BonusApuracaoService())->progressoDe($evento, $inscricao['id'], Auth::usuarioId());
+                }
+            } catch (\Throwable $e) {
+                error_log('[Bonus] Falha ao apurar na abertura do painel da inscricao ' . (int) $inscricao['id'] . ': ' . $e->getMessage());
+            }
+        }
+
+        // Fase 58: cartao de pontos. So' o total da propria pessoa, numa
+        // consulta por inscricao: a classificacao do evento inteiro fica em
+        // "Minha pontuacao", fora da tela mais aberta do aplicativo.
+        $gamificacao = (new GamificacaoConfigRepository())->vigente($evento['id']);
+        $totalPontos = null;
+
+        if ($gamificacao['ativo'] === 1) {
+            try {
+                $totalPontos = (new GamificacaoService())->somaDaInscricao($evento['id'], $inscricao['id'])['total'];
+            } catch (\Throwable $e) {
+                error_log('[Gamificacao] Falha ao somar os pontos da inscricao ' . (int) $inscricao['id'] . ': ' . $e->getMessage());
+            }
+        }
 
         $this->renderizar('eventoApp/painel', [
             'evento' => $evento,
@@ -166,36 +191,27 @@ class EventoAppController extends Controller
             'ehAvaliadorDoEvento' => $ehAvaliadorDoEvento,
             // Fase 53: botao "Anais" (so' quando ha versao publicada).
             'anais' => (new EventoAnaisRepository())->buscarPublicadoParaParticipante($evento['id']),
-            // Fase 54: botao "Estandes" (so' com estande ativo) e o resumo
-            // de pontos; as duas consultas ja se protegem de falha de banco.
+            // As consultas dos modulos opcionais abaixo capturam falha de banco:
+            // tabela ainda nao criada esconde o botao em vez de derrubar o painel.
             'temEstandes' => (new EstandeRepository())->existeAtivoNoEvento($evento['id']),
             'resumoEstandes' => (new EstandeVisitaRepository())->resumoParticipante($inscricao['id']),
-            // Fase 55: "Conectar com participante" (a antiga "Ler codigo")
-            // so' aparece com o modulo Conexoes ligado no evento; o resumo
-            // vem junto. As duas consultas tambem se protegem de falha de
-            // banco, entao uma tabela ainda nao criada nunca derruba o
-            // painel de quem esta inscrito.
             'conexoesAtivas' => (new ConexaoConfigRepository())->estaAtivo($evento['id']),
             'resumoConexoes' => (new ConexaoRepository())->resumoParticipante($inscricao['id']),
-            // Fase 56: botao "Divulgacao" so' com o modulo ligado no evento,
-            // com o resumo de pontos abaixo. Mesma protecao das duas fases
-            // anteriores: as consultas capturam falha de banco dentro do
-            // repositorio, entao tabela ainda nao criada faz o botao sumir
-            // em vez de derrubar o painel de todo inscrito.
             'divulgacaoAtiva' => (new DivulgacaoConfigRepository())->estaAtivo($evento['id']),
             'resumoDivulgacao' => (new DivulgacaoComprovacaoRepository())->resumoParticipante($inscricao['id']),
-            // Fase 57: o bloco de bonus percorre os bonus ATIVOS do evento,
-            // que sao cadastro e nao codigo, entao bonus novo aparece aqui
-            // sem alteracao nenhuma nesta view. progressoDe() resolve tudo
-            // em uma consulta (duas quando ha bonus por tipo de atividade),
-            // e o estado da pesquisa sai de mais duas leituras. Mesma
-            // protecao das tres fases anteriores: os repositorios capturam
-            // falha de banco e devolvem vazio, entao tabela ainda nao criada
-            // faz o bloco sumir em vez de derrubar o painel.
             'bonusAtivo' => $bonusAtivo,
-            'progressoBonus' => $bonusAtivo ? (new BonusApuracaoService())->progressoDe($evento, $inscricao['id']) : [],
+            'progressoBonus' => $progressoBonus,
+            'gamificacaoAtiva' => $gamificacao['ativo'] === 1,
+            'totalPontos' => $totalPontos,
+            'gincanaEncerrada' => GamificacaoService::encerrada($evento['id']),
             'pesquisaAberta' => $pesquisaAberta,
             'pesquisaRespondida' => $pesquisaAberta ? (new PesquisaRespondenteRepository())->jaRespondeu($evento['id'], Auth::usuarioId()) : false,
+            // So' a conferencia das duas travas da emissao; a apuracao do dossie fica
+            // na tela de certificados, porque custa varias consultas.
+            'certificadosAbertos' => (new CertificadoElegibilidadeService())->emissaoAbertaAoParticipante(
+                $evento,
+                (new CertificadoConfigRepository())->vigente($evento['id'])
+            ),
         ], $evento['nome']);
     }
 
@@ -236,13 +252,7 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 45: conteudo de um aviso em massa (sub-aba "Comunicacao" do
-     * Admin) - destino da notificacao do sino ('url' em NotificacaoPainelRepository::criar(),
-     * gravada por EventoAdminController::comunicacaoEnviar()). Mesma
-     * checagem de posse de inscricao()/cracha() (evento + inscricao do
-     * PROPRIO usuario) - nao basta ter a comunicacao, precisa pertencer ao
-     * evento em que a pessoa esta inscrita, senao' um id de comunicacao
-     * alheio na URL vazaria o aviso de outro evento.
+     * Conteudo de um aviso em massa da Comunicacao, destino do sino.
      */
     public function aviso($id)
     {
@@ -269,17 +279,8 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 42: crachá de credenciamento pronto para impressão - QR +
-     * código em texto (App\Services\QrCodeService). Página solta, sem
-     * layout.php (mesmo espírito de politica.php/termos.php: sem app-bar,
-     * sem menu), renderizada via View::renderizarString() (mesmo mecanismo
-     * já usado por PdfService/relatórios em PDF desde a Fase 23 - aqui o
-     * HTML vai direto pro navegador via echo, nunca pro Dompdf).
-     *
-     * Mesma checagem de posse de inscricao() - e MESMO redirect nos dois
-     * casos de falha (evento inexistente OU inscrição de outra conta), de
-     * propósito: não dar pista de enumeração de id a quem tentar outro
-     * $id na URL.
+     * Cracha de credenciamento pronto para impressao, em pagina solta, sem o
+     * layout do sistema.
      */
     public function cracha($id)
     {
@@ -298,6 +299,13 @@ class EventoAppController extends Controller
             return;
         }
 
+        // Fase 58: evento sem cracha impresso (Dados Gerais) nao oferece a
+        // impressao; o codigo continua na tela "Minha inscricao".
+        if (isset($evento['oferece_cracha']) && (int) $evento['oferece_cracha'] === 0) {
+            $this->redirecionar('eventoApp/inscricao/' . (int) $id);
+            return;
+        }
+
         echo View::renderizarString('eventoApp/cracha', [
             'evento' => $evento,
             'inscricao' => $inscricao,
@@ -306,16 +314,9 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 43: tela do componente de leitura de codigo - mesma checagem de
-     * posse de inscricao()/cracha() (evento existe + o LEITOR tem inscricao
-     * nesse evento), com o MESMO redirect neutro nos dois casos de falha.
-     * $id aqui e' sempre o evento do proprio leitor, nunca do codigo lido.
-     *
-     * Fase 55: a tela deixou de ser so' conferencia e virou "Conectar com
-     * participante" - a leitura grava a conexao e credita pontos aos dois
-     * lados (decisao do dono). Com o modulo desligado no evento, o leitor
-     * da' lugar a um aviso, para ninguem ler um cracha achando que vai
-     * pontuar.
+     * "Conectar com participante": a leitura grava a conexao e credita os
+     * dois lados. Com o modulo desligado no evento, a tela mostra um aviso no
+     * lugar do leitor.
      */
     public function ler($id)
     {
@@ -336,8 +337,13 @@ class EventoAppController extends Controller
 
         $config = (new ConexaoConfigRepository())->vigente($id);
 
+        // Fase 58: a tela passa a mostrar tambem o codigo da propria pessoa,
+        // para quem vai ser lida nao precisar sair dela (dinamica de pontos
+        // v2: "QR fornecido diretamente na tela do aplicativo").
         $this->renderizar('eventoApp/ler', [
             'evento' => $evento,
+            'inscricao' => $inscricao,
+            'gincanaEncerrada' => GamificacaoService::encerrada($evento['id']),
             'config' => $config,
             'resumo' => (new ConexaoRepository())->resumoParticipante($inscricao['id']),
             'dentroDaJanela' => (new ConexaoService())->dentroDaJanela($evento),
@@ -345,11 +351,8 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 55: lista das conexoes da pessoa, no molde de estandes() -
-     * mesma conferencia de posse e mesmo redirect neutro. O que aparece de
-     * cada pessoa conectada e' decidido por PerfilVisibilidadeService, a
-     * partir do que ela mesma liberou em "Meu Perfil", lido agora e nunca
-     * congelado na conexao.
+     * Conexoes da pessoa. O que aparece de cada pessoa conectada vem de
+     * PerfilVisibilidadeService, lido agora e nunca congelado na conexao.
      */
     public function conexoes($id)
     {
@@ -388,12 +391,7 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 56: tela "Divulgacao" - onde a pessoa envia a comprovacao de que
-     * publicou sobre o evento numa rede social, ou de que passou a
-     * acompanhar os canais do Tribunal, e acompanha a situacao de cada uma.
-     *
-     * Mesma conferencia de posse e mesmo redirect neutro das telas de
-     * Estandes e Conexoes.
+     * Divulgacao: envio das comprovacoes e acompanhamento de cada uma.
      */
     public function divulgacao($id)
     {
@@ -439,6 +437,7 @@ class EventoAppController extends Controller
             'rede' => isset($_POST['rede']) ? (string) $_POST['rede'] : '',
             'tipo_acao' => isset($_POST['tipo_acao']) ? (string) $_POST['tipo_acao'] : '',
             'endereco' => isset($_POST['endereco']) ? trim((string) $_POST['endereco']) : '',
+            'rede_informada' => isset($_POST['rede_informada']) ? trim((string) $_POST['rede_informada']) : '',
         ];
 
         $configRepo = new DivulgacaoConfigRepository();
@@ -455,9 +454,17 @@ class EventoAppController extends Controller
             $this->renderizarDivulgacao(
                 $evento,
                 $inscricao,
-                'As comprovações de divulgação valem apenas de ' . $janela . '.',
+                'As comprovações de divulgação valem apenas ' . $janela . '.',
                 $valores
             );
+            return;
+        }
+
+        // Fase 58: depois do encerramento da gincana, comprovacao de
+        // divulgacao nao tem mais para que existir (ela so' serve para
+        // pontuar), entao e' recusada antes de qualquer arquivo ir ao disco.
+        if (GamificacaoService::encerrada($evento['id'])) {
+            $this->renderizarDivulgacao($evento, $inscricao, 'A gincana deste evento foi encerrada: comprovações de divulgação não pontuam mais.', $valores);
             return;
         }
 
@@ -476,23 +483,51 @@ class EventoAppController extends Controller
             return;
         }
 
-        $rotulo = $configRede['rotulo'];
+        $rotuloNo = $configRede['rotulo_no'];
 
-        // A rede precisa estar cadastrada em "Meu Perfil": o documento da
-        // dinamica de pontos fala em "mesmo Instagram informado na
-        // plataforma", e e' o nome de usuario cadastrado que permite
-        // comparar a prova com a conta da pessoa.
-        $perfilRepo = new UsuarioPerfilRepository();
-        $redesDaPessoa = $perfilRepo->redesSociais($perfilRepo->buscarPorUsuarioId(Auth::usuarioId()));
+        // A publicacao precisa ser da conta cadastrada em "Meu Perfil" (a
+        // dinamica de pontos fala em "conta ja' cadastrada"). Fase 58: o que
+        // conta como conta depende da rede (DivulgacaoConfigRepository::
+        // REDES): a rede do perfil, o telefone marcado como WhatsApp, ou
+        // nada, no TikTok e em "qualquer rede". Seguir um canal nunca exige
+        // conta. Nao
+        // ha' conferencia previa da prova: a organizacao audita depois.
+        if ($valores['tipo_acao'] === 'publicacao' && $configRede['conta'] !== null) {
+            $perfilRepo = new UsuarioPerfilRepository();
+            $perfilPessoa = $perfilRepo->buscarPorUsuarioId(Auth::usuarioId());
 
-        if (!isset($redesDaPessoa[$valores['rede']])) {
-            $this->renderizarDivulgacao(
-                $evento,
-                $inscricao,
-                'Informe primeiro o seu perfil no ' . $rotulo . ' em "Meu Perfil". A comprovação é conferida contra a conta que você cadastrou.',
-                $valores
-            );
-            return;
+            if ($configRede['conta'] === 'whatsapp') {
+                if ($perfilPessoa === null || empty($perfilPessoa['telefone']) || empty($perfilPessoa['telefone_whatsapp'])) {
+                    $this->renderizarDivulgacao(
+                        $evento,
+                        $inscricao,
+                        'Informe primeiro, em "Meu Perfil", o telefone que você usa no WhatsApp e marque que ele recebe mensagens no WhatsApp: a publicação precisa ser dessa conta.',
+                        $valores
+                    );
+                    return;
+                }
+            } elseif (!isset($perfilRepo->redesSociais($perfilPessoa)[$valores['rede']])) {
+                $this->renderizarDivulgacao(
+                    $evento,
+                    $inscricao,
+                    'Informe primeiro a sua conta ' . $rotuloNo . ' em "Meu Perfil": a publicação precisa ser dessa conta.',
+                    $valores
+                );
+                return;
+            }
+        }
+
+        // Fase 58: nome da rede digitado em "qualquer rede", opcional, ate' o
+        // tamanho da coluna. Nas demais redes o campo e' ignorado.
+        $redeInformada = null;
+
+        if ($valores['rede'] === 'qualquer' && $valores['rede_informada'] !== '') {
+            if (mb_strlen($valores['rede_informada']) > 60) {
+                $this->renderizarDivulgacao($evento, $inscricao, 'O nome da rede pode ter até 60 caracteres.', $valores);
+                return;
+            }
+
+            $redeInformada = $valores['rede_informada'];
         }
 
         $prova = $valores['tipo_acao'] === 'publicacao' ? $configRede['publicacao_prova'] : $configRede['acompanhar_prova'];
@@ -502,21 +537,21 @@ class EventoAppController extends Controller
         $enviouImagem = isset($_FILES['imagem']) && isset($_FILES['imagem']['error']) && $_FILES['imagem']['error'] !== UPLOAD_ERR_NO_FILE;
 
         if (!$enviouEndereco && !$enviouImagem) {
-            $this->renderizarDivulgacao($evento, $inscricao, $this->mensagemProvaEsperada($prova, $rotulo), $valores);
+            $this->renderizarDivulgacao($evento, $inscricao, $this->mensagemProvaEsperada($prova, $rotuloNo), $valores);
             return;
         }
 
         if ($enviouEndereco && !$aceitaEndereco) {
-            $this->renderizarDivulgacao($evento, $inscricao, 'No ' . $rotulo . ', a comprovação é a imagem da tela.', $valores);
+            $this->renderizarDivulgacao($evento, $inscricao, 'Para comprovar ' . $rotuloNo . ', envie a imagem da tela.', $valores);
             return;
         }
 
         if ($enviouImagem && !$aceitaImagem) {
-            $this->renderizarDivulgacao($evento, $inscricao, 'No ' . $rotulo . ', a comprovação é o endereço da publicação.', $valores);
+            $this->renderizarDivulgacao($evento, $inscricao, 'Para comprovar ' . $rotuloNo . ', informe o endereço da publicação.', $valores);
             return;
         }
 
-        $dados = ['rede' => $valores['rede'], 'tipo_acao' => $valores['tipo_acao']];
+        $dados = ['rede' => $valores['rede'], 'tipo_acao' => $valores['tipo_acao'], 'rede_informada' => $redeInformada];
 
         if ($enviouEndereco) {
             $endereco = $servico->normalizarEndereco($valores['rede'], $valores['endereco']);
@@ -525,7 +560,7 @@ class EventoAppController extends Controller
                 $this->renderizarDivulgacao(
                     $evento,
                     $inscricao,
-                    'Esse endereço não parece ser uma publicação do ' . $rotulo . '. Copie o endereço da publicação e cole aqui.',
+                    'Esse endereço não parece ser de uma publicação ' . $rotuloNo . '. Copie o endereço da publicação e cole aqui.',
                     $valores
                 );
                 return;
@@ -608,9 +643,13 @@ class EventoAppController extends Controller
                 ArquivoPrivadoService::remover($dados['arquivo_path']);
             }
 
-            $mensagem = $resultado['motivo_sem_pontos'] === 'acompanhar_repetido'
-                ? 'Você já registrou que acompanha o ' . $rotulo . '.'
-                : 'Esta comprovação já foi registrada neste evento.';
+            if ($resultado['motivo_sem_pontos'] === 'acompanhar_repetido') {
+                $mensagem = 'Você já registrou que segue o canal ' . $rotuloNo . '.';
+            } elseif ($resultado['motivo_sem_pontos'] === 'gincana_encerrada') {
+                $mensagem = 'A gincana deste evento foi encerrada: comprovações de divulgação não pontuam mais.';
+            } else {
+                $mensagem = 'Esta comprovação já foi registrada neste evento.';
+            }
             $this->renderizarDivulgacao($evento, $inscricao, $mensagem, $valores);
             return;
         }
@@ -618,9 +657,9 @@ class EventoAppController extends Controller
         if ($resultado['pontos'] > 0) {
             flashSucesso('Comprovação registrada. Você recebeu ' . $resultado['pontos'] . ' ponto(s).');
         } elseif ($resultado['motivo_sem_pontos'] === 'teto_dia') {
-            flashAlerta('Comprovação registrada, sem pontos: você já atingiu o limite diário de publicações que pontuam no ' . $rotulo . '.');
+            flashAlerta('Comprovação registrada, sem pontos: você já atingiu o limite diário de publicações que pontuam ' . $rotuloNo . '.');
         } elseif ($resultado['motivo_sem_pontos'] === 'teto_evento') {
-            flashAlerta('Comprovação registrada, sem pontos: você já atingiu o limite de publicações que pontuam no ' . $rotulo . ' neste evento.');
+            flashAlerta('Comprovação registrada, sem pontos: você já atingiu o limite de publicações que pontuam ' . $rotuloNo . ' neste evento.');
         } else {
             flashAlerta('Comprovação registrada. Esta ação não credita pontos neste evento.');
         }
@@ -659,8 +698,7 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Posse do aplicativo, repetida nas tres acoes de Divulgacao como nas
-     * demais telas: evento existe e quem pede tem inscricao nele. Devolve
+     * Evento e inscricao de quem pede, para as acoes de Divulgacao. Devolve
      * null depois de redirecionar, e quem chama so' precisa voltar.
      */
     private function contextoDivulgacaoOuVolta($id)
@@ -683,17 +721,21 @@ class EventoAppController extends Controller
         return ['evento' => $evento, 'inscricao' => $inscricao];
     }
 
-    private function mensagemProvaEsperada($prova, $rotulo)
+    /**
+     * Fase 58: recebe a frase com a preposicao ("no Instagram", "na rede em
+     * que voce publicou"), da lista de redes da Divulgacao.
+     */
+    private function mensagemProvaEsperada($prova, $rotuloNo)
     {
         if ($prova === 'endereco') {
-            return 'Informe o endereço da sua publicação no ' . $rotulo . '.';
+            return 'Informe o endereço da sua publicação ' . $rotuloNo . '.';
         }
 
         if ($prova === 'imagem') {
-            return 'Envie a imagem da tela mostrando a sua publicação no ' . $rotulo . '.';
+            return 'Envie a imagem da tela mostrando a sua publicação ' . $rotuloNo . '.';
         }
 
-        return 'Informe o endereço da publicação ou envie a imagem da tela do ' . $rotulo . '.';
+        return 'Informe o endereço da publicação ou envie a imagem da tela ' . $rotuloNo . '.';
     }
 
     private function renderizarDivulgacao(array $evento, array $inscricao, $erro = null, array $valores = [])
@@ -706,13 +748,17 @@ class EventoAppController extends Controller
         $config = $configRepo->vigente($evento['id']);
         $servico = new DivulgacaoService();
         $perfilRepo = new UsuarioPerfilRepository();
+        $perfilPessoa = $perfilRepo->buscarPorUsuarioId(Auth::usuarioId());
 
         $this->renderizar('eventoApp/divulgacao', [
             'evento' => $evento,
             'inscricao' => $inscricao,
             'config' => $config,
             'redes' => $configRepo->redesAtivas($evento['id']),
-            'redesDaPessoa' => $perfilRepo->redesSociais($perfilRepo->buscarPorUsuarioId(Auth::usuarioId())),
+            'redesDaPessoa' => $perfilRepo->redesSociais($perfilPessoa),
+            // Fase 58: a conta do WhatsApp e' o telefone marcado no perfil.
+            'temWhatsapp' => $perfilPessoa !== null && !empty($perfilPessoa['telefone']) && !empty($perfilPessoa['telefone_whatsapp']),
+            'gincanaEncerrada' => GamificacaoService::encerrada($evento['id']),
             'dentroDaJanela' => $servico->dentroDaJanela($evento, $config),
             'janelaTexto' => $servico->janelaTexto($evento, $config),
             'resumo' => (new DivulgacaoComprovacaoRepository())->resumoParticipante($inscricao['id']),
@@ -722,16 +768,8 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 57: pesquisa de satisfacao do evento, dentro do aplicativo.
-     *
-     * A pesquisa e' ANONIMA: o sistema guarda, em tabelas separadas e sem
-     * elo nenhum, que a pessoa respondeu (nominal, e' o que habilita o
-     * credito e o que impede responder duas vezes) e o que foi respondido.
-     *
-     * Conferencia de posse PROPRIA, e nao a de inscricao usada pelas demais
-     * acoes deste controller (bloco E, pendencia 34): facilitador e
-     * avaliador avulso tambem respondem, e nenhum dos dois tem inscricao.
-     * Nenhuma das outras conferencias do controller e' tocada.
+     * Pesquisa de satisfacao do evento, dentro do aplicativo. Facilitador,
+     * avaliador e representante de estande tambem respondem, sem pontuar.
      */
     public function pesquisa($id)
     {
@@ -745,10 +783,10 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Posse da pesquisa: inscrito no evento, facilitador ativo de alguma
-     * atividade dele, ou avaliador ativo de Trabalhos dele. Devolve a
-     * inscricao quando existe (e' ela que habilita o credito de pontos) e
-     * null quando a pessoa tem vinculo sem ser inscrita.
+     * Inscrito no evento, facilitador de alguma atividade dele, avaliador de
+     * Trabalhos dele ou representante de estande dele. Devolve a inscricao
+     * quando existe (e' ela que habilita o credito de pontos) e null quando a
+     * pessoa tem vinculo sem ser inscrita.
      */
     private function contextoPesquisaOuVolta($id)
     {
@@ -770,8 +808,9 @@ class EventoAppController extends Controller
         if ($inscricao === null) {
             $ehFacilitador = (new EventoAtividadeFacilitadorRepository())->listarPorUsuarioNoEvento($usuarioId, $id) !== [];
             $ehAvaliador = (new TrabalhoAvaliadorRepository())->estaAtivo($id, $usuarioId);
+            $ehRepresentante = (new EstandeRepresentanteRepository())->buscarPorEventoEUsuario($id, $usuarioId) !== null;
 
-            if (!$ehFacilitador && !$ehAvaliador) {
+            if (!$ehFacilitador && !$ehAvaliador && !$ehRepresentante) {
                 $this->redirecionar('eventoInscricao/index/' . (int) $id);
                 return null;
             }
@@ -815,7 +854,7 @@ class EventoAppController extends Controller
 
         if (!$servico->dentroDaJanela($evento, $config)) {
             $janela = $servico->janelaTexto($evento, $config);
-            $this->renderizarPesquisa($evento, $inscricao, 'A pesquisa fica aberta' . ($janela !== '' ? ' de ' . $janela : '') . '.');
+            $this->renderizarPesquisa($evento, $inscricao, 'A pesquisa fica aberta' . ($janela !== '' ? ' ' . $janela : '') . '.');
             return;
         }
 
@@ -885,6 +924,7 @@ class EventoAppController extends Controller
             // pessoa responde e nao pontua, e a tela precisa dizer isso
             // antes, nunca depois do envio.
             'pontua' => $inscricao !== null,
+            'gincanaEncerrada' => GamificacaoService::encerrada($evento['id']),
             'config' => $config,
             'titulo' => $configRepo->tituloDe($config),
             'perguntas' => (new PesquisaPerguntaRepository())->listarAtivas($evento['id']),
@@ -900,25 +940,9 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 43: endpoint AJAX do componente de leitura - recebe o codigo
-     * decodificado do QR (BarcodeDetector nativo) OU digitado manualmente
-     * (fallback usado sempre em Safari/Firefox, que nao suportam a API), e
-     * confirma se pertence a uma inscricao do MESMO evento do leitor.
-     *
-     * Fase 55: a leitura passou a GRAVAR a conexao entre as duas pessoas e a
-     * creditar pontos aos dois lados, numa transacao so' (ConexaoService).
-     * A ordem das conferencias segue validarEstande() (Fase 54), e a mesma
-     * distincao vale aqui: so' codigo inexistente conta no limite de
-     * tentativas. Modulo desligado, fora da janela do evento, autoleitura,
-     * inscricao ainda nao homologada e dupla ja conectada sao restricoes
-     * legitimas, nao engano de quem esta lendo.
-     *
-     * A autoleitura fecha o achado registrado na Fase 43 (Implantar.md,
-     * entrada da Fase 44): ate aqui, ler o proprio codigo era aceito.
-     *
-     * Rate limiting: LeituraCodigoFalhaRepository, tabela dedicada (nunca a
-     * mesma de login) por usuario_id do LEITOR - 10 falhas em 30 minutos
-     * bloqueia com 429 generico, resetado a cada acerto.
+     * Leitura do codigo de outra pessoa em "Conectar com participante":
+     * grava a conexao e credita os dois lados numa transacao so'
+     * (ConexaoService). Resposta em JSON para o componente de leitura.
      */
     public function validarCodigo($id)
     {
@@ -1023,6 +1047,11 @@ class EventoAppController extends Controller
         $pontos = (int) $resultado['pontos_leitor'];
         $mensagem = 'Conexão com ' . $inscricaoLida['usuario_nome'] . ' registrada';
 
+        if (GamificacaoService::encerrada($evento['id'])) {
+            echo json_encode(['valido' => true, 'mensagem' => $mensagem . '. A gincana foi encerrada, então a conexão não pontua mais.']);
+            return;
+        }
+
         if ($pontos > 0) {
             $mensagem .= ': ' . $pontos . ($pontos === 1 ? ' ponto.' : ' pontos.');
         } elseif ((int) $config['pontos_por_conexao'] > 0) {
@@ -1035,10 +1064,8 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 46: agenda de atividades do evento, com o status de inscricao do
-     * proprio usuario em cada uma - mesma checagem de posse de inscricao()/
-     * aviso()/cracha()/ler() (evento existe + o usuario tem inscricao nesse
-     * evento), mesmo redirect neutro nos dois casos de falha.
+     * Agenda de atividades do evento, com a situacao de inscricao da propria
+     * pessoa em cada uma.
      */
     public function atividades($id)
     {
@@ -1071,13 +1098,6 @@ class EventoAppController extends Controller
         ], 'Atividades: ' . $evento['nome']);
     }
 
-    /**
-     * Fase 46: recebe so' atividade_id no POST - o evento_id e' SEMPRE
-     * derivado da propria atividade no banco, nunca aceito do formulario, e
-     * so' entao a posse e' conferida (evita repetir, em codigo novo, o
-     * padrao de falta de comparacao de posse ja identificado - nao corrigido
-     * por ser fora de escopo - em validarCodigo()).
-     */
     public function inscreverAtividade()
     {
         if (!Auth::autenticado()) {
@@ -1127,10 +1147,8 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 46: mesma checagem de posse de inscreverAtividade() - evita
-     * prender alguem numa atividade por clique errado. Sem promocao
-     * automatica da lista de espera (o Admin confirma manualmente, ver
-     * AtividadeAdminController::confirmarEspera()).
+     * Sem promocao automatica da lista de espera: a organizacao confirma em
+     * AtividadeAdminController::confirmarEspera().
      */
     public function cancelarInscricaoAtividade()
     {
@@ -1164,12 +1182,8 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 47: tela do leitor de codigo para confirmar presenca - mesma
-     * checagem de posse de ler()/validarCodigo() (evento existe + o LEITOR
-     * tem inscricao nesse evento), mesmo redirect neutro nos dois casos de
-     * falha. Um unico icone "Confirmar presenca" em eventoApp/atividades
-     * abre esta tela (nao ha uma por atividade) - a atividade e'
-     * identificada pelo proprio codigo lido, dentro do evento do leitor.
+     * Leitor para confirmar presenca. A atividade e' identificada pelo
+     * proprio codigo lido, dentro do evento de quem le.
      */
     public function presenca($id)
     {
@@ -1194,13 +1208,9 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 48: atividades do evento em que a pessoa logada e' facilitadora,
-     * com o codigo de presenca online (5 caracteres) de cada uma em
-     * destaque, para comunicar verbalmente durante a atividade. Checagem de
-     * posse PROPRIA (EventoAtividadeFacilitadorRepository::listarPorUsuarioNoEvento()),
-     * nunca a checagem de inscricao usada pelas demais acoes deste
-     * controller - um facilitador pode nunca ter se inscrito como
-     * participante.
+     * Atividades em que a pessoa e' facilitadora, com o codigo de presenca
+     * online de cada uma em destaque. O acesso vem da facilitacao, e nao da
+     * inscricao: um facilitador pode nunca ter se inscrito como participante.
      */
     public function facilitacoes($id = null)
     {
@@ -1209,11 +1219,7 @@ class EventoAppController extends Controller
             return;
         }
 
-        // $id ausente (achado real: acesso direto/historico do navegador
-        // sem o parametro) - eventoApp/index() ja resolve pra onde mandar
-        // a pessoa (facilitacoes de outro evento, inscricao existente, ou
-        // formulario), mesmo criterio de robustez que index($id = null) ja
-        // tem.
+        // Sem o evento no endereco, index() decide para onde mandar a pessoa.
         if ($id === null) {
             $this->redirecionar('eventoApp/index');
             return;
@@ -1232,24 +1238,30 @@ class EventoAppController extends Controller
         // Fase 57 (bloco E, pendencia 34): quem conduziu uma atividade
         // tambem responde a pesquisa de satisfacao, e ate' aqui nao tinha
         // por onde. Nao pontua, porque nao tem inscricao.
+        // Fase 58: competicoes ligadas as atividades que a pessoa facilita,
+        // com o codigo de participacao para mostrar em tela cheia a quem
+        // canta ou compete ("QR na mao do responsavel").
         $this->renderizar('eventoApp/facilitacoes', [
             'evento' => $evento,
             'facilitacoes' => $facilitacoes,
+            'competicoes' => (new CompeticaoRepository())->listarDoFacilitadorNoEvento(Auth::usuarioId(), $evento['id']),
+            'gincanaEncerrada' => GamificacaoService::encerrada($evento['id']),
             'pesquisaAberta' => $this->pesquisaAberta($evento),
             'pesquisaRespondida' => (new PesquisaRespondenteRepository())->jaRespondeu($evento['id'], Auth::usuarioId()),
             'temInscricao' => (new EventoInscricaoRepository())->buscarPorEventoEUsuario($id, Auth::usuarioId()) !== null,
+            // Fase 59: quem conduziu atividade tem direito ao certificado do
+            // evento e ao de cada atividade conduzida, e sem inscricao nao
+            // passa pelo painel - este e' o caminho dele.
+            'certificadosAbertos' => (new CertificadoElegibilidadeService())->emissaoAbertaAoParticipante(
+                $evento,
+                (new CertificadoConfigRepository())->vigente($evento['id'])
+            ),
         ], 'Minhas facilitações: ' . $evento['nome']);
     }
 
     /**
-     * Fase 47: endpoint AJAX do leitor de codigo - mesmo contrato JSON de
-     * validarCodigo(), mas busca em evento_atividades (codigo fixo,
-     * impessoal, da atividade), nunca em evento_inscricoes (codigo pessoal
-     * de outro participante). A ordem foi pensada para que a chave do
-     * limite de tentativas so' use atividade_id quando o codigo de fato
-     * corresponde a uma atividade real (ver EventoAtividadeLeituraFalhaRepository) -
-     * busca a atividade ANTES de checar o limite, para nao atribuir falhas
-     * de codigo invalido a uma atividade que o leitor nunca de fato tentou.
+     * Leitura dos codigos fixos do evento (atividade, competicao e
+     * credenciamento no local), em JSON, no contrato de validarCodigo().
      */
     public function validarPresenca($id)
     {
@@ -1275,22 +1287,42 @@ class EventoAppController extends Controller
         $corpo = json_decode(file_get_contents('php://input'), true);
         $codigo = isset($corpo['codigo']) ? strtoupper(trim((string) $corpo['codigo'])) : '';
 
-        // Fase 48: o tamanho do codigo decide qual coluna buscar - 6
-        // caracteres e' o QR fixo (sempre 'presencial'), 5 e' o codigo de
-        // presenca online (sempre 'online'). Os dois tamanhos nunca colidem
-        // entre si (CodigoUnicoService::gerar() checa unicidade so' dentro
-        // da propria coluna), e um comprimento fora desses dois e' sempre
-        // codigo invalido, sem tentar nenhuma das duas buscas.
+        // O tamanho do codigo decide a busca: 6 caracteres e' codigo fixo
+        // (atividade, competicao ou credenciamento, nesta ordem), 5 e' o codigo de
+        // presenca online. Os codigos fixos sao unicos entre si
+        // (CodigoUnicoService::gerarCodigoFixoDoEvento()), entao a ordem nunca
+        // decide entre dois donos do mesmo codigo.
         $atividadesRepo = new EventoAtividadeRepository();
         $modalidadeAcesso = 'presencial';
         $atividade = null;
+        $competicao = null;
+        $credenciamento = null;
 
         if (strlen($codigo) === 6) {
             $atividade = $atividadesRepo->buscarPorCodigo($id, $codigo);
             $modalidadeAcesso = 'presencial';
+
+            if ($atividade === null) {
+                $competicao = (new CompeticaoRepository())->buscarPorCodigo($id, $codigo);
+            }
+
+            if ($atividade === null && $competicao === null) {
+                $credenciamento = (new CredenciamentoLocalRepository())->buscarConfigPorCodigo($id, $codigo);
+            }
         } elseif (strlen($codigo) === 5) {
             $atividade = $atividadesRepo->buscarPorCodigoPresencaOnline($id, $codigo);
             $modalidadeAcesso = 'online';
+        }
+
+        // Contagem de falhas nos codigos fixos: ver Implantar.md, secao 13.17.
+        if ($competicao !== null) {
+            echo json_encode($this->participarDaCompeticao($evento, $inscricaoLeitor, $competicao));
+            return;
+        }
+
+        if ($credenciamento !== null) {
+            echo json_encode($this->credenciarNoLocal($evento, $inscricaoLeitor, $credenciamento));
+            return;
         }
 
         $atividadeId = $atividade !== null ? (int) $atividade['id'] : null;
@@ -1310,16 +1342,21 @@ class EventoAppController extends Controller
             return;
         }
 
-        // Fase 47 (correcao pos-teste de fumaca): achado real - sem esta
-        // checagem, a leitura era aceita a qualquer momento ate' data_fim,
-        // inclusive MESES antes de data_inicio. Nao conta como falha de
-        // rate limit (nao e' erro de leitura/digitacao, e' uma restricao de
-        // horario legitima).
+        // Leitura aceita so' a partir da antecedencia configurada antes do inicio.
         $aberturaTimestamp = strtotime($atividade['data_inicio']) - ((int) $atividade['antecedencia_abertura_presenca'] * 60);
         if (time() < $aberturaTimestamp) {
             echo json_encode([
                 'valido' => false,
                 'mensagem' => 'A confirmação de presença para esta atividade abre a partir de ' . formatarDataHora(date('Y-m-d H:i:s', $aberturaTimestamp)) . '.',
+            ]);
+            return;
+        }
+
+        // A leitura fecha no fim da atividade.
+        if (time() > strtotime($atividade['data_fim'])) {
+            echo json_encode([
+                'valido' => false,
+                'mensagem' => 'A confirmação de presença desta atividade encerrou em ' . formatarDataHora($atividade['data_fim']) . '.',
             ]);
             return;
         }
@@ -1345,16 +1382,22 @@ class EventoAppController extends Controller
         $checkins->registrar($atividadeId, $inscricaoLeitor['id'], $modalidadeAcesso);
         $tentativas->limparFalhas($usuarioId, $atividadeId);
 
-        // Fase 57: a presenca nova pode fechar um bonus. A apuracao roda
-        // DEPOIS da gravacao da presenca e dentro de um bloco de protecao
-        // proprio: a presenca e' o fato principal, o cabecalho da resposta
-        // ja foi escrito, e falha na apuracao nunca pode transformar uma
-        // confirmacao bem sucedida em erro na tela de quem esta na porta da
-        // sala. Nao ha' chamada dentro de EventoCheckinRepository de
-        // proposito: repositorio nao depende de servico neste projeto, e
-        // aqui o metodo so' chega quando a presenca e' nova de verdade (a
-        // repetida ja' retornou acima).
+        // A apuracao dos bonus roda depois da gravacao e em bloco proprio: falha
+        // nela nunca transforma uma presenca confirmada em erro.
         $mensagem = 'Presença confirmada em "' . $atividade['nome'] . '".';
+
+        // Pontos da propria presenca, no mesmo tipo de bloco: falha no credito
+        // nunca vira erro na tela de quem esta' na porta da sala.
+        try {
+            $checkinGravado = $checkins->buscarPorAtividadeEInscricao($atividadeId, $inscricaoLeitor['id']);
+
+            if ($checkinGravado !== null) {
+                $pontuacao = (new PresencaPontuacaoService())->creditar($evento, $atividade, $checkinGravado, Auth::usuarioId());
+                $mensagem .= $this->mensagemDePontosDePresenca($pontuacao);
+            }
+        } catch (\Throwable $e) {
+            error_log('[Presenca] Falha ao creditar a presenca da inscricao ' . (int) $inscricaoLeitor['id'] . ': ' . $e->getMessage());
+        }
 
         try {
             $creditados = (new BonusApuracaoService())->apurarInscricao($evento, $inscricaoLeitor['id'], Auth::usuarioId());
@@ -1364,6 +1407,142 @@ class EventoAppController extends Controller
         }
 
         echo json_encode(['valido' => true, 'mensagem' => $mensagem]);
+    }
+
+    /**
+     * Fase 58: complemento da mensagem da leitura com os pontos da propria
+     * presenca (PresencaPontuacaoService::creditar()).
+     */
+    private function mensagemDePontosDePresenca($pontuacao)
+    {
+        if ($pontuacao === null) {
+            return '';
+        }
+
+        if (!empty($pontuacao['encerrada'])) {
+            return ' A gincana foi encerrada, então esta presença não pontua mais.';
+        }
+
+        if (!empty($pontuacao['facilitador'])) {
+            return ' Você facilita esta atividade, então a presença fica registrada sem pontos.';
+        }
+
+        $presenca = (int) $pontuacao['pontos_presenca'];
+        $pontualidade = (int) $pontuacao['pontos_pontualidade'];
+        $texto = ' Você recebeu ' . $presenca . ($presenca === 1 ? ' ponto' : ' pontos');
+
+        if ($pontualidade > 0) {
+            $texto .= ', mais ' . $pontualidade . ' de pontualidade';
+        }
+
+        return $texto . '.';
+    }
+
+    /**
+     * Fase 58: leitura do codigo de uma competicao (Karaoke, Batalha de
+     * Prompts). A dinamica de pontos v2 pontua a participacao, lida num
+     * codigo "na mao do responsavel", sem inscricao previa; uma
+     * participacao pontuada por pessoa por competicao.
+     *
+     * Janela: a da atividade ligada (abertura da leitura ate' o fim); sem
+     * atividade ligada, os dias do evento. Devolve a resposta JSON pronta.
+     */
+    private function participarDaCompeticao(array $evento, array $inscricao, array $competicao)
+    {
+        if (empty($competicao['ativo'])) {
+            return ['valido' => false, 'mensagem' => 'Esta competição não está recebendo participações no momento.'];
+        }
+
+        if (!empty($competicao['atividade_id']) && $competicao['atividade_inicio'] !== null) {
+            $abertura = strtotime($competicao['atividade_inicio']) - ((int) $competicao['atividade_antecedencia'] * 60);
+            $fim = strtotime($competicao['atividade_fim']);
+
+            if (time() < $abertura || time() > $fim) {
+                return [
+                    'valido' => false,
+                    'mensagem' => 'A participação em "' . $competicao['nome'] . '" vale de '
+                        . formatarDataHora(date('Y-m-d H:i:s', $abertura)) . ' a ' . formatarDataHora($competicao['atividade_fim']) . '.',
+                ];
+            }
+        } else {
+            $hoje = date('Y-m-d');
+
+            if ($hoje < substr((string) $evento['data_inicio'], 0, 10) || $hoje > substr((string) $evento['data_fim'], 0, 10)) {
+                return [
+                    'valido' => false,
+                    'mensagem' => 'A participação em "' . $competicao['nome'] . '" vale só durante o evento, de '
+                        . formatarData($evento['data_inicio']) . ' a ' . formatarData($evento['data_fim']) . '.',
+                ];
+            }
+        }
+
+        if (!empty($competicao['atividade_id'])) {
+            $facilitacao = (new EventoAtividadeFacilitadorRepository())->buscarPorAtividadeEUsuario((int) $competicao['atividade_id'], Auth::usuarioId());
+
+            if ($facilitacao !== null && $facilitacao['removido_em'] === null) {
+                return ['valido' => false, 'mensagem' => 'Você conduz esta competição, então a participação nela não pontua para você.'];
+            }
+        }
+
+        if (GamificacaoService::encerrada($evento['id'])) {
+            return ['valido' => false, 'mensagem' => 'A gincana deste evento foi encerrada: a participação em competições não pontua mais.'];
+        }
+
+        $pontos = (int) $competicao['pontos_participacao'];
+        $gravou = (new CompeticaoParticipacaoRepository())->registrar((int) $evento['id'], (int) $competicao['id'], (int) $inscricao['id'], $pontos);
+
+        if (!$gravou) {
+            return ['valido' => true, 'mensagem' => 'Sua participação em "' . $competicao['nome'] . '" já estava registrada.'];
+        }
+
+        return [
+            'valido' => true,
+            'mensagem' => 'Participação em "' . $competicao['nome'] . '" registrada'
+                . ($pontos > 0 ? ': ' . $pontos . ($pontos === 1 ? ' ponto.' : ' pontos.') : '.'),
+        ];
+    }
+
+    /**
+     * Fase 58: leitura do codigo do credenciamento no local. Grava o fato e
+     * apura os bonus: quem credita e' um bonus do tipo credenciamento_local
+     * do catalogo, e nao este metodo. Depois do encerramento, o fato
+     * continua sendo gravado, sem pontos. Devolve a resposta JSON pronta.
+     */
+    private function credenciarNoLocal(array $evento, array $inscricao, array $config)
+    {
+        if ((int) $config['ativo'] !== 1) {
+            return ['valido' => false, 'mensagem' => 'O credenciamento no local não está aberto neste evento.'];
+        }
+
+        $inicio = $config['leitura_inicio'] !== null ? strtotime($config['leitura_inicio']) : strtotime(substr((string) $evento['data_inicio'], 0, 10) . ' 00:00:00');
+        $fim = $config['leitura_fim'] !== null ? strtotime($config['leitura_fim']) : strtotime(substr((string) $evento['data_fim'], 0, 10) . ' 23:59:59');
+
+        if (time() < $inicio || time() > $fim) {
+            return [
+                'valido' => false,
+                'mensagem' => 'O credenciamento no local vale de ' . formatarDataHora(date('Y-m-d H:i:s', $inicio))
+                    . ' a ' . formatarDataHora(date('Y-m-d H:i:s', $fim)) . '.',
+            ];
+        }
+
+        if (!(new CredenciamentoLocalRepository())->registrar((int) $evento['id'], (int) $inscricao['id'])) {
+            return ['valido' => true, 'mensagem' => 'Credenciamento já confirmado.'];
+        }
+
+        $mensagem = 'Credenciamento confirmado. Boas-vindas ao evento!';
+
+        if (GamificacaoService::encerrada($evento['id'])) {
+            return ['valido' => true, 'mensagem' => $mensagem . ' A gincana foi encerrada, então o credenciamento não pontua mais.'];
+        }
+
+        try {
+            $creditados = (new BonusApuracaoService())->apurarInscricao($evento, (int) $inscricao['id'], Auth::usuarioId());
+            $mensagem .= $this->mensagemDeBonus($creditados);
+        } catch (\Throwable $e) {
+            error_log('[Bonus] Falha ao apurar apos o credenciamento da inscricao ' . (int) $inscricao['id'] . ': ' . $e->getMessage());
+        }
+
+        return ['valido' => true, 'mensagem' => $mensagem];
     }
 
     /**
@@ -1398,9 +1577,169 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 54: estandes ativos do evento e o progresso do participante
-     * (estandes ja visitados e total de pontos). Mesma conferencia de posse
-     * de atividades(). O codigo do estande nunca sai nesta tela.
+     * Fase 58: "Minha pontuacao" - total, posicao e extrato da pessoa, e os
+     * N primeiros da classificacao geral (com ou sem nomes, conforme a
+     * configuracao). A classificacao e' calculada na hora, numa consulta so'
+     * (GamificacaoService::classificacao()); falha de banco mostra
+     * "classificacao indisponivel" em vez de numeros errados.
+     */
+    public function pontuacao($id)
+    {
+        $contexto = $this->contextoGamificacaoOuVolta($id);
+
+        if ($contexto === null) {
+            return;
+        }
+
+        $evento = $contexto['evento'];
+        $inscricao = $contexto['inscricao'];
+        $config = $contexto['config'];
+        $classificacao = [];
+        $indisponivel = false;
+
+        try {
+            $classificacao = (new GamificacaoService())->classificacao($evento['id']);
+        } catch (\Throwable $e) {
+            error_log('[Gamificacao] Falha ao montar a classificacao do evento ' . (int) $evento['id'] . ': ' . $e->getMessage());
+            $indisponivel = true;
+        }
+
+        $primeiros = [];
+
+        if ($config['classificacao_visivel'] === 1 && $config['classificacao_quantidade'] > 0) {
+            foreach ($classificacao as $linha) {
+                if ($linha['posicao'] > $config['classificacao_quantidade']) {
+                    break;
+                }
+
+                $primeiros[] = $linha;
+            }
+        }
+
+        try {
+            $presencas = (new PresencaCreditoRepository())->listarDaInscricao($inscricao['id']);
+            $participacoes = (new CompeticaoParticipacaoRepository())->listarDaInscricao($inscricao['id']);
+        } catch (\PDOException $e) {
+            error_log('[Gamificacao] Falha ao ler o extrato da inscricao ' . (int) $inscricao['id'] . ': ' . $e->getMessage());
+            $presencas = [];
+            $participacoes = [];
+        }
+
+        $this->renderizar('eventoApp/pontuacao', [
+            'evento' => $evento,
+            'inscricao' => $inscricao,
+            'config' => $config,
+            'indisponivel' => $indisponivel,
+            'minhaLinha' => GamificacaoService::linhaDaInscricao($classificacao, $inscricao['id']),
+            'primeiros' => $primeiros,
+            'presencas' => $presencas,
+            'participacoes' => $participacoes,
+            'gincanaEncerrada' => GamificacaoService::encerrada($evento['id']),
+        ], 'Minha pontuação: ' . $evento['nome']);
+    }
+
+    /**
+     * Fase 58: "Regras do jogo" - montada a partir do cadastro de cada
+     * modulo (tipos de atividade, bonus, estandes, conexoes, redes,
+     * competicoes, credenciamento, desempate), nunca de texto fixo: o que a
+     * tela mostra e' o que o sistema vai de fato creditar. Todo texto de
+     * explicacao mora na view.
+     */
+    public function regras($id)
+    {
+        $contexto = $this->contextoGamificacaoOuVolta($id);
+
+        if ($contexto === null) {
+            return;
+        }
+
+        $evento = $contexto['evento'];
+        $eventoId = (int) $evento['id'];
+
+        $tipos = (new EventoAtividadeTipoRepository())->listar($eventoId);
+        $tiposPorId = [];
+
+        foreach ($tipos as $tipo) {
+            $tiposPorId[(int) $tipo['id']] = $tipo;
+        }
+
+        // Atividades com valor proprio, diferente do tipo: a tela lista cada
+        // uma, porque a regra do tipo nao vale para elas.
+        $atividadesComExcecao = [];
+
+        foreach ((new EventoAtividadeRepository())->listarPorEvento($eventoId) as $atividade) {
+            if ($atividade['pontos_presenca'] === null && $atividade['pontos_pontualidade'] === null) {
+                continue;
+            }
+
+            $tipo = !empty($atividade['tipo_id']) && isset($tiposPorId[(int) $atividade['tipo_id']]) ? $tiposPorId[(int) $atividade['tipo_id']] : null;
+            $atividadesComExcecao[] = [
+                'nome' => $atividade['nome'],
+                'data_inicio' => $atividade['data_inicio'],
+                'valores' => PresencaPontuacaoService::valoresVigentes($atividade, $tipo),
+            ];
+        }
+
+        $desempate = [];
+
+        foreach ((new GamificacaoDesempateRepository())->listarCriterios($eventoId) as $linha) {
+            $desempate[] = GamificacaoService::rotuloDoCriterio($linha['criterio']);
+        }
+
+        $divulgacaoConfig = new DivulgacaoConfigRepository();
+
+        $this->renderizar('eventoApp/regras', [
+            'evento' => $evento,
+            'config' => $contexto['config'],
+            'tipos' => $tipos,
+            'atividadesComExcecao' => $atividadesComExcecao,
+            'bonus' => (new BonusConfigRepository())->estaAtivo($eventoId) ? (new BonusRepository())->listarAtivos($eventoId) : [],
+            'estandes' => (new EstandeRepository())->listarAtivosPublico($eventoId),
+            'conexoes' => (new ConexaoConfigRepository())->vigente($eventoId),
+            'divulgacao' => $divulgacaoConfig->vigente($eventoId),
+            'redes' => $divulgacaoConfig->redesAtivas($eventoId),
+            'competicoes' => (new CompeticaoRepository())->listarAtivasDoEvento($eventoId),
+            'credenciamento' => (new CredenciamentoLocalRepository())->configVigente($eventoId),
+            'desempate' => $desempate,
+            'gincanaEncerrada' => GamificacaoService::encerrada($eventoId),
+        ], 'Regras do jogo: ' . $evento['nome']);
+    }
+
+    /**
+     * Evento, inscricao de quem pede e modulo Gamificacao ligado; sem eles, a
+     * pessoa volta ao painel. Devolve null depois de redirecionar.
+     */
+    private function contextoGamificacaoOuVolta($id)
+    {
+        if (!Auth::autenticado()) {
+            $this->redirecionar('eventoInscricao/index/' . (int) $id);
+            return null;
+        }
+
+        $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+        $inscricao = $evento !== null
+            ? (new EventoInscricaoRepository())->buscarPorEventoEUsuario($id, Auth::usuarioId())
+            : null;
+
+        if ($evento === null || $inscricao === null) {
+            $this->redirecionar('eventoInscricao/index/' . (int) $id);
+            return null;
+        }
+
+        $config = (new GamificacaoConfigRepository())->vigente($evento['id']);
+
+        if ($config['ativo'] !== 1) {
+            flashAlerta('A pontuação da gincana não está disponível neste evento.');
+            $this->redirecionar('eventoApp/index/' . (int) $evento['id']);
+            return null;
+        }
+
+        return ['evento' => $evento, 'inscricao' => $inscricao, 'config' => $config];
+    }
+
+    /**
+     * Estandes ativos do evento e o progresso da pessoa. O codigo do estande
+     * nunca sai nesta tela.
      */
     public function estandes($id)
     {
@@ -1428,6 +1767,7 @@ class EventoAppController extends Controller
 
         $this->renderizar('eventoApp/estandes', [
             'evento' => $evento,
+            'gincanaEncerrada' => GamificacaoService::encerrada($evento['id']),
             'estandes' => (new EstandeRepository())->listarAtivosPublico($id),
             'resumo' => $resumo,
             'visitados' => $visitados,
@@ -1435,8 +1775,7 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 54: tela do leitor do codigo do estande - mesma conferencia de
-     * posse e mesmo componente de leitura de presenca().
+     * Leitor do codigo do estande, com o mesmo componente de presenca().
      */
     public function lerEstande($id)
     {
@@ -1461,13 +1800,9 @@ class EventoAppController extends Controller
     }
 
     /**
-     * Fase 54: resposta JSON da leitura do codigo do estande, no contrato de
-     * validarPresenca(). Ordem: posse, limite de tentativas, codigo de 6
-     * caracteres do evento de quem le, estande ativo, autovisita (quem
-     * representa o estande nao pontua nele), visita ja registrada, gravacao
-     * com os pontos vigentes. Estande inativo e autovisita sao restricoes
-     * legitimas, nao erro de leitura: nao contam no limite de tentativas.
-     * Sem janela de horario (decisao do dono na Fase 54).
+     * Leitura do codigo do estande, em JSON, no contrato de validarPresenca().
+     * Quem representa o estande nao pontua nele, e a visita nao tem janela de
+     * horario (decisao do dono na Fase 54).
      */
     public function validarEstande($id)
     {
@@ -1526,14 +1861,19 @@ class EventoAppController extends Controller
             return;
         }
 
-        $registro = $visitas->registrar((int) $estande['id'], $inscricaoLeitor['id'], (int) $estande['pontos_visita']);
+        // Fase 58: depois do encerramento da gincana a visita continua
+        // registrada (ela interessa ao expositor), mas com zero ponto.
+        $encerrada = GamificacaoService::encerrada($evento['id']);
+        $registro = $visitas->registrar((int) $estande['id'], $inscricaoLeitor['id'], $encerrada ? 0 : (int) $estande['pontos_visita']);
         $tentativas->limparFalhas($usuarioId);
         $pontos = (int) $registro['pontos_creditados'];
 
         echo json_encode([
             'valido' => true,
             'mensagem' => 'Visita ao estande "' . $estande['nome'] . '" registrada'
-                . ($pontos > 0 ? ': ' . $pontos . ($pontos === 1 ? ' ponto.' : ' pontos.') : '.'),
+                . ($encerrada
+                    ? '. A gincana foi encerrada, então a visita não pontua mais.'
+                    : ($pontos > 0 ? ': ' . $pontos . ($pontos === 1 ? ' ponto.' : ' pontos.') : '.')),
         ]);
     }
 
@@ -1632,5 +1972,176 @@ class EventoAppController extends Controller
 
         header('Content-Type: application/manifest+json');
         echo json_encode($manifesto, JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * Fase 59: os certificados a que a pessoa tem direito neste evento, com o
+     * botao de emitir ou de baixar cada um.
+     *
+     * Alcanca tambem quem nao tem inscricao (facilitador e avaliador avulso),
+     * pelo mesmo criterio aberto na Fase 57 para a pesquisa de satisfacao: a
+     * designacao deles e' a propria prova de participacao.
+     */
+    public function certificados($id)
+    {
+        $contexto = $this->contextoCertificadoOuVolta($id);
+
+        if ($contexto === null) {
+            return;
+        }
+
+        $evento = $contexto['evento'];
+        $config = (new CertificadoConfigRepository())->vigente((int) $evento['id']);
+        $elegibilidade = new CertificadoElegibilidadeService();
+
+        if (!$elegibilidade->emissaoAbertaAoParticipante($evento, $config)) {
+            flashAlerta('A organização ainda não abriu a emissão dos certificados deste evento.');
+            $this->redirecionar('eventoApp/index/' . (int) $evento['id']);
+            return;
+        }
+
+        $dossie = $elegibilidade->dossieDoUsuario($evento, $config, $contexto['usuarioId'], $contexto['inscricao']);
+        $emitidos = (new CertificadoRepository())->mapaDoUsuarioNoEvento((int) $evento['id'], $contexto['usuarioId']);
+
+        $this->renderizar('eventoApp/certificados', [
+            'evento' => $evento,
+            'inscricao' => $contexto['inscricao'],
+            'dossie' => $dossie,
+            'emitidos' => $emitidos,
+            'exigencias' => CertificadoElegibilidadeService::exigenciasEmVigor($config),
+            'cargaHoraria' => CertificadoElegibilidadeService::formatarCargaHoraria($dossie['minutos_total']),
+        ], 'Certificados: ' . $evento['nome']);
+    }
+
+    /**
+     * Fase 59: o proprio interessado pede o certificado. Gravacao, entao
+     * nunca acontece em "visualizar como outro usuario" (o Router ja' recusa
+     * POST nesse modo, e a tela tambem nao mostra o botao).
+     *
+     * O documento e' guardado na primeira emissao: pedir de novo entrega o
+     * mesmo arquivo, e a chave unica da migration 199 garante isso mesmo com
+     * duplo clique.
+     */
+    public function emitirCertificado($id)
+    {
+        $contexto = $this->contextoCertificadoOuVolta($id);
+
+        if ($contexto === null) {
+            return;
+        }
+
+        $evento = $contexto['evento'];
+        $eventoId = (int) $evento['id'];
+        $config = (new CertificadoConfigRepository())->vigente($eventoId);
+        $elegibilidade = new CertificadoElegibilidadeService();
+
+        if (!$elegibilidade->emissaoAbertaAoParticipante($evento, $config)) {
+            flashAlerta('A organização ainda não abriu a emissão dos certificados deste evento.');
+            $this->redirecionar('eventoApp/index/' . $eventoId);
+            return;
+        }
+
+        $chave = isset($_POST['chave']) ? trim((string) $_POST['chave']) : '';
+        $dossie = $elegibilidade->dossieDoUsuario($evento, $config, $contexto['usuarioId'], $contexto['inscricao']);
+        $escolhido = null;
+
+        // A apuracao e' a fonte de verdade: chave que nao esteja no dossie
+        // desta pessoa nao alcanca nada, mesmo que alguem altere o
+        // formulario.
+        foreach ($dossie['itens'] as $item) {
+            if ($item['chave'] === $chave) {
+                $escolhido = $item;
+                break;
+            }
+        }
+
+        if ($escolhido === null) {
+            flashAlerta('Não foi encontrado certificado a emitir. Recarregue a tela e tente outra vez.');
+            $this->redirecionar('eventoApp/certificados/' . $eventoId);
+            return;
+        }
+
+        try {
+            $saida = (new CertificadoEmissaoService())->emitirItem($evento, $config, $dossie, $escolhido);
+
+            if ($saida['novo']) {
+                flashSucesso('Certificado emitido. Ele fica guardado e pode ser baixado quantas vezes você precisar.');
+            } else {
+                flashAlerta('Este certificado já havia sido emitido.');
+            }
+        } catch (\Throwable $e) {
+            error_log('[Certificado] Falha ao emitir ' . $chave . ' pelo participante: ' . $e->getMessage());
+            flashErro('Não foi possível emitir o certificado agora. Tente de novo em alguns minutos; se persistir, procure a organização do evento.');
+        }
+
+        $this->redirecionar('eventoApp/certificados/' . $eventoId);
+    }
+
+    /**
+     * Entrega o arquivo guardado do certificado, que precisa ser da propria
+     * pessoa e nao estar cancelado.
+     */
+    public function certificadoArquivo($id, $certificadoId = null)
+    {
+        $contexto = $this->contextoCertificadoOuVolta($id);
+
+        if ($contexto === null) {
+            return;
+        }
+
+        $certificado = (new CertificadoRepository())->buscarPorId($certificadoId);
+
+        if ($certificado === null
+            || (int) $certificado['evento_id'] !== (int) $contexto['evento']['id']
+            || (int) $certificado['usuario_id'] !== (int) $contexto['usuarioId']) {
+            http_response_code(404);
+            exit('Certificado não encontrado.');
+        }
+
+        if ($certificado['cancelado_em'] !== null) {
+            http_response_code(404);
+            exit('Este certificado foi cancelado pela organização em ' . formatarData($certificado['cancelado_em']) . '.');
+        }
+
+        ArquivoPrivadoService::servir(
+            $certificado['arquivo_path'],
+            'certificado-' . $certificado['codigo_verificacao'] . '.pdf'
+        );
+    }
+
+    /**
+     * Fase 59: mesmo molde de contextoPesquisaOuVolta() - quem nao tem
+     * inscricao segue adiante quando conduz atividade, avalia trabalho ou e'
+     * autor de trabalho apresentado neste evento.
+     */
+    private function contextoCertificadoOuVolta($id)
+    {
+        if (!Auth::autenticado()) {
+            $this->redirecionar('eventoInscricao/index/' . (int) $id);
+            return null;
+        }
+
+        $evento = (new SemanaInovacaoRepository())->buscarPorId($id);
+
+        if ($evento === null) {
+            $this->redirecionar('eventoApp/index');
+            return null;
+        }
+
+        $usuarioId = Auth::usuarioId();
+        $inscricao = (new EventoInscricaoRepository())->buscarPorEventoEUsuario($id, $usuarioId);
+
+        if ($inscricao === null) {
+            $ehFacilitador = (new EventoAtividadeFacilitadorRepository())->listarPorUsuarioNoEvento($usuarioId, $id) !== [];
+            $ehAvaliador = (new TrabalhoAvaliadorRepository())->estaAtivo($id, $usuarioId);
+            $ehAutor = (new TrabalhoApresentacaoRepository())->listarAutoriasApresentadasDoUsuario($id, $usuarioId) !== [];
+
+            if (!$ehFacilitador && !$ehAvaliador && !$ehAutor) {
+                $this->redirecionar('eventoInscricao/index/' . (int) $id);
+                return null;
+            }
+        }
+
+        return ['evento' => $evento, 'inscricao' => $inscricao, 'usuarioId' => $usuarioId];
     }
 }

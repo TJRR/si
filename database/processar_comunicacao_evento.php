@@ -1,21 +1,19 @@
 <?php
 
 /**
- * Fase 45: processa a fila de avisos em massa dos eventos (sub-aba
- * "Comunicacao") em lotes pequenos - uso:
+ * Processa a fila de avisos em massa dos eventos (sub-aba "Comunicacao")
+ * em lotes pequenos. Uso:
  *   php database/processar_comunicacao_evento.php
  *
- * Chamado por cron a cada 1 minuto (ver DeployFase45.md, secao de
- * infraestrutura). O throttle exigido pelo canal de SMTP institucional
- * (no maximo 10 e-mails por lote, pausa de 60s entre lotes) nao precisa de
- * nenhum controle de tempo proprio: cada execucao processa ate' 10
- * destinatarios pendentes NO TOTAL (de todas as campanhas em aberto, mais
- * antigas primeiro - ver EventoComunicacaoRepository::proximosPendentes()),
- * e o proprio intervalo de 1 minuto entre execucoes do cron impoe a pausa.
+ * Disparado pelo agendador do servidor a cada minuto. Cada execucao
+ * processa no maximo 10 destinatarios pendentes NO TOTAL (de todas as
+ * campanhas em aberto, mais antigas primeiro; ver
+ * EventoComunicacaoRepository::proximosPendentes()), e o intervalo do
+ * agendador impoe a pausa entre lotes. Ver Implantar.md, secao 13.4.
  *
  * Seguro rodar a qualquer momento e quantas vezes quiser: so' processa o que
  * esta pendente, e cada destinatario e' marcado enviado/falhou de forma
- * definitiva (sem retry automatico) assim que processado.
+ * definitiva (sem nova tentativa automatica) assim que processado.
  */
 
 if (php_sapi_name() !== 'cli') {

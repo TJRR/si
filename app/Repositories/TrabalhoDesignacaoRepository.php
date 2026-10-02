@@ -174,4 +174,56 @@ class TrabalhoDesignacaoRepository
 
         Auditoria::registrar('remover', 'trabalho_designacoes', $id, $antes !== false ? $antes : null, null);
     }
+
+    /**
+     * Fase 59: quantos trabalhos do evento o avaliador de fato NOTOU, e nao
+     * apenas recebeu. O certificado do avaliador atesta funcao cumprida, e
+     * nao convite aceito: quem foi designado e nunca lancou nota nenhuma nao
+     * tem direito.
+     *
+     * Conta designacoes com ao menos uma linha em trabalho_notas, nao notas:
+     * o avaliador lanca uma nota por criterio, e contar notas diria quantos
+     * criterios ele preencheu.
+     */
+    public function contarNotadosNoEventoPorUsuario($eventoId, $usuarioId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*)
+               FROM trabalho_designacoes d
+               INNER JOIN trabalhos t ON t.id = d.trabalho_id
+              WHERE t.evento_id = :evento_id AND d.usuario_id = :usuario_id
+                AND EXISTS (SELECT 1 FROM trabalho_notas n WHERE n.designacao_id = d.id)'
+        );
+        $stmt->execute(['evento_id' => (int) $eventoId, 'usuario_id' => (int) $usuarioId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Fase 59: a mesma contagem para o evento inteiro, na forma
+     * [usuario_id => quantos]. Quem nao notou nada nao aparece, entao a
+     * apuracao do evento percorre so' quem cumpriu a funcao.
+     */
+    public function contarNotadosNoEvento($eventoId)
+    {
+        $pdo = Database::conexao();
+        $stmt = $pdo->prepare(
+            'SELECT d.usuario_id, COUNT(*) AS notados
+               FROM trabalho_designacoes d
+               INNER JOIN trabalhos t ON t.id = d.trabalho_id
+              WHERE t.evento_id = :evento_id
+                AND EXISTS (SELECT 1 FROM trabalho_notas n WHERE n.designacao_id = d.id)
+              GROUP BY d.usuario_id'
+        );
+        $stmt->execute(['evento_id' => (int) $eventoId]);
+
+        $porUsuario = [];
+
+        foreach ($stmt->fetchAll() as $linha) {
+            $porUsuario[(int) $linha['usuario_id']] = (int) $linha['notados'];
+        }
+
+        return $porUsuario;
+    }
 }

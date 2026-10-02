@@ -21,11 +21,26 @@
         stream.getTracks().forEach(function (track) { track.stop(); });
     }
 
-    function mostrarResultado(container, valido, mensagem) {
+    function mostrarResultado(container, valido, mensagem, foto) {
         var resultado = container.querySelector('[data-leitor-resultado]');
         resultado.textContent = mensagem;
         resultado.className = 'leitor-codigo-resultado status-pill ' + (valido ? 'verde' : 'vermelho');
         resultado.hidden = false;
+
+        var fotoAnterior = container.querySelector('[data-leitor-foto]');
+
+        if (fotoAnterior) {
+            fotoAnterior.parentNode.removeChild(fotoAnterior);
+        }
+
+        if (foto) {
+            var imagem = document.createElement('img');
+            imagem.src = foto;
+            imagem.alt = '';
+            imagem.className = 'leitor-codigo-foto';
+            imagem.setAttribute('data-leitor-foto', '');
+            resultado.parentNode.insertBefore(imagem, resultado);
+        }
     }
 
     function enviarCodigo(container, codigo) {
@@ -37,7 +52,7 @@
         })
             .then(function (resposta) { return resposta.json(); })
             .then(function (dados) {
-                mostrarResultado(container, dados.valido === true, dados.mensagem || 'Não foi possível validar o código.');
+                mostrarResultado(container, dados.valido === true, dados.mensagem || 'Não foi possível validar o código.', dados.foto || null);
             })
             .catch(function () {
                 mostrarResultado(container, false, 'Não foi possível validar o código. Verifique sua conexão e tente novamente.');
@@ -88,6 +103,12 @@
     }
 
     function inicializar(container) {
+        if (container.dataset.leitorPronto === '1') {
+            return;
+        }
+
+        container.dataset.leitorPronto = '1';
+
         var botaoCamera = container.querySelector('[data-leitor-botao-camera]');
         var input = container.querySelector('[data-leitor-input]');
         var botaoValidar = container.querySelector('[data-leitor-botao-validar]');
@@ -115,7 +136,12 @@
         });
     }
 
-    document.querySelectorAll('[data-leitor-codigo]').forEach(function (container) {
-        inicializar(container);
-    });
+    function inicializarTodos() {
+        document.querySelectorAll('[data-leitor-codigo]').forEach(function (container) {
+            inicializar(container);
+        });
+    }
+
+    inicializarTodos();
+    document.addEventListener('conteudo-admin-atualizado', inicializarTodos);
 })();

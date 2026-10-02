@@ -27,8 +27,14 @@ define('SI_BOOT', true);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+// Fase 58: a conferencia do encerramento da gincana compara com o relogio do
+// PHP, entao o fuso precisa ser o do sistema tambem na linha de comando
+// (mesmo cuidado de database/gerar_anais.php).
+date_default_timezone_set(config('timezone'));
+
 use App\Core\Auditoria;
 use App\Core\Database;
+use App\Services\GamificacaoService;
 
 $confirmar = in_array('--confirmar', $argv, true);
 $conexaoId = 0;
@@ -73,6 +79,14 @@ echo '  - pessoas: ' . $conexao['nome_menor'] . ' e ' . $conexao['nome_maior'] .
 echo '  - pontos creditados: ' . (int) $conexao['pontos_creditados_menor']
     . ' e ' . (int) $conexao['pontos_creditados_maior'] . "\n";
 echo '  - conectada em: ' . $conexao['conectado_em'] . "\n";
+
+// Fase 58: depois do encerramento da gincana a classificacao fica congelada
+// "sem mudancas" (dinamica de pontos v2). Apagar a conexao devolveria os
+// pontos dos dois lados e mudaria a classificacao, entao a rotina recusa.
+if (GamificacaoService::encerrada((int) $conexao['evento_id'])) {
+    echo "\nA gincana deste evento foi encerrada e a classificacao esta congelada: a conexao nao pode ser removida.\n";
+    exit(1);
+}
 
 if (!$confirmar) {
     echo "\nModo consulta. Nada foi alterado.\n";

@@ -11,12 +11,8 @@ use App\Core\Auditoria;
 use App\Core\Database;
 
 /**
- * Fase 49: notas lancadas pelo avaliador, por criterio, por designacao -
- * mesmo padrao de upsert de NotaLancadaRepository do Concurso
- * (ON DUPLICATE KEY UPDATE), inclusive a mesma limitacao ja existente la'
- * (Auditoria::registrar() nao guarda o valor anterior da nota, so' o
- * valor novo - ver achado da revisao desta fase, nao corrigido porque nao
- * foi apontado como bloqueante, e' o mesmo padrao ja aceito no Concurso).
+ * Notas lancadas pelo avaliador, por criterio, por designacao, com upsert
+ * (ON DUPLICATE KEY UPDATE). A auditoria guarda a nota anterior e a nova.
  */
 class TrabalhoNotaRepository
 {
@@ -77,6 +73,13 @@ class TrabalhoNotaRepository
     public function salvar($designacaoId, $criterioId, $nota)
     {
         $pdo = Database::conexao();
+        $consulta = $pdo->prepare(
+            'SELECT nota FROM trabalho_notas WHERE designacao_id = :designacao_id AND criterio_id = :criterio_id'
+        );
+        $consulta->execute(['designacao_id' => $designacaoId, 'criterio_id' => $criterioId]);
+        $notaAnterior = $consulta->fetchColumn();
+        $antes = $notaAnterior !== false ? ['criterio_id' => $criterioId, 'nota' => $notaAnterior] : null;
+
         $stmt = $pdo->prepare(
             'INSERT INTO trabalho_notas (designacao_id, criterio_id, nota)
              VALUES (:designacao_id, :criterio_id, :nota)
@@ -84,6 +87,6 @@ class TrabalhoNotaRepository
         );
         $stmt->execute(['designacao_id' => $designacaoId, 'criterio_id' => $criterioId, 'nota' => $nota]);
 
-        Auditoria::registrar('salvar', 'trabalho_notas', $designacaoId, null, ['criterio_id' => $criterioId, 'nota' => $nota]);
+        Auditoria::registrar('salvar', 'trabalho_notas', $designacaoId, $antes, ['criterio_id' => $criterioId, 'nota' => $nota]);
     }
 }

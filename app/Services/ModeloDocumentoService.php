@@ -97,15 +97,9 @@ class ModeloDocumentoService
     }
 
     /**
-     * Troca cada [[chave]] pelo valor ja escapado - o corpo do modelo em si
-     * (o que o Administrador escreveu no editor rico) segue o mesmo nivel
-     * de confianca que o resto do sistema ja da' a esse perfil (sem
-     * sanitizacao adicional, mesma decisao ja documentada em
-     * editor-rico.js); so' o DADO substituido (nome, cpf, necessidade etc.)
-     * e' escapado, por vir de participante/lider, que nao e' fonte
-     * confiavel da mesma forma. "necessidade" e "equipe.solucao_proposta"
-     * preservam quebra de linha (nl2br) - sao as duas com texto livre de
-     * mais de uma linha.
+     * Troca cada [[chave]] pelo valor ja escapado. "necessidade" e
+     * "equipe.solucao_proposta" preservam quebra de linha (nl2br): sao as duas
+     * com texto livre de mais de uma linha.
      */
     public function resolver($corpoHtml, array $dados)
     {

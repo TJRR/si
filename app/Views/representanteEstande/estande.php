@@ -30,10 +30,20 @@
 </section>
 
 <section class="admin-card">
-    <h2>Cartaz com o código</h2>
-    <p>Imprima o cartaz e deixe-o à vista no estande: o participante lê o QR (ou digita o código) no aplicativo do evento para registrar a visita.</p>
+    <h2>Código do estande</h2>
+    <p>Você decide como apresentar o código ao visitante: imprima o cartaz e deixe-o à vista no estande, ou mostre o código na tela do celular ou do computador. O participante lê o QR (ou digita o código) no aplicativo do evento para registrar a visita.</p>
     <p><strong>Código:</strong> <span style="font-family:'Courier New',Courier,monospace;font-size:1.2em;letter-spacing:2px;"><?php echo htmlspecialchars($estande['codigo_estande'], ENT_QUOTES, 'UTF-8'); ?></span></p>
     <p><a href="<?php echo url('representanteEstande/cartaz/' . (int) $estande['id']); ?>" class="btn-acao" target="_blank" rel="noopener">Abrir o cartaz para imprimir</a></p>
+    <?php /* Fase 58 (dinâmica de pontos v2: "o responsável pelo estande decide
+    como apresentar o QR"): o código também na tela, com a mesma camada de
+    ampliação do aplicativo (assets/js/brilho-cracha.js). */ ?>
+    <?php $qrEstande = \App\Services\QrCodeService::renderizarSvg($estande['codigo_estande'], 220); ?>
+    <p>
+        <button type="button" class="btn-acao" data-toggle-brilho="overlay-brilho-estande">Mostrar o código em tela cheia</button>
+    </p>
+    <div id="overlay-brilho-estande" class="overlay-brilho-qr" hidden data-fechar-overlay-brilho="">
+        <?php echo $qrEstande; ?>
+    </div>
 </section>
 
 <section class="admin-card">
@@ -49,6 +59,18 @@
     <?php endif; ?>
     <p><a href="<?php echo url('representanteEstande/editar/' . (int) $estande['id']); ?>" class="btn-acao">Atualizar nome, descrição e logotipo</a></p>
 </section>
+
+<?php if (!empty($pesquisaAberta)): ?>
+    <section class="admin-card">
+        <h2>Pesquisa de satisfação</h2>
+        <?php if (empty($pesquisaRespondida)): ?>
+            <p>A pesquisa de satisfação do evento está aberta, e a sua opinião como representante de estande também conta.</p>
+            <p><a href="<?php echo url('eventoApp/pesquisa/' . (int) $estande['evento_id']); ?>" class="btn-acao">Responder à pesquisa</a></p>
+        <?php else: ?>
+            <p>Obrigado por responder à pesquisa de satisfação.</p>
+        <?php endif; ?>
+    </section>
+<?php endif; ?>
 
 <?php if ($inscritoNoEvento): ?>
     <section class="admin-card">

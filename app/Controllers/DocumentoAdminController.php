@@ -137,7 +137,7 @@ class DocumentoAdminController extends Controller
 
         $this->documentos->despublicar($id);
 
-        $_SESSION['flash'] = 'Documento despublicado - não aparece mais na home, mas continua salvo e acessível aqui.';
+        flashSucesso('Documento despublicado - não aparece mais na home, mas continua salvo e acessível aqui.');
         $this->redirecionar('documentos/index/' . $documento['concurso_id']);
     }
 
@@ -153,7 +153,7 @@ class DocumentoAdminController extends Controller
 
         $this->documentos->republicar($id);
 
-        $_SESSION['flash'] = 'Documento republicado.';
+        flashSucesso('Documento republicado.');
         $this->redirecionar('documentos/index/' . $documento['concurso_id']);
     }
 
@@ -179,7 +179,7 @@ class DocumentoAdminController extends Controller
             $this->arquivos->remover($versao['arquivo_path']);
         }
 
-        $_SESSION['flash'] = 'Documento removido (todas as versões).';
+        flashSucesso('Documento removido (todas as versões).');
         $this->redirecionar('documentos/index/' . $concursoId);
     }
 

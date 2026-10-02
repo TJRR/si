@@ -95,7 +95,7 @@ class HomologacaoController extends Controller
         RoleMiddleware::exigir(['administrador'], $trilha !== null ? $trilha['concurso_id'] : null);
 
         $this->homologacaoPublica->publicar($trilhaId, Auth::usuarioId());
-        $_SESSION['flash'] = 'Lista de equipes homologadas publicada.';
+        flashSucesso('Lista de equipes homologadas publicada.');
         $this->redirecionar('homologacao/index/' . $trilhaId);
     }
 
@@ -105,7 +105,7 @@ class HomologacaoController extends Controller
         RoleMiddleware::exigir(['administrador'], $trilha !== null ? $trilha['concurso_id'] : null);
 
         $this->homologacaoPublica->reabrir($trilhaId);
-        $_SESSION['flash'] = 'Lista de equipes homologadas despublicada.';
+        flashSucesso('Lista de equipes homologadas despublicada.');
         $this->redirecionar('homologacao/index/' . $trilhaId);
     }
 
@@ -140,8 +140,8 @@ class HomologacaoController extends Controller
         $trilhaId = (int) (isset($_POST['trilha_id']) ? $_POST['trilha_id'] : 0);
 
         $contextoAnterior = $this->homologarUmVinculo($vinculoId, $trilhaId);
-        $_SESSION['flash'] = 'Participante homologado e acesso liberado.'
-            . ($contextoAnterior !== null ? ' ' . $contextoAnterior : '');
+        flashSucesso('Participante homologado e acesso liberado.'
+            . ($contextoAnterior !== null ? ' ' . $contextoAnterior : ''));
 
         $this->redirecionar('homologacao/index/' . $trilhaId);
     }
@@ -153,7 +153,7 @@ class HomologacaoController extends Controller
         $motivo = trim(isset($_POST['motivo']) ? $_POST['motivo'] : '');
 
         $this->rejeitarUmVinculo($vinculoId, $motivo !== '' ? $motivo : null);
-        $_SESSION['flash'] = 'Participante rejeitado.';
+        flashSucesso('Participante rejeitado.');
 
         $this->redirecionar('homologacao/index/' . $trilhaId);
     }
@@ -198,7 +198,7 @@ class HomologacaoController extends Controller
         (new AcessoParticipanteService())->liberarAcesso($participante, $equipe['trilha_id'], $equipe['nome_equipe']);
         $this->notificacoes->removerPorTipoEParticipante('participante_email_completo', $participanteId);
 
-        $_SESSION['flash'] = 'Convite enviado para "' . $participante['nome'] . '".';
+        flashSucesso('Convite enviado para "' . $participante['nome'] . '".');
         $this->redirecionar('homologacao/index/' . $equipe['trilha_id']);
     }
 
@@ -211,7 +211,7 @@ class HomologacaoController extends Controller
             $this->homologarUmVinculo((int) $vinculoId, $trilhaId);
         }
 
-        $_SESSION['flash'] = count($vinculoIds) . ' inscrição(ões) homologada(s).';
+        flashSucesso(count($vinculoIds) . ' inscrição(ões) homologada(s).');
         $this->redirecionar('homologacao/index/' . $trilhaId);
     }
 
@@ -225,7 +225,7 @@ class HomologacaoController extends Controller
             $this->rejeitarUmVinculo((int) $vinculoId, $motivo !== '' ? $motivo : null);
         }
 
-        $_SESSION['flash'] = count($vinculoIds) . ' inscrição(ões) rejeitada(s).';
+        flashSucesso(count($vinculoIds) . ' inscrição(ões) rejeitada(s).');
         $this->redirecionar('homologacao/index/' . $trilhaId);
     }
 

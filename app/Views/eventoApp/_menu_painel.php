@@ -41,6 +41,15 @@ if (isset($temInscricao)) {
     $menuTemInscricao = (new \App\Repositories\EventoInscricaoRepository())
         ->buscarPorEventoEUsuario($eventoId, \App\Core\Auth::usuarioId()) !== null;
 }
+
+/**
+ * Fase 58: "Minha pontuação" e "Regras do jogo" so' com a Gamificacao ligada
+ * no evento (Gamificação, Configurações) e para quem tem inscricao, porque
+ * os pontos vivem na inscricao. A leitura e' protegida: sem tabela ou sem
+ * configuracao, os itens simplesmente nao aparecem.
+ */
+$menuGamificacaoAtiva = isset($eventoId) && $menuTemInscricao && \App\Core\Auth::autenticado()
+    && (new \App\Repositories\GamificacaoConfigRepository())->vigente($eventoId)['ativo'] === 1;
 ?>
 <aside id="painel-menu-app" class="app-menu-lateral" aria-hidden="true" aria-label="Menu">
     <nav class="app-menu-corpo">
@@ -53,6 +62,10 @@ if (isset($temInscricao)) {
                 do painel administrativo, sem nenhum caminho até ela para
                 quem é apenas inscrito em evento. */ ?>
                 <a href="<?php echo url('eventoAppPerfil/index/' . (int) $eventoId); ?>">Meu Perfil</a>
+            <?php endif; ?>
+            <?php if ($menuGamificacaoAtiva): ?>
+                <a href="<?php echo url('eventoApp/pontuacao/' . (int) $eventoId); ?>">Minha pontuação</a>
+                <a href="<?php echo url('eventoApp/regras/' . (int) $eventoId); ?>">Regras do jogo</a>
             <?php endif; ?>
             <a href="<?php echo url('auth/logout'); ?>" class="app-menu-sair">Sair</a>
         <?php else: ?>

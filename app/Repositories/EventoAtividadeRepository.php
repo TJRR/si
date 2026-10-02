@@ -15,8 +15,13 @@ use App\Services\CodigoUnicoService;
  * Fase 46: cursos/palestras/seminarios do Evento - primeira entidade filha
  * de arvore do Evento (NavegacaoService::noAtividades()/noAtividade()).
  * Inscricao (evento_atividade_inscricoes, ver EventoAtividadeInscricaoRepository)
- * e emissao de certificado (Fase 59, so' a flag e' gravada aqui) sao
- * configuraveis como opcionais por atividade.
+ * e emissao de certificado sao configuraveis como opcionais por atividade.
+ *
+ * Fase 59: emite_certificado, gravada aqui desde a Fase 46 e sem leitor ate'
+ * agora, passou a valer de verdade - e' ela que decide se a atividade gera
+ * certificado proprio (CertificadoElegibilidadeService). A atividade ganhou
+ * tambem certificado_fundo_url, o plano de fundo so' dela; em branco, vale o
+ * das atividades na configuracao dos certificados do evento.
  */
 class EventoAtividadeRepository
 {
@@ -84,7 +89,10 @@ class EventoAtividadeRepository
     {
         $campos = $this->camposComuns($dados);
         $campos['evento_id'] = $eventoId;
-        $campos['codigo_atividade'] = CodigoUnicoService::gerar('evento_atividades', 'codigo_atividade');
+        // Fase 58: o codigo de 6 caracteres da sala e' lido pelo mesmo leitor
+        // que os codigos de competicao e de credenciamento no local, entao a
+        // unicidade tem de valer entre as tres colunas, e nao so' nesta.
+        $campos['codigo_atividade'] = CodigoUnicoService::gerarCodigoFixoDoEvento();
         $campos['codigo_presenca_online'] = $campos['modalidade'] !== 'presencial'
             ? CodigoUnicoService::gerar('evento_atividades', 'codigo_presenca_online', 5)
             : null;
@@ -92,9 +100,9 @@ class EventoAtividadeRepository
         $pdo = Database::conexao();
         $stmt = $pdo->prepare(
             'INSERT INTO evento_atividades
-                (evento_id, nome, tipo_id, destacar_na_pagina, descricao_html, local, modalidade, data_inicio, data_fim, exige_inscricao, emite_certificado, vagas, permite_lista_espera, tolerancia_presenca_efetiva, antecedencia_abertura_presenca, codigo_atividade, codigo_presenca_online)
+                (evento_id, nome, tipo_id, destacar_na_pagina, descricao_html, local, modalidade, data_inicio, data_fim, exige_inscricao, emite_certificado, certificado_fundo_url, certificado_fundo_cor, vagas, permite_lista_espera, tolerancia_presenca_efetiva, antecedencia_abertura_presenca, pontos_presenca, pontos_pontualidade, codigo_atividade, codigo_presenca_online)
              VALUES
-                (:evento_id, :nome, :tipo_id, :destacar_na_pagina, :descricao_html, :local, :modalidade, :data_inicio, :data_fim, :exige_inscricao, :emite_certificado, :vagas, :permite_lista_espera, :tolerancia_presenca_efetiva, :antecedencia_abertura_presenca, :codigo_atividade, :codigo_presenca_online)'
+                (:evento_id, :nome, :tipo_id, :destacar_na_pagina, :descricao_html, :local, :modalidade, :data_inicio, :data_fim, :exige_inscricao, :emite_certificado, :certificado_fundo_url, :certificado_fundo_cor, :vagas, :permite_lista_espera, :tolerancia_presenca_efetiva, :antecedencia_abertura_presenca, :pontos_presenca, :pontos_pontualidade, :codigo_atividade, :codigo_presenca_online)'
         );
         $stmt->execute($campos);
         $id = (int) $pdo->lastInsertId();
@@ -133,9 +141,12 @@ class EventoAtividadeRepository
                  descricao_html = :descricao_html, local = :local, modalidade = :modalidade,
                  codigo_presenca_online = :codigo_presenca_online, data_inicio = :data_inicio,
                  data_fim = :data_fim, exige_inscricao = :exige_inscricao, emite_certificado = :emite_certificado,
+                 certificado_fundo_url = :certificado_fundo_url,
+                 certificado_fundo_cor = :certificado_fundo_cor,
                  vagas = :vagas, permite_lista_espera = :permite_lista_espera,
                  tolerancia_presenca_efetiva = :tolerancia_presenca_efetiva,
-                 antecedencia_abertura_presenca = :antecedencia_abertura_presenca
+                 antecedencia_abertura_presenca = :antecedencia_abertura_presenca,
+                 pontos_presenca = :pontos_presenca, pontos_pontualidade = :pontos_pontualidade
              WHERE id = :id'
         );
         $stmt->execute($campos);
@@ -174,6 +185,24 @@ class EventoAtividadeRepository
             'permite_lista_espera' => $dados['permite_lista_espera'] ? 1 : 0,
             'tolerancia_presenca_efetiva' => (int) $dados['tolerancia_presenca_efetiva'],
             'antecedencia_abertura_presenca' => (int) $dados['antecedencia_abertura_presenca'],
+            // Fase 58: excecao de pontos na propria atividade. Campo em
+            // branco grava NULO, que e' "herda do tipo"; zero e' "esta
+            // atividade nao pontua".
+            'pontos_presenca' => isset($dados['pontos_presenca']) && $dados['pontos_presenca'] !== '' && $dados['pontos_presenca'] !== null
+                ? (int) $dados['pontos_presenca']
+                : null,
+            'pontos_pontualidade' => isset($dados['pontos_pontualidade']) && $dados['pontos_pontualidade'] !== '' && $dados['pontos_pontualidade'] !== null
+                ? (int) $dados['pontos_pontualidade']
+                : null,
+            // Fase 59: plano de fundo proprio do certificado desta atividade.
+            // Campo em branco grava NULO, que e' "herda a arte das atividades
+            // da configuracao dos certificados" - nunca uma arte inventada.
+            'certificado_fundo_url' => isset($dados['certificado_fundo_url']) && trim((string) $dados['certificado_fundo_url']) !== ''
+                ? trim((string) $dados['certificado_fundo_url'])
+                : null,
+            'certificado_fundo_cor' => isset($dados['certificado_fundo_cor']) && trim((string) $dados['certificado_fundo_cor']) !== ''
+                ? trim((string) $dados['certificado_fundo_cor'])
+                : null,
         ];
     }
 }

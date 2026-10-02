@@ -13,10 +13,9 @@
  * inicializacao por elemento (contenteditable funciona assim que existe no
  * DOM), nenhum "montar()" e' necessario - só os listeners globais abaixo.
  *
- * Este componente nao filtra nada: o filtro vale no servidor, ao gravar
- * (sanitizarHtmlRico(), em app/helpers.php), para todo campo que usa o
- * editor. Desde a Fase 54 ele tambem aparece para o representante de
- * estande (pessoa de fora da instituicao), sem o botao de imagem.
+ * O saneamento acontece no servidor, ao gravar: ver Implantar.md, secao
+ * 13.6. Desde a Fase 54 o editor tambem aparece para o representante de
+ * estande, sem o botao de imagem.
  */
 (function () {
     'use strict';

@@ -194,7 +194,7 @@ class DesignacaoAdminController extends Controller
                 $totalAtribuido++;
             }
 
-            $_SESSION['flash'] = $totalAtribuido . ' submissão(ões) atribuída(s) ao avaliador selecionado.';
+            flashSucesso($totalAtribuido . ' submissão(ões) atribuída(s) ao avaliador selecionado.');
         }
 
         $this->redirecionar('designacoes/index/' . $etapaId);
@@ -387,7 +387,7 @@ class DesignacaoAdminController extends Controller
         $origem = ($etapa !== null && $etapa['modo_designacao'] === 'sorteio_categoria') ? 'sorteio' : 'manual';
 
         $total = $this->servico->confirmarDistribuicao($etapaId, $atribuicoes, Auth::usuarioId(), $origem);
-        $_SESSION['flash'] = $total . ' designação(ões) criada(s).';
+        flashSucesso($total . ' designação(ões) criada(s).');
         $this->redirecionar('designacoes/index/' . $etapaId);
     }
 }

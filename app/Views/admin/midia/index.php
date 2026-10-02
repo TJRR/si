@@ -69,9 +69,32 @@ $sufixoTipo = $tipoFiltro !== null ? '&tipo=' . urlencode($tipoFiltro) : '';
 <?php if (empty($midias)): ?>
     <p>Nenhuma mídia nesta pasta.</p>
 <?php else: ?>
+    <?php /* Formulario de lote vazio e fora dos cartoes: as caixas de cada
+    cartao se ligam a ele por form="", porque cada cartao ja tem os proprios
+    formularios e HTML nao aceita formulario dentro de formulario. */ ?>
+    <form method="post" id="form-lote-midia" class="secao-linha-form"><?= campoCsrf() ?>
+        <input type="hidden" name="pasta_atual" value="<?php echo $pastaAtualId !== null ? $pastaAtualId : ''; ?>">
+        <strong>Com as mídias marcadas:</strong>
+        <label>mover para
+            <select name="pasta_id">
+                <option value="">Biblioteca (raiz)</option>
+                <?php foreach ($todasAsPastas as $pastaDestino): ?>
+                    <option value="<?php echo (int) $pastaDestino['id']; ?>"><?php echo htmlspecialchars($pastaDestino['nome'], ENT_QUOTES, 'UTF-8'); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <button type="submit" class="btn-acao" formaction="<?php echo url('midia/moverEmLote'); ?>">Mover marcadas</button>
+        <button type="submit" class="btn-acao" formaction="<?php echo url('midia/removerEmLote'); ?>" onclick="return confirm('Remover todas as mídias marcadas? Se alguma estiver em uso, nada é removido.');">Remover marcadas</button>
+        <small>Até <?php echo (int) \App\Controllers\MidiaAdminController::LIMITE_LOTE; ?> por vez.</small>
+    </form>
+
     <div class="admin-dashboard-cards">
         <?php foreach ($midias as $midia): ?>
         <div class="admin-card">
+            <label class="midia-marcar">
+                <input type="checkbox" name="ids[]" value="<?php echo (int) $midia['id']; ?>" form="form-lote-midia" class="marcar-linha">
+                Marcar
+            </label>
             <?php if ($midia['tipo'] === 'imagem'): ?>
                 <img src="<?php echo htmlspecialchars(config('base_path') . '/assets/' . $midia['arquivo_path'], ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars((string) $midia['alt_text'], ENT_QUOTES, 'UTF-8'); ?>" style="width:100%;height:120px;object-fit:cover;border-radius:6px;">
             <?php else: ?>

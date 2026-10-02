@@ -87,4 +87,84 @@ class MidiaRepository
 
         Auditoria::registrar('remover', 'midias', $id, $antes, null);
     }
+
+    /**
+     * Operacoes em lote da Biblioteca. Midia e' global, entao nao ha escopo
+     * por evento como no traco OperacaoEmLote. Ver Implantar.md, secao 13.17.
+     */
+    public static function idsDoFormulario($bruto)
+    {
+        $ids = [];
+
+        foreach ((array) $bruto as $valor) {
+            $id = (int) $valor;
+
+            if ($id > 0) {
+                $ids[$id] = $id;
+            }
+        }
+
+        return array_values($ids);
+    }
+
+    public function moverEmLote(array $ids, $pastaId)
+    {
+        if ($ids === []) {
+            return 0;
+        }
+
+        $pdo = Database::conexao();
+        $marcadores = implode(', ', array_fill(0, count($ids), '?'));
+        $pdo->beginTransaction();
+
+        try {
+            $consulta = $pdo->prepare("SELECT id, pasta_id FROM midias WHERE id IN ({$marcadores})");
+            $consulta->execute($ids);
+            $antes = $consulta->fetchAll();
+
+            $stmt = $pdo->prepare("UPDATE midias SET pasta_id = ? WHERE id IN ({$marcadores})");
+            $stmt->execute(array_merge([$pastaId], $ids));
+
+            Auditoria::registrar('mover_em_lote', 'midias', null, ['midias' => $antes], ['ids' => $ids, 'pasta_id' => $pastaId]);
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+
+        return count($antes);
+    }
+
+    /**
+     * Devolve as linhas removidas, para quem chamou apagar os arquivos
+     * depois de a transacao confirmar. Midia em uso faz o banco recusar o
+     * comando inteiro (estado 23000), e nada e' removido.
+     */
+    public function removerEmLote(array $ids)
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $pdo = Database::conexao();
+        $marcadores = implode(', ', array_fill(0, count($ids), '?'));
+        $pdo->beginTransaction();
+
+        try {
+            $consulta = $pdo->prepare("SELECT * FROM midias WHERE id IN ({$marcadores})");
+            $consulta->execute($ids);
+            $antes = $consulta->fetchAll();
+
+            $stmt = $pdo->prepare("DELETE FROM midias WHERE id IN ({$marcadores})");
+            $stmt->execute($ids);
+
+            Auditoria::registrar('remover_em_lote', 'midias', null, ['midias' => $antes], ['ids' => $ids]);
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+
+        return $antes;
+    }
 }

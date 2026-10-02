@@ -14,7 +14,10 @@ if (isset($view) && !$ehPainelInterno) {
         }
     }
 }
-$ehPaginaConvidado = isset($view) && in_array($view, ['auth/login', 'auth/cadastro', 'auth/definir_senha', 'auth/esqueci_senha', 'publico/evento_inscricao_cadastro'], true);
+// Fase 59: 'publico/certificado_conferencia' entra aqui pela aparencia: e'
+// tela de visitante, com cartao centralizado e logotipo, e nao uma pagina do
+// site do evento.
+$ehPaginaConvidado = isset($view) && in_array($view, ['auth/login', 'auth/cadastro', 'auth/definir_senha', 'auth/esqueci_senha', 'publico/evento_inscricao_cadastro', 'publico/certificado_conferencia'], true);
 
 // Fase 41 (correcao pos-teste de fumaca): manifesto/service worker/aparencia
 // de aplicativo (fundo colorido, app-bar, menu) - nunca em
@@ -39,7 +42,7 @@ $ehPaginaConvidado = isset($view) && in_array($view, ['auth/login', 'auth/cadast
 // instalavel de proposito (decisao separada, confirmada tambem), so' com a
 // mesma aparencia visual (ver $ehContextoEvento abaixo).
 $ehAppEvento = isset($view) && (
-    in_array($view, ['eventoApp/painel', 'eventoApp/selecionar', 'eventoApp/inscricao', 'eventoApp/ler', 'eventoApp/aviso', 'eventoApp/atividades', 'eventoApp/presenca', 'eventoApp/facilitacoes', 'eventoApp/estandes', 'eventoApp/ler_estande', 'eventoApp/conexoes', 'eventoApp/divulgacao', 'eventoApp/pesquisa', 'eventoApp/perfil', 'eventoApp/perfil_aparencia', 'eventoApp/perfil_senha'], true)
+    in_array($view, ['eventoApp/painel', 'eventoApp/selecionar', 'eventoApp/inscricao', 'eventoApp/ler', 'eventoApp/aviso', 'eventoApp/atividades', 'eventoApp/presenca', 'eventoApp/facilitacoes', 'eventoApp/estandes', 'eventoApp/ler_estande', 'eventoApp/conexoes', 'eventoApp/divulgacao', 'eventoApp/pesquisa', 'eventoApp/perfil', 'eventoApp/perfil_aparencia', 'eventoApp/perfil_senha', 'eventoApp/pontuacao', 'eventoApp/regras', 'eventoApp/certificados'], true)
     || ($view === 'publico/evento_inscricao' && ehContextoApp())
     || (isset($view) && strpos($view, 'trabalho/') === 0)
 );
@@ -105,7 +108,7 @@ if ($ehPainelAdmin) {
     // "Eventos" e' aba de 1o nivel propria (ver NavegacaoService::
     // filhosDe('raizEvento', ...) e admin/_arvore.php, generalizado para
     // aceitar mais de uma raiz).
-    $modulosArvoreEvento = ['eventos', 'eventoCabecalho', 'eventoSlides', 'eventoBanners', 'eventoBlocos', 'eventoSecoes', 'eventoDocumentos', 'atividadeTipos', 'eventoFormulario', 'atividades', 'trabalhos', 'trabalhoAnais', 'anaisMontagem', 'estandes', 'conexoes', 'divulgacao', 'bonus', 'pesquisa'];
+    $modulosArvoreEvento = ['eventos', 'eventoCabecalho', 'eventoSlides', 'eventoBanners', 'eventoBlocos', 'eventoSecoes', 'eventoDocumentos', 'atividadeTipos', 'eventoFormulario', 'atividades', 'trabalhos', 'trabalhoAnais', 'anaisMontagem', 'estandes', 'conexoes', 'divulgacao', 'bonus', 'pesquisa', 'gamificacao', 'competicoes', 'certificados'];
     $ehEscopoArvoreEvento = in_array($moduloAtual, $modulosArvoreEvento, true);
     $ehEscopoArvore = $ehEscopoArvoreConcurso || $ehEscopoArvoreEvento;
 
@@ -145,7 +148,7 @@ if ($ehPainelAdmin) {
         // Fase 19 (#84 v2): Tema/Mídia/Slideshow/Banners/Blocos/Contato
         // deixaram de ser abas de nivel 1 - viraram sub-abas de
         // "Configurações" (ver NavegacaoService::$abasPorGrupo['configuracao']).
-        $modulosConfiguracao = ['configuracoes', 'tema', 'midia', 'slides', 'banners', 'blocos', 'contatosConcurso', 'ordenacaoHome', 'seguranca'];
+        $modulosConfiguracao = ['configuracoes', 'tema', 'midia', 'slides', 'banners', 'blocos', 'contatosConcurso', 'textosAvisoEvento', 'ordenacaoHome', 'seguranca'];
         $abasAdmin[] = ['rotulo' => 'Configurações', 'url' => 'configuracoes/index', 'ativo' => in_array($moduloAtual, $modulosConfiguracao, true)];
     }
 
@@ -305,13 +308,10 @@ if ($ehPainelAdmin) {
 <?php if ($ehPainelInterno): ?>
     <script src="<?php echo config('base_path'); ?>/assets/js/notificacoes-sino.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/notificacoes-sino.js'); ?>" defer></script>
 
-    <!-- Fase 17 (Bug 5/Melhoria 1): shell do modal generico, injetado uma vez -->
     <div id="modal-generico" class="modal-overlay" hidden>
         <div class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
             <button type="button" class="modal-fechar" onclick="fecharModal()" aria-label="Fechar">&times;</button>
             <h2 id="modal-titulo"></h2>
-            <!-- Fase 33: barra de navegacao entre itens da mesma tabela.
-                 Fica oculta quando o modal nao faz parte de uma sequencia. -->
             <div id="modal-navegacao" class="modal-navegacao" hidden>
                 <button type="button" id="modal-anterior" class="btn-acao" onclick="navegarModal(-1);">&larr; Anterior</button>
                 <span id="modal-posicao"></span>
@@ -326,41 +326,31 @@ if ($ehPainelAdmin) {
     <script src="<?php echo config('base_path'); ?>/assets/js/editor-rico.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/editor-rico.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/reordenar-arrastar.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/reordenar-arrastar.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/campo-cor.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/campo-cor.js'); ?>" defer></script>
-    <!-- Fase 48 (correcao pos-teste de fumaca): busca-usuario.js e
-         atividade-tolerancia.js passam a carregar incondicionalmente (nao
-         so' nas telas onde nasceram) porque os dois so' agem quando
-         encontram seus elementos no DOM, e precisam reagir ao evento
-         'conteudo-admin-atualizado' apos navegacao pela arvore lateral
-         (ver assets/js/navegacao-arvore.js) - condicionar por $view nunca
-         funcionaria pra isso, ja que essa navegacao nunca reexecuta os
-         <script> de layout.php (achado real: os rotulos de tolerancia e a
-         busca de facilitador so' funcionavam em F5 direto na URL). -->
+    <?php /* As rotinas abaixo carregam em todo o painel, e nao so' na tela de
+    cada uma: a navegacao pela arvore lateral troca o conteudo sem reexecutar
+    os scripts deste arquivo, e cada rotina so' age quando encontra o proprio
+    componente na tela. */ ?>
     <script src="<?php echo config('base_path'); ?>/assets/js/busca-usuario.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/busca-usuario.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/atividade-tolerancia.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/atividade-tolerancia.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/seletor-fundo-certificado.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/seletor-fundo-certificado.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/leitor-codigo.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/leitor-codigo.js'); ?>" defer></script>
     <?php endif; ?>
     <?php if (isset($view) && strpos($view, 'representanteEstande/') === 0): ?>
-    <!-- Fase 54: o representante do estande edita a descricao com o editor
-         rico (sem o botao de imagem, que continua so' do Administrador). -->
     <script>window.SI_BASE_PATH = <?php echo json_encode(config('base_path')); ?>; window.SI_CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token']); ?>;</script>
     <script src="<?php echo config('base_path'); ?>/assets/js/editor-rico.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/editor-rico.js'); ?>" defer></script>
+    <script src="<?php echo config('base_path'); ?>/assets/js/brilho-cracha.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/brilho-cracha.js'); ?>" defer></script>
     <?php endif; ?>
 <?php endif; ?>
 <?php $ehPaginaPublicaSemTopbar = $ehPaginaConvidado || $ehContextoEvento || (isset($view) && strpos($view, 'publico/') === 0); ?>
 <?php if ($ehPaginaPublicaSemTopbar && $ajudaHtml !== null): ?>
-    <!-- Fase 31: paginas convidadas (login/cadastro/senha) e publico/* nao
-         passam pelo bloco $ehPainelInterno acima (cada uma monta o proprio
-         cabecalho, sem topbar), entao o shell do modal generico precisa ser
-         injetado aqui tambem para a ajuda contextual funcionar nelas. Fase 41:
-         mesmo motivo vale para as telas do aplicativo do Evento (app-bar
-         propria, tambem sem topbar) - sem isso, abrirModal() nao existe e o
-         botao de ajuda quebra com erro no console. -->
+    <?php /* Telas sem a barra do painel (entrada, cadastro, paginas publicas e
+    aplicativo do Evento) nao passam pelo bloco do painel acima: sem esta
+    segunda copia da janela, o botao de ajuda delas fica sem ter onde abrir. */ ?>
     <div id="ajuda-painel-fonte" hidden><?php echo $ajudaHtml; ?></div>
     <div id="modal-generico" class="modal-overlay" hidden>
         <div class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
             <button type="button" class="modal-fechar" onclick="fecharModal()" aria-label="Fechar">&times;</button>
             <h2 id="modal-titulo"></h2>
-            <!-- Fase 33: barra de navegacao entre itens da mesma tabela.
-                 Fica oculta quando o modal nao faz parte de uma sequencia. -->
             <div id="modal-navegacao" class="modal-navegacao" hidden>
                 <button type="button" id="modal-anterior" class="btn-acao" onclick="navegarModal(-1);">&larr; Anterior</button>
                 <span id="modal-posicao"></span>
@@ -396,14 +386,6 @@ if ($ehPainelAdmin) {
     <script src="<?php echo config('base_path'); ?>/assets/js/cabecalho-rolagem.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/cabecalho-rolagem.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/cabecalho-flutuar.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/cabecalho-flutuar.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/painel-lateral.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/painel-lateral.js'); ?>" defer></script>
-    <?php
-    // Reabertura da Fase 51 (achado do teste de fumaca): contagem regressiva
-    // e abas da programacao so' existem na pagina do Evento, mas estavam
-    // incluidas no bloco da home do Concurso - na pagina do Evento o relogio
-    // nao contava e as abas nao abriam. evento-pagina.js cuida da distancia
-    // de rolagem das ancoras (altura do cabecalho fixo) e da entrada animada
-    // dos cartoes.
-    ?>
     <script src="<?php echo config('base_path'); ?>/assets/js/contagem-regressiva.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/contagem-regressiva.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/programacao-abas.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/programacao-abas.js'); ?>" defer></script>
     <script src="<?php echo config('base_path'); ?>/assets/js/evento-pagina.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/evento-pagina.js'); ?>" defer></script>
@@ -423,21 +405,10 @@ if ($ehPainelAdmin) {
     <?php endif; ?>
 <?php endif; ?>
 <?php if ($ehContextoEvento): ?>
-    <!-- Fase 41: menu do aplicativo (botao hamburguer na app-bar + painel,
-         ver app/Views/eventoApp/_app_bar.php/_menu_painel.php) reaproveita o
-         mesmo componente generico de painel lateral da home publica. Fase
-         49B: passa a valer tambem para trabalho/*/avaliacaoTrabalhos/*
-         ($ehContextoEvento), que agora montam a mesma _app_bar.php. -->
     <script src="<?php echo config('base_path'); ?>/assets/js/painel-lateral.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/painel-lateral.js'); ?>" defer></script>
     <?php if ($ehAppEvento): ?>
-    <!-- Fase 41 (correcao pos-teste de fumaca): item "Instalar aplicativo"
-         sempre visivel no menu, em vez de depender do usuario encontrar a
-         opcao escondida no menu de tres pontos do navegador. Fase 49B:
-         continua restrito a $ehAppEvento (rotas eventoApp/*) de proposito -
-         so' ali existe manifesto/service worker para o navegador considerar
-         a pagina instalavel; nas telas de Trabalhos o banner ficaria inerte
-         mesmo carregando o script (nunca aparece), entao nao ha motivo pra
-         carregar. -->
+    <?php /* "Instalar aplicativo" so' nas telas do aplicativo: so' nelas o
+    navegador considera a pagina instalavel. */ ?>
     <script src="<?php echo config('base_path'); ?>/assets/js/instalar-app.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/instalar-app.js'); ?>" defer></script>
     <?php
     // Fase 50: mesmo botao de contato por WhatsApp da home publica (ver
@@ -457,31 +428,14 @@ if ($ehPainelAdmin) {
     </a>
     <?php endif; ?>
     <?php endif; ?>
-    <!-- Fase 44: sino de notificacoes agora tambem na app-bar do evento
-         (eventoApp/_app_bar.php) - mesmo script usado pelo painel interno. -->
     <script src="<?php echo config('base_path'); ?>/assets/js/notificacoes-sino.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/notificacoes-sino.js'); ?>" defer></script>
-    <?php if ($view === 'eventoApp/inscricao'): ?>
-    <!-- Fase 42 (correcao pos-teste de fumaca): botao "Aumentar brilho para
-         leitura" do cartao de credenciamento - so' existe em "Minha
-         inscricao", nao precisa carregar nas demais telas do app. -->
+    <?php if (in_array($view, ['eventoApp/inscricao', 'eventoApp/ler', 'eventoApp/facilitacoes'], true)): ?>
     <script src="<?php echo config('base_path'); ?>/assets/js/brilho-cracha.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/brilho-cracha.js'); ?>" defer></script>
     <?php endif; ?>
     <?php if ($view === 'eventoApp/perfil'): ?>
-    <!-- Fase 55: mascara de telefone em "Meu Perfil" dentro do aplicativo -
-         mesmo arquivo ja usado pelos formularios publicos desde a Fase 51.
-         Carregado so' nesta tela, como o brilho do cracha acima. -->
     <script src="<?php echo config('base_path'); ?>/assets/js/telefone-mascara.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/telefone-mascara.js'); ?>" defer></script>
     <?php endif; ?>
     <?php if (in_array($view, ['eventoApp/ler', 'eventoApp/presenca', 'eventoApp/ler_estande'], true)): ?>
-    <!-- Fase 43: componente de leitura de codigo (camera + digitacao
-         manual) - existe em "Ler codigo" e, desde a Fase 47, em "Confirmar
-         presenca" - reaproveitavel pelas Fases 49/50 (estandes, networking).
-         window.SI_CSRF_TOKEN so' era definido dentro do bloco $ehPainelAdmin
-         (linha ~358) - as
-         telas do app do evento nunca tinham precisado de POST via fetch
-         antes desta fase, entao a variavel nunca existia aqui (undefined),
-         o header X-CSRF-Token ia como a string literal "undefined", e o
-         Router rejeitava com 403 (bug real, achado no teste de fumaca). -->
     <script>window.SI_CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token']); ?>;</script>
     <script src="<?php echo config('base_path'); ?>/assets/js/leitor-codigo.js?v=<?php echo filemtime(__DIR__ . '/../../assets/js/leitor-codigo.js'); ?>" defer></script>
     <?php endif; ?>

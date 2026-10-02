@@ -52,9 +52,8 @@
             <input type="date" name="data_fim" value="<?php echo htmlspecialchars((string) $config['data_fim'], ENT_QUOTES, 'UTF-8'); ?>">
         </label>
         <p style="color:#555;font-size:0.9em;">
-            As duas datas em branco fazem valer as datas do evento, de
-            <?php echo htmlspecialchars(formatarData($evento['data_inicio']), ENT_QUOTES, 'UTF-8'); ?> a
-            <?php echo htmlspecialchars(formatarData($evento['data_fim']), ENT_QUOTES, 'UTF-8'); ?>.
+            Cada campo limita por conta própria. Em branco, aquele lado não limita nada: com os dois em branco,
+            a pesquisa fica aberta enquanto estiver ativada, e quem decide abrir e fechar é a marca acima.
             A comparação é por data, então o último dia conta inteiro.
         </p>
 

@@ -110,7 +110,7 @@ class EventoCronogramaAdminController extends Controller
 
         $this->eventos->remover($id);
 
-        $_SESSION['flash'] = 'Evento removido.';
+        flashSucesso('Evento removido.');
         $this->redirecionar('eventosCronograma/index/' . $concursoId);
     }
 

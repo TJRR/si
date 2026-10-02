@@ -7,19 +7,19 @@ if (!defined('SI_BOOT')) {
 
 return [
     'titulo' => 'Oficinas',
-    'resumo' => 'Encontros coletivos com tema pré-definido. Diferente de Mentorias, sua equipe pode se inscrever em quantas oficinas quiser, sem exclusividade.',
+    'resumo' => 'Oficinas são encontros coletivos sobre um tema definido pela organização, abertos a várias equipes ao mesmo tempo. Diferente das mentorias, a sua equipe pode se inscrever em quantas oficinas quiser.',
     'operacoes' => [
         [
             'nome' => 'Inscrever-se',
-            'como' => 'Disponível nos horários que aparecem para a sua equipe. Alguns encontros são vinculados a uma etapa: nesse caso só aparecem para quem está habilitado a ela, ou seja, foi classificado na etapa anterior. Se um encontro que você via sumiu da lista, é porque ele passou a ser restrito a uma etapa em que a sua equipe não está habilitada.',
+            'como' => 'Clique em "Inscrever-se" no encontro que interessar. Alguns encontros são reservados a uma etapa e só aparecem para as equipes classificadas na etapa anterior; se um encontro sumiu da lista, foi por isso.',
         ],
         [
             'nome' => 'Cancelar',
-            'como' => 'Disponível na sua inscrição, com confirmação.',
+            'como' => 'Na sua inscrição, clique em "Cancelar" e confirme.',
         ],
         [
-            'nome' => 'Entrar (hiperlink do Meet)',
-            'como' => 'Só aparece para quem está inscrito no horário.',
+            'nome' => 'Entrar na sala',
+            'como' => 'No horário do encontro, use o botão "Entrar" para abrir a sala no Google Meet. Ele só aparece para quem está inscrito.',
         ],
     ],
     'conceitos' => [],

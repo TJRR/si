@@ -63,9 +63,14 @@
                 <?php endforeach; ?>
             </ul>
 
+            <?php /* Fase 58: o crachá impresso é opcional por evento (Dados
+            Gerais). Sem ele, o código desta tela e o da tela "Conectar com
+            participante" fazem o papel do crachá. */ ?>
+            <?php if (!isset($evento['oferece_cracha']) || (int) $evento['oferece_cracha'] === 1): ?>
             <p>
                 <a href="<?php echo url('eventoApp/cracha/' . (int) $evento['id']); ?>" class="btn" target="_blank" rel="noopener">Imprimir crachá</a>
             </p>
+            <?php endif; ?>
         </div>
     </div>
 </div>

@@ -20,6 +20,8 @@ use App\Repositories\TrabalhoNaturezaRepository;
 use App\Repositories\TrabalhoRepository;
 use App\Repositories\UsuarioPerfilRepository;
 use App\Repositories\UsuarioRepository;
+use App\Repositories\BonusFatosRepository;
+use App\Services\BonusApuracaoService;
 use App\Services\EventoAnaisPdfFinalService;
 use App\Services\TrabalhoResultadoService;
 use App\Services\TrabalhoSubmissaoException;
@@ -77,13 +79,8 @@ class TrabalhoController extends Controller
             'expira_em' => time() + 1800,
         ];
 
-        // Fase 51: a porta de entrada e' a do Evento (identidade visual
-        // propria, Fase 48B), nao a do Concurso. Fase 54 (achado do teste do
-        // dono): quem chega aqui sem estar conectado cai primeiro no cadastro
-        // do evento, que leva direto ao formulario depois de criar a conta
-        // (EventoInscricaoPublicaController::cadastrar()) e tem o atalho
-        // "Entrar" para quem ja' tem conta; a entrada tambem volta ao
-        // formulario (AuthController::redirecionarPosLogin()).
+        // Quem chega sem estar conectado vai ao cadastro do evento, que leva
+        // direto ao formulario depois de criar a conta e tem o atalho "Entrar".
         $this->redirecionar('eventoInscricao/cadastrar/' . (int) $eventoId);
         exit;
     }
@@ -133,12 +130,8 @@ class TrabalhoController extends Controller
             return;
         }
 
-        // Achado do usuário na revisão de fumaça (19/09/2026): antes disto,
-        // o formulário inteiro aparecia mesmo fora do prazo, e só avisava
-        // "o prazo ainda não começou" depois de a pessoa preencher tudo e
-        // tentar enviar. A checagem de verdade (que decide se salva)
-        // continua em TrabalhoSubmissaoService::validarPrazo(), esta aqui
-        // só evita mostrar o formulário fora de hora.
+        // A checagem que decide fica em TrabalhoSubmissaoService::validarPrazo();
+        // esta so' evita mostrar o formulario fora do prazo.
         $agora = date('Y-m-d H:i:s');
 
         if ($config['data_abertura_submissao'] !== null && $agora < $config['data_abertura_submissao']) {
@@ -162,12 +155,10 @@ class TrabalhoController extends Controller
     }
 
     /**
-     * Reabertura da Fase 51 (achados da equipe de Teste Cego): um so' lugar
-     * monta os dados da tela do formulario, tanto na primeira exibicao
-     * quanto na volta depois de um erro. $valores e' o que a pessoa ja
-     * tinha preenchido (a tela mostra tudo de novo; so' os arquivos
-     * precisam ser escolhidos outra vez, limitacao do navegador), e
-     * $erro, quando o erro sabe o campo, faz a tela destacar esse campo.
+     * Um so' lugar monta os dados da tela do formulario, na primeira exibicao
+     * e na volta depois de um erro. $valores e' o que a pessoa ja tinha
+     * preenchido (so' os arquivos precisam ser escolhidos de novo, limite do
+     * navegador), e $erro, quando sabe o campo, faz a tela destacar esse campo.
      */
     private function renderizarFormulario(array $evento, array $config, array $valores = [], array $termosMarcados = [], \RuntimeException $erro = null)
     {
@@ -264,9 +255,7 @@ class TrabalhoController extends Controller
             }
         }
 
-        // Fase 54 (achado do dono): o e-mail da pessoa nunca muda. O autor
-        // principal e' sempre a conta conectada, entao o e-mail gravado e' o
-        // da conta, e nenhum valor enviado pelo navegador e' lido.
+        // O e-mail do autor principal e' sempre o da conta conectada.
         $contaAutor = $this->usuarios->buscarPorId(Auth::usuarioId());
 
         $dadosAutorPrincipal = [
@@ -312,6 +301,11 @@ class TrabalhoController extends Controller
             $this->renderizarFormulario($this->eventos->buscarPorId($eventoId), $config, $_POST, $termosAceitos, $e);
             return;
         }
+
+        // A submissao pode fechar o bonus de autor de trabalho submetido. Roda
+        // depois do commit e em bloco proprio: falha na apuracao nunca vira erro na
+        // tela.
+        $this->apurarAutores($eventoId, $trabalhoId);
 
         // Um unico aviso na tela, com tudo que aconteceu: recebimento,
         // inscricao dos autores e e-mail.
@@ -464,10 +458,8 @@ class TrabalhoController extends Controller
     }
 
     /**
-     * Fase 54: envio do PDF final do trabalho para a montagem automatica dos
-     * Anais. Toda a conferencia (autor principal, trabalho nos Anais, prazo
-     * aberto, arquivo legivel) fica em EventoAnaisPdfFinalService; aqui so'
-     * a mesma conferencia de posse de ver().
+     * Envio do PDF final do trabalho para a montagem dos Anais. A conferencia
+     * fica em EventoAnaisPdfFinalService.
      */
     public function enviarVersaoAnais($id)
     {
@@ -541,5 +533,28 @@ class TrabalhoController extends Controller
         }
 
         return $trabalho;
+    }
+
+    /**
+     * Fase 58: apura os bonus de cada autor do trabalho que tem conta e
+     * inscricao no evento (autor principal e coautores).
+     */
+    private function apurarAutores($eventoId, $trabalhoId)
+    {
+        try {
+            $evento = $this->eventos->buscarPorId($eventoId);
+
+            if ($evento === null) {
+                return;
+            }
+
+            $apuracao = new BonusApuracaoService();
+
+            foreach ((new BonusFatosRepository())->inscricoesDosAutoresDoTrabalho($trabalhoId) as $autor) {
+                $apuracao->apurarInscricao($evento, (int) $autor['inscricao_id'], (int) $autor['usuario_id']);
+            }
+        } catch (\Throwable $e) {
+            error_log('[Bonus] Falha ao apurar os autores do trabalho ' . (int) $trabalhoId . ': ' . $e->getMessage());
+        }
     }
 }

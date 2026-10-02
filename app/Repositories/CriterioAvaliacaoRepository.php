@@ -135,9 +135,8 @@ class CriterioAvaliacaoRepository
     }
 
     /**
-     * Fase 50 (achado de seguranca): WHERE inclui etapa_id, nao so' id -
-     * sem isso, um id de criterio de OUTRA etapa seria aceito e teria sua
-     * ordem alterada, sem checagem de posse.
+     * Reordena os criterios da etapa. Escopo da etapa no proprio comando:
+     * ver Implantar.md, secao 13.6.
      */
     public function reordenar($etapaId, array $ids)
     {

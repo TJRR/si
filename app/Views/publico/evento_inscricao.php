@@ -17,9 +17,9 @@
      * esta mesma view + ehContextoApp() pra tambem ativar manifesto/service
      * worker/CSS do app aqui.
      */
-    $eventoId = isset($evento) && $evento !== null ? $evento['id'] : null;
-    $tituloTopo = $evento !== null ? $evento['nome'] : 'Semana de Inovação';
-    $urlVoltar = $evento !== null ? urlPaginaEvento($evento['id']) : null;
+    $eventoId = $evento['id'];
+    $tituloTopo = $evento['nome'];
+    $urlVoltar = urlPaginaEvento($evento['id']);
     require __DIR__ . '/../eventoApp/_app_bar.php';
     ?>
     <?php else: ?>
@@ -31,7 +31,7 @@
     // logoAtual(true) resolve a logo propria do Evento (com fallback pra
     // logo do site), mesmo padrao ja usado em EventoPublicoController.
     $logoDesktopEvento = logoAtual(true);
-    $altLogoDesktopEvento = isset($evento) && $evento !== null ? $evento['nome'] : 'Semana de Inovação';
+    $altLogoDesktopEvento = $evento['nome'];
     ?>
     <header class="site-header">
         <div class="site-header-inner">
@@ -47,20 +47,13 @@
                 </button>
                 <?php endif; ?>
                 <?php // Reabertura da Fase 51 (item 1): volta a pagina do proprio evento, nunca a home do Concurso. ?>
-                <a href="<?php echo htmlspecialchars(urlPaginaEvento(isset($evento) && $evento !== null ? $evento['id'] : null), ENT_QUOTES, 'UTF-8'); ?>" class="btn">Voltar à página do evento</a>
+                <a href="<?php echo htmlspecialchars(urlPaginaEvento($evento['id']), ENT_QUOTES, 'UTF-8'); ?>" class="btn">Voltar à página do evento</a>
             </nav>
         </div>
     </header>
     <?php endif; ?>
 
     <div class="site-form-page">
-<?php if ($evento === null): ?>
-    <h1>Semana de Inovação</h1>
-    <p>Nenhum evento disponível para inscrição no momento.</p>
-    </div>
-</div>
-    <?php return; ?>
-<?php endif; ?>
 
 <h1><?php echo htmlspecialchars($evento['nome'], ENT_QUOTES, 'UTF-8'); ?></h1>
 

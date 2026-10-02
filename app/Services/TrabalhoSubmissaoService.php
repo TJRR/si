@@ -24,17 +24,13 @@ use App\Repositories\UsuarioRepository;
 use App\Validation\CpfValidador;
 
 /**
- * Fase 49: submissao de um Trabalho. Toda regra vem de
- * evento_trabalhos_config (metodos aceitos, quantidade maxima de
- * autores, exige telefone, deduplicacao de pessoa), nunca fixa aqui.
+ * Submissao de um Trabalho. Toda regra vem de evento_trabalhos_config
+ * (metodos aceitos, quantidade maxima de autores, exige telefone,
+ * deduplicacao de pessoa), nunca fixa aqui.
  *
- * Protecao de concorrencia (achado corrigido na revisao desta fase): a
- * checagem de CPF duplicado roda dentro de uma transacao que trava a
+ * A checagem de CPF duplicado roda dentro de uma transacao que trava a
  * linha de configuracao do evento (FOR UPDATE), serializando submissoes
- * concorrentes do mesmo evento - mesmo mecanismo ja usado em
- * EventoAtividadeInscricaoRepository::inscrever() para vagas de
- * atividade, adaptado aqui para travar o recurso pai em vez de uma
- * contagem.
+ * concorrentes do mesmo evento.
  */
 class TrabalhoSubmissaoService
 {
@@ -164,10 +160,9 @@ class TrabalhoSubmissaoService
             }
         }
 
-        // Fase 49B, achado do teste de fumaça (item 6.b): exclusão mútua
-        // autor/avaliador dentro do mesmo evento, na outra direção - quem
-        // já é avaliador avulso ATIVO deste evento não pode submeter um
-        // trabalho nele. Checa autor principal e cada coautor, por e-mail.
+        // Exclusao mutua autor e avaliador no mesmo evento: quem ja e' avaliador
+        // ativo deste evento nao submete trabalho nele. Confere o autor principal e
+        // cada coautor, por e-mail.
         if ($this->avaliadores->emailJaEhAvaliadorAtivo($eventoId, $dadosAutorPrincipal['email'])) {
             throw new TrabalhoSubmissaoException('Este e-mail já está cadastrado como avaliador de Trabalhos deste evento e não pode submeter um trabalho.', 'autor_email');
         }
@@ -184,9 +179,8 @@ class TrabalhoSubmissaoService
 
         $conteudo = $this->validarConteudo($config, $dadosTrabalho, $arquivosEnviados);
 
-        // Reabertura da Fase 51 (achado da equipe de Teste Cego): quando o
-        // evento liga "inscrever autores ao submeter", o autor principal e
-        // cada coautor entram inscritos no evento junto com o trabalho.
+        // Com "inscrever autores ao submeter" ligado, o autor principal e cada
+        // coautor entram inscritos no evento junto com o trabalho.
         $evento = $this->eventos->buscarPorId($eventoId);
         $inscreverAutores = $evento !== null
             && isset($config['inscrever_autores_ao_submeter'])
@@ -197,6 +191,7 @@ class TrabalhoSubmissaoService
 
         $pdo = Database::conexao();
         $pdo->beginTransaction();
+        $arquivosGravados = [];
 
         try {
             $configTravada = $this->config->buscarPorEventoParaAtualizar($eventoId);
@@ -219,10 +214,12 @@ class TrabalhoSubmissaoService
 
             if (isset($conteudo['arquivo_avaliacao'])) {
                 $caminhoAvaliacao = TrabalhoArquivoValidador::salvar($conteudo['arquivo_avaliacao'], $conteudo['extensao_avaliacao'], $trabalhoId);
+                $arquivosGravados[] = $caminhoAvaliacao;
                 $caminhoPublicacao = null;
 
                 if (isset($conteudo['arquivo_publicacao'])) {
                     $caminhoPublicacao = TrabalhoArquivoValidador::salvar($conteudo['arquivo_publicacao'], $conteudo['extensao_publicacao'], $trabalhoId);
+                    $arquivosGravados[] = $caminhoPublicacao;
                 }
 
                 $this->trabalhos->atualizarArquivos($trabalhoId, $caminhoAvaliacao, $caminhoPublicacao);
@@ -331,6 +328,7 @@ class TrabalhoSubmissaoService
             $pdo->commit();
         } catch (\Throwable $e) {
             $pdo->rollBack();
+            $this->removerArquivosGravados($arquivosGravados);
 
             throw $e;
         }
@@ -499,17 +497,8 @@ class TrabalhoSubmissaoService
     }
 
     /**
-     * Metodo "formulario direto" usa um campo de texto simples (textarea),
-     * nao um editor rico tipo WYSIWYG: reaproveitar _editor_rico.php
-     * (assets/js/editor-rico.js) exigiria confiar em HTML digitado por um
-     * participante externo qualquer, quebrando o pressuposto de seguranca
-     * daquele componente (so' e' seguro porque so' Administrador grava
-     * nele hoje) e ainda ofereceria botoes (imagem, cor, fonte) que essa
-     * submissao nao suporta. Em vez disso, o texto digitado e' sempre
-     * escapado primeiro (nenhuma tag do participante sobrevive) e so'
-     * depois reconstruido em paragrafos/quebras de linha - nao ha como uma
-     * tag maliciosa passar, porque a reconstrucao nunca le tag nenhuma do
-     * texto original.
+     * Metodo "formulario direto": texto simples, nunca editor rico. O texto
+     * digitado e' escapado antes de virar paragrafos. Ver Implantar.md, secao 13.6.
      */
     private function textoParaHtmlSeguro($texto)
     {
@@ -560,9 +549,7 @@ class TrabalhoSubmissaoService
      */
     private function checarDuplicidade($eventoId, $usuarioId, array $dadosAutorPrincipal, array $coautores)
     {
-        // Fase 54 (achado do teste do dono): o CPF sozinho nao garantia um
-        // trabalho por pessoa, porque pode ser trocado no formulario. Tres
-        // camadas: a conta que envia, o CPF e o e-mail de cada autor.
+        // Um trabalho por pessoa: ver Implantar.md, secao 13.13.
         if ($this->autores->usuarioJaEhAutorNoEvento($eventoId, $usuarioId)) {
             throw new TrabalhoSubmissaoException('Você já consta como autor ou coautor de outro trabalho submetido neste evento. Cada pessoa participa de um único trabalho.');
         }
@@ -688,6 +675,36 @@ class TrabalhoSubmissaoService
 
         if (!$this->perfis->possuiPerfil($usuarioId, $perfilInscrito['id'], null)) {
             $this->perfis->atribuir($usuarioId, $perfilInscrito['id'], null);
+        }
+    }
+
+    /**
+     * A transacao desfeita apaga a linha do trabalho, mas nao o arquivo ja
+     * movido para o disco: sem esta limpeza, uma submissao recusada no meio
+     * deixaria arquivo sem dono na pasta privada.
+     */
+    private function removerArquivosGravados(array $caminhos)
+    {
+        $baseReal = realpath(__DIR__ . '/../../storage/uploads/trabalhos');
+
+        if ($baseReal === false) {
+            return;
+        }
+
+        foreach ($caminhos as $caminhoRelativo) {
+            $caminho = realpath($baseReal . '/' . $caminhoRelativo);
+
+            if ($caminho === false || strpos($caminho, $baseReal . DIRECTORY_SEPARATOR) !== 0 || !is_file($caminho)) {
+                continue;
+            }
+
+            $pasta = dirname($caminho);
+            @unlink($caminho);
+            $restantes = glob($pasta . '/*');
+
+            if ($pasta !== $baseReal && is_array($restantes) && empty($restantes)) {
+                @rmdir($pasta);
+            }
         }
     }
 }

@@ -8,17 +8,11 @@ if (!defined('SI_BOOT')) {
 }
 
 /**
- * Fase 48: gera o arquivo de participantes no layout exato exigido pela
- * EJURR (Educa Enfam) - mesmas 13 colunas do modelo de referencia
- * (ListaParticipante_19-09-2025_09-52-54.xlsx). Formato .csv, nao .xlsx:
- * nao existe hoje versao do phpoffice/phpspreadsheet compativel com PHP 7.3
- * que nao esteja listada com vulnerabilidades de seguranca conhecidas
- * (decisao do usuario, ver plano da fase). Delimitador ';' (padrao que o
- * Excel em portugues reconhece sem assistente de importacao) + BOM UTF-8
- * (senao os acentos ficam corrompidos ao abrir direto no Excel).
+ * Gera o arquivo de participantes no formato de colunas exigido pela
+ * instituicao que certifica as horas. Formato .csv, e nao .xlsx: ver Implantar.md, secao 13.7.
+ * Delimitador ';' e BOM UTF-8, para os acentos abrirem certo nas planilhas.
  *
- * So' formata a saida - nao busca nem resolve dado nenhum (isso fica nos
- * Repositories/Controllers que montam o array de linhas).
+ * So' formata a saida; nao busca nem resolve dado nenhum.
  */
 class EjurrExportService
 {
