@@ -24,8 +24,12 @@ return [
             'como' => 'Consulta as agendas visíveis para o e-mail informado. Só leitura: não cria, não altera e não apaga nada. Confirma que a credencial funciona sem exibi-la.',
         ],
         [
+            'nome' => 'Nome do remetente',
+            'como' => 'Não fica nesta tela: os e-mails saem com o "Nome do organizador para assinatura dos e-mails", de Configurações, Contato. Aqui ficam só o servidor, a porta, o usuário, a senha e o e-mail remetente.',
+        ],
+        [
             'nome' => 'Auditoria e aviso',
-            'como' => 'Abrir esta tela é registrado na auditoria e avisa os demais administradores globais, por notificação e e-mail. Gravar qualquer credencial também avisa.',
+            'como' => 'Abrir esta tela é registrado na auditoria e avisa os demais administradores globais, por notificação e por e-mail com o assunto iniciado por "[Segurança]". Gravar qualquer credencial também avisa, com o nome do grupo e dos campos alterados.',
             'observacao' => 'Nem a auditoria nem o aviso contêm o valor da credencial: registram apenas quem, o quê e quando. Na mesma sessão, o aviso não se repete antes de 30 minutos.',
         ],
         [

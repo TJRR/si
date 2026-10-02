@@ -14,6 +14,11 @@ return [
             'como' => 'Dados de contato exibidos publicamente.',
         ],
         [
+            'nome' => 'Nome do organizador para assinatura dos e-mails',
+            'como' => 'É o nome do remetente de todos os e-mails que o sistema envia, do Concurso e dos Eventos, e também assina os e-mails automáticos, acima do e-mail e do telefone de contato. A troca vale a partir do envio seguinte.',
+            'observacao' => 'Em branco, os e-mails saem com o nome de remetente padrão e assinados só com os canais de contato preenchidos.',
+        ],
+        [
             'nome' => 'Texto institucional',
             'como' => 'Editor rico.',
         ],

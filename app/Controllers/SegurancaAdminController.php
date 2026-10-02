@@ -39,6 +39,30 @@ class SegurancaAdminController extends Controller
      */
     const MINUTOS_ENTRE_AVISOS = 30;
 
+    /**
+     * Rotulos dos campos, usados pela tela e pelo aviso de alteracao: o
+     * aviso nunca leva a chave interna do campo.
+     */
+    const ROTULOS_CAMPOS = [
+        'client_email' => 'E-mail da Conta de Serviço',
+        'private_key' => 'Chave privada (PEM)',
+        'token_uri' => 'Endereço do código de acesso (token) (opcional)',
+        'client_id' => 'ID do cliente',
+        'client_secret' => 'Segredo do cliente',
+        'redirect_uri' => 'Endereço de retorno',
+        'host' => 'Servidor',
+        'port' => 'Porta',
+        'user' => 'Usuário',
+        'pass' => 'Senha',
+        'from_email' => 'E-mail remetente',
+    ];
+
+    const ROTULOS_GRUPOS = [
+        'google_service_account' => 'Google: Conta de Serviço (Agenda e Meet)',
+        'google_oauth' => 'Google: Login dos usuários',
+        'smtp' => 'Envio de e-mail',
+    ];
+
     private $credenciais;
     private $notificacoes;
     private $perfis;
@@ -75,6 +99,7 @@ class SegurancaAdminController extends Controller
 
         $this->renderizar('admin/seguranca/credenciais', [
             'grupos' => $this->gruposParaTela(),
+            'rotulos' => self::ROTULOS_CAMPOS,
             'chaveMestraConfigurada' => Cifra::chaveMestraConfigurada(),
             'possuiCredencialNoBanco' => $this->credenciais->possuiAlgumaCredencial(),
             'resultadoTeste' => isset($_SESSION['seguranca_teste']) ? $_SESSION['seguranca_teste'] : null,
@@ -120,9 +145,13 @@ class SegurancaAdminController extends Controller
 
         $alterados = $this->credenciais->salvarGrupo($grupo, $valores);
 
+        $rotulosAlterados = array_map(function ($campo) {
+            return array_key_exists($campo, self::ROTULOS_CAMPOS) ? self::ROTULOS_CAMPOS[$campo] : $campo;
+        }, $alterados);
+
         $this->avisarDemaisAdministradores(
             'Credenciais de segurança alteradas',
-            'alterou credenciais do grupo "' . $grupo . '" (campos: ' . implode(', ', $alterados) . ').'
+            'alterou credenciais do grupo "' . self::ROTULOS_GRUPOS[$grupo] . '" (campos: ' . implode(', ', $rotulosAlterados) . ').'
         );
 
         flashSucesso('Credenciais gravadas. Os demais administradores foram avisados.');
@@ -180,7 +209,7 @@ class SegurancaAdminController extends Controller
         $mapa = [
             'google_service_account' => ['client_email', 'private_key', 'token_uri'],
             'google_oauth' => ['client_id', 'client_secret', 'redirect_uri'],
-            'smtp' => ['host', 'port', 'user', 'pass', 'from_email', 'from_name'],
+            'smtp' => ['host', 'port', 'user', 'pass', 'from_email'],
         ];
 
         return isset($mapa[$grupo]) ? $mapa[$grupo] : [];
@@ -188,15 +217,9 @@ class SegurancaAdminController extends Controller
 
     private function gruposParaTela()
     {
-        $rotulos = [
-            'google_service_account' => 'Google: Conta de Serviço (Agenda e Meet)',
-            'google_oauth' => 'Google: Login dos usuários',
-            'smtp' => 'Envio de e-mail',
-        ];
-
         $grupos = [];
 
-        foreach ($rotulos as $grupo => $rotulo) {
+        foreach (self::ROTULOS_GRUPOS as $grupo => $rotulo) {
             $grupos[] = [
                 'chave' => $grupo,
                 'rotulo' => $rotulo,
@@ -312,7 +335,7 @@ class SegurancaAdminController extends Controller
             if (!empty($administrador['email'])) {
                 Mailer::enviar(
                     $administrador['email'],
-                    '[Prêmio de Inovação] ' . $titulo,
+                    '[Segurança] ' . $titulo,
                     '<p>' . htmlspecialchars($mensagem, ENT_QUOTES, 'UTF-8') . '</p>'
                     . '<p>Este aviso é automático e não contém nenhum valor de credencial.</p>'
                 );

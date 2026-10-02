@@ -56,10 +56,11 @@
         <input type="text" name="nome_organizador_assinatura" value="<?php echo htmlspecialchars($assinaturaAtual, ENT_QUOTES, 'UTF-8'); ?>" maxlength="150" size="60">
     </label>
     <p style="color:#555;font-size:0.9em;">
-        Assina os e-mails automáticos (recuperação de senha e liberação de acesso),
-        acima do e-mail e do telefone informados acima. Ex.:
-        <em>Organização do Prêmio de Inovação - <?php echo nomeInstituicao(); ?></em>. Em branco, os e-mails
-        saem apenas com os canais de contato preenchidos.
+        É o nome do remetente de todos os e-mails do sistema, do Concurso e dos Eventos, e assina
+        os e-mails automáticos, acima do e-mail e do telefone informados acima. Ex.:
+        <em><?php echo htmlspecialchars(nomeUnidadeResponsavelCompleto() . ' - ' . nomeInstituicao(), ENT_QUOTES, 'UTF-8'); ?></em>.
+        Em branco, os e-mails saem com o nome de remetente padrão e assinados apenas com os canais
+        de contato preenchidos.
     </p>
 
     <fieldset>

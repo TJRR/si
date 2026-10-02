@@ -2,23 +2,7 @@
     http_response_code(403);
     exit('Acesso negado');
 } ?>
-<?php
-    // Nenhum valor de campo sigiloso chega aqui: so' a impressao digital.
-    $rotulos = [
-        'client_email' => 'E-mail da Conta de Serviço',
-        'private_key' => 'Chave privada (PEM)',
-        'token_uri' => 'Endereço do código de acesso (token) (opcional)',
-        'client_id' => 'ID do cliente',
-        'client_secret' => 'Segredo do cliente',
-        'redirect_uri' => 'Endereço de retorno',
-        'host' => 'Servidor',
-        'port' => 'Porta',
-        'user' => 'Usuário',
-        'pass' => 'Senha',
-        'from_email' => 'E-mail remetente',
-        'from_name' => 'Nome do remetente',
-    ];
-?>
+<?php /* Nenhum valor de campo sigiloso chega aqui: so' a impressao digital. */ ?>
 <div class="pagina-titulo-acoes">
     <h1>Segurança 🔐: credenciais</h1>
 </div>
@@ -110,6 +94,10 @@
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
+
+            <?php if ($grupo['chave'] === 'smtp'): ?>
+                <p class="seguranca-estado">O nome do remetente vem de <a href="<?php echo url('contatosConcurso/index'); ?>">Configurações, Contato</a>.</p>
+            <?php endif; ?>
 
             <div class="form-acoes">
                 <button type="submit">Gravar <?php echo htmlspecialchars($grupo['rotulo'], ENT_QUOTES, 'UTF-8'); ?></button>

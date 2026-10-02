@@ -7,6 +7,7 @@ if (!defined('SI_BOOT')) {
     exit('Acesso negado');
 }
 
+use App\Repositories\ContatoConcursoRepository;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
 
@@ -34,7 +35,7 @@ class Mailer
             $mail->Password = $config['pass'];
             $mail->CharSet = 'UTF-8';
 
-            $mail->setFrom($config['from_email'], $config['from_name']);
+            $mail->setFrom($config['from_email'], self::nomeRemetente($config));
             $mail->addAddress($destinatarioEmail);
 
             $mail->isHTML(true);
@@ -47,6 +48,23 @@ class Mailer
         } catch (PHPMailerException $e) {
             return ['sucesso' => false, 'erro' => $mail->ErrorInfo];
         }
+    }
+
+    /**
+     * Nome do remetente: o "Nome do organizador para assinatura dos e-mails"
+     * de Configuracoes, Contato, o mesmo da assinatura. Em branco, vale o da
+     * configuracao de envio. Lido a cada envio, para a troca na tela valer
+     * no envio seguinte.
+     */
+    private static function nomeRemetente(array $config)
+    {
+        $contato = (new ContatoConcursoRepository())->buscar();
+
+        if ($contato !== null && isset($contato['nome_organizador_assinatura']) && trim($contato['nome_organizador_assinatura']) !== '') {
+            return trim($contato['nome_organizador_assinatura']);
+        }
+
+        return isset($config['from_name']) ? $config['from_name'] : '';
     }
 
     private static function config()

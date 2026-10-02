@@ -590,7 +590,7 @@ class NotificacaoService
 
     public function recuperacaoSenha($destinatarioEmail, $nomeUsuario, $linkDefinirSenha)
     {
-        $assunto = 'Redefinição de senha: Sistema do Prêmio de Inovação ' . nomeInstituicao();
+        $assunto = 'Redefinição de senha';
         $corpo = $this->montarCorpoRecuperacao($nomeUsuario, $linkDefinirSenha);
 
         $id = $this->notificacoes->criar(
@@ -618,7 +618,7 @@ class NotificacaoService
     {
         return sprintf(
             '<p>Olá, %s,</p>'
-            . '<p>Recebemos uma solicitação para redefinir a senha da sua conta no Sistema do Prêmio de Inovação ' . htmlspecialchars(nomeInstituicao(), ENT_QUOTES, 'UTF-8') . '.</p>'
+            . '<p>Recebemos uma solicitação para redefinir a senha da sua conta.</p>'
             . '<p>Para definir uma nova senha, clique no hiperlink abaixo:</p>'
             . '<p><a href="%s">Redefinir minha senha</a></p>'
             . '<p style="color:#555;font-size:0.9em;">Se você não solicitou essa redefinição, ignore este e-mail. Sua senha atual '
