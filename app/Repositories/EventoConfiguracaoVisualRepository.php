@@ -98,6 +98,8 @@ class EventoConfiguracaoVisualRepository
             'logo_alt' => $dados['logo_alt'],
             'fonte_titulo' => $dados['fonte_titulo'],
             'fonte_texto' => $dados['fonte_texto'],
+            'mostrar_botao_inscricao' => $dados['mostrar_botao_inscricao'],
+            'mostrar_botao_entrar' => $dados['mostrar_botao_entrar'],
         ];
 
         if ($antes === null) {
@@ -105,11 +107,11 @@ class EventoConfiguracaoVisualRepository
                 'INSERT INTO evento_configuracao_visual (
                     evento_id, publicado, cabecalho_imagem_path, cabecalho_logo_claro_path, cabecalho_titulo_html,
                     cabecalho_efeito_transicao, cabecalho_overlay_opacidade, cabecalho_imagem_posicao, cabecalho_efeito_entrada,
-                    logo_path, logo_alt, fonte_titulo, fonte_texto
+                    logo_path, logo_alt, fonte_titulo, fonte_texto, mostrar_botao_inscricao, mostrar_botao_entrar
                 ) VALUES (
                     :evento_id, :publicado, :cabecalho_imagem_path, :cabecalho_logo_claro_path, :cabecalho_titulo_html,
                     :cabecalho_efeito_transicao, :cabecalho_overlay_opacidade, :cabecalho_imagem_posicao, :cabecalho_efeito_entrada,
-                    :logo_path, :logo_alt, :fonte_titulo, :fonte_texto
+                    :logo_path, :logo_alt, :fonte_titulo, :fonte_texto, :mostrar_botao_inscricao, :mostrar_botao_entrar
                 )'
             );
             $stmt->execute($parametros);
@@ -129,7 +131,9 @@ class EventoConfiguracaoVisualRepository
                     logo_path = :logo_path,
                     logo_alt = :logo_alt,
                     fonte_titulo = :fonte_titulo,
-                    fonte_texto = :fonte_texto
+                    fonte_texto = :fonte_texto,
+                    mostrar_botao_inscricao = :mostrar_botao_inscricao,
+                    mostrar_botao_entrar = :mostrar_botao_entrar
                  WHERE id = :id'
             );
             $parametrosAtualizacao = $parametros;

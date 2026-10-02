@@ -24,6 +24,11 @@ return [
             'observacao' => 'Antes de publicar, a tela mostra o endereço da prévia (a página só existe depois que este cabeçalho é salvo uma vez). Marcada a caixa, a tela mostra o endereço completo, pronto para divulgar.',
         ],
         [
+            'nome' => 'Botões do cabeçalho',
+            'como' => 'Cada botão tem a própria escolha, "Visualizar" ou "Ocultar": o "Inscreva-se", que leva à inscrição no evento, e o "Entrar", que leva ao aplicativo do evento. Vale qualquer combinação. Oculto, o botão some do cabeçalho da página pública deste evento, também no menu do celular.',
+            'observacao' => 'A inscrição e a entrada continuam funcionando pelos próprios endereços e pelos botões cadastrados nas seções da página. O cabeçalho da página inicial do Concurso não muda.',
+        ],
+        [
             'nome' => 'Imagem de fundo',
             'como' => '1920×800, opcional.',
             'observacao' => 'Vários outros campos desta tela (posição, transição, opacidade, efeito de entrada, logo clara) só têm efeito visível se houver imagem de fundo cadastrada.',

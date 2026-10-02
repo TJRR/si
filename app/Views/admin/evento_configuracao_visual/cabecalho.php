@@ -31,6 +31,25 @@
     </fieldset>
 
     <fieldset>
+        <legend>Botões do cabeçalho</legend>
+        <p>Oculto, o botão some do cabeçalho da página pública deste evento, também no menu do celular. A inscrição e a entrada continuam funcionando pelos próprios endereços e pelos botões cadastrados nas seções da página.</p>
+        <?php
+        $botoesCabecalho = [
+            'mostrar_botao_inscricao' => 'Botão "Inscreva-se"',
+            'mostrar_botao_entrar' => 'Botão "Entrar"',
+        ];
+        ?>
+        <?php foreach ($botoesCabecalho as $campoBotao => $rotuloBotao): ?>
+            <?php $botaoVisivel = !isset($configuracaoVisual[$campoBotao]) || (int) $configuracaoVisual[$campoBotao] === 1; ?>
+            <p>
+                <?php echo htmlspecialchars($rotuloBotao, ENT_QUOTES, 'UTF-8'); ?>:
+                <label><input type="radio" name="<?php echo $campoBotao; ?>" value="visualizar" <?php echo $botaoVisivel ? 'checked' : ''; ?>> Visualizar</label>
+                <label><input type="radio" name="<?php echo $campoBotao; ?>" value="ocultar" <?php echo $botaoVisivel ? '' : 'checked'; ?>> Ocultar</label>
+            </p>
+        <?php endforeach; ?>
+    </fieldset>
+
+    <fieldset>
         <legend>Logo do evento (opcional)</legend>
         <p>Enviada aqui, esta logo vale na página pública deste evento e no rodapé dela, sem depender do tema de cor que cada pessoa escolheu. Sem logo enviada, continua valendo a logo do tema.</p>
         <?php if (!empty($configuracaoVisual['logo_path'])): ?>

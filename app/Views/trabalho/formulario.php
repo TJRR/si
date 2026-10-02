@@ -226,7 +226,7 @@ $urlEntrar = url('trabalho/entrar/' . (int) $evento['id']);
                 campo so' mostra o e-mail da conta, e o servidor grava esse
                 e-mail, sem ler nada do navegador. */ ?>
                 <label class="<?php echo $classeErro('autor_email'); ?>"><?php echo $rotulo('E-mail', true); ?>
-                    <input type="email" value="<?php echo htmlspecialchars($emailConta, ENT_QUOTES, 'UTF-8'); ?>" readonly aria-readonly="true"<?php echo $focoErro('autor_email'); ?>>
+                    <input type="email" value="<?php echo htmlspecialchars($emailConta, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $visitante ? ' placeholder="O e-mail do autor será informado automaticamente após o login"' : ''; ?> readonly aria-readonly="true"<?php echo $focoErro('autor_email'); ?>>
                     <?php echo $mensagemErro('autor_email'); ?>
                 </label>
                 <?php if ($visitante): ?>

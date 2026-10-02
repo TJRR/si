@@ -154,7 +154,18 @@ class EventoConfiguracaoVisualAdminController extends Controller
             'logo_alt' => isset($_POST['logo_alt']) && trim($_POST['logo_alt']) !== '' ? trim($_POST['logo_alt']) : null,
             'fonte_titulo' => $this->fonteEscolhida('fonte_titulo'),
             'fonte_texto' => $this->fonteEscolhida('fonte_texto'),
+            'mostrar_botao_inscricao' => $this->botaoVisivel('mostrar_botao_inscricao'),
+            'mostrar_botao_entrar' => $this->botaoVisivel('mostrar_botao_entrar'),
         ]);
+    }
+
+    /**
+     * Cada botao do cabecalho tem a propria escolha. So' "ocultar" esconde;
+     * qualquer outro valor mantem o botao, que e' o comportamento padrao.
+     */
+    private function botaoVisivel($campo)
+    {
+        return isset($_POST[$campo]) && $_POST[$campo] === 'ocultar' ? 0 : 1;
     }
 
     /**

@@ -75,8 +75,15 @@ $temLogoClara = $temImagemCabecalho && $logoClaroSrc !== null;
                 // entre mostrar o painel (autenticado) ou mandar para o login
                 // preservando o retorno ao evento certo (nao autenticado).
                 $urlEntrar = isset($concursoAtivo) ? url('auth/login') : url('eventoApp/index/' . (int) $evento['id']);
+                // Fase 61B: so' na pagina do Evento cada botao pode ser
+                // ocultado pela aba Cabecalho do evento. Na home do Concurso
+                // o "Entrar" sai sempre. Coluna ausente mostra o botao.
+                $mostrarInscricao = !isset($concursoAtivo)
+                    && (!isset($configVisual['mostrar_botao_inscricao']) || (int) $configVisual['mostrar_botao_inscricao'] === 1);
+                $mostrarEntrar = isset($concursoAtivo)
+                    || !isset($configVisual['mostrar_botao_entrar']) || (int) $configVisual['mostrar_botao_entrar'] === 1;
                 ?>
-                <?php if (!isset($concursoAtivo)): ?>
+                <?php if ($mostrarInscricao): ?>
                     <?php
                     // Fase 51: na pagina do Evento os dois botoes convivem -
                     // "Inscreva-se" em destaque, para quem ainda nao se
@@ -85,7 +92,9 @@ $temLogoClara = $temImagemCabecalho && $logoClaroSrc !== null;
                     ?>
                     <a href="<?php echo url('eventoInscricao/index/' . (int) $evento['id']); ?>" class="btn btn-cta">Inscreva-se</a>
                 <?php endif; ?>
-                <a href="<?php echo $urlEntrar; ?>" class="btn btn-bordered">Entrar</a>
+                <?php if ($mostrarEntrar): ?>
+                    <a href="<?php echo $urlEntrar; ?>" class="btn btn-bordered">Entrar</a>
+                <?php endif; ?>
             </nav>
         </div>
     </div>
